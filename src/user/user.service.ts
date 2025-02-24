@@ -8,9 +8,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 @Injectable()
 export class UserService {
 
-  @InjectRepository(User)
-  private userRepository: Repository<User>;
 
+  @InjectRepository(User) private readonly userRepository: Repository<User>
   constructor(){}
 
   async createUser(createUserDto:CreateUserDto): Promise<User> {
