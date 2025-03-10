@@ -1,8 +1,26 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Logger, HttpException, HttpStatus } from '@nestjs/common';
-import { UserService } from './user.service';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpException,
+  HttpStatus,
+  Logger,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
+import {
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
+import { User } from './entities/user.entity';
+import { UserService } from './user.service';
 
 @ApiTags('Usuários') // Define a categoria no Swagger
 @Controller('user')
@@ -24,26 +42,46 @@ export class UserController {
       const createUser = await this.userService.createUser(createUserDto);
 
       if (!createUser) {
-        this.logger.error('Erro ao criar usuário'); // Log de erro
-        throw new HttpException('Erro ao criar usuário', HttpStatus.INTERNAL_SERVER_ERROR);
+        this.logger.error('Erro ao criar usuário');
+        throw new HttpException(
+          'Erro ao criar usuário',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
       }
 
-      this.logger.log(`Usuário criado com sucesso: ${JSON.stringify(createUser)}`); // Log de sucesso
+      this.logger.log(
+        `Usuário criado com sucesso: ${JSON.stringify(createUser)}`,
+      );
       return createUser;
-      
-    } catch (error) {
-      this.logger.error(`Erro ao criar usuário: ${error.message}`, error.stack); // Log detalhado com stack trace
+    } catch (error: unknown) {
+      // Verifica se o erro é uma instância de Error
+      if (error instanceof Error) {
+        this.logger.error(
+          `Erro ao criar usuário: ${error.message}`,
+          error.stack,
+        );
+        throw new HttpException(
+          error.message,
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
 
+      // Se o erro não for uma instância de Error, trata como erro genérico
+      this.logger.error('Erro desconhecido ao criar usuário');
       throw new HttpException(
-        error.message || 'Erro ao criar usuário',
-        error.status || HttpStatus.INTERNAL_SERVER_ERROR
+        'Erro interno no servidor',
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
 
   @Get()
   @ApiOperation({ summary: 'Retorna todos os usuários' })
-  @ApiResponse({ status: 200, description: 'Lista de usuários retornada com sucesso' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de usuários retornada com sucesso',
+    type: [User],
+  })
   findAll() {
     return this.userService.findAll();
   }
