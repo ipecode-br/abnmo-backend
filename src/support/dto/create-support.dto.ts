@@ -8,7 +8,9 @@ export class CreateSupportDto {
     required: true,
   })
   @IsString({ message: 'O nome do apoio deve ser uma string' })
-  @MaxLength(100, { message: 'A' })
+  @MaxLength(100, {
+    message: 'O nome do apoio deve ter no máximo 100 caracteres',
+  })
   nome_apoio: string;
 
   @ApiProperty({
@@ -21,11 +23,10 @@ export class CreateSupportDto {
 
   @ApiProperty({
     example: '11987654321',
-    description:
-      'Número de WhatsApp do apoio, sem espaços ou caracteres especiais.',
+    description: 'Número de WhatsApp do apoio (somente números, 11 dígitos).',
     required: true,
   })
-  @IsString()
+  @IsString({ message: 'O Whatsapp deve ser uma string' })
   @Matches(/^\d{11}$/, { message: 'O Whatsapp deve conter apenas números' })
   @Length(11, 11, { message: 'O Whatsapp deve ter exatamente 11 dígitos' })
   whatsapp: string;

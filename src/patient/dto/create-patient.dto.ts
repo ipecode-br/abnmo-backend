@@ -2,9 +2,9 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import {
   IsBoolean,
-  IsDate,
   IsIn,
   IsInt,
+  IsISO8601,
   IsOptional,
   IsString,
   IsUrl,
@@ -32,8 +32,8 @@ export class CreatePatientDto {
     description: 'Data de nascimento do paciente (YYYY-MM-DD).',
     required: true,
   })
-  @IsDate({ message: 'Informe uma data válida' })
-  data_nascimento: Date;
+  @IsISO8601({}, { message: 'Informe uma data no formato YYYY-MM-DD' })
+  data_nascimento: string;
 
   @ApiProperty({
     example: 'São Paulo',
@@ -55,7 +55,7 @@ export class CreatePatientDto {
   @IsIn(siglasEstados, {
     message: 'Estado inválido. Use uma sigla de estado brasileira válida.',
   })
-  @IsString()
+  @IsString({ message: 'A sigla do estado deve ser uma string' })
   @Length(2, 2, {
     message: 'A sigla do estado deve ter exatamente 2 caracteres',
   })
@@ -66,7 +66,7 @@ export class CreatePatientDto {
     description: 'Número de WhatsApp do usuário (somente números, 11 dígitos).',
     required: true,
   })
-  @IsString()
+  @IsString({ message: 'O Whatsapp deve ser uma string' })
   @Matches(/^\d{11}$/, { message: 'O Whatsapp deve conter apenas números' })
   @Length(11, 11, { message: 'O Whatsapp deve ter exatamente 11 dígitos' })
   whatsapp: string;
@@ -76,7 +76,7 @@ export class CreatePatientDto {
     description: 'CPF do usuário (apenas números, 11 dígitos).',
     required: true,
   })
-  @IsString()
+  @IsString({ message: 'O CPF deve ser uma string' })
   @Matches(/^\d{11}$/, { message: 'O CPF deve conter apenas números' })
   @Length(11, 11, { message: 'O CPF deve ter exatamente 11 dígitos' })
   cpf: string;
@@ -109,7 +109,7 @@ export class CreatePatientDto {
     required: false,
   })
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'A descrição de deficiências deve ser uma string' })
   @MaxLength(500, {
     message: 'A descrição de deficiências deve ter no máximo 500 caracteres',
   })
@@ -143,7 +143,7 @@ export class CreatePatientDto {
     required: false,
   })
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'A descrição dos medicamentos deve ser uma string' })
   @MaxLength(500, {
     message: 'A descrição dos medicamentos deve ter no máximo 500 caracteres',
   })
@@ -155,13 +155,15 @@ export class CreatePatientDto {
     required: false,
   })
   @IsOptional()
-  @IsString()
-  @MaxLength(200)
+  @IsString({ message: 'O arquivo do diagnóstico deve ser uma string' })
+  @MaxLength(200, {
+    message: 'O arquivo do diagnóstico deve ter no máximo 200 caracteres',
+  })
   filename_diagnostico?: string;
 
   @ApiProperty({
     example: 1,
-    description: 'Identificador do diagnóstico associado ao paciente.',
+    description: 'Identificador único do diagnóstico.',
     required: true,
   })
   @IsInt({ message: 'O id_diagnostico deve ser um número inteiro' })
