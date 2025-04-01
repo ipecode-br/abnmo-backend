@@ -34,7 +34,7 @@ export class SupportService {
       return support;
     }
 
-    const samePatient = supportExists.pacientes.filter(
+    const samePatient = supportExists.pacientes.some(
       (patient) => patient.id_paciente === createSupportDto.id_paciente,
     );
 
@@ -42,10 +42,10 @@ export class SupportService {
       throw new ConflictException('Apoio já cadastrado para esse paciente.');
     }
 
-    patientExists.apoios.push(supportExists);
-    supportExists.pacientes.push(patientExists);
+    // é necessário atualizar apenas uma das tabelas relacionadas (paciente/apoio) - nesse caso a de apoio.
+    // dessa forma o proprio TypeORM cria os registros na tabela intermediária - usada em relacionamentos many to many.
+    supportExists.pacientes = [...supportExists.pacientes, patientExists];
 
-    await this.patientRepository.update(patientExists);
     await this.supportRepository.update(supportExists);
 
     return supportExists;
