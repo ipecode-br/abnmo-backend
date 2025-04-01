@@ -12,7 +12,9 @@ export class SupportRepository {
   ) {}
 
   public async findAll(): Promise<Support[]> {
-    const supports = await this.supportRepository.find();
+    const supports = await this.supportRepository.find({
+      relations: ['pacientes'],
+    });
 
     return supports;
   }
@@ -22,6 +24,7 @@ export class SupportRepository {
       where: {
         id_apoio: id,
       },
+      relations: ['pacientes'],
     });
 
     return support;
@@ -36,6 +39,7 @@ export class SupportRepository {
         nome_apoio: name,
         whatsapp,
       },
+      relations: ['pacientes'],
     });
 
     return support;

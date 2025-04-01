@@ -12,7 +12,9 @@ export class PatientRepository {
   ) {}
 
   public async findAll(): Promise<Patient[]> {
-    const patients = await this.patientRepository.find();
+    const patients = await this.patientRepository.find({
+      relations: ['apoios', 'diagnostico', 'usuario'],
+    });
 
     return patients;
   }
@@ -22,6 +24,7 @@ export class PatientRepository {
       where: {
         id_paciente: id,
       },
+      relations: ['apoios', 'diagnostico', 'usuario'],
     });
 
     return patient;
@@ -32,6 +35,7 @@ export class PatientRepository {
       where: {
         id_usuario,
       },
+      relations: ['apoios', 'diagnostico', 'usuario'],
     });
 
     return patient;

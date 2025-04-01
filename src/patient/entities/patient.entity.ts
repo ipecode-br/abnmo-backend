@@ -143,7 +143,7 @@ export class Patient {
   // Relação com tabela de usuários
   @OneToOne(() => User)
   @JoinColumn({ name: 'id_usuario' }) // Define que 'id_usuario' é a foreign key
-  user: User;
+  usuario: User;
 
   @ApiProperty({ example: 1, description: 'Identificador único do usuário' })
   @Column({ type: 'integer' })

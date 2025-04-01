@@ -12,7 +12,9 @@ export class DiagnosisRepository {
   ) {}
 
   public async findAll(): Promise<Diagnosis[]> {
-    const diagnosiss = await this.diagnosisRepository.find();
+    const diagnosiss = await this.diagnosisRepository.find({
+      relations: ['pacientes'],
+    });
 
     return diagnosiss;
   }
@@ -22,6 +24,7 @@ export class DiagnosisRepository {
       where: {
         id_diagnostico: id,
       },
+      relations: ['pacientes'],
     });
 
     return diagnosis;
