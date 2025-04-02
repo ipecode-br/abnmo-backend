@@ -3,23 +3,24 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
-import { validateDto } from 'src/common/utils/validation.util';
-import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
+import { UserRepository } from './user.repository';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UserService {
-  constructor(
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
-  ) {}
+  constructor(private readonly userRepository: UserRepository) {}
 
-  async createUser(createUserDto: CreateUserDto): Promise<User> {
-    console.log('Entrou no método createUser');
+  async create(createUserDto: CreateUserDto): Promise<User> {
+    const userExists = await this.userRepository.findByEmail(
+      createUserDto.email,
+    );
+
+    if (userExists) {
+      throw new BadRequestException('Já existe um usuário com este e-mail.');
+    }
 
     createUserDto.flag_login_facebook =
       createUserDto.flag_login_facebook ?? false;
@@ -27,46 +28,36 @@ export class UserService {
     createUserDto.flag_ativo = createUserDto.flag_ativo ?? true;
     createUserDto.flag_deletado = createUserDto.flag_deletado ?? false;
 
-    console.log('flag deletado:', createUserDto.flag_deletado);
-    await validateDto(createUserDto);
-
-    console.log('DTO validado com sucesso');
-
-    const userExistente = await this.userRepository.findOne({
-      where: { email: createUserDto.email },
-    });
-
-    if (userExistente) {
-      throw new BadRequestException('Já existe um usuário com este e-mail.');
-    }
-    console.log('flag deletado2:', createUserDto.flag_deletado);
     // Define a data de cadastro
     if (!createUserDto.data_cadastro) {
       createUserDto.data_cadastro = new Date();
     }
-    console.log('flag deletado3:', createUserDto.flag_deletado);
+
     const user = this.userRepository.create(createUserDto);
-    return await this.userRepository.save(user);
+
+    return user;
   }
 
   async findAll(): Promise<User[]> {
-    return await this.userRepository.find();
+    return await this.userRepository.findAll();
   }
 
-  async findOne(id: number): Promise<User> {
-    const user = await this.userRepository.findOne({
-      where: { id_usuario: id },
-    });
+  async findById(id: number): Promise<User> {
+    const user = await this.userRepository.findById(id);
+
     if (!user) {
       throw new NotFoundException('Usuário não encontrado.');
     }
+
     return user;
   }
 
   async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
-    await validateDto(updateUserDto);
+    const userExists = await this.userRepository.findById(id);
 
-    const user = await this.findOne(id);
+    if (!userExists) {
+      throw new NotFoundException('Usuário não encontrado.');
+    }
 
     // Verifica se a senha foi enviada no update
     if (updateUserDto.senha) {
@@ -75,13 +66,22 @@ export class UserService {
     }
 
     // 🔹 Atualiza os campos alterados
-    Object.assign(user, updateUserDto);
+    Object.assign(userExists, updateUserDto);
 
-    return await this.userRepository.save(user);
+    const user = await this.userRepository.update(userExists);
+
+    return user;
   }
 
-  async remove(id: number): Promise<void> {
-    const user = await this.findOne(id);
-    await this.userRepository.remove(user);
+  async remove(id: number): Promise<User> {
+    const userExists = await this.userRepository.findById(id);
+
+    if (!userExists) {
+      throw new NotFoundException('Usuário não encontrado.');
+    }
+
+    const user = await this.userRepository.remove(userExists);
+
+    return user;
   }
 }

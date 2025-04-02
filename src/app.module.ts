@@ -1,9 +1,14 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { DiagnosticoModule } from './diagnostico/diagnostico.module';
-import { PacienteModule } from './paciente/paciente.module';
+import { DiagnosisModule } from './diagnosis/diagnosis.module';
+import { PatientModule } from './patient/patient.module';
 import { UserModule } from './user/user.module';
+import { SupportModule } from './support/support.module';
+import { User } from './user/entities/user.entity';
+import { Diagnosis } from './diagnosis/entities/diagnosis.entity';
+import { Patient } from './patient/entities/patient.entity';
+import { Support } from './support/entities/support.entity';
 
 @Module({
   imports: [
@@ -15,12 +20,13 @@ import { UserModule } from './user/user.module';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         type: 'mysql',
-        host: configService.get<string>('DB_HOST', 'localhost'), // Endereço do servidor DB
-        port: configService.get<number>('DB_PORT', 3306),
-        username: configService.get<string>('DB_USERNAME_DEV', 'root'), // Usuário de dev
-        password: configService.get<string>('DB_PASSWORD_DEV', 'root'), // Senha de dev
-        database: configService.get<string>('DB_DATABASE', 'test'), // Nome do banco
-        autoLoadEntities: true,
+        host: configService.get<string>('DB_HOST'), // Endereço do servidor DB
+        port: configService.get<number>('DB_PORT'),
+        username: configService.get<string>('DB_USERNAME_DEV'), // Usuário de dev
+        password: configService.get<string>('DB_PASSWORD_DEV'), // Senha de dev
+        database: configService.get<string>('DB_DATABASE'), // Nome do banco
+        entities: [User, Diagnosis, Patient, Support],
+        migrations: [__dirname + '/database/migrations/*.ts'],
         synchronize: false, // Ajuste para produção // alterado para false para não pedir migration pois dev não tem permissão
         extra: {
           connectionLimit: 10, // Limite de conexões simultâneas
@@ -30,8 +36,9 @@ import { UserModule } from './user/user.module';
       inject: [ConfigService],
     }),
     UserModule,
-    PacienteModule,
-    DiagnosticoModule,
+    PatientModule,
+    DiagnosisModule,
+    SupportModule,
   ],
 })
 export class AppModule {}

@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { DiagnosticoController } from './diagnostico.controller';
-import { DiagnosticoService } from './diagnostico.service';
+import { DiagnosticoController } from './diagnosis.controller';
+import { DiagnosticoService } from './diagnosis.service';
 
 describe('DiagnosticoController', () => {
   let controller: DiagnosticoController;

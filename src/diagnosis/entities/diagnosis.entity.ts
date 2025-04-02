@@ -1,14 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Paciente } from 'src/paciente/entities/paciente.entity';
-import { Column, Entity, OneToMany, PrimaryColumn } from 'typeorm';
+import { Patient } from 'src/patient/entities/patient.entity';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('diagnosticos')
-export class Diagnostico {
+export class Diagnosis {
   @ApiProperty({
     example: 1,
     description: 'Identificador único do diagnóstico',
   })
-  @PrimaryColumn()
+  @PrimaryGeneratedColumn({ type: 'integer' })
   id_diagnostico: number;
 
   @ApiProperty({
@@ -19,6 +19,6 @@ export class Diagnostico {
   @Column({ type: 'varchar', length: 40 })
   desc_diagnostico: string;
 
-  @OneToMany(() => Paciente, (paciente) => paciente.diagnostico)
-  pacientes: Paciente[];
+  @OneToMany(() => Patient, (patient) => patient.diagnostico)
+  pacientes: Patient[];
 }
