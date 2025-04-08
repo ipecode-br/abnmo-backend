@@ -1,58 +1,49 @@
-import { execSync } from 'child_process';
+import { build } from 'esbuild';
 import fs from 'fs-extra';
 import path from 'path';
+import archiver from 'archiver';
 
-const buildFolder = '.lambda-build';
+const outDir = '.lambda-esbuild';
 const zipFile = 'lambda.zip';
+const entryFile = 'src/lambda.ts';
+const envFile = '.env';
 
-// Passos da pipeline de build organizados em funções
-const steps = {
-  // Limpa e recria a pasta de build
-  cleanBuildFolder: () => {
-    fs.removeSync(buildFolder);
-    fs.ensureDirSync(buildFolder);
-  },
+async function bundleLambda() {
+  console.log('🚀 Iniciando build Lambda com esbuild...');
 
-  // Compila o TypeScript usando o comando `tsc`
-  compile: () => {
-    execSync('tsc --project tsconfig.build.json', { stdio: 'inherit' });
-  },
+  // 1. Limpa a pasta
+  await fs.remove(outDir);
+  await fs.ensureDir(outDir);
 
-  // Copia arquivos necessários para o deploy
-  copyFiles: () => {
-    fs.copySync('dist', path.join(buildFolder, 'dist'));
-    fs.copySync('package.json', path.join(buildFolder, 'package.json'));
-    if (fs.existsSync('package-lock.json')) {
-      fs.copySync(
-        'package-lock.json',
-        path.join(buildFolder, 'package-lock.json'),
-      );
-    }
-  },
+  // 2. Build com esbuild
+  await build({
+    entryPoints: [entryFile],
+    bundle: true,
+    platform: 'node',
+    target: 'node20',
+    outfile: path.join(outDir, 'index.js'),
+    minify: true,
+    external: ['aws-sdk'], // já existe na Lambda
+  });
 
-  // Instala apenas as dependências de produção dentro da pasta de build
-  installProdDeps: () => {
-    execSync('npm install --omit=dev', {
-      cwd: buildFolder,
-      stdio: 'inherit',
-    });
-  },
+  // 3. Copia o .env para a build (se existir)
+  if (await fs.pathExists(envFile)) {
+    await fs.copy(envFile, path.join(outDir, '.env'));
+  }
 
-  // Cria o arquivo zip com o conteúdo da pasta de build
-  zip: () => {
-    execSync(`cd ${buildFolder} && zip -r ../${zipFile} . > /dev/null`, {
-      stdio: 'inherit',
-    });
-  },
-};
+  // 4. Zipa a pasta de build
+  const output = fs.createWriteStream(zipFile);
+  const archive = archiver('zip', { zlib: { level: 9 } });
 
-// Executa os passos na ordem definida (sem uso de async, pois tudo é síncrono)
-(() => {
-  console.log('🚀 Iniciando build Lambda...');
-  steps.cleanBuildFolder();
-  steps.compile();
-  steps.copyFiles();
-  steps.installProdDeps();
-  steps.zip();
-  console.log('🎉 Lambda zip criado com sucesso!');
-})();
+  archive.pipe(output);
+  archive.directory(outDir, false);
+
+  await archive.finalize();
+
+  console.log(`✅ Lambda zip gerado com sucesso: ${zipFile}`);
+}
+
+bundleLambda().catch((err) => {
+  console.error('❌ Erro ao gerar lambda:', err);
+  process.exit(1);
+});
