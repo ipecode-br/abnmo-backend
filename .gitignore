@@ -3,6 +3,7 @@
 /node_modules
 /build
 .lambda-build
+.lambda-esbuild
 lambda.zip
 
 # Logs
