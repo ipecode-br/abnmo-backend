@@ -1,0 +1,60 @@
+name: Deploy Lambda to AWS
+
+on:
+  push:
+    branches:
+      - dev
+      - qa
+      - main
+
+jobs:
+  deploy:
+    name: Build and Deploy Lambda
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build and package Lambda
+        run: npx ts-node scripts/build-lambda.ts
+
+      - name: Set Lambda function name based on branch
+        id: set-lambda-name
+        run: |
+          echo "Detected branch: ${{ github.ref_name }}"
+          if [ "${{ github.ref_name }}" = "dev" ]; then
+            echo "LAMBDA_NAME=ipecode-abnmo-lambda-backend-dev" >> $GITHUB_ENV
+          elif [ "${{ github.ref_name }}" = "qa" ]; then
+            echo "LAMBDA_NAME=ipecode-abnmo-lambda-backend-qa" >> $GITHUB_ENV
+          elif [ "${{ github.ref_name }}" = "main" ]; then
+            echo "LAMBDA_NAME=ipecode-abnmo-lambda-backend-main" >> $GITHUB_ENV
+          else
+            echo "Branch não suportado: ${{ github.ref_name }}"
+            exit 1
+          fi
+
+      - name: Configure AWS credentials with OIDC
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: us-east-1
+        
+      - name: Upload to Lambda
+        run: |
+          if [ ! -f lambda.zip ]; then
+            echo "❌ Arquivo lambda.zip não encontrado!"
+            exit 1
+          fi
+          echo "🚀 Deploying to Lambda: $LAMBDA_NAME"
+          aws lambda update-function-code \
+            --function-name $LAMBDA_NAME \
+            --zip-file fileb://lambda.zip
