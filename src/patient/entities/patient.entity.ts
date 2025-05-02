@@ -6,9 +6,8 @@ import {
   Column,
   Entity,
   JoinColumn,
-  JoinTable,
-  ManyToMany,
   ManyToOne,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -131,6 +130,13 @@ export class Patient {
   @Column({ type: 'varchar', length: 200, nullable: true })
   filename_diagnostico: string | null;
 
+  @ApiProperty({
+    example: 1,
+    description: 'Indica se o paciente está ativo. 1 = Sim, 0 = Não.',
+  })
+  @Column({ type: 'tinyint', width: 1, default: 0 })
+  flag_ativo: boolean;
+
   // Relação com a tabela de diagnósticos
   @ManyToOne(() => Diagnosis)
   @JoinColumn({ name: 'id_diagnostico' }) // Define que 'id_diagnostico' é a foreign key
@@ -150,15 +156,6 @@ export class Patient {
   id_usuario: number;
 
   // Relação com tabela de apoios
-  @ManyToMany(() => Support, (support) => support.pacientes)
-  @JoinTable({
-    name: 'pacientes_apoios',
-    joinColumn: {
-      name: 'id_paciente',
-    },
-    inverseJoinColumn: {
-      name: 'id_apoio',
-    },
-  })
+  @OneToMany(() => Support, (support) => support.paciente)
   apoios: Support[];
 }

@@ -12,7 +12,6 @@ import { SupportService } from './support.service';
 import { CreateSupportDto } from './dto/create-support.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Support } from './entities/support.entity';
-import { validateDto } from 'src/common/utils/validation.util';
 
 @ApiTags('Apoios')
 @Controller('support')
@@ -35,8 +34,6 @@ export class SupportController {
   public async create(
     @Body() createSupportDto: CreateSupportDto,
   ): Promise<Support> {
-    await validateDto(createSupportDto);
-
     const support = await this.supportService.create(createSupportDto);
 
     this.logger.log(`Apoio criado com sucesso: ${JSON.stringify(support)}`);

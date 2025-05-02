@@ -1,6 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Patient } from 'src/patient/entities/patient.entity';
-import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity('apoios')
 export class Support {
@@ -37,6 +43,11 @@ export class Support {
   whatsapp: string;
 
   // Relação com tabela de pacientes
-  @ManyToMany(() => Patient, (patient) => patient.apoios)
-  pacientes: Patient[];
+  @ManyToOne(() => Patient)
+  @JoinColumn({ name: 'id_paciente' }) // Define que 'id_paciente' é a foreign key
+  paciente: Patient;
+
+  @ApiProperty({ example: 1, description: 'Identificador único do paciente' })
+  @Column({ type: 'integer' })
+  id_paciente: number;
 }
