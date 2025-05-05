@@ -12,7 +12,7 @@ import {
   Matches,
   MaxLength,
 } from 'class-validator';
-import { siglasEstados } from 'src/common/utils/siglas-estados';
+import { brazilianStates } from 'src/common/utils/brazilian-states';
 
 export class CreatePatientDto {
   @ApiProperty({
@@ -52,7 +52,7 @@ export class CreatePatientDto {
   @Transform(({ value }: { value: unknown }): string | undefined =>
     typeof value === 'string' ? value.toUpperCase() : undefined,
   )
-  @IsIn(siglasEstados, {
+  @IsIn(brazilianStates, {
     message: 'Estado inválido. Use uma sigla de estado brasileira válida.',
   })
   @IsString({ message: 'A sigla do estado deve ser uma string' })

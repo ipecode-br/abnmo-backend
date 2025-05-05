@@ -1,4 +1,4 @@
-export const siglasEstados = [
+export const brazilianStates = [
   'AC',
   'AL',
   'AP',
