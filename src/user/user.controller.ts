@@ -1,8 +1,26 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Logger, HttpException, HttpStatus } from '@nestjs/common';
-import { UserService } from './user.service';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Logger,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+} from '@nestjs/common';
+import {
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
+import { User } from './entities/user.entity';
+import { UserService } from './user.service';
+import { validateDto } from 'src/common/utils/validation.util';
 
 @ApiTags('Usuários') // Define a categoria no Swagger
 @Controller('user')
@@ -17,35 +35,25 @@ export class UserController {
   @ApiResponse({ status: 400, description: 'Dados inválidos' })
   @ApiResponse({ status: 500, description: 'Erro interno no servidor' })
   @ApiBody({ type: CreateUserDto })
-  async create(@Body() createUserDto: CreateUserDto) {
-    this.logger.log('Recebida solicitação para criar um novo usuário'); // Log informativo
+  public async create(@Body() createUserDto: CreateUserDto): Promise<User> {
+    await validateDto(createUserDto);
 
-    try {
-      const createUser = await this.userService.createUser(createUserDto);
+    const user = await this.userService.create(createUserDto);
 
-      if (!createUser) {
-        this.logger.error('Erro ao criar usuário'); // Log de erro
-        throw new HttpException('Erro ao criar usuário', HttpStatus.INTERNAL_SERVER_ERROR);
-      }
+    this.logger.log(`Usuário criado com sucesso: ${JSON.stringify(user)}`);
 
-      this.logger.log(`Usuário criado com sucesso: ${JSON.stringify(createUser)}`); // Log de sucesso
-      return createUser;
-      
-    } catch (error) {
-      this.logger.error(`Erro ao criar usuário: ${error.message}`, error.stack); // Log detalhado com stack trace
-
-      throw new HttpException(
-        error.message || 'Erro ao criar usuário',
-        error.status || HttpStatus.INTERNAL_SERVER_ERROR
-      );
-    }
+    return user;
   }
 
   @Get()
   @ApiOperation({ summary: 'Retorna todos os usuários' })
-  @ApiResponse({ status: 200, description: 'Lista de usuários retornada com sucesso' })
-  findAll() {
-    return this.userService.findAll();
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de usuários retornada com sucesso',
+    type: [User],
+  })
+  public async findAll(): Promise<User[]> {
+    return await this.userService.findAll();
   }
 
   @Get(':id')
@@ -53,8 +61,12 @@ export class UserController {
   @ApiResponse({ status: 200, description: 'Usuário encontrado' })
   @ApiResponse({ status: 404, description: 'Usuário não encontrado' })
   @ApiParam({ name: 'id', type: 'number', description: 'ID do usuário' })
-  findOne(@Param('id') id: string) {
-    return this.userService.findOne(+id);
+  public async findById(@Param('id', ParseIntPipe) id: number): Promise<User> {
+    const user = await this.userService.findById(id);
+
+    this.logger.log(`Usuário encontrado`);
+
+    return user;
   }
 
   @Patch(':id')
@@ -64,8 +76,17 @@ export class UserController {
   @ApiResponse({ status: 404, description: 'Usuário não encontrado' })
   @ApiParam({ name: 'id', type: 'number', description: 'ID do usuário' })
   @ApiBody({ type: UpdateUserDto })
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(+id, updateUserDto);
+  public async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateUserDto: UpdateUserDto,
+  ): Promise<User> {
+    await validateDto(UpdateUserDto);
+
+    const user = await this.userService.update(id, updateUserDto);
+
+    this.logger.log(`Usuário atualizado com sucesso: ${JSON.stringify(user)}`);
+
+    return user;
   }
 
   @Delete(':id')
@@ -73,7 +94,11 @@ export class UserController {
   @ApiResponse({ status: 200, description: 'Usuário removido com sucesso' })
   @ApiResponse({ status: 404, description: 'Usuário não encontrado' })
   @ApiParam({ name: 'id', type: 'number', description: 'ID do usuário' })
-  remove(@Param('id') id: string) {
-    return this.userService.remove(+id);
+  public async remove(@Param('id', ParseIntPipe) id: number): Promise<User> {
+    const user = await this.userService.remove(id);
+
+    this.logger.log(`Usuário removido com sucesso: ${JSON.stringify(user)}`);
+
+    return user;
   }
 }

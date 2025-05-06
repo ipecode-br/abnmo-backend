@@ -1,10 +1,23 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { AppModule } from './app.module';
+import { HttpExceptionFilter } from './common/utils/http-exception.filter';
 
-async function bootstrap() {
+async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
+
+  app.useGlobalFilters(new HttpExceptionFilter());
+
   const configService = app.get(ConfigService);
 
   // Configuração do Swagger
@@ -22,10 +35,10 @@ async function bootstrap() {
   const baseUrl = configService.get<string>('BASE_URL') || 'http://localhost';
   const port = configService.get<number>('PORT') ?? 3000;
 
-  await app.listen(port, () => {
-    console.log(`🚀 Aplicação rodando em: ${baseUrl}:${port}`);
-    console.log(`📘 Swagger disponível em: ${baseUrl}:${port}/api`);
-  });
+  await app.listen(port);
+  console.log(`🚀 Aplicação rodando em: ${baseUrl}:${port}`);
+  console.log(`📘 Swagger disponível em: ${baseUrl}:${port}/api`);
 }
 
-bootstrap();
+// Evita warning do ESLint `no-floating-promises`
+void bootstrap();
