@@ -5,6 +5,7 @@
 .lambda-build
 .lambda-esbuild
 lambda.zip
+.devcontainer
 
 # Logs
 logs

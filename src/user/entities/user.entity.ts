@@ -66,13 +66,6 @@ export class User {
   data_cadastro: Date;
 
   @ApiProperty({
-    example: 1,
-    description: 'Indica se o usuário está ativo. 1 = Sim, 0 = Não.',
-  })
-  @Column({ type: 'tinyint', width: 1, default: 0 })
-  flag_ativo: boolean;
-
-  @ApiProperty({
     example: 0,
     description:
       'Indica se o usuário foi deletado logicamente. 1 = Sim, 0 = Não.',

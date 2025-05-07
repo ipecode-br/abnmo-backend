@@ -23,32 +23,9 @@ export class SupportService {
       throw new NotFoundException('Paciente não encontrado.');
     }
 
-    const supportExists = await this.supportRepository.findByName(
-      createSupportDto.nome_apoio,
-      createSupportDto.whatsapp,
-    );
+    const support = await this.supportRepository.create(createSupportDto);
 
-    if (!supportExists) {
-      const support = await this.supportRepository.create(createSupportDto);
-
-      return support;
-    }
-
-    const samePatient = supportExists.pacientes.some(
-      (patient) => patient.id_paciente === createSupportDto.id_paciente,
-    );
-
-    if (samePatient) {
-      throw new ConflictException('Apoio já cadastrado para esse paciente.');
-    }
-
-    // é necessário atualizar apenas uma das tabelas relacionadas (paciente/apoio) - nesse caso a de apoio.
-    // dessa forma o proprio TypeORM cria os registros na tabela intermediária - usada em relacionamentos many to many.
-    supportExists.pacientes = [...supportExists.pacientes, patientExists];
-
-    await this.supportRepository.update(supportExists);
-
-    return supportExists;
+    return support;
   }
 
   public async findAll() {
