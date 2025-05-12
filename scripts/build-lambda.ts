@@ -23,7 +23,7 @@ async function bundleLambda() {
     target: 'node20',
     outfile: path.join(outDir, 'index.js'),
     minify: true,
-    external: ['aws-sdk'], // já existe na Lambda
+    // external: ['aws-sdk'],
   });
 
   // 3. Copia o .env para a build (se existir)
