@@ -25,7 +25,7 @@ jobs:
         run: npm ci
 
       - name: Build and package Lambda
-        run: npx ts-node --trace-warnings scripts/build-lambda.ts
+        run: npx ts-node scripts/build-lambda.ts
 
       - name: Set Lambda function name based on branch
         id: set-lambda-name
@@ -43,9 +43,9 @@ jobs:
           fi
 
       - name: Configure AWS credentials with OIDC
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-session-name: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           aws-region: us-east-1
         
       - name: Upload to Lambda
