@@ -6,6 +6,7 @@ on:
       - dev
       - qa
       - main
+  workflow_dispatch: # Adiciona o trigger manual
 
 jobs:
   deploy:
