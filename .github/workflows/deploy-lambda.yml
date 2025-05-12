@@ -12,6 +12,9 @@ jobs:
   deploy:
     name: Build and Deploy Lambda
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Permite a obtenção do token OIDC
+      contents: read # Permissão comum para checkout do código
 
     steps:
       - name: Checkout source
