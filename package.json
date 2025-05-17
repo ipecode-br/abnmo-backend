@@ -24,9 +24,9 @@
     "build:lambda": "ts-node scripts/build-lambda.ts",
     
     "dev": "npm run services:up && npm run start:dev",
-    "services:up": "docker compose -f src/infra/docker/compose.yaml --env-file .env up -d",
-    "services:stop": "docker compose -f src/infra/docker/compose.yaml stop",
-    "services:down": "docker compose -f src/infra/docker/compose.yaml down"
+    "services:up": "docker compose -f infra/docker/compose.yaml --env-file .env up -d",
+    "services:stop": "docker compose -f infra/docker/compose.yaml stop",
+    "services:down": "docker compose -f infra/docker/compose.yaml down"
   },
   "dependencies": {
     "@aws-sdk/client-lambda": "^3.806.0",
