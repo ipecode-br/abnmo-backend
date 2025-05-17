@@ -1,10 +1,11 @@
 import { ConfigService } from '@nestjs/config';
 import { config } from 'dotenv';
-import { Diagnosis } from 'src/diagnosis/entities/diagnosis.entity';
-import { Patient } from 'src/patient/entities/patient.entity';
-import { Support } from 'src/support/entities/support.entity';
-import { User } from 'src/user/entities/user.entity';
 import { DataSource } from 'typeorm';
+
+import { Diagnostic } from '@/diagnostics/entities/diagnostic.entity';
+import { PatientSupport } from '@/patient-supports/entities/patient-support.entity';
+import { Patient } from '@/patients/entities/patient.entity';
+import { User } from '@/users/entities/user.entity';
 
 config();
 
@@ -17,8 +18,8 @@ const dataSource = new DataSource({
   username: configService.get<string>('DB_USERNAME'),
   password: configService.get<string>('DB_PASSWORD'),
   database: configService.get<string>('DB_DATABASE'),
-  entities: [User, Patient, Diagnosis, Support],
-  migrations: ['./infra/database/migrations/**.ts'],
+  entities: [User, Patient, PatientSupport, Diagnostic],
+  migrations: ['src/infra/database/migrations/**/*.ts'],
   synchronize: false,
 });
 

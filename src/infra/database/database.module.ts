@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Diagnosis } from 'src/diagnosis/entities/diagnosis.entity';
-import { Patient } from 'src/patient/entities/patient.entity';
-import { Support } from 'src/support/entities/support.entity';
-import { User } from 'src/user/entities/user.entity';
 
-import { EnvModule } from '../env/env.module';
-import { EnvService } from '../env/env.service';
+import { Diagnostic } from '@/diagnostics/entities/diagnostic.entity';
+import { EnvModule } from '@/infra/env/env.module';
+import { EnvService } from '@/infra/env/env.service';
+import { PatientSupport } from '@/patient-supports/entities/patient-support.entity';
+import { Patient } from '@/patients/entities/patient.entity';
+import { User } from '@/users/entities/user.entity';
 
 @Module({
   imports: [
@@ -20,8 +20,8 @@ import { EnvService } from '../env/env.service';
         database: env.get('DB_DATABASE'),
         username: env.get('DB_USERNAME'),
         password: env.get('DB_PASSWORD'),
-        entities: [User, Diagnosis, Patient, Support],
-        migrations: [__dirname + '/../../database/migrations/*.ts'],
+        entities: [User, Patient, PatientSupport, Diagnostic],
+        migrations: [__dirname + 'src/infra/database/migrations/**/*.ts'],
         synchronize: false,
         extra: {
           connectionLimit: 10,
