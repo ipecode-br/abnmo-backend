@@ -8,8 +8,8 @@ if (!name) {
   process.exit(1);
 }
 
-const outputPath = `./infra/database/migrations/${name}`;
-const command = `ts-node -r tsconfig-paths/register -P tsconfig.json ./node_modules/typeorm/cli.js migration:generate -d ./infra/database/data.source.ts ${outputPath}`;
+const outputPath = `./src/infra/database/migrations/${name}`;
+const command = `ts-node -r tsconfig-paths/register -P tsconfig.json ./node_modules/typeorm/cli.js migration:generate -d ./src/infra/database/data.source.ts ${outputPath}`;
 
 try {
   console.log(`Generating migration: ${outputPath}`);

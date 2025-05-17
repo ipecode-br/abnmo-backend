@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { EnvModule } from '../env/env.module';
-import { EnvService } from '../env/env.service';
-import { User } from 'src/user/entities/user.entity';
 import { Diagnosis } from 'src/diagnosis/entities/diagnosis.entity';
 import { Patient } from 'src/patient/entities/patient.entity';
 import { Support } from 'src/support/entities/support.entity';
+import { User } from 'src/user/entities/user.entity';
+
+import { EnvModule } from '../env/env.module';
+import { EnvService } from '../env/env.service';
 
 @Module({
   imports: [

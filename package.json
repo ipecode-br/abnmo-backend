@@ -21,12 +21,12 @@
     "start:local": "ts-node src/local.ts",
     "build:lambda": "ts-node scripts/build-lambda.ts",
     "dev": "npm run services:up && npm run services:wait:database && npm run db:migrate && npm run start:dev",
-    "services:up": "docker compose -f infra/docker/compose.yaml --env-file .env up -d",
-    "services:stop": "docker compose -f infra/docker/compose.yaml stop",
-    "services:down": "docker compose -f infra/docker/compose.yaml down",
-    "services:wait:database": "ts-node ./infra/database/scripts/wait-for-database.ts",
-    "db:generate": "ts-node ./infra/database/scripts/generate-migration.ts",
-    "db:migrate": "ts-node -r tsconfig-paths/register -P tsconfig.json ./node_modules/typeorm/cli.js migration:run -d ./infra/database/data.source.ts",
+    "services:up": "docker compose -f docker/compose.yaml --env-file .env up -d",
+    "services:stop": "docker compose -f docker/compose.yaml stop",
+    "services:down": "docker compose -f docker/compose.yaml down",
+    "services:wait:database": "ts-node ./src/infra/database/scripts/wait-for-database.ts",
+    "db:generate": "ts-node ./src/infra/database/scripts/generate-migration.ts",
+    "db:migrate": "ts-node -r tsconfig-paths/register -P tsconfig.json ./node_modules/typeorm/cli.js migration:run -d ./src/infra/database/data.source.ts",
     "prepare": "husky"
   },
   "dependencies": {
