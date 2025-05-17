@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DiagnosisModule } from './diagnosis/diagnosis.module';
 import { PatientModule } from './patient/patient.module';
@@ -11,32 +11,36 @@ import { Patient } from './patient/entities/patient.entity';
 import { Support } from './support/entities/support.entity';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { envSchema } from './infra/env/env';
+import { EnvModule } from './infra/env/env.module';
+import { EnvService } from './infra/env/env.service';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env', // Caminho para o arquivo .env
+      validate: (env) => envSchema.parse(env),
     }),
     TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
+      imports: [EnvModule],
+      inject: [EnvService],
+      useFactory: (env: EnvService) => ({
         type: 'mysql',
-        host: configService.get<string>('DB_HOST'), // Endereço do servidor DB
-        port: configService.get<number>('DB_PORT'),
-        username: configService.get<string>('DB_USERNAME_DEV'), // Usuário de dev
-        password: configService.get<string>('DB_PASSWORD_DEV'), // Senha de dev
-        database: configService.get<string>('DB_DATABASE'), // Nome do banco
+        host: env.get('DB_HOST'),
+        port: env.get('DB_EXTERNAL_PORT'),
+        database: env.get('DB_DATABASE'),
+        username: env.get('DB_USERNAME'),
+        password: env.get('DB_PASSWORD'),
         entities: [User, Diagnosis, Patient, Support],
         migrations: [__dirname + '/database/migrations/*.ts'],
-        synchronize: false, // Ajuste para produção // alterado para false para não pedir migration pois dev não tem permissão
+        synchronize: false, // Do not request migration on production environment
         extra: {
-          connectionLimit: 10, // Limite de conexões simultâneas
-          connectTimeout: 10000, // 10 segundos para o timeout de conexão
+          connectionLimit: 10,
+          connectTimeout: 10000,
         },
       }),
-      inject: [ConfigService],
     }),
+    EnvModule,
     UserModule,
     PatientModule,
     DiagnosisModule,
