@@ -12,7 +12,7 @@ import { SupportService } from './support.service';
 import { CreateSupportDto } from './dto/create-support.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Support } from './entities/support.entity';
-import { validateDto } from 'src/common/utils/validation.util';
+import { validateDto } from 'src/common/utils/validate.dto';
 
 @ApiTags('Apoios')
 @Controller('support')

@@ -12,7 +12,7 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CreatePatientDto } from './dto/create-patient.dto';
 import { Patient } from './entities/patient.entity';
 import { PatientService } from './patient.service';
-import { validateDto } from 'src/common/utils/validation.util';
+import { validateDto } from 'src/common/utils/validate.dto';
 
 @ApiTags('Paciente')
 @Controller('patient')

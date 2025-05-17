@@ -20,7 +20,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { UserService } from './user.service';
-import { validateDto } from 'src/common/utils/validation.util';
+import { validateDto } from 'src/common/utils/validate.dto';
 
 @ApiTags('Usuários') // Define a categoria no Swagger
 @Controller('user')
