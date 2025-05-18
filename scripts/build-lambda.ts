@@ -1,7 +1,7 @@
+import archiver from 'archiver';
 import { build } from 'esbuild';
 import fs from 'fs-extra';
 import path from 'path';
-import archiver from 'archiver';
 
 const outDir = '.lambda-esbuild';
 const zipFile = 'lambda.zip';

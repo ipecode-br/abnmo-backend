@@ -1,5 +1,5 @@
 {
-  "name": "back-abmno",
+  "name": "abnmo-backend",
   "version": "0.0.1",
   "description": "",
   "author": "",
@@ -18,10 +18,18 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk ./node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "migration:generate": "npx ts-node -P ./tsconfig.json -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:generate -d ./src/database/data-source.ts",
-    "migration:run": "npx ts-node -P ./tsconfig.json -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:run -d ./src/database/data-source.ts",
     "start:local": "ts-node src/local.ts",
-    "build:lambda": "ts-node scripts/build-lambda.ts"
+    "build:lambda": "ts-node scripts/build-lambda.ts",
+    "dev": "npm run services:up && npm run services:wait:database && npm run db:migrate && npm run start:dev",
+    "services:up": "docker compose -f docker/compose.yaml --env-file .env up -d",
+    "services:stop": "docker compose -f docker/compose.yaml stop",
+    "services:down": "docker compose -f docker/compose.yaml down",
+    "services:wait:database": "ts-node ./src/infra/database/scripts/wait-for-database.ts",
+    "db:generate": "ts-node ./src/infra/database/scripts/generate-migration.ts",
+    "db:migrate": "ts-node -r tsconfig-paths/register -P tsconfig.json ./node_modules/typeorm/cli.js migration:run -d ./src/infra/database/data.source.ts",
+    "lint:prettier:check": "prettier --check .",
+    "lint:prettier:fix": "prettier --write . --log-level=warn",
+    "prepare": "husky"
   },
   "dependencies": {
     "@aws-sdk/client-lambda": "^3.806.0",
@@ -42,9 +50,12 @@
     "mysql2": "^3.12.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "typeorm": "^0.3.20"
+    "typeorm": "^0.3.20",
+    "zod": "3.24.4"
   },
   "devDependencies": {
+    "@commitlint/cli": "19.8.1",
+    "@commitlint/config-conventional": "19.8.1",
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",
     "@nestjs/cli": "^11.0.0",
@@ -65,8 +76,11 @@
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",
+    "eslint-plugin-simple-import-sort": "12.1.1",
     "globals": "^15.14.0",
+    "husky": "9.1.7",
     "jest": "^29.7.0",
+    "lint-staged": "16.0.0",
     "prettier": "^3.4.2",
     "source-map-support": "^0.5.21",
     "supertest": "^7.1.0",

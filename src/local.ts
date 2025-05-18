@@ -1,5 +1,6 @@
-import express, { Request, Response } from 'express';
 import cors from 'cors';
+import express, { Request, Response } from 'express';
+
 import { app } from './app';
 
 const server = express();
