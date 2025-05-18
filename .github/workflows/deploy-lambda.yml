@@ -6,11 +6,15 @@ on:
       - dev
       - qa
       - main
+  workflow_dispatch: # Adiciona o trigger manual
 
 jobs:
   deploy:
     name: Build and Deploy Lambda
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Permite a obtenção do token OIDC
+      contents: read # Permissão comum para checkout do código
 
     steps:
       - name: Checkout source
@@ -43,11 +47,11 @@ jobs:
           fi
 
       - name: Configure AWS credentials with OIDC
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           aws-region: us-east-1
-        
+
       - name: Upload to Lambda
         run: |
           if [ ! -f lambda.zip ]; then
