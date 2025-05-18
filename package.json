@@ -27,6 +27,8 @@
     "services:wait:database": "ts-node ./src/infra/database/scripts/wait-for-database.ts",
     "db:generate": "ts-node ./src/infra/database/scripts/generate-migration.ts",
     "db:migrate": "ts-node -r tsconfig-paths/register -P tsconfig.json ./node_modules/typeorm/cli.js migration:run -d ./src/infra/database/data.source.ts",
+    "lint:prettier:check": "prettier --check .",
+    "lint:prettier:fix": "prettier --write . --log-level=warn",
     "prepare": "husky"
   },
   "dependencies": {
