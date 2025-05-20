@@ -1,10 +1,11 @@
 # compiled output
 /dist
+/dist-lambda
 /node_modules
 /build
+lambda.zip
 .lambda-build
 .lambda-esbuild
-lambda.zip
 .devcontainer
 
 # Logs
