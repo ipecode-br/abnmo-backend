@@ -1,49 +1,52 @@
-import archiver from 'archiver';
+import { execSync } from 'child_process';
 import { build } from 'esbuild';
 import fs from 'fs-extra';
 import path from 'path';
 
-const outDir = '.lambda-esbuild';
+const outDir = 'dist-lambda';
 const zipFile = 'lambda.zip';
-const entryFile = 'src/lambda.ts';
 const envFile = '.env';
 
 async function bundleLambda() {
-  console.log('🚀 Iniciando build Lambda com esbuild...');
+  console.log('🚀 Building Lambda bundle...');
 
-  // 1. Limpa a pasta
+  // Clean directories
   await fs.remove(outDir);
   await fs.ensureDir(outDir);
 
-  // 2. Build com esbuild
+  // 1. First run NestJS build
+  execSync('npm run build', { stdio: 'inherit' });
+
+  // 2. Use esbuild to bundle the lambda entry point
   await build({
-    entryPoints: [entryFile],
+    entryPoints: ['infra/lambda.ts'],
     bundle: true,
     platform: 'node',
-    target: 'node20',
+    target: 'node18',
     outfile: path.join(outDir, 'index.js'),
+    external: [
+      '@nestjs/microservices',
+      '@nestjs/websockets',
+      'class-validator',
+      'class-transformer',
+    ],
     minify: true,
-    // external: ['aws-sdk'],
   });
 
-  // 3. Copia o .env para a build (se existir)
+  // 3. Copy necessary files
   if (await fs.pathExists(envFile)) {
     await fs.copy(envFile, path.join(outDir, '.env'));
   }
+  await fs.copy('dist', path.join(outDir, 'dist'));
+  await fs.copy('node_modules', path.join(outDir, 'node_modules'));
 
-  // 4. Zipa a pasta de build
-  const output = fs.createWriteStream(zipFile);
-  const archive = archiver('zip', { zlib: { level: 9 } });
+  // 4. Create zip
+  execSync(`cd ${outDir} && zip -r ../${zipFile} .`, { stdio: 'inherit' });
 
-  archive.pipe(output);
-  archive.directory(outDir, false);
-
-  await archive.finalize();
-
-  console.log(`✅ Lambda zip gerado com sucesso: ${zipFile}`);
+  console.log(`✅ Lambda bundle created: ${zipFile}`);
 }
 
 bundleLambda().catch((err) => {
-  console.error('❌ Erro ao gerar lambda:', err);
+  console.error('❌ Lambda build failed:', err);
   process.exit(1);
 });
