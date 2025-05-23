@@ -7,7 +7,7 @@ export const envSchema = z.object({
 
   // Database
   DB_HOST: z.string().min(1),
-  DB_EXTERNAL_PORT: z.coerce.number(),
+  DB_PORT: z.coerce.number(),
   DB_DATABASE: z.string().min(1),
   DB_ROOT_PASSWORD: z.string().min(1),
   DB_USERNAME: z.string().min(1),
