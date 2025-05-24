@@ -29,13 +29,10 @@ async function bundleLambda() {
     outfile: path.join(outDir, 'index.js'),
     external: [
       '@nestjs/microservices',
+      '@nestjs/microservices/microservices-module',
       '@nestjs/websockets',
-      'class-validator',
-      'class-transformer',
-      '@nestjs/common',
-      '@nestjs/core',
-      '@nestjs/platform-express',
-      '@nestjs/config',
+      '@nestjs/websockets/socket-module',
+      'class-transformer/storage',
     ],
     minify: true,
   });
