@@ -19,7 +19,6 @@ import {
 
 import { User } from '@/domain/entities/user';
 import { validateDto } from '@/utils/validate.dto';
-
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UsersService } from './users.service';

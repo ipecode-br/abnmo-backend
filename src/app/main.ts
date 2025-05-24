@@ -31,12 +31,15 @@ async function bootstrap(): Promise<void> {
   SwaggerModule.setup('api', app, document);
 
   const envService = app.get(EnvService);
+
+  const jwt = envService.get('JWT_SECRET')
   const baseUrl = envService.get('API_BASE_URL');
   const port = envService.get('API_PORT');
 
   await app.listen(port);
   console.log(`🚀 Server running on: ${baseUrl}:${port}`);
   console.log(`📘 Swagger running on: ${baseUrl}:${port}/api`);
+      console.log('JWT_SECRET carregado:', jwt); 
 }
 
 // Prevent ESLint `no-floating-promises` error

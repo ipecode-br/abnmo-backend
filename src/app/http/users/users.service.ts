@@ -4,16 +4,20 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
-
 import type { User } from '@/domain/entities/user';
-
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UsersRepository } from './users.repository';
+import { ResponseUserDto } from './dto/response-user.dto';
+import { BcryptHasher } from '@/app/cryptography/bcrypt-hasher';
+
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly userRepository: UsersRepository) {}
+  constructor(
+    private readonly userRepository: UsersRepository,
+    private bcryptHasher:BcryptHasher
+  ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
     const userExists = await this.userRepository.findByEmail(
@@ -25,10 +29,13 @@ export class UsersService {
     }
 
     createUserDto.flag_login_facebook =
-      createUserDto.flag_login_facebook ?? false;
+    createUserDto.flag_login_facebook ?? false;
     createUserDto.flag_login_gmail = createUserDto.flag_login_gmail ?? false;
     createUserDto.flag_ativo = createUserDto.flag_ativo ?? true;
-    createUserDto.flag_deletado = createUserDto.flag_deletado ?? false;
+    createUserDto.flag_deletado = createUserDto.flag_deletado ?? false; 
+    if(createUserDto.senha){
+      createUserDto.senha = (await this.bcryptHasher.hash(createUserDto.senha))
+    }
 
     if (!createUserDto.data_cadastro) {
       createUserDto.data_cadastro = new Date();
@@ -43,6 +50,22 @@ export class UsersService {
     return await this.userRepository.findAll();
   }
 
+  async findByEmail(email: string): Promise<ResponseUserDto> {
+    const user = await this.userRepository.findByEmail(email);
+
+
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado.');
+    }
+    
+    const modelUserDto = new ResponseUserDto;
+    modelUserDto.email = user?.email;
+    modelUserDto.token_oauth = user.token_oauth;
+   if(user.senha){
+      modelUserDto.senha = user.senha
+   }
+    return modelUserDto;
+  }
   async findById(id: number): Promise<User> {
     const user = await this.userRepository.findById(id);
 
