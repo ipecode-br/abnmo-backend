@@ -55,23 +55,13 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           aws-region: us-east-1
 
-      - name: Upload Lambda & set env vars
-        env:
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_PORT: ${{ secrets.DB_PORT }}
-          DB_DATABASE: ${{ secrets.DB_DATABASE }}
-          DB_USERNAME: ${{ secrets.DB_USERNAME }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          NODE_ENV: ${{ env.NODE_ENV }}
+      - name: Upload Lambda
         run: |
           if [ ! -f lambda.zip ]; then
             echo "❌ lambda.zip not found!"
             exit 1
           fi
           echo "🚀 Deploying to Lambda: $LAMBDA_NAME"
-          aws lambda update-function-configuration \
-            --function-name $LAMBDA_NAME \
-            --environment "Variables={DB_HOST=$DB_HOST,DB_PORT=$DB_PORT,DB_DATABASE=$DB_DATABASE,DB_USERNAME=$DB_USERNAME,DB_PASSWORD=$DB_PASSWORD,NODE_ENV=$NODE_ENV}"
 
           aws lambda update-function-code \
             --function-name $LAMBDA_NAME \
