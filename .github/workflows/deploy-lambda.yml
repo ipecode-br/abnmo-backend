@@ -12,7 +12,7 @@ jobs:
   deploy:
     name: Build and Deploy Lambda
     runs-on: ubuntu-latest
-    # environment: development
+    environment: development
     permissions:
       id-token: write # Permite a obtenção do token OIDC
       contents: read # Permissão comum para checkout do código
@@ -74,7 +74,16 @@ jobs:
           echo "🚀 Deploying to Lambda: $LAMBDA_NAME"
           aws lambda update-function-configuration \
             --function-name $LAMBDA_NAME \
-            --environment "Variables={DB_HOST=$DB_HOST,DB_PORT=$DB_PORT,DB_DATABASE=$DB_DATABASE,DB_USERNAME=$DB_USERNAME,DB_PASSWORD=$DB_PASSWORD,NODE_ENV=$NODE_ENV,API_BASE_URL=$API_BASE_URL,API_PORT=$API_PORT}"
+            --environment "Variables={\
+              DB_HOST=$DB_HOST,\
+              DB_PORT=$DB_PORT,\
+              DB_DATABASE=$DB_DATABASE,\
+              DB_USERNAME=$DB_USERNAME,\
+              DB_PASSWORD=$DB_PASSWORD,\
+              NODE_ENV=$NODE_ENV,\
+              API_BASE_URL=$API_BASE_URL,\
+              API_PORT=$API_PORT\
+              }"
 
           aws lambda update-function-code \
             --function-name $LAMBDA_NAME \
