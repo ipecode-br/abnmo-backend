@@ -25,7 +25,7 @@ async function bundleLambda() {
     entryPoints: ['infra/lambda.ts'],
     bundle: true,
     platform: 'node',
-    target: 'node18',
+    target: 'node20',
     outfile: path.join(outDir, 'index.js'),
     external: [
       '@nestjs/microservices',

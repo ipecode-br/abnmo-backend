@@ -58,8 +58,6 @@ jobs:
           fi
           echo "🚀 Deploying to Lambda: $LAMBDA_NAME"
 
-          echo "NODE_ENV=$NODE_ENV"
-
           aws lambda update-function-configuration \
             --function-name $LAMBDA_NAME \
             --environment "Variables={\
