@@ -4,17 +4,15 @@ on:
   push:
     branches:
       - dev
-      - qa
-      - main
-  workflow_dispatch: # Adiciona o trigger manual
 
 jobs:
   deploy:
     name: Build and Deploy Lambda
     runs-on: ubuntu-latest
+    environment: development
     permissions:
-      id-token: write # Permite a obtenção do token OIDC
-      contents: read # Permissão comum para checkout do código
+      id-token: write # Permission to obtain token OIDC
+      contents: read # Permission to checkout
 
     steps:
       - name: Checkout source
@@ -63,6 +61,8 @@ jobs:
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           NODE_ENV: ${{ env.NODE_ENV }}
+          API_BASE_URL: ${{ env.API_BASE_URL }}
+          API_PORT: ${{ env.API_PORT }}
         run: |
           if [ ! -f lambda.zip ]; then
             echo "❌ lambda.zip not found!"
@@ -71,7 +71,7 @@ jobs:
           echo "🚀 Deploying to Lambda: $LAMBDA_NAME"
           aws lambda update-function-configuration \
             --function-name $LAMBDA_NAME \
-            --environment "Variables={DB_HOST=$DB_HOST,DB_PORT=$DB_PORT,DB_DATABASE=$DB_DATABASE,DB_USERNAME=$DB_USERNAME,DB_PASSWORD=$DB_PASSWORD,NODE_ENV=$NODE_ENV}"
+            --environment "Variables={DB_HOST=$DB_HOST,DB_PORT=$DB_PORT,DB_DATABASE=$DB_DATABASE,DB_USERNAME=$DB_USERNAME,DB_PASSWORD=$DB_PASSWORD,NODE_ENV=$NODE_ENV,API_BASE_URL=$API_BASE_URL,API_PORT=$API_PORT}"
 
           aws lambda update-function-code \
             --function-name $LAMBDA_NAME \
