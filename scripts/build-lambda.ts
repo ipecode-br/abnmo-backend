@@ -22,16 +22,18 @@ async function bundleLambda() {
   }
 
   await build({
-    entryPoints: ['infra/lambda.ts'],
+    entryPoints: ['./src/app/lambda.ts'],
     bundle: true,
     platform: 'node',
     target: 'node20',
     outfile: path.join(outDir, 'index.js'),
     external: [
+      '@vendia/serverless-express',
       '@nestjs/microservices',
       '@nestjs/microservices/microservices-module',
       '@nestjs/websockets',
       '@nestjs/websockets/socket-module',
+      'aws-sdk',
       'class-transformer/storage',
     ],
     minify: true,
