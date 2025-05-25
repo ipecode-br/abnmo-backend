@@ -25,8 +25,10 @@ async function bootstrapServer(): Promise<Server> {
       throw new Error('Invalid environment variables');
     }
 
+    console.log(process.env);
     const expressApp = express();
     const adapter = new ExpressAdapter(expressApp);
+
     const app = await NestFactory.create(AppModule, adapter);
 
     app.enableCors();

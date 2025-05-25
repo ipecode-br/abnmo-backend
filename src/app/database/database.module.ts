@@ -14,7 +14,7 @@ import { EnvService } from '@/env/env.service';
       imports: [EnvModule],
       inject: [EnvService],
       useFactory: (env: EnvService) => {
-        console.log('EnvService inside TypeORM:', !!env);
+        console.log(env);
 
         return {
           type: 'mysql',
