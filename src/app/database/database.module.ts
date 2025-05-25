@@ -1,28 +1,27 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { Diagnostic } from '@/domain/entities/diagnostic';
 import { Patient } from '@/domain/entities/patient';
 import { PatientSupport } from '@/domain/entities/patient-support';
 import { User } from '@/domain/entities/user';
-import { EnvModule } from '@/env/env.module';
-import { EnvService } from '@/env/env.service';
 
 @Module({
   imports: [
     TypeOrmModule.forRootAsync({
-      imports: [EnvModule],
-      inject: [EnvService],
-      useFactory: (env: EnvService) => {
-        console.log(env);
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        console.log(configService);
 
         return {
           type: 'mysql',
-          host: env.get('DB_HOST'),
-          port: env.get('DB_PORT'),
-          database: env.get('DB_DATABASE'),
-          username: env.get('DB_USERNAME'),
-          password: env.get('DB_PASSWORD'),
+          host: configService.get('DB_HOST'),
+          port: configService.get('DB_PORT'),
+          database: configService.get('DB_DATABASE'),
+          username: configService.get('DB_USERNAME'),
+          password: configService.get('DB_PASSWORD'),
           entities: [User, Patient, PatientSupport, Diagnostic],
           migrations: [__dirname + 'infra/database/migrations/**/*.ts'],
           synchronize: false,
