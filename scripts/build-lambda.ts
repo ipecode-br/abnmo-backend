@@ -1,6 +1,7 @@
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 
+import tsconfigPaths from '@esbuild-plugins/tsconfig-paths';
 import { build } from 'esbuild';
 import fs from 'fs-extra';
 
@@ -27,13 +28,14 @@ async function bundleLambda() {
     platform: 'node',
     target: 'node20',
     outfile: path.join(outDir, 'index.js'),
+    plugins: [tsconfigPaths({ tsconfig: './tsconfig.json' })],
     external: [
+      'aws-sdk',
+      'class-transformer/storage',
       '@nestjs/microservices',
       '@nestjs/microservices/microservices-module',
       '@nestjs/websockets',
       '@nestjs/websockets/socket-module',
-      'aws-sdk',
-      'class-transformer/storage',
     ],
     minify: true,
   });
