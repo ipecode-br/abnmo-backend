@@ -13,21 +13,25 @@ import { EnvService } from '@/env/env.service';
     TypeOrmModule.forRootAsync({
       imports: [EnvModule],
       inject: [EnvService],
-      useFactory: (env: EnvService) => ({
-        type: 'mysql',
-        host: env.get('DB_HOST'),
-        port: env.get('DB_PORT'),
-        database: env.get('DB_DATABASE'),
-        username: env.get('DB_USERNAME'),
-        password: env.get('DB_PASSWORD'),
-        entities: [User, Patient, PatientSupport, Diagnostic],
-        migrations: [__dirname + 'infra/database/migrations/**/*.ts'],
-        synchronize: false,
-        extra: {
-          connectionLimit: 10,
-          connectTimeout: 10000,
-        },
-      }),
+      useFactory: (env: EnvService) => {
+        console.log('EnvService inside TypeORM:', !!env);
+
+        return {
+          type: 'mysql',
+          host: env.get('DB_HOST'),
+          port: env.get('DB_PORT'),
+          database: env.get('DB_DATABASE'),
+          username: env.get('DB_USERNAME'),
+          password: env.get('DB_PASSWORD'),
+          entities: [User, Patient, PatientSupport, Diagnostic],
+          migrations: [__dirname + 'infra/database/migrations/**/*.ts'],
+          synchronize: false,
+          extra: {
+            connectionLimit: 10,
+            connectTimeout: 10000,
+          },
+        };
+      },
     }),
   ],
 })

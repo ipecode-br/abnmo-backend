@@ -8,6 +8,8 @@ import { HttpExceptionFilter } from '../utils/http.exception.filter';
 import { AppModule } from './app.module';
 
 async function bootstrap(): Promise<void> {
+  console.log(process.env.API_PORT);
+
   const app = await NestFactory.create(AppModule);
 
   app.useGlobalPipes(
