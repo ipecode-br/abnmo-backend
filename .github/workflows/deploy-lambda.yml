@@ -4,15 +4,18 @@ on:
   push:
     branches:
       - dev
+      - qa
+      - main
+  workflow_dispatch: # Adiciona o trigger manual
 
 jobs:
   deploy:
     name: Build and Deploy Lambda
     runs-on: ubuntu-latest
-    environment: development
+    # environment: development
     permissions:
-      id-token: write # Permission to obtain token OIDC
-      contents: read # Permission to checkout
+      id-token: write # Permite a obtenção do token OIDC
+      contents: read # Permissão comum para checkout do código
 
     steps:
       - name: Checkout source
