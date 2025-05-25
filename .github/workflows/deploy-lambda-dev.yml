@@ -3,8 +3,7 @@ name: Deploy Lambda to AWS
 on:
   push:
     branches:
-      - main
-  workflow_dispatch: # Adiciona o trigger manual
+      - dev
 
 jobs:
   deploy:
@@ -70,6 +69,12 @@ jobs:
             exit 1
           fi
           echo "🚀 Deploying to Lambda: $LAMBDA_NAME"
+
+          echo "DB_HOST=${DB_HOST:0:3}***"
+          echo "NODE_ENV=$NODE_ENV"
+          echo "API_BASE_URL=$API_BASE_URL"
+          echo "API_PORT=$API_PORT"
+
           aws lambda update-function-configuration \
             --function-name $LAMBDA_NAME \
             --environment "Variables={\
