@@ -28,7 +28,6 @@ async function bundleLambda() {
     target: 'node20',
     outfile: path.join(outDir, 'index.js'),
     external: [
-      '@vendia/serverless-express',
       '@nestjs/microservices',
       '@nestjs/microservices/microservices-module',
       '@nestjs/websockets',
