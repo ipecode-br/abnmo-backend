@@ -1,5 +1,5 @@
-import { config as loadEnv } from 'dotenv';
-loadEnv();
+import 'reflect-metadata';
+import 'tsconfig-paths/register';
 
 import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
@@ -9,11 +9,14 @@ import {
   Context,
 } from 'aws-lambda';
 import { createServer, proxy } from 'aws-serverless-express';
+import { config as loadEnv } from 'dotenv';
 import express from 'express';
 import { Server } from 'http';
 
 import { AppModule } from '@/app/app.module';
 import { envSchema } from '@/env/env';
+
+loadEnv();
 
 let cachedServer: Server;
 
