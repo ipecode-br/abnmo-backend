@@ -38,6 +38,7 @@ async function bundleLambda() {
       '@nestjs/websockets/socket-module',
     ],
     minify: true,
+    treeShaking: false,
   });
 
   if (await fs.pathExists(envFile)) {

@@ -20,7 +20,6 @@ import { User } from '@/domain/entities/user';
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         entities: [User, Patient, PatientSupport, Diagnostic],
-        migrations: [__dirname + 'infra/database/migrations/**/*.ts'],
         synchronize: false,
         extra: {
           connectionLimit: 10,
