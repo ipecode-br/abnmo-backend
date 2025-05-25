@@ -11,8 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     environment: development
     permissions:
-      id-token: write # Permite a obtenção do token OIDC
-      contents: read # Permissão comum para checkout do código
+      id-token: write # Permission to obtain OIDC token
+      contents: read # Permission to checkout
 
     steps:
       - name: Checkout source
@@ -32,20 +32,8 @@ jobs:
       - name: Set Lambda function name and NODE_ENV based on branch
         id: set-lambda-env
         run: |
-          echo "Detected branch: ${{ github.ref_name }}"
-          if [ "${{ github.ref_name }}" = "dev" ]; then
-            echo "LAMBDA_NAME=ipecode-abnmo-lambda-backend-dev" >> $GITHUB_ENV
-            echo "NODE_ENV=development" >> $GITHUB_ENV
-          elif [ "${{ github.ref_name }}" = "homolog" ]; then
-            echo "LAMBDA_NAME=ipecode-abnmo-lambda-backend-homolog" >> $GITHUB_ENV
-            echo "NODE_ENV=homolog" >> $GITHUB_ENV
-          elif [ "${{ github.ref_name }}" = "main" ]; then
-            echo "LAMBDA_NAME=ipecode-abnmo-lambda-backend-main" >> $GITHUB_ENV
-            echo "NODE_ENV=production" >> $GITHUB_ENV
-          else
-            echo "Branch not supported: ${{ github.ref_name }}"
-            exit 1
-          fi
+          echo "LAMBDA_NAME=ipecode-abnmo-lambda-backend-dev" >> $GITHUB_ENV
+          echo "NODE_ENV=development" >> $GITHUB_ENV
 
       - name: Configure AWS credentials with OIDC
         uses: aws-actions/configure-aws-credentials@v4
@@ -60,9 +48,9 @@ jobs:
           DB_DATABASE: ${{ secrets.DB_DATABASE }}
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          API_BASE_URL: ${{ secrets.API_BASE_URL }}
+          API_PORT: ${{ secrets.API_PORT }}
           NODE_ENV: ${{ env.NODE_ENV }}
-          API_BASE_URL: ${{ env.API_BASE_URL }}
-          API_PORT: ${{ env.API_PORT }}
         run: |
           if [ ! -f lambda.zip ]; then
             echo "❌ lambda.zip not found!"
@@ -70,22 +58,19 @@ jobs:
           fi
           echo "🚀 Deploying to Lambda: $LAMBDA_NAME"
 
-          echo "DB_HOST=${DB_HOST:0:3}***"
           echo "NODE_ENV=$NODE_ENV"
-          echo "API_BASE_URL=$API_BASE_URL"
-          echo "API_PORT=$API_PORT"
 
           aws lambda update-function-configuration \
             --function-name $LAMBDA_NAME \
             --environment "Variables={\
-              DB_HOST=$DB_HOST,\
-              DB_PORT=$DB_PORT,\
-              DB_DATABASE=$DB_DATABASE,\
-              DB_USERNAME=$DB_USERNAME,\
-              DB_PASSWORD=$DB_PASSWORD,\
-              NODE_ENV=$NODE_ENV,\
-              API_BASE_URL=$API_BASE_URL,\
-              API_PORT=$API_PORT\
+                DB_HOST=$DB_HOST,\
+                DB_PORT=$DB_PORT,\
+                DB_DATABASE=$DB_DATABASE,\
+                DB_USERNAME=$DB_USERNAME,\
+                DB_PASSWORD=$DB_PASSWORD,\
+                API_BASE_URL=$API_BASE_URL,\
+                API_PORT=$API_PORT,\
+                NODE_ENV=$NODE_ENV\
               }"
 
           aws lambda update-function-code \
