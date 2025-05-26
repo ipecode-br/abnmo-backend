@@ -1,9 +1,7 @@
-import { execSync } from 'node:child_process';
-import path from 'node:path';
-
-import tsconfigPaths from '@esbuild-plugins/tsconfig-paths';
+import * as path from 'path';
+import { execSync } from 'child_process';
 import { build } from 'esbuild';
-import fs from 'fs-extra';
+import * as fs from 'fs-extra';
 
 const outDir = 'dist-lambda';
 const zipFile = 'lambda.zip';
@@ -23,15 +21,16 @@ async function bundleLambda() {
   }
 
   await build({
-    entryPoints: ['./src/app/lambda.ts'],
+    entryPoints: ['src/lambda.ts'],
     bundle: true,
     platform: 'node',
     target: 'node20',
     outfile: path.join(outDir, 'index.js'),
-    plugins: [tsconfigPaths({ tsconfig: './tsconfig.json' })],
     external: [
       'aws-sdk',
+      'class-transformer',
       'class-transformer/storage',
+      'class-validator',
       '@nestjs/microservices',
       '@nestjs/microservices/microservices-module',
       '@nestjs/websockets',
@@ -39,12 +38,12 @@ async function bundleLambda() {
     ],
     minify: true,
     treeShaking: false,
+    sourcemap: true,
   });
 
   if (await fs.pathExists(envFile)) {
     await fs.copy(envFile, path.join(outDir, '.env'));
   }
-  await fs.copy('dist', path.join(outDir, 'dist'));
 
   try {
     execSync(`cd ${outDir} && zip -r ../${zipFile} .`, { stdio: 'inherit' });

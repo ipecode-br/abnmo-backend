@@ -27,7 +27,7 @@ jobs:
         run: npm ci
 
       - name: Build and package Lambda
-        run: npx ts-node scripts/build-lambda.ts
+        run: npx ts-node infra/scripts/build-lambda.ts
 
       - name: Set Lambda function name and NODE_ENV based on branch
         id: set-lambda-env
