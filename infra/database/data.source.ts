@@ -1,4 +1,3 @@
-import { ConfigService } from '@nestjs/config';
 import { config } from 'dotenv';
 import { DataSource } from 'typeorm';
 
@@ -9,15 +8,13 @@ import { User } from '@/domain/entities/user';
 
 config();
 
-const configService = new ConfigService();
-
 const dataSource = new DataSource({
   type: 'mysql',
-  host: configService.get<string>('DB_HOST'),
-  port: configService.get<number>('DB_EXTERNAL_PORT'),
-  username: configService.get<string>('DB_USERNAME'),
-  password: configService.get<string>('DB_PASSWORD'),
-  database: configService.get<string>('DB_DATABASE'),
+  host: process.env.DB_HOST,
+  port: Number(process.env.DB_PORT),
+  username: process.env.DB_USERNAME,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_DATABASE,
   entities: [User, Patient, PatientSupport, Diagnostic],
   migrations: ['infra/database/migrations/**/*.ts'],
   synchronize: false,

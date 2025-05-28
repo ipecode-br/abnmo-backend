@@ -9,7 +9,7 @@ config();
 const host = process.env.DB_HOST;
 const user = process.env.DB_USERNAME;
 const password = process.env.DB_PASSWORD;
-const port = Number(process.env.DB_EXTERNAL_PORT);
+const port = Number(process.env.DB_PORT);
 
 async function checkDatabase() {
   try {

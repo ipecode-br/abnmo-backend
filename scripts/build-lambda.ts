@@ -1,49 +1,60 @@
-import archiver from 'archiver';
+import { execSync } from 'node:child_process';
+import path from 'node:path';
+
 import { build } from 'esbuild';
 import fs from 'fs-extra';
-import path from 'path';
 
-const outDir = '.lambda-esbuild';
+const outDir = 'dist-lambda';
 const zipFile = 'lambda.zip';
-const entryFile = 'src/lambda.ts';
 const envFile = '.env';
 
 async function bundleLambda() {
-  console.log('🚀 Iniciando build Lambda com esbuild...');
+  console.log('🚀 Building Lambda bundle...');
 
-  // 1. Limpa a pasta
   await fs.remove(outDir);
   await fs.ensureDir(outDir);
 
-  // 2. Build com esbuild
+  try {
+    execSync('npm run build', { stdio: 'inherit' });
+  } catch (error) {
+    console.error('❌ Failed TypeScript build:', error);
+    process.exit(1);
+  }
+
   await build({
-    entryPoints: [entryFile],
+    entryPoints: ['infra/lambda.ts'],
     bundle: true,
     platform: 'node',
-    target: 'node20',
+    target: 'node18',
     outfile: path.join(outDir, 'index.js'),
+    external: [
+      '@nestjs/microservices',
+      '@nestjs/microservices/microservices-module',
+      '@nestjs/websockets',
+      '@nestjs/websockets/socket-module',
+      'class-transformer/storage',
+    ],
     minify: true,
-    // external: ['aws-sdk'],
   });
 
-  // 3. Copia o .env para a build (se existir)
   if (await fs.pathExists(envFile)) {
     await fs.copy(envFile, path.join(outDir, '.env'));
   }
+  await fs.copy('dist', path.join(outDir, 'dist'));
 
-  // 4. Zipa a pasta de build
-  const output = fs.createWriteStream(zipFile);
-  const archive = archiver('zip', { zlib: { level: 9 } });
+  try {
+    execSync(`cd ${outDir} && zip -r ../${zipFile} .`, { stdio: 'inherit' });
+  } catch (error) {
+    console.error('❌ Failed to zip Lambda package:', error);
+    process.exit(1);
+  }
 
-  archive.pipe(output);
-  archive.directory(outDir, false);
-
-  await archive.finalize();
-
-  console.log(`✅ Lambda zip gerado com sucesso: ${zipFile}`);
+  const { size } = await fs.stat(zipFile);
+  console.log(`✅ Lambda bundle created: ${zipFile}`);
+  console.log(`📦 Zip size: ${(size / 1024 / 1024).toFixed(2)} MB`);
 }
 
-bundleLambda().catch((err) => {
-  console.error('❌ Erro ao gerar lambda:', err);
+bundleLambda().catch((error) => {
+  console.error('❌ Lambda build failed:', error);
   process.exit(1);
 });
