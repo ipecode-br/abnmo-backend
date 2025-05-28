@@ -7,11 +7,11 @@ import { EnvModule } from '@/env/env.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
+import { AuthModule } from './http/auth/auth.module';
 import { DiagnosticsModule } from './http/diagnostics/diagnostics.module';
 import { PatientSupportsModule } from './http/patient-supports/patient-supports.module';
 import { PatientsModule } from './http/patients/patients.module';
 import { UsersModule } from './http/users/users.module';
-import { AuthModule } from './http/auth/auth.module';
 
 @Module({
   imports: [
@@ -25,7 +25,7 @@ import { AuthModule } from './http/auth/auth.module';
     PatientsModule,
     PatientSupportsModule,
     DiagnosticsModule,
-    AuthModule
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

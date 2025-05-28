@@ -1,7 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
-  IsBoolean,
-  IsDateString,
   IsEmail,
   IsOptional,
   IsString,
@@ -10,14 +8,14 @@ import {
   MinLength,
 } from 'class-validator';
 
-export class ResponseUserDto {
+export class AuthDto {
   @ApiProperty({
     example: 'user@example.com',
     description: 'Endereço de e-mail único do usuário.',
   })
   @IsEmail({ allow_ip_domain: false }, { message: 'O e-mail deve ser válido' })
   @MaxLength(320, { message: 'O e-mail deve ter no máximo 320 caracteres' })
-  email: string ="";
+  email: string = '';
 
   @ApiProperty({
     example: 'Senha@123',
@@ -38,7 +36,7 @@ export class ResponseUserDto {
   @Matches(/[\W_]/, {
     message: 'A senha deve conter pelo menos um caractere especial',
   })
-  senha: string = "";
+  senha: string = '';
 
   @ApiProperty({
     example: 'eyJhbGciOiJIUzI1NiIsInR5cCI...',
