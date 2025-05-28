@@ -99,6 +99,7 @@ npm run db:migrate
 - `npm run lint:prettier:fix`: Corrige problemas de formatação
 
 ---
+
 ## 📡 Padrão de Respostas da API
 
 ### ✅ Sucesso
@@ -122,6 +123,7 @@ npm run db:migrate
   "data": null
 }
 ```
+
 ## Para mais detalhes consulte o Wiki do projeto em:
-https://github.com/ipecode-br/abnmo-backend/wiki
----
+
+## https://github.com/ipecode-br/abnmo-backend/wiki

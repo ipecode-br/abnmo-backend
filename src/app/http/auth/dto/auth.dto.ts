@@ -9,6 +9,7 @@ import {
 } from 'class-validator';
 
 export class AuthDto {
+  id: number;
   @ApiProperty({
     example: 'user@example.com',
     description: 'Endereço de e-mail único do usuário.',

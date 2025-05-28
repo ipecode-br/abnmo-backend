@@ -18,11 +18,16 @@ export class AuthService {
     senha: string,
   ): Promise<{ access_token: string }> {
     const user = await this.usersService.findByEmail(email);
-    const verifyPassword = await this.bcript.compare(senha, user?.senha);
+    if (!user) {
+      throw new UnauthorizedException('Usuário não autorizado');
+    }
+
+    const verifyPassword = await this.bcript.compare(senha, user.senha);
     if (!verifyPassword) {
       throw new UnauthorizedException('Usuário não autorizado');
     }
-    const payload = { sub: user.senha, username: user.email };
+
+    const payload = { sub: user.id, username: user.email };
     return {
       access_token: await this.jwtService.signAsync(payload),
     };

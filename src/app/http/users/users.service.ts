@@ -56,6 +56,7 @@ export class UsersService {
     }
 
     const modelUserDto = new AuthDto();
+    modelUserDto.id = user.id_usuario;
     modelUserDto.email = user?.email;
     modelUserDto.token_oauth = user.token_oauth;
     if (user.senha) {
