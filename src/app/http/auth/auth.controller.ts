@@ -13,10 +13,27 @@ export class AuthController {
   @ApiResponse({ status: 400, description: 'Dados inválidos' })
   @ApiResponse({ status: 500, description: 'Erro interno no servidor' })
   @ApiBody({ type: AuthDto })
-  signIn(
+  async signIn(
     @Body()
     authDto: AuthDto,
   ) {
-    return this.authService.signIn(authDto.email, authDto.senha);
+    try {
+      const data = await this.authService.signIn(authDto.email, authDto.senha);
+      if (data) {
+        return {
+          success: true,
+          message: 'Login realizado com sucesso!',
+          data: data.access_token,
+        };
+      }
+    } catch (error) {
+      if (error) {
+        return {
+          success: false,
+          message: 'Erro ao realizar login',
+          data: null,
+        };
+      }
+    }
   }
 }

@@ -20,7 +20,7 @@ export class AuthService {
     const user = await this.usersService.findByEmail(email);
     const verifyPassword = await this.bcript.compare(senha, user?.senha);
     if (!verifyPassword) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('Usuário não autorizado');
     }
     const payload = { sub: user.senha, username: user.email };
     return {
