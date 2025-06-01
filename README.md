@@ -10,7 +10,6 @@ Este repositório contém a API do projeto ABNMO, construída com [NestJS](https
 - NestJS
 - TypeORM
 - MySQL
-- Docker
 - Jest (testes)
 - ESLint + Prettier (linting e formatação)
 - Zod (validação)
@@ -41,22 +40,6 @@ npm run start:dev
 ```
 
 Isso iniciará o servidor em modo de desenvolvimento com `watch`.
-
----
-
-## 🐳 Usando Docker
-
-Para subir os serviços com Docker Compose:
-
-```bash
-npm run services:up
-```
-
-Para derrubar os serviços:
-
-```bash
-npm run services:down
-```
 
 ---
 
