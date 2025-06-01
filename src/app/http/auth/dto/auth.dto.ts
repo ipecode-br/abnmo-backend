@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
+  IsNumber,
   IsOptional,
   IsString,
   Matches,
@@ -9,6 +10,8 @@ import {
 } from 'class-validator';
 
 export class AuthDto {
+  @IsOptional()
+  @IsNumber()
   id: number;
   @ApiProperty({
     example: 'user@example.com',
@@ -37,7 +40,7 @@ export class AuthDto {
   @Matches(/[\W_]/, {
     message: 'A senha deve conter pelo menos um caractere especial',
   })
-  senha: string = '';
+  password: string = '';
 
   @ApiProperty({
     example: 'eyJhbGciOiJIUzI1NiIsInR5cCI...',

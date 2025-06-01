@@ -1,11 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity('usuarios')
 export class User {
   @ApiProperty({ example: 1, description: 'Identificador único do usuário' })
   @PrimaryGeneratedColumn({ type: 'integer' })
-  id_usuario: number;
+  id: number;
 
   @ApiProperty({
     example: 'user@example.com',
@@ -18,8 +23,8 @@ export class User {
     example: 'senha123',
     description: 'Senha do usuário armazenada de forma segura (hash).',
   })
-  @Column({ type: 'varchar', length: 50, nullable: true })
-  senha?: string;
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  password?: string;
 
   @ApiProperty({
     example: 0,
@@ -56,20 +61,20 @@ export class User {
     description: 'Nome completo do usuário.',
   })
   @Column({ type: 'varchar', length: 100, nullable: false })
-  nome_completo: string;
+  fullname: string;
 
   @ApiProperty({
     example: '2024-02-27T12:30:00.000Z',
     description: 'Data e hora de cadastro do usuário.',
   })
-  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
-  data_cadastro: Date;
-
   @ApiProperty({
     example: 0,
     description:
       'Indica se o usuário foi deletado logicamente. 1 = Sim, 0 = Não.',
   })
   @Column({ type: 'tinyint', width: 1, default: 0 })
-  flag_deletado: boolean;
+  flag_is_removed: boolean;
+
+  @CreateDateColumn({ type: 'timestamp' })
+  createdAt?: Date;
 }

@@ -1,6 +1,8 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
+import { EnvelopeDTO } from '@/utils/envelope.dto';
+
 import { AuthService } from './auth.service';
 import { AuthDto } from './dto/auth.dto';
 
@@ -16,24 +18,33 @@ export class AuthController {
   async signIn(
     @Body()
     authDto: AuthDto,
-  ) {
+  ): Promise<EnvelopeDTO<string, undefined>> {
     try {
-      const data = await this.authService.signIn(authDto.email, authDto.senha);
-      if (data) {
-        return {
-          success: true,
-          message: 'Login realizado com sucesso!',
-          data: data.access_token,
-        };
-      }
-    } catch (error) {
-      if (error) {
+      const data = await this.authService.signIn(
+        authDto.email,
+        authDto.password,
+      );
+      if (!data) {
         return {
           success: false,
-          message: 'Erro ao realizar login',
-          data: null,
+          message: 'Erro ao ralizar login!',
+          data: undefined,
         };
       }
+      return {
+        success: true,
+        message: 'Login realizado com sucesso!',
+        data: data.access_token,
+      };
+    } catch (error: unknown) {
+      return {
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Erro interno ao realizar login!',
+        data: undefined,
+      };
     }
   }
 }

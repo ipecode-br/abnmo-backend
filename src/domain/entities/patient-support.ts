@@ -9,14 +9,14 @@ import {
 
 import { Patient } from '@/domain/entities/patient';
 
-@Entity('apoios')
+@Entity('support')
 export class PatientSupport {
   @ApiProperty({
     example: 1,
     description: 'Identificador único do apoio',
   })
   @PrimaryGeneratedColumn()
-  id_apoio: number;
+  id_support: number;
 
   @ApiProperty({
     example: 'Amélia da Silva',
@@ -24,7 +24,7 @@ export class PatientSupport {
     required: true,
   })
   @Column({ type: 'varchar', length: 100, nullable: false })
-  nome_apoio: string;
+  support_name: string;
 
   @ApiProperty({
     example: 'Mãe',
@@ -32,7 +32,7 @@ export class PatientSupport {
     required: true,
   })
   @Column({ type: 'varchar', length: 50, nullable: false })
-  parentesco: string;
+  relation: string;
 
   @ApiProperty({
     example: '11987654321',
@@ -43,12 +43,11 @@ export class PatientSupport {
   @Column({ type: 'char', length: 11, nullable: false })
   whatsapp: string;
 
-  // Relação com tabela de pacientes
   @ManyToOne(() => Patient)
-  @JoinColumn({ name: 'id_paciente' }) // Define que 'id_paciente' é a foreign key
-  paciente: Patient;
+  @JoinColumn({ name: 'id_paciente' })
+  patient: Patient;
 
   @ApiProperty({ example: 1, description: 'Identificador único do paciente' })
   @Column({ type: 'integer' })
-  id_paciente: number;
+  id_patient: number;
 }

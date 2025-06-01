@@ -17,6 +17,8 @@ import {
 } from '@nestjs/swagger';
 
 import { Diagnostic } from '@/domain/entities/diagnostic';
+import { EnvelopeDTO } from '@/utils/envelope.dto';
+import { validateDto } from '@/utils/validate.dto';
 
 import { DiagnosticsService } from './diagnostics.service';
 import { CreateDiagnosticDto } from './dto/create-diagnostic.dto';
@@ -34,15 +36,38 @@ export class DiagnosticsController {
   @ApiResponse({ status: 400, description: 'Dados inválidos' })
   @ApiResponse({ status: 500, description: 'Erro interno no servidor' })
   @ApiBody({ type: CreateDiagnosticDto })
-  public async create(@Body() createDiagnosticDto: CreateDiagnosticDto) {
-    const diagnostic =
-      await this.diagnosticsService.create(createDiagnosticDto);
-
-    this.logger.log(
-      `Diagnóstico criado com sucesso: ${JSON.stringify(diagnostic)}`,
-    );
-
-    return diagnostic;
+  public async create(
+    @Body() createDiagnosticDto: CreateDiagnosticDto,
+  ): Promise<EnvelopeDTO<Diagnostic, undefined>> {
+    try {
+      await validateDto(createDiagnosticDto);
+      const diagnostic =
+        await this.diagnosticsService.create(createDiagnosticDto);
+      if (!diagnostic) {
+        return {
+          success: false,
+          message: 'Erro ao criar Diagnóstico!',
+          data: undefined,
+        };
+      }
+      this.logger.log(
+        `Diagnóstico criado com sucesso: ${JSON.stringify(diagnostic)}`,
+      );
+      return {
+        success: true,
+        message: 'Diagnóstico criado com sucesso',
+        data: diagnostic,
+      };
+    } catch (error: unknown) {
+      return {
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Erro interno ao criar diagnóstico',
+        data: undefined,
+      };
+    }
   }
 
   @Get()
@@ -52,8 +77,31 @@ export class DiagnosticsController {
     description: 'Lista de diagnósticos retornada com sucesso',
     type: [Diagnostic],
   })
-  public async findAll() {
-    return await this.diagnosticsService.findAll();
+  public async findAll(): Promise<EnvelopeDTO<Diagnostic[], undefined>> {
+    try {
+      const diagnostics = await this.diagnosticsService.findAll();
+      if (!diagnostics) {
+        return {
+          success: false,
+          message: 'Erro ao retornar lista de diagnósticos',
+          data: undefined,
+        };
+      }
+      return {
+        success: true,
+        message: 'Lista de diagnósticos',
+        data: diagnostics,
+      };
+    } catch (error: unknown) {
+      return {
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Erro interno ao retornar lista de diagnósticos',
+        data: undefined,
+      };
+    }
   }
 
   @Get(':id')
@@ -61,12 +109,34 @@ export class DiagnosticsController {
   @ApiResponse({ status: 200, description: 'Diagnóstico encontrado' })
   @ApiResponse({ status: 404, description: 'Diagnóstico não encontrado' })
   @ApiParam({ name: 'id', type: 'number', description: 'ID do diagnóstico' })
-  public async findById(@Param('id', ParseIntPipe) id: number) {
-    const diagnostic = await this.diagnosticsService.findById(id);
-
-    this.logger.log(`Diagnóstico encontrado`);
-
-    return diagnostic;
+  public async findById(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<EnvelopeDTO<Diagnostic, undefined>> {
+    try {
+      const diagnostic = await this.diagnosticsService.findById(id);
+      if (!diagnostic) {
+        return {
+          success: false,
+          message: 'Diagnóstico não encontrado',
+          data: undefined,
+        };
+      }
+      this.logger.log(`Diagnóstico encontrado`);
+      return {
+        success: true,
+        message: 'Diagnóstico encontrado',
+        data: diagnostic,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Erro interno ao encontrar diagnóstico',
+        data: undefined,
+      };
+    }
   }
 
   @Delete(':id')
@@ -75,12 +145,32 @@ export class DiagnosticsController {
   @ApiResponse({ status: 404, description: 'Diagnóstico não encontrado' })
   @ApiParam({ name: 'id', type: 'number', description: 'ID do diagnóstico' })
   public async remove(@Param('id', ParseIntPipe) id: number) {
-    const diagnostic = await this.diagnosticsService.remove(id);
-
-    this.logger.log(
-      `Diagnóstico removido com sucesso: ${JSON.stringify(diagnostic)}`,
-    );
-
-    return diagnostic;
+    try {
+      const diagnostic = await this.diagnosticsService.remove(id);
+      if (!diagnostic) {
+        return {
+          success: false,
+          message: 'Erro ao remover diagnóstico',
+          data: diagnostic,
+        };
+      }
+      this.logger.log(
+        `Diagnóstico removido com sucesso: ${JSON.stringify(diagnostic)}`,
+      );
+      return {
+        success: true,
+        message: 'Diagnóstico removido com sucesso',
+        data: diagnostic,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Erro intertno ao remover diagnóstico',
+        data: null,
+      };
+    }
   }
 }

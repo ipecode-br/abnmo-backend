@@ -11,6 +11,7 @@ import {
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { Patient } from '@/domain/entities/patient';
+import { EnvelopeDTO } from '@/utils/envelope.dto';
 import { validateDto } from '@/utils/validate.dto';
 
 import { CreatePatientDto } from './dto/create-patient.dto';
@@ -36,14 +37,36 @@ export class PatientsController {
   })
   public async create(
     @Body() createPatientDto: CreatePatientDto,
-  ): Promise<Patient> {
-    await validateDto(createPatientDto);
+  ): Promise<EnvelopeDTO<Patient, null>> {
+    try {
+      await validateDto(createPatientDto);
 
-    const patient = await this.patientsService.create(createPatientDto);
-
-    this.logger.log(`Paciente criado com sucesso: ${JSON.stringify(patient)}`);
-
-    return patient;
+      const patient = await this.patientsService.create(createPatientDto);
+      if (!patient) {
+        return {
+          success: false,
+          message: 'Erro ao criar paciente',
+          data: undefined,
+        };
+      }
+      this.logger.log(
+        `Paciente criado com sucesso: ${JSON.stringify(patient)}`,
+      );
+      return {
+        success: true,
+        message: 'Paciente criado com sucesso',
+        data: undefined,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Erro interno ao criar paciente',
+        data: undefined,
+      };
+    }
   }
 
   @Get()
@@ -53,8 +76,31 @@ export class PatientsController {
     description: 'Lista de pacientes',
     type: [Patient],
   })
-  public async findAll(): Promise<Patient[]> {
-    return await this.patientsService.findAll();
+  public async findAll(): Promise<EnvelopeDTO<Patient[], null>> {
+    try {
+      const patients = await this.patientsService.findAll();
+      if (!patients) {
+        return {
+          success: false,
+          message: 'Erro ao listas todos os pacientes!',
+          data: undefined,
+        };
+      }
+      return {
+        success: true,
+        message: 'Lista de pacientes retornada com sucesso!',
+        data: patients,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Erro interno ao listas todos os pacientes!',
+        data: undefined,
+      };
+    }
   }
 
   @Get(':id')
@@ -67,25 +113,68 @@ export class PatientsController {
   @ApiResponse({ status: 404, description: 'Paciente não encontrado' })
   public async findById(
     @Param('id', ParseIntPipe) id: number,
-  ): Promise<Patient> {
-    const patient = await this.patientsService.findById(id);
-
-    this.logger.log(`Paciente encontrado`);
-
-    return patient;
+  ): Promise<EnvelopeDTO<Patient, null>> {
+    try {
+      const patient = await this.patientsService.findById(id);
+      if (!patient) {
+        return {
+          success: false,
+          message: 'Erro ao encontrar paciente!',
+          data: undefined,
+        };
+      }
+      this.logger.log(`Paciente encontrado`);
+      return {
+        success: true,
+        message: 'Paciente encontrado',
+        data: patient,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Erro interno ao encontrar paciente!',
+        data: undefined,
+      };
+    }
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Remove um paciente pelo ID' })
   @ApiResponse({ status: 200, description: 'Paciente removido com sucesso' })
   @ApiResponse({ status: 404, description: 'Paciente não encontrado' })
-  public async remove(@Param('id', ParseIntPipe) id: number): Promise<Patient> {
-    const patient = await this.patientsService.remove(id);
+  public async remove(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<EnvelopeDTO<Patient, null>> {
+    try {
+      const patient = await this.patientsService.remove(id);
+      if (!patient) {
+        return {
+          success: false,
+          message: 'Erro ao remover paciente!',
+          data: undefined,
+        };
+      }
 
-    this.logger.log(
-      `Paciente removido com sucesso: ${JSON.stringify(patient)}`,
-    );
-
-    return patient;
+      this.logger.log(
+        `Paciente removido com sucesso: ${JSON.stringify(patient)}`,
+      );
+      return {
+        success: true,
+        message: '`Paciente removido com sucesso',
+        data: patient,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Erro interno ao remover paciente!',
+        data: undefined,
+      };
+    }
   }
 }

@@ -23,7 +23,7 @@ export class UsersRepository {
   public async findById(id: number): Promise<User | null> {
     const user = await this.usersRepository.findOne({
       where: {
-        id_usuario: id,
+        id: id,
       },
     });
 

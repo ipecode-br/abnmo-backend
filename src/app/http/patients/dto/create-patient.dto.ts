@@ -26,7 +26,7 @@ export class CreatePatientDto {
   @MaxLength(100, {
     message: 'A descrição do gênero deve ter no máximo 100 caracteres',
   })
-  desc_genero: string;
+  desc_gender: string;
 
   @ApiProperty({
     example: '1995-08-25',
@@ -34,7 +34,7 @@ export class CreatePatientDto {
     required: true,
   })
   @IsISO8601({}, { message: 'Informe uma data no formato YYYY-MM-DD' })
-  data_nascimento: string;
+  birth_of_date: string;
 
   @ApiProperty({
     example: 'São Paulo',
@@ -43,7 +43,7 @@ export class CreatePatientDto {
   })
   @IsString({ message: 'A cidade do paciente deve ser uma string' })
   @MaxLength(50, { message: 'A cidade deve ter no máximo 50 caracteres' })
-  cidade: string;
+  city: string;
 
   @ApiProperty({
     example: 'SP',
@@ -60,7 +60,7 @@ export class CreatePatientDto {
   @Length(2, 2, {
     message: 'A sigla do estado deve ter exatamente 2 caracteres',
   })
-  sigla_estado: string;
+  state: string;
 
   @ApiProperty({
     example: '11987654321',
@@ -91,7 +91,7 @@ export class CreatePatientDto {
   @MaxLength(255, {
     message: 'A URL da foto deve ter no máximo 255 caracteres',
   })
-  url_foto: string;
+  url_photo: string;
 
   @ApiProperty({
     example: 'true',
@@ -101,7 +101,7 @@ export class CreatePatientDto {
   @IsBoolean({
     message: 'Possui deficiência deve ser um booleano (true ou false)',
   })
-  possui_deficiencia: boolean;
+  have_disability: boolean;
 
   @ApiProperty({
     example: 'Deficiência visual e auditiva',
@@ -114,7 +114,7 @@ export class CreatePatientDto {
   @MaxLength(500, {
     message: 'A descrição de deficiências deve ter no máximo 500 caracteres',
   })
-  desc_deficiencias?: string;
+  desc_disability?: string;
 
   @ApiProperty({
     example: 'true',
@@ -125,7 +125,7 @@ export class CreatePatientDto {
     message:
       'Precisa de assistência legal deve ser um booleano (true ou false)',
   })
-  precisa_assist_legal: boolean;
+  need_legal_help: boolean;
 
   @ApiProperty({
     example: 'true',
@@ -135,7 +135,7 @@ export class CreatePatientDto {
   @IsBoolean({
     message: 'Usa medicamento deve ser um booleano (true ou false)',
   })
-  usa_medicamento: boolean;
+  use_medicine: boolean;
 
   @ApiProperty({
     example: 'Medicamento para pressão alta, uso diário.',
@@ -148,7 +148,7 @@ export class CreatePatientDto {
   @MaxLength(500, {
     message: 'A descrição dos medicamentos deve ter no máximo 500 caracteres',
   })
-  desc_medicamentos?: string;
+  desc_medicine?: string;
 
   @ApiProperty({
     example: 'diagnostico_usuario.pdf',
@@ -160,7 +160,7 @@ export class CreatePatientDto {
   @MaxLength(200, {
     message: 'O arquivo do diagnóstico deve ter no máximo 200 caracteres',
   })
-  filename_diagnostico?: string;
+  filename_diagnostic?: string;
 
   @ApiProperty({
     example: 1,
@@ -168,7 +168,7 @@ export class CreatePatientDto {
     required: true,
   })
   @IsInt({ message: 'O id_diagnostico deve ser um número inteiro' })
-  id_diagnostico: number;
+  id_diagnostic: number;
 
   @ApiProperty({
     example: 1,
@@ -176,5 +176,5 @@ export class CreatePatientDto {
     required: true,
   })
   @IsInt({ message: 'O id_usuario deve ser um número inteiro' })
-  id_usuario: number;
+  id_user: number;
 }

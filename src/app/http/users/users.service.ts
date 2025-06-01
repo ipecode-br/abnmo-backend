@@ -7,6 +7,7 @@ import * as bcrypt from 'bcryptjs';
 
 import { BcryptHasher } from '@/app/cryptography/bcrypt-hasher';
 import type { User } from '@/domain/entities/user';
+import { EnvelopeDTO } from '@/utils/envelope.dto';
 
 import { AuthDto } from '../auth/dto/auth.dto';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -32,14 +33,16 @@ export class UsersService {
     createUserDto.flag_login_facebook =
       createUserDto.flag_login_facebook ?? false;
     createUserDto.flag_login_gmail = createUserDto.flag_login_gmail ?? false;
-    createUserDto.flag_ativo = createUserDto.flag_ativo ?? true;
-    createUserDto.flag_deletado = createUserDto.flag_deletado ?? false;
-    if (createUserDto.senha) {
-      createUserDto.senha = await this.bcryptHasher.hash(createUserDto.senha);
+    createUserDto.flag_active = createUserDto.flag_active ?? true;
+    createUserDto.flag_is_removed = createUserDto.flag_is_removed ?? false;
+    if (createUserDto.password) {
+      createUserDto.password = await this.bcryptHasher.hash(
+        createUserDto.password,
+      );
     }
-    if (!createUserDto.data_cadastro) {
-      createUserDto.data_cadastro = new Date();
-    }
+    // if (!createUserDto.createdAt) {
+    //   createUserDto.createdAt = new Date();
+    // }
     const user = this.userRepository.create(createUserDto);
     return user;
   }
@@ -48,7 +51,7 @@ export class UsersService {
     return await this.userRepository.findAll();
   }
 
-  async findByEmail(email: string): Promise<AuthDto> {
+  async findByEmail(email: string): Promise<EnvelopeDTO<AuthDto, undefined>> {
     const user = await this.userRepository.findByEmail(email);
 
     if (!user) {
@@ -56,13 +59,17 @@ export class UsersService {
     }
 
     const modelUserDto = new AuthDto();
-    modelUserDto.id = user.id_usuario;
+    modelUserDto.id = user.id;
     modelUserDto.email = user?.email;
     modelUserDto.token_oauth = user.token_oauth;
-    if (user.senha) {
-      modelUserDto.senha = user.senha;
+    if (user.password) {
+      modelUserDto.password = user.password;
     }
-    return modelUserDto;
+    return {
+      success: true,
+      message: 'Usuario retornado para o login!',
+      data: modelUserDto,
+    };
   }
   async findById(id: number): Promise<User> {
     const user = await this.userRepository.findById(id);
@@ -82,9 +89,12 @@ export class UsersService {
     }
 
     // Verifica se a senha foi enviada no update
-    if (updateUserDto.senha) {
+    if (updateUserDto.password) {
       const saltRounds = 10;
-      updateUserDto.senha = await bcrypt.hash(updateUserDto.senha, saltRounds);
+      updateUserDto.password = await bcrypt.hash(
+        updateUserDto.password,
+        saltRounds,
+      );
     }
 
     //Atualiza os campos alterados

@@ -11,5 +11,5 @@ export class CreateDiagnosticDto {
   @MaxLength(40, {
     message: 'A descrição do diagnóstico deve ter no máximo 40 caracteres',
   })
-  desc_diagnostico: string;
+  desc_diagnostic: string;
 }

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 import { PatientsRepository } from '@/app/http/patients/patients.repository';
 
@@ -24,7 +28,9 @@ export class PatientSupportsService {
     const patientSupport = await this.patientSupportsRepository.create(
       createPatientSupportDto,
     );
-
+    if (!patientSupport) {
+      throw new BadRequestException('Erro ao criar apoio!');
+    }
     return patientSupport;
   }
 

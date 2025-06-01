@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsBoolean,
-  IsDateString,
   IsEmail,
   IsOptional,
   IsString,
@@ -17,7 +16,7 @@ export class CreateUserDto {
   })
   @IsString({ message: 'O nome deve ser uma string válida' })
   @MaxLength(100, { message: 'O nome deve ter no máximo 100 caracteres' })
-  nome_completo: string;
+  fullname: string;
 
   @ApiProperty({
     example: 'user@example.com',
@@ -46,7 +45,7 @@ export class CreateUserDto {
   @Matches(/[\W_]/, {
     message: 'A senha deve conter pelo menos um caractere especial',
   })
-  senha?: string;
+  password?: string;
 
   @ApiProperty({
     example: 0,
@@ -88,15 +87,6 @@ export class CreateUserDto {
   token_oauth?: string;
 
   @ApiProperty({
-    example: '2024-02-27T12:30:00.000Z',
-    description: 'Data e hora de cadastro do usuário.',
-    required: false,
-  })
-  @IsOptional()
-  @IsDateString()
-  data_cadastro?: Date;
-
-  @ApiProperty({
     example: 1,
     description: 'Indica se o usuário está ativo. 1 = Sim, 0 = Não.',
   })
@@ -104,7 +94,7 @@ export class CreateUserDto {
   @IsBoolean({
     message: 'O campo flag_ativo deve ser um booleano (true ou false)',
   })
-  flag_ativo: boolean;
+  flag_active: boolean;
 
   @ApiProperty({
     example: 0,
@@ -115,5 +105,5 @@ export class CreateUserDto {
   @IsBoolean({
     message: 'O campo flag_deletado deve ser um booleano (true ou false)',
   })
-  flag_deletado: boolean;
+  flag_is_removed: boolean;
 }

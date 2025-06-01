@@ -24,7 +24,7 @@ export class PatientSupportsRepository {
   public async findById(id: number): Promise<PatientSupport | null> {
     const patientSupport = await this.patientSupportsRepository.findOne({
       where: {
-        id_apoio: id,
+        id_support: id,
       },
       relations: ['paciente'],
     });

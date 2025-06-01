@@ -21,7 +21,7 @@ export class PatientsService {
 
   async create(createPatientDto: CreatePatientDto): Promise<Patient> {
     const userExists = await this.usersRepository.findById(
-      createPatientDto.id_usuario,
+      createPatientDto.id_user,
     );
 
     if (!userExists) {
@@ -29,7 +29,7 @@ export class PatientsService {
     }
 
     const diagnosticExists = await this.diagnosticsRepository.findById(
-      createPatientDto.id_diagnostico,
+      createPatientDto.id_diagnostic,
     );
 
     if (!diagnosticExists) {
@@ -37,7 +37,7 @@ export class PatientsService {
     }
 
     const patientExists = await this.patientsRepository.findByIdUsuario(
-      createPatientDto.id_usuario,
+      createPatientDto.id_user,
     );
 
     if (patientExists) {

@@ -17,7 +17,7 @@ const dataSource = new DataSource({
   database: process.env.DB_DATABASE,
   entities: [User, Patient, PatientSupport, Diagnostic],
   migrations: ['infra/database/migrations/**/*.ts'],
-  synchronize: false,
+  synchronize: true,
 });
 
 export default dataSource;

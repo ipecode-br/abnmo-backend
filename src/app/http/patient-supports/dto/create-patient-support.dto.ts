@@ -11,7 +11,7 @@ export class CreatePatientSupportDto {
   @MaxLength(100, {
     message: 'O nome do apoio deve ter no máximo 100 caracteres',
   })
-  nome_apoio: string;
+  support_name: string;
 
   @ApiProperty({
     example: 'Mãe',
@@ -19,7 +19,7 @@ export class CreatePatientSupportDto {
     required: true,
   })
   @IsString({ message: 'O grau de parentesco deve ser uma string' })
-  parentesco: string;
+  relation: string;
 
   @ApiProperty({
     example: '11987654321',

@@ -15,19 +15,25 @@ export class AuthService {
 
   async signIn(
     email: string,
-    senha: string,
+    password: string,
   ): Promise<{ access_token: string }> {
     const user = await this.usersService.findByEmail(email);
     if (!user) {
-      throw new UnauthorizedException('Usuário não autorizado');
+      throw new UnauthorizedException('Usuário não enconbtrado!');
     }
 
-    const verifyPassword = await this.bcript.compare(senha, user.senha);
+    if (!user.data?.password) {
+      throw new UnauthorizedException('Senha não encontrada para o usuário!');
+    }
+    const verifyPassword = await this.bcript.compare(
+      password,
+      user.data.password,
+    );
     if (!verifyPassword) {
       throw new UnauthorizedException('Usuário não autorizado');
     }
 
-    const payload = { sub: user.id, username: user.email };
+    const payload = { sub: user.data.id, username: user.data.email };
     return {
       access_token: await this.jwtService.signAsync(payload),
     };

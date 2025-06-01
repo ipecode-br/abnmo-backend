@@ -3,14 +3,14 @@ import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
 
-@Entity('diagnosticos')
+@Entity('diagnostics')
 export class Diagnostic {
   @ApiProperty({
     example: 1,
     description: 'Identificador único do diagnóstico',
   })
   @PrimaryGeneratedColumn({ type: 'integer' })
-  id_diagnostico: number;
+  id: number;
 
   @ApiProperty({
     example: 'Diagnóstico de hipertensão arterial',
@@ -18,8 +18,8 @@ export class Diagnostic {
     required: true,
   })
   @Column({ type: 'varchar', length: 40 })
-  desc_diagnostico: string;
+  desc_diagnostic: string;
 
-  @OneToMany(() => Patient, (patient) => patient.diagnostico)
-  pacientes: Patient[];
+  @OneToMany(() => Patient, (patient) => patient.diagnostic)
+  patients: Patient[];
 }

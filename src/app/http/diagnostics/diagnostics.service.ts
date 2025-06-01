@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 import type { Diagnostic } from '@/domain/entities/diagnostic';
 
@@ -10,10 +14,12 @@ export class DiagnosticsService {
   constructor(private readonly diagnosticsRepository: DiagnosticsRepository) {}
 
   async create(createDiagnosticDto: CreateDiagnosticDto): Promise<Diagnostic> {
-    const diagnostic = this.diagnosticsRepository.create({
-      desc_diagnostico: createDiagnosticDto.desc_diagnostico,
+    const diagnostic = await this.diagnosticsRepository.create({
+      desc_diagnostic: createDiagnosticDto.desc_diagnostic,
     });
-
+    if (!diagnostic) {
+      throw new BadRequestException('Erro ao criar diagnóstico!');
+    }
     return diagnostic;
   }
 
