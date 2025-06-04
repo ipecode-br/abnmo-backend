@@ -11,6 +11,7 @@ import {
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { Patient } from '@/domain/entities/patient';
+import { PatientFormsStatus } from '@/domain/types/form-types';
 import { EnvelopeDTO } from '@/utils/envelope.dto';
 import { validateDto } from '@/utils/validate.dto';
 
@@ -179,51 +180,25 @@ export class PatientsController {
   }
 
   @Get('forms/status')
-  @ApiOperation({ summary: 'Obtém todos os formulários separados por status' })
+  @ApiOperation({ summary: 'Lista formulários pendentes por paciente' })
   @ApiResponse({
     status: 200,
-    description: 'Formulários separados por status de preenchimento',
-    schema: {
-      type: 'object',
-      properties: {
-        success: { type: 'boolean' },
-        message: { type: 'string' },
-        data: {
-          type: 'object',
-          properties: {
-            completeForms: {
-              type: 'array',
-              items: { $ref: '#/components/schemas/Patient' },
-            },
-            pendingForms: {
-              type: 'array',
-              items: { $ref: '#/components/schemas/Patient' },
-            },
-          },
-        },
-      },
-    },
+    description: 'Lista de formulários pendentes por paciente',
   })
   public async getFormsStatus(): Promise<
-    EnvelopeDTO<
-      {
-        completeForms: Patient[];
-        pendingForms: Patient[];
-      },
-      null
-    >
+    EnvelopeDTO<PatientFormsStatus[], null>
   > {
     try {
-      const { completeForms, pendingForms } =
-        await this.patientsService.getFormsStatus();
+      const formsStatus = await this.patientsService.getPatientFormsStatus();
+      const pendingCount = formsStatus.reduce(
+        (total, patient) => total + patient.pendingForms.length,
+        0,
+      );
 
       return {
         success: true,
-        message: 'Status dos formulários obtidos com sucesso',
-        data: {
-          completeForms,
-          pendingForms,
-        },
+        message: `${pendingCount} formulário(s) pendente(s) no total`,
+        data: formsStatus,
       };
     } catch (error) {
       return {
@@ -231,8 +206,8 @@ export class PatientsController {
         message:
           error instanceof Error
             ? error.message
-            : 'Erro ao verificar status dos formulários',
-        data: undefined,
+            : 'Erro ao verificar formulários pendentes',
+        data: [],
       };
     }
   }

@@ -100,4 +100,10 @@ export class PatientsRepository {
 
     return { completeForms, pendingForms };
   }
+
+  public async getPatientsWithRelations(): Promise<Patient[]> {
+    return this.patientsRepository.find({
+      relations: ['user', 'support'], // Adicione outras relações conforme necessário
+    });
+  }
 }

@@ -7,9 +7,15 @@ import {
 import { DiagnosticsRepository } from '@/app/http/diagnostics/diagnostics.repository';
 import { UsersRepository } from '@/app/http/users/users.repository';
 import type { Patient } from '@/domain/entities/patient';
+import {
+  FormType,
+  PatientFormsStatus,
+  PendingForm,
+} from '@/domain/types/form-types';
 
 import { CreatePatientDto } from './dto/create-patient.dto';
 import { PatientsRepository } from './patients.repository';
+import { validateTriagemForm } from './validators/form-validators';
 
 @Injectable()
 export class PatientsService {
@@ -77,16 +83,27 @@ export class PatientsService {
     return patient;
   }
 
-  async getFormsStatus() {
-    const { completeForms, pendingForms } =
-      await this.patientsRepository.getFormsStatus();
-    return {
-      completeForms,
-      pendingForms,
-      counts: {
-        complete: completeForms.length,
-        pending: pendingForms.length,
-      },
-    };
+  async getPatientFormsStatus(): Promise<PatientFormsStatus[]> {
+    const patients = await this.patientsRepository.getPatientsWithRelations();
+
+    return patients.map((patient) => {
+      const pendingForms: PendingForm[] = [];
+      const completedForms: FormType[] = [];
+
+      // Validação do formulário de triagem
+      const triagemStatus = validateTriagemForm(patient);
+      if (triagemStatus) {
+        pendingForms.push(triagemStatus);
+      } else {
+        completedForms.push('triagem');
+      }
+
+      return {
+        patientId: Number(patient.cpf), // Conversão explícita para number
+        patientName: patient.user?.fullname || 'Não informado',
+        pendingForms,
+        completedForms,
+      };
+    });
   }
 }
