@@ -76,4 +76,17 @@ export class PatientsService {
 
     return patient;
   }
+
+  async getFormsStatus() {
+    const { completeForms, pendingForms } =
+      await this.patientsRepository.getFormsStatus();
+    return {
+      completeForms,
+      pendingForms,
+      counts: {
+        complete: completeForms.length,
+        pending: pendingForms.length,
+      },
+    };
+  }
 }

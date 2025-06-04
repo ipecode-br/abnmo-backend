@@ -177,4 +177,63 @@ export class PatientsController {
       };
     }
   }
+
+  @Get('forms/status')
+  @ApiOperation({ summary: 'Obtém todos os formulários separados por status' })
+  @ApiResponse({
+    status: 200,
+    description: 'Formulários separados por status de preenchimento',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean' },
+        message: { type: 'string' },
+        data: {
+          type: 'object',
+          properties: {
+            completeForms: {
+              type: 'array',
+              items: { $ref: '#/components/schemas/Patient' },
+            },
+            pendingForms: {
+              type: 'array',
+              items: { $ref: '#/components/schemas/Patient' },
+            },
+          },
+        },
+      },
+    },
+  })
+  public async getFormsStatus(): Promise<
+    EnvelopeDTO<
+      {
+        completeForms: Patient[];
+        pendingForms: Patient[];
+      },
+      null
+    >
+  > {
+    try {
+      const { completeForms, pendingForms } =
+        await this.patientsService.getFormsStatus();
+
+      return {
+        success: true,
+        message: 'Status dos formulários obtidos com sucesso',
+        data: {
+          completeForms,
+          pendingForms,
+        },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Erro ao verificar status dos formulários',
+        data: undefined,
+      };
+    }
+  }
 }

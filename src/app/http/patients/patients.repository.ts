@@ -62,4 +62,42 @@ export class PatientsRepository {
 
     return patientDeleted;
   }
+
+  public async getFormsStatus(): Promise<{
+    completeForms: Patient[];
+    pendingForms: Patient[];
+  }> {
+    const allPatients = await this.patientsRepository.find({
+      relations: ['support', 'user'],
+    });
+
+    const completeForms: Patient[] = [];
+    const pendingForms: Patient[] = [];
+
+    allPatients.forEach((patient) => {
+      const patientComplete = [
+        patient.desc_gender,
+        patient.birth_of_date,
+        patient.city,
+        patient.state,
+        patient.whatsapp,
+        patient.cpf,
+        patient.url_photo,
+        patient.have_disability !== undefined,
+        patient.need_legal_help !== undefined,
+        patient.use_medicine !== undefined,
+        patient.id_diagnostic,
+      ].every((field) => field !== undefined && field !== null && field !== '');
+
+      const supportComplete = patient.support && patient.support.length > 0;
+
+      if (patientComplete && supportComplete) {
+        completeForms.push(patient);
+      } else {
+        pendingForms.push(patient);
+      }
+    });
+
+    return { completeForms, pendingForms };
+  }
 }
