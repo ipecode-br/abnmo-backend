@@ -11,6 +11,7 @@ import {
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { Patient } from '@/domain/entities/patient';
+import { PatientFormsStatus } from '@/domain/types/form-types';
 import { EnvelopeDTO } from '@/utils/envelope.dto';
 import { validateDto } from '@/utils/validate.dto';
 
@@ -174,6 +175,39 @@ export class PatientsController {
             ? error.message
             : 'Erro interno ao remover paciente!',
         data: undefined,
+      };
+    }
+  }
+
+  @Get('forms/status')
+  @ApiOperation({ summary: 'Lista formulários pendentes por paciente' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de formulários pendentes por paciente',
+  })
+  public async getFormsStatus(): Promise<
+    EnvelopeDTO<PatientFormsStatus[], null>
+  > {
+    try {
+      const formsStatus = await this.patientsService.getPatientFormsStatus();
+      const pendingCount = formsStatus.reduce(
+        (total, patient) => total + patient.pendingForms.length,
+        0,
+      );
+
+      return {
+        success: true,
+        message: `${pendingCount} formulário(s) pendente(s) no total`,
+        data: formsStatus,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Erro ao verificar formulários pendentes',
+        data: [],
       };
     }
   }

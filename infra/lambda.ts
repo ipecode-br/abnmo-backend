@@ -32,7 +32,7 @@ async function bootstrapServer(): Promise<Server> {
     app.enableCors();
 
     await app.init();
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+
     cachedServer = createServer(expressApp);
   }
   return cachedServer;
