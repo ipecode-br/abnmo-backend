@@ -7,12 +7,12 @@ import { EnvService } from '@/env/env.service';
 
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
+import { AuthGuard } from './auth.guard';
 import { AuthService } from './auth.service';
 
 @Module({
   imports: [
     UsersModule,
-    BcryptHasher,
     EnvModule,
     JwtModule.registerAsync({
       imports: [EnvModule, BcryptHasher],
@@ -23,8 +23,8 @@ import { AuthService } from './auth.service';
       }),
     }),
   ],
-  providers: [AuthService, BcryptHasher],
+  providers: [AuthService, BcryptHasher, AuthGuard],
   controllers: [AuthController],
-  exports: [AuthService],
+  exports: [AuthService, AuthGuard, JwtModule, BcryptHasher],
 })
 export class AuthModule {}
