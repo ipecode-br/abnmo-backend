@@ -19,6 +19,7 @@ lerna-debug.log*
 
 # OS
 .DS_Store
+.trash
 
 # Tests
 /coverage

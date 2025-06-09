@@ -21,26 +21,27 @@ async function bootstrap(): Promise<void> {
   app.useGlobalFilters(new HttpExceptionFilter());
 
   const config = new DocumentBuilder()
-    .setTitle('API de Exemplo')
-    .setDescription('Descrição da API')
-    .setVersion('1.0')
-    .addTag('example')
+    .setTitle('SVM - Sistema Viver Melhor')
+    .setDescription(
+      'Esta documentação lista as rotas disponíveis da aplicação, bem como seus respectivos requisitos e dados retornados.',
+    )
+    .setVersion('0.0.1')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+  SwaggerModule.setup('swagger', app, document);
 
   const envService = app.get(EnvService);
 
-  const jwt = envService.get('JWT_SECRET');
-  const baseUrl = envService.get('API_BASE_URL');
-  const port = envService.get('API_PORT');
+  const BASE_URL = envService.get('API_BASE_URL');
+  const PORT = envService.get('API_PORT');
+  const JWT_SECRET = envService.get('JWT_SECRET');
 
-  await app.listen(port);
-  console.log(`🚀 Server running on: ${baseUrl}:${port}`);
-  console.log(`📘 Swagger running on: ${baseUrl}:${port}/api`);
-  console.log('JWT_SECRET carregado:', jwt);
+  await app.listen(PORT).then(() => {
+    console.log(`🚀 Server running on ${BASE_URL}:${PORT}`);
+    console.log(`📘 Swagger running on ${BASE_URL}:${PORT}/swagger`);
+    console.log('🔑 JWT_SECRET value:', JWT_SECRET);
+  });
 }
 
-// Prevent ESLint `no-floating-promises` error
 void bootstrap();
