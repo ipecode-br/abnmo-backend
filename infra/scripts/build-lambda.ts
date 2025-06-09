@@ -29,8 +29,7 @@ async function buildLambda() {
     treeShaking: false,
     sourcemap: false,
     external: [
-      'class-transformer',
-      'class-validator',
+      'class-transformer/storage',
       '@nestjs/microservices',
       '@nestjs/websockets/socket-module',
       '@nestjs/microservices/microservices-module',
