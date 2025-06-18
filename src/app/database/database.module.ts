@@ -1,13 +1,14 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { Diagnostic } from '@/domain/entities/diagnostic';
-import { Patient } from '@/domain/entities/patient';
-import { PatientSupport } from '@/domain/entities/patient-support';
-import { User } from '@/domain/entities/user';
+// import { Diagnostic } from '@/domain/entities/diagnostic';
+// import { Patient } from '@/domain/entities/patient';
+// import { PatientSupport } from '@/domain/entities/patient-support';
+// import { User } from '@/domain/entities/user';
 import { EnvModule } from '@/env/env.module';
 import { EnvService } from '@/env/env.service';
 
+// TODO: uncomment entities
 @Module({
   imports: [
     TypeOrmModule.forRootAsync({
@@ -20,7 +21,12 @@ import { EnvService } from '@/env/env.service';
         database: env.get('DB_DATABASE'),
         username: env.get('DB_USERNAME'),
         password: env.get('DB_PASSWORD'),
-        entities: [User, Patient, PatientSupport, Diagnostic],
+        entities: [
+          // User,
+          // Patient,
+          // PatientSupport,
+          // Diagnostic
+        ],
         migrations: [__dirname + 'infra/database/migrations/**/*.ts'],
         synchronize: false,
         extra: {

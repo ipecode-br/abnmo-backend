@@ -1,65 +1,65 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+// import {
+//   BadRequestException,
+//   Injectable,
+//   NotFoundException,
+// } from '@nestjs/common';
 
-import { PatientsRepository } from '@/app/http/patients/patients.repository';
+// import { PatientsRepository } from '@/app/http/patients/patients.repository';
 
-import { CreatePatientSupportDto } from './dto/create-patient-support.dto';
-import { PatientSupportsRepository } from './patient-supports.repository';
+// import { CreatePatientSupportDto } from './dto/create-patient-support.dto';
+// import { PatientSupportsRepository } from './patient-supports.repository';
 
-@Injectable()
-export class PatientSupportsService {
-  constructor(
-    private readonly patientSupportsRepository: PatientSupportsRepository,
-    private readonly patientsRepository: PatientsRepository,
-  ) {}
+// @Injectable()
+// export class PatientSupportsService {
+//   constructor(
+//     private readonly patientSupportsRepository: PatientSupportsRepository,
+//     private readonly patientsRepository: PatientsRepository,
+//   ) {}
 
-  public async create(createPatientSupportDto: CreatePatientSupportDto) {
-    const patientExists = await this.patientsRepository.findById(
-      createPatientSupportDto.id_paciente,
-    );
+//   public async create(createPatientSupportDto: CreatePatientSupportDto) {
+//     const patientExists = await this.patientsRepository.findById(
+//       createPatientSupportDto.id_paciente,
+//     );
 
-    if (!patientExists) {
-      throw new NotFoundException('Paciente não encontrado.');
-    }
+//     if (!patientExists) {
+//       throw new NotFoundException('Paciente não encontrado.');
+//     }
 
-    const patientSupport = await this.patientSupportsRepository.create(
-      createPatientSupportDto,
-    );
-    if (!patientSupport) {
-      throw new BadRequestException('Erro ao criar apoio!');
-    }
-    return patientSupport;
-  }
+//     const patientSupport = await this.patientSupportsRepository.create(
+//       createPatientSupportDto,
+//     );
+//     if (!patientSupport) {
+//       throw new BadRequestException('Erro ao criar apoio!');
+//     }
+//     return patientSupport;
+//   }
 
-  public async findAll() {
-    const patientSupports = await this.patientSupportsRepository.findAll();
+//   public async findAll() {
+//     const patientSupports = await this.patientSupportsRepository.findAll();
 
-    return patientSupports;
-  }
+//     return patientSupports;
+//   }
 
-  public async findById(id: number) {
-    const patientSupports = await this.patientSupportsRepository.findById(id);
+//   public async findById(id: number) {
+//     const patientSupports = await this.patientSupportsRepository.findById(id);
 
-    if (!patientSupports) {
-      throw new NotFoundException('Apoio não encontrado.');
-    }
+//     if (!patientSupports) {
+//       throw new NotFoundException('Apoio não encontrado.');
+//     }
 
-    return patientSupports;
-  }
+//     return patientSupports;
+//   }
 
-  public async remove(id: number) {
-    const supportExists = await this.patientSupportsRepository.findById(id);
+//   public async remove(id: number) {
+//     const supportExists = await this.patientSupportsRepository.findById(id);
 
-    if (!supportExists) {
-      throw new NotFoundException('Apoio não encontrado.');
-    }
+//     if (!supportExists) {
+//       throw new NotFoundException('Apoio não encontrado.');
+//     }
 
-    const patientSupports =
-      await this.patientSupportsRepository.remove(supportExists);
+//     const patientSupports =
+//       await this.patientSupportsRepository.remove(supportExists);
 
-    return patientSupports;
-  }
-}
+//     return patientSupports;
+//   }
+// }

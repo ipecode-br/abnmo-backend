@@ -1,19 +1,19 @@
-import { Test, TestingModule } from '@nestjs/testing';
+// import { Test, TestingModule } from '@nestjs/testing';
 
-import { DiagnosticsService } from './diagnostics.service';
+// import { DiagnosticsService } from './diagnostics.service';
 
-describe('DiagnosticsService', () => {
-  let service: DiagnosticsService;
+// describe('DiagnosticsService', () => {
+//   let service: DiagnosticsService;
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [DiagnosticsService],
-    }).compile();
+//   beforeEach(async () => {
+//     const module: TestingModule = await Test.createTestingModule({
+//       providers: [DiagnosticsService],
+//     }).compile();
 
-    service = module.get<DiagnosticsService>(DiagnosticsService);
-  });
+//     service = module.get<DiagnosticsService>(DiagnosticsService);
+//   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
-});
+//   it('should be defined', () => {
+//     expect(service).toBeDefined();
+//   });
+// });

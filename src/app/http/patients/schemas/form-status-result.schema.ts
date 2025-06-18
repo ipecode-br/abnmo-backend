@@ -1,5 +1,5 @@
-export class FormStatusResultSchema {
-  formType: string;
+// export class FormStatusResultSchema {
+//   formType: string;
 
-  pendingCount: number;
-}
+//   pendingCount: number;
+// }

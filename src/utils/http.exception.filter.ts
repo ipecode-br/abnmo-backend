@@ -1,24 +1,24 @@
-import {
-  ArgumentsHost,
-  Catch,
-  ExceptionFilter,
-  HttpException,
-  Logger,
-} from '@nestjs/common';
-import { Response } from 'express';
+// import {
+//   ArgumentsHost,
+//   Catch,
+//   ExceptionFilter,
+//   HttpException,
+//   Logger,
+// } from '@nestjs/common';
+// import { Response } from 'express';
 
-@Catch(HttpException)
-export class HttpExceptionFilter implements ExceptionFilter {
-  private readonly logger = new Logger(HttpExceptionFilter.name);
+// @Catch(HttpException)
+// export class HttpExceptionFilter implements ExceptionFilter {
+//   private readonly logger = new Logger(HttpExceptionFilter.name);
 
-  catch(exception: HttpException, host: ArgumentsHost) {
-    const context = host.switchToHttp();
-    const response = context.getResponse<Response>();
-    const status = exception.getStatus();
-    const error = exception.getResponse();
+//   catch(exception: HttpException, host: ArgumentsHost) {
+//     const context = host.switchToHttp();
+//     const response = context.getResponse<Response>();
+//     const status = exception.getStatus();
+//     const error = exception.getResponse();
 
-    this.logger.error(exception);
+//     this.logger.error(exception);
 
-    response.status(status).json(error);
-  }
-}
+//     response.status(status).json(error);
+//   }
+// }
