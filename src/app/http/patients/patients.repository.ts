@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { Patient } from '@/domain/entities/patient';
 
 import { CreatePatientDto } from './dto/create-patient.dto';
+import { FindPatientDto } from './dto/find-patient.dto';
 
 @Injectable()
 export class PatientsRepository {
@@ -13,12 +14,36 @@ export class PatientsRepository {
     private readonly patientsRepository: Repository<Patient>,
   ) {}
 
-  public async findAll(): Promise<Patient[]> {
-    const patients = await this.patientsRepository.find({
-      relations: ['support', 'diagnostic', 'user'],
-    });
+  public async findAllWithFilters(filters: FindPatientDto): Promise<Patient[]> {
+    const {
+      status,
+      startDate,
+      endDate,
+      sortBy = 'created_at',
+      order = 'ASC',
+    } = filters;
 
-    return patients;
+    const query = this.patientsRepository
+      .createQueryBuilder('patient')
+      .leftJoinAndSelect('patient.supports', 'support')
+      .leftJoinAndSelect('patient.diagnostic', 'diagnostic')
+      .leftJoinAndSelect('patient.user', 'user');
+
+    if (status) {
+      query.andWhere('patient.status = :status', { status });
+    }
+
+    if (startDate && endDate) {
+      query.andWhere('patient.created_at BETWEEN :startDate AND :endDate', {
+        startDate,
+        endDate,
+      });
+    }
+
+    if (sortBy) {
+      query.orderBy(`patient.${sortBy}`, order);
+    }
+    return await query.getMany();
   }
 
   public async findById(id: number): Promise<Patient | null> {

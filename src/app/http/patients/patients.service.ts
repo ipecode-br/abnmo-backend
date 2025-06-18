@@ -14,6 +14,7 @@ import {
 } from '@/domain/types/form-types';
 
 import { CreatePatientDto } from './dto/create-patient.dto';
+import { FindPatientDto } from './dto/find-patient.dto';
 import { PatientsRepository } from './patients.repository';
 import { validateTriagemForm } from './validators/form-validators';
 
@@ -55,10 +56,8 @@ export class PatientsService {
     return patient;
   }
 
-  async findAll(): Promise<Patient[]> {
-    const patients = await this.patientsRepository.findAll();
-
-    return patients;
+  async findAll(filters: FindPatientDto): Promise<Patient[]> {
+    return this.patientsRepository.findAllWithFilters(filters);
   }
 
   async findById(id: number): Promise<Patient> {

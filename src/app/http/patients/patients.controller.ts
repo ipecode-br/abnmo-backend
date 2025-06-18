@@ -7,6 +7,7 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Query,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
@@ -16,6 +17,7 @@ import { EnvelopeDTO } from '@/utils/envelope.dto';
 import { validateDto } from '@/utils/validate.dto';
 
 import { CreatePatientDto } from './dto/create-patient.dto';
+import { FindPatientDto } from './dto/find-patient.dto';
 import { PatientsService } from './patients.service';
 
 @ApiTags('Pacientes')
@@ -77,9 +79,11 @@ export class PatientsController {
     description: 'Lista de pacientes',
     type: [Patient],
   })
-  public async findAll(): Promise<EnvelopeDTO<Patient[], null>> {
+  public async findAll(
+    @Query() filters: FindPatientDto,
+  ): Promise<EnvelopeDTO<Patient[], null>> {
     try {
-      const patients = await this.patientsService.findAll();
+      const patients = await this.patientsService.findAll(filters);
       if (!patients) {
         return {
           success: false,
