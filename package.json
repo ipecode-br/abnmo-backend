@@ -51,10 +51,11 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "mysql2": "^3.12.0",
+    "nestjs-zod": "4.3.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "typeorm": "^0.3.20",
-    "zod": "3.24.4"
+    "zod": "3.25.64"
   },
   "devDependencies": {
     "@commitlint/cli": "19.8.1",

@@ -1,24 +1,18 @@
-import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { patchNestJsSwagger } from 'nestjs-zod';
 
 import { EnvService } from '@/env/env.service';
 
-import { HttpExceptionFilter } from '../utils/http.exception.filter';
+import { GlobalZodValidationPipe } from '../common/zod.validation.pipe';
 import { AppModule } from './app.module';
 
 async function bootstrap(): Promise<void> {
+  patchNestJsSwagger();
+
   const app = await NestFactory.create(AppModule);
 
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    }),
-  );
-
-  app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalPipes(new GlobalZodValidationPipe());
 
   const config = new DocumentBuilder()
     .setTitle('SVM - Sistema Viver Melhor')
