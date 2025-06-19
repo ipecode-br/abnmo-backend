@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { patchNestJsSwagger } from 'nestjs-zod';
 
+import { HttpExceptionFilter } from '@/common/http.exception.filter';
 import { EnvService } from '@/env/env.service';
 
 import { GlobalZodValidationPipe } from '../common/zod.validation.pipe';
@@ -13,6 +14,7 @@ async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
 
   app.useGlobalPipes(new GlobalZodValidationPipe());
+  app.useGlobalFilters(new HttpExceptionFilter());
 
   const config = new DocumentBuilder()
     .setTitle('SVM - Sistema Viver Melhor')
