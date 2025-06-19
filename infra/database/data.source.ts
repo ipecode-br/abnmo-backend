@@ -1,10 +1,11 @@
 import { config } from 'dotenv';
 import { DataSource } from 'typeorm';
 
+import { User } from '@/domain/entities/user';
+
 // import { Diagnostic } from '@/domain/entities/diagnostic';
 // import { Patient } from '@/domain/entities/patient';
 // import { PatientSupport } from '@/domain/entities/patient-support';
-// import { User } from '@/domain/entities/user';
 
 config();
 
@@ -17,7 +18,7 @@ const dataSource = new DataSource({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
   entities: [
-    // User,
+    User,
     // Patient,
     // PatientSupport,
     // Diagnostic

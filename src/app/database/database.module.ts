@@ -1,12 +1,13 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { User } from '@/domain/entities/user';
+import { EnvModule } from '@/env/env.module';
+import { EnvService } from '@/env/env.service';
+
 // import { Diagnostic } from '@/domain/entities/diagnostic';
 // import { Patient } from '@/domain/entities/patient';
 // import { PatientSupport } from '@/domain/entities/patient-support';
-// import { User } from '@/domain/entities/user';
-import { EnvModule } from '@/env/env.module';
-import { EnvService } from '@/env/env.service';
 
 // TODO: uncomment entities
 @Module({
@@ -22,7 +23,7 @@ import { EnvService } from '@/env/env.service';
         username: env.get('DB_USERNAME'),
         password: env.get('DB_PASSWORD'),
         entities: [
-          // User,
+          User,
           // Patient,
           // PatientSupport,
           // Diagnostic
