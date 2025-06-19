@@ -18,27 +18,17 @@ export class AuthController {
   async signIn(
     @Body() body: SignInWithEmailDto,
   ): Promise<SignInWithEmailResponseSchema> {
-    try {
-      const { access_token } = await this.authService.signIn(
-        body.email,
-        body.password,
-      );
+    const { access_token } = await this.authService.signIn(
+      body.email,
+      body.password,
+    );
 
-      // TODO: set Cookie with access_token generated after sign-in
-      console.log(access_token);
+    // TODO: set Cookie with access_token generated after sign-in
+    console.log(access_token);
 
-      return {
-        success: true,
-        message: 'Login realizado com sucesso.',
-      };
-    } catch (error: unknown) {
-      return {
-        success: false,
-        message:
-          error instanceof Error
-            ? error.message
-            : 'A tentativa de login falhou.',
-      };
-    }
+    return {
+      success: true,
+      message: 'Login realizado com sucesso.',
+    };
   }
 }
