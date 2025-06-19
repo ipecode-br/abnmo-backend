@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const envSchema = z.object({
   // API
   NODE_ENV: z
-    .enum(['development', 'test', 'homolog', 'production'])
+    .enum(['production', 'development', 'test'])
     .default('development'),
   API_BASE_URL: z.string().url(),
   API_PORT: z.coerce.number().min(1),
