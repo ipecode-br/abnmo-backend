@@ -21,33 +21,16 @@ export class UsersController {
   public async create(
     @Body() createUserDto: CreateUserDto,
   ): Promise<CreateUserResponseSchema> {
-    try {
-      const user = await this.usersService.create(createUserDto);
+    const user = await this.usersService.create(createUserDto);
 
-      if (!user) {
-        return {
-          success: false,
-          message: 'A criação do usuário falhou.',
-        };
-      }
+    this.logger.log(
+      `Usuário criado com sucesso: ${JSON.stringify({ id: user.id, email: user.email, timestamp: new Date() })}`,
+    );
 
-      this.logger.log(
-        `Usuário criado com sucesso: ${JSON.stringify({ id: user.id, email: user.email, timestamp: new Date() })}`,
-      );
-
-      return {
-        success: true,
-        message: 'Usuário registrado com sucesso!',
-      };
-    } catch (error: any) {
-      return {
-        success: false,
-        message:
-          error instanceof Error
-            ? error.message
-            : 'Erro interno ao criar usuário!',
-      };
-    }
+    return {
+      success: true,
+      message: 'Usuário registrado com sucesso!',
+    };
   }
 
   // TODO: update other endpoints
