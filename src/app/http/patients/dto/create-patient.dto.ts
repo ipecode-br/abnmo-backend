@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import {
   IsBoolean,
+  IsDate,
   IsIn,
   IsInt,
   IsISO8601,
@@ -177,4 +178,11 @@ export class CreatePatientDto {
   })
   @IsInt({ message: 'O id_usuario deve ser um número inteiro' })
   id_user: number;
+
+  @ApiProperty({
+    example: '2023-01-01T00:00:00.000Z',
+    description: 'Data de criação do paciente',
+  })
+  @IsDate({ message: 'O createdAt deve ser uma data válida' })
+  createdAt: Date;
 }
