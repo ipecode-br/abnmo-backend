@@ -1,14 +1,20 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, Res } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import type { Response } from 'express';
 
-import { type SignInWithEmailResponseSchema } from '@/domain/schemas/auth';
+import { COOKIES_MAPPER } from '@/domain/cookies';
+import type { SignInWithEmailResponseSchema } from '@/domain/schemas/auth';
+import { UtilsService } from '@/utils/utils.service';
 
 import { SignInWithEmailDto } from './auth.dtos';
 import { AuthService } from './auth.service';
 
 @Controller()
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private utilsService: UtilsService,
+  ) {}
 
   @Post('login')
   @ApiBody({ type: SignInWithEmailDto })
@@ -16,15 +22,18 @@ export class AuthController {
   @ApiResponse({ status: 201, description: 'Login realizado com sucesso.' })
   @ApiResponse({ status: 401, description: 'Credenciais inválidas.' })
   async signIn(
+    @Res({ passthrough: true }) response: Response,
     @Body() body: SignInWithEmailDto,
   ): Promise<SignInWithEmailResponseSchema> {
-    const { access_token } = await this.authService.signIn(
+    const { accessToken } = await this.authService.signIn(
       body.email,
       body.password,
     );
 
-    // TODO: set Cookie with access_token generated after sign-in
-    console.log(access_token);
+    this.utilsService.setCookie(response, {
+      name: COOKIES_MAPPER.access_token,
+      value: accessToken,
+    });
 
     return {
       success: true,

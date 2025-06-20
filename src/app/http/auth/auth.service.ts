@@ -16,23 +16,27 @@ export class AuthService {
   async signIn(
     email: string,
     password: string,
-  ): Promise<{ access_token: string }> {
+  ): Promise<{ accessToken: string }> {
     const user = await this.usersRepository.findByEmail(email);
 
     if (!user || !user.password) {
-      throw new UnauthorizedException('Credenciais inválidas!');
+      throw new UnauthorizedException(
+        'Credenciais inválidas. Por favor, tente novamente.',
+      );
     }
 
     const verifyPassword = await this.hasher.compare(password, user.password);
 
     if (!verifyPassword) {
-      throw new UnauthorizedException('Credenciais inválidas!');
+      throw new UnauthorizedException(
+        'Credenciais inválidas. Por favor, tente novamente.',
+      );
     }
 
     const payload = { sub: user.id };
 
     return {
-      access_token: await this.jwtService.signAsync(payload),
+      accessToken: await this.jwtService.signAsync(payload),
     };
   }
 }

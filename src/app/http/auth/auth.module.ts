@@ -4,6 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { CryptographyModule } from '@/app/cryptography/cryptography.module';
 import { EnvModule } from '@/env/env.module';
 import { EnvService } from '@/env/env.service';
+import { UtilsModule } from '@/utils/utils.module';
 
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
@@ -14,6 +15,7 @@ import { AuthService } from './auth.service';
     EnvModule,
     CryptographyModule,
     UsersModule,
+    UtilsModule,
     JwtModule.registerAsync({
       imports: [EnvModule],
       inject: [EnvService],
