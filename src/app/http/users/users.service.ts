@@ -23,7 +23,9 @@ export class UsersService {
     );
 
     if (userExists) {
-      throw new ConflictException('Já existe um usuário com este e-mail.');
+      throw new ConflictException(
+        'Já existe uma conta cadastrada com este e-mail. Tente fazer login ou clique em "Esqueceu sua senha?" para recuperar o acesso.',
+      );
     }
 
     const hashPassword = await this.hasher.hash(createUserDto.password);

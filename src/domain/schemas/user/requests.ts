@@ -4,6 +4,7 @@ import { userSchema } from '.';
 
 export const createUserSchema = userSchema.omit({
   id: true,
+  role: true,
   created_at: true,
   updated_at: true,
 });

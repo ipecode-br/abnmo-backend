@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Hasher } from '@/domain/cryptography/hasher';
 
 import { UsersRepository } from '../users/users.repository';
+import type { SignInWithEmailDto } from './auth.dtos';
 
 @Injectable()
 export class AuthService {
@@ -13,10 +14,10 @@ export class AuthService {
     private readonly hasher: Hasher,
   ) {}
 
-  async signIn(
-    email: string,
-    password: string,
-  ): Promise<{ accessToken: string }> {
+  async signIn({
+    email,
+    password,
+  }: SignInWithEmailDto): Promise<{ accessToken: string }> {
     const user = await this.usersRepository.findByEmail(email);
 
     if (!user || !user.password) {
