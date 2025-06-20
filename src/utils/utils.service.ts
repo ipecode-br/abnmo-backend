@@ -22,7 +22,7 @@ export class UtilsService {
       maxAge: 1000 * 60 * 60 * 8, // 8 hours
       path: '/',
       sameSite: 'lax',
-      secure: this.envService.get('API_ENVIRONMENT') !== 'local',
+      secure: this.envService.get('APP_ENVIRONMENT') !== 'local',
       signed: true,
       ...options,
     });
@@ -38,7 +38,7 @@ export class UtilsService {
       httpOnly: true,
       path: '/',
       sameSite: 'lax',
-      secure: this.envService.get('API_ENVIRONMENT') !== 'local',
+      secure: this.envService.get('APP_ENVIRONMENT') !== 'local',
       signed: true,
       ...options,
     });
