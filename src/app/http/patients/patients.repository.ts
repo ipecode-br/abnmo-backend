@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { Patient } from '@/domain/entities/patient';
 
 import { CreatePatientDto } from './dto/create-patient.dto';
+import { FindPatientDto } from './dto/find-patient.dto';
 
 @Injectable()
 export class PatientsRepository {
@@ -13,12 +14,36 @@ export class PatientsRepository {
     private readonly patientsRepository: Repository<Patient>,
   ) {}
 
-  public async findAll(): Promise<Patient[]> {
-    const patients = await this.patientsRepository.find({
-      relations: ['support', 'diagnostic', 'user'],
-    });
+  public async findAllWithFilters(filters: FindPatientDto): Promise<Patient[]> {
+    const {
+      status,
+      startDate,
+      endDate,
+      sortBy = 'created_at',
+      order = 'ASC',
+    } = filters;
 
-    return patients;
+    const query = this.patientsRepository
+      .createQueryBuilder('patient')
+      .leftJoinAndSelect('patient.supports', 'support')
+      .leftJoinAndSelect('patient.diagnostic', 'diagnostic')
+      .leftJoinAndSelect('patient.user', 'user');
+
+    if (status) {
+      query.andWhere('patient.status = :status', { status });
+    }
+
+    if (startDate && endDate) {
+      query.andWhere('patient.created_at BETWEEN :startDate AND :endDate', {
+        startDate,
+        endDate,
+      });
+    }
+
+    if (sortBy) {
+      query.orderBy(`patient.${sortBy}`, order);
+    }
+    return await query.getMany();
   }
 
   public async findById(id: number): Promise<Patient | null> {
@@ -31,7 +56,6 @@ export class PatientsRepository {
 
     return patient;
   }
-
   public async findByIdUsuario(id_user: number): Promise<Patient | null> {
     const patient = await this.patientsRepository.findOne({
       where: {
@@ -42,21 +66,15 @@ export class PatientsRepository {
 
     return patient;
   }
-
   public async create(patient: CreatePatientDto): Promise<Patient> {
     const patientCreated = this.patientsRepository.create(patient);
-
     const patientSaved = await this.patientsRepository.save(patientCreated);
-
     return patientSaved;
   }
-
   public async update(patient: Patient): Promise<Patient> {
     const patientUpdated = await this.patientsRepository.save(patient);
-
     return patientUpdated;
   }
-
   public async remove(patient: Patient): Promise<Patient> {
     const patientDeleted = await this.patientsRepository.remove(patient);
 
