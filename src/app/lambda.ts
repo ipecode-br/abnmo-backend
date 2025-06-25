@@ -1,12 +1,11 @@
 import 'reflect-metadata';
 
-import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import serverlessExpress from '@vendia/serverless-express';
 import { Callback, Context, Handler } from 'aws-lambda';
 import express from 'express';
 
-import { AppModule } from './app.module';
+import { createNestApp } from './app';
 
 let cachedHandler: Handler;
 
@@ -18,9 +17,7 @@ export const handler: Handler = async (
   if (!cachedHandler) {
     const expressApp = express();
     const adapter = new ExpressAdapter(expressApp);
-    const app = await NestFactory.create(AppModule, adapter);
-
-    app.enableCors();
+    const app = await createNestApp(adapter);
 
     await app.init();
 
