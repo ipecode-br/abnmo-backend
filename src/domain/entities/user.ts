@@ -5,7 +5,11 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-import { USER_ROLES, type UserRole, type UserSchema } from '../schemas/user';
+import {
+  userRoleEnum,
+  type UserRoleType,
+  type UserSchema,
+} from '../schemas/user';
 
 @Entity('users')
 export class User implements UserSchema {
@@ -21,8 +25,8 @@ export class User implements UserSchema {
   @Column({ type: 'varchar', length: 255 })
   password: string;
 
-  @Column({ type: 'enum', enum: USER_ROLES, default: 'patient' })
-  role: UserRole;
+  @Column({ type: 'enum', enum: userRoleEnum, default: 'patient' })
+  role: UserRoleType;
 
   @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
