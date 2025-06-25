@@ -1,9 +1,6 @@
-import { Body, Controller, Logger, Post } from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Controller, Logger } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 
-import type { CreateUserResponseSchema } from '@/domain/schemas/user/responses';
-
-import { CreateUserDto } from './users.dtos';
 import { UsersService } from './users.service';
 
 @ApiTags('Usuários')
@@ -12,26 +9,6 @@ export class UsersController {
   private readonly logger = new Logger(UsersController.name);
 
   constructor(private readonly usersService: UsersService) {}
-
-  @Post()
-  @ApiBody({ type: CreateUserDto })
-  @ApiOperation({ summary: 'Cria um novo usuário.' })
-  @ApiResponse({ status: 201, description: 'Usuário registrado com sucesso.' })
-  @ApiResponse({ status: 400, description: 'Dados inválidos.' })
-  public async create(
-    @Body() createUserDto: CreateUserDto,
-  ): Promise<CreateUserResponseSchema> {
-    const user = await this.usersService.create(createUserDto);
-
-    this.logger.log(
-      `Usuário criado com sucesso: ${JSON.stringify({ id: user.id, email: user.email, timestamp: new Date() })}`,
-    );
-
-    return {
-      success: true,
-      message: 'Usuário registrado com sucesso!',
-    };
-  }
 
   // TODO: update other endpoints
   // @Get()

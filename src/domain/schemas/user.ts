@@ -26,6 +26,16 @@ export const userSchema = z
   .strict();
 export type UserSchema = z.infer<typeof userSchema>;
 
+// Create
+
+export const createUserSchema = userSchema.omit({
+  id: true,
+  role: true,
+  created_at: true,
+  updated_at: true,
+});
+export type CreateUserSchema = z.infer<typeof createUserSchema>;
+
 // Update
 
 export const updateUserParamsSchema = z.object({
