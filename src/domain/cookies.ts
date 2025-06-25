@@ -1,6 +1,6 @@
-import type { AuthToken } from './entities/tokens';
+import type { AuthTokenType } from './schemas/token';
 
-type Cookie = AuthToken;
+type Cookie = AuthTokenType;
 type Cookies = Record<Cookie, string>;
 
 export const COOKIES_MAPPER: Cookies = {
