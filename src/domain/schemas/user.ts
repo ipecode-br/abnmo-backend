@@ -20,6 +20,7 @@ export const userSchema = z
     email: z.string().email().max(255),
     password: z.string().max(255),
     role: userRoleEnum.optional().default('patient'),
+    avatar_url: z.string().url(),
     created_at: z.coerce.date(),
     updated_at: z.coerce.date(),
   })
