@@ -218,6 +218,9 @@ export class PatientsController {
   }
 
   @Patch(':id/inactivate')
+  @ApiOperation({ summary: 'Inativa o Paciente pelo ID' })
+  @ApiResponse({ status: 200, description: 'Paciente inativado com sucesso' })
+  @ApiResponse({ status: 404, description: 'Paciente não encontrado' })
   async inactivatePatient(
     @Param('id', ParseIntPipe) id: number,
   ): Promise<EnvelopeDTO<Patient, null>> {
