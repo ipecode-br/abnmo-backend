@@ -124,4 +124,13 @@ export class PatientsRepository {
       relations: ['user', 'support'], // Adicione outras relações conforme necessário
     });
   }
+
+  public async setPatientInactive(id: number) {
+    await this.patientsRepository.update(
+      { id_user: id },
+      { flag_active: false },
+    );
+    const patient = await this.patientsRepository.findOneBy({ id_user: id });
+    return patient;
+  }
 }

@@ -92,4 +92,12 @@ export class PatientsService {
       };
     });
   }
+
+  async inactivatePatientStatus(id: number) {
+    const patient = await this.patientsRepository.setPatientInactive(id);
+    if (!patient) {
+      throw new Error('Paciente não encontrado!');
+    }
+    return patient;
+  }
 }

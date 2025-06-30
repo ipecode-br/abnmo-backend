@@ -6,6 +6,7 @@ import {
   Logger,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Query,
 } from '@nestjs/common';
@@ -212,6 +213,49 @@ export class PatientsController {
             ? error.message
             : 'Erro ao verificar formulários pendentes',
         data: [],
+      };
+    }
+  }
+
+  @Patch(':id/inactivate')
+  async inactivatePatient(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<EnvelopeDTO<Patient, null>> {
+    try {
+      const patient = await this.patientsService.findById(id);
+
+      if (!patient) {
+        return {
+          success: false,
+          message: 'Erro ao encontrar paciente!',
+          data: undefined,
+        };
+      }
+      if (patient.flag_active == false) {
+        return {
+          success: false,
+          message: 'Paciente já está inativo!',
+          data: undefined,
+        };
+      }
+
+      const status = await this.patientsService.inactivatePatientStatus(
+        patient.id_user,
+      );
+
+      return {
+        success: true,
+        message: `Paciente inativado com sucesso!`,
+        data: status,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Erro interno ao inativar paciente!',
+        data: undefined,
       };
     }
   }
