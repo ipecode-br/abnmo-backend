@@ -28,6 +28,9 @@ export class User implements UserSchema {
   @Column({ type: 'enum', enum: userRoleEnum, default: 'patient' })
   role: UserRoleType;
 
+  @Column({ type: 'varchar', length: 255 })
+  avatar_url: string;
+
   @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
 
