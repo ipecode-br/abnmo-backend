@@ -6,7 +6,7 @@ import {
 } from 'typeorm';
 
 import {
-  userRoleEnum,
+  USER_ROLES,
   type UserRoleType,
   type UserSchema,
 } from '../schemas/user';
@@ -25,11 +25,11 @@ export class User implements UserSchema {
   @Column({ type: 'varchar', length: 255 })
   password: string;
 
-  @Column({ type: 'enum', enum: userRoleEnum, default: 'patient' })
+  @Column({ type: 'enum', enum: USER_ROLES, default: 'patient' })
   role: UserRoleType;
 
-  @Column({ type: 'varchar', length: 255 })
-  avatar_url: string;
+  @Column({ type: 'varchar', length: 255, default: null })
+  avatar_url: string | null;
 
   @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;

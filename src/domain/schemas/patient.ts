@@ -2,22 +2,21 @@ import { z } from 'zod';
 
 // Entity
 
-// TODO: review enums for gender
-export const genderEnum = z.enum([
+export const GENDERS = [
   'male_cis',
   'female_cis',
   'male_trans',
   'female_trans',
   'non_binary',
   'prefer_not_to_say',
-]);
-export type GenderType = z.infer<typeof genderEnum>;
+] as const;
+export type GenderType = (typeof GENDERS)[number];
 
 export const patientSchema = z
   .object({
     id: z.string().uuid(),
     user_id: z.string().uuid(),
-    gender: genderEnum.nullable(),
+    gender: z.enum(GENDERS).default('prefer_not_to_say'),
     date_of_birth: z.coerce.date(),
     phone: z.string(),
     cpf: z.string().min(11).max(11),

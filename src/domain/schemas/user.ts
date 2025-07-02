@@ -4,22 +4,22 @@ import { baseResponseSchema } from './base';
 
 // Entity
 
-export const userRoleEnum = z.enum([
+export const USER_ROLES = [
   'admin',
   'nurse',
   'specialist',
   'manager',
   'patient',
-]);
-export type UserRoleType = z.infer<typeof userRoleEnum>;
+] as const;
+export type UserRoleType = (typeof USER_ROLES)[number];
 
 export const userSchema = z
   .object({
-    id: z.string(),
+    id: z.string().uuid(),
     name: z.string().min(3),
     email: z.string().email().max(255),
-    password: z.string().max(255),
-    role: userRoleEnum.default('patient'),
+    password: z.string().min(8).max(255),
+    role: z.enum(USER_ROLES),
     avatar_url: z.string().url().nullable(),
     created_at: z.coerce.date(),
     updated_at: z.coerce.date(),
@@ -29,11 +29,10 @@ export type UserSchema = z.infer<typeof userSchema>;
 
 // Create
 
-export const createUserSchema = userSchema.omit({
-  id: true,
-  role: true,
-  created_at: true,
-  updated_at: true,
+export const createUserSchema = userSchema.pick({
+  name: true,
+  email: true,
+  password: true,
 });
 export type CreateUserSchema = z.infer<typeof createUserSchema>;
 

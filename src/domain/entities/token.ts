@@ -6,7 +6,7 @@ import {
 } from 'typeorm';
 
 import {
-  authTokenEnum,
+  AUTH_TOKENS,
   type AuthTokenSchema,
   type AuthTokenType,
 } from '../schemas/token';
@@ -25,7 +25,7 @@ export class Token implements AuthTokenSchema {
   @Column({ type: 'varchar', length: 255 })
   token: string;
 
-  @Column({ type: 'enum', enum: authTokenEnum })
+  @Column({ type: 'enum', enum: AUTH_TOKENS })
   type: AuthTokenType;
 
   @CreateDateColumn({ type: 'timestamp' })
