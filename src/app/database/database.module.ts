@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { EnvModule } from '@/env/env.module';
 import { EnvService } from '@/env/env.service';
@@ -24,6 +25,7 @@ import { EnvService } from '@/env/env.service';
         password: env.get('DB_PASSWORD'),
         entities: [
           User,
+          Token,
           // Patient,
           // PatientSupport,
           // Diagnostic

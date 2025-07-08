@@ -1,6 +1,10 @@
 import { z } from 'zod';
 
-export const AUTH_TOKENS = ['access_token', 'password_reset'] as const;
+export const AUTH_TOKENS = [
+  'access_token',
+  'password_reset',
+  'refresh_token',
+] as const;
 export type AuthTokenType = (typeof AUTH_TOKENS)[number];
 
 export const authTokenSchema = z.object({

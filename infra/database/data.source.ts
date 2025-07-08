@@ -1,6 +1,7 @@
 import { config } from 'dotenv';
 import { DataSource } from 'typeorm';
 
+import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 
 // import { Diagnostic } from '@/domain/entities/diagnostic';
@@ -19,6 +20,7 @@ const dataSource = new DataSource({
   database: process.env.DB_DATABASE,
   entities: [
     User,
+    Token,
     // Patient,
     // PatientSupport,
     // Diagnostic

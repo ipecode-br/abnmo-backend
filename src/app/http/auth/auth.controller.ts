@@ -1,6 +1,14 @@
-import { Body, Controller, Logger, Post, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Logger,
+  Post,
+  Req,
+  Res,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 
 import { COOKIES_MAPPER } from '@/domain/cookies';
 import type { SignInWithEmailResponseSchema } from '@/domain/schemas/auth';
@@ -30,16 +38,46 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
     @Body() body: SignInWithEmailDto,
   ): Promise<SignInWithEmailResponseSchema> {
-    const { accessToken } = await this.authService.signIn(body);
+    const { accessToken, refreshToken } = await this.authService.signIn(body);
 
     this.utilsService.setCookie(response, {
       name: COOKIES_MAPPER.access_token,
       value: accessToken,
     });
 
+    this.utilsService.setCookie(response, {
+      name: COOKIES_MAPPER.refresh_token,
+      value: refreshToken,
+    });
+
     return {
       success: true,
       message: 'Login realizado com sucesso.',
+    };
+  }
+
+  @Post('refresh')
+  @ApiOperation({ summary: 'Renova o access token a partir do refresh token' })
+  async refreshToken(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const refreshToken = (req.cookies?.[COOKIES_MAPPER.refresh_token] ??
+      '') as string;
+    if (!refreshToken)
+      throw new UnauthorizedException('Refresh token ausente.');
+
+    const newAccessToken =
+      await this.authService.refreshAccessToken(refreshToken);
+
+    this.utilsService.setCookie(res, {
+      name: COOKIES_MAPPER.access_token,
+      value: newAccessToken,
+    });
+
+    return {
+      success: true,
+      message: 'Novo access token gerado.',
     };
   }
 
@@ -51,10 +89,25 @@ export class AuthController {
   @ApiResponse({ status: 409, description: 'E-mail já registrado.' })
   async register(
     @Body() createUserDto: CreateUserDto,
+    @Res({ passthrough: true }) response: Response,
   ): Promise<SignInWithEmailResponseSchema> {
     const user = await this.usersService.create(createUserDto);
 
-    // TODO: create and set a access_token cookie after registering the user
+    const { accessToken, refreshToken } = await this.authService.signIn({
+      email: user.email,
+      password: createUserDto.password,
+      rememberMe: false,
+    });
+
+    this.utilsService.setCookie(response, {
+      name: COOKIES_MAPPER.access_token,
+      value: accessToken,
+    });
+
+    this.utilsService.setCookie(response, {
+      name: COOKIES_MAPPER.refresh_token,
+      value: refreshToken,
+    });
 
     this.logger.log(
       `Usuário registrado com sucesso: ${JSON.stringify({ id: user.id, email: user.email, timestamp: new Date() })}`,
