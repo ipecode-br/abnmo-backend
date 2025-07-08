@@ -1,65 +1,90 @@
-// import {
-//   BadRequestException,
-//   Injectable,
-//   NotFoundException,
-// } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
-// import { PatientsRepository } from '@/app/http/patients/patients.repository';
+import { PatientSupport } from '@/domain/entities/patient-support';
+import {
+  createPatientSupportSchema,
+  updatePatientSupportParamsSchema,
+  updatePatientSupportSchema,
+} from '@/domain/schemas/patient-support';
 
-// import { CreatePatientSupportDto } from './dto/create-patient-support.dto';
-// import { PatientSupportsRepository } from './patient-supports.repository';
+import {
+  CreatePatientSupportDto,
+  UpdatePatientSupportDto,
+} from './dto/create-patient-support.dto';
 
-// @Injectable()
-// export class PatientSupportsService {
-//   constructor(
-//     private readonly patientSupportsRepository: PatientSupportsRepository,
-//     private readonly patientsRepository: PatientsRepository,
-//   ) {}
+@Injectable()
+export class PatientSupportsService {
+  constructor(
+    @InjectRepository(PatientSupport)
+    private readonly repo: Repository<PatientSupport>,
+  ) {}
 
-//   public async create(createPatientSupportDto: CreatePatientSupportDto) {
-//     const patientExists = await this.patientsRepository.findById(
-//       createPatientSupportDto.id_paciente,
-//     );
+  async create(
+    patientId: string,
+    createDto: CreatePatientSupportDto,
+  ): Promise<PatientSupport> {
+    const parsed = createPatientSupportSchema.safeParse(createDto);
+    if (!parsed.success) throw new BadRequestException(parsed.error.format());
 
-//     if (!patientExists) {
-//       throw new NotFoundException('Paciente não encontrado.');
-//     }
+    const patientSupportExists = await this.repo.findOne({
+      where: { patient_id: patientId, name: createDto.name },
+    });
+    if (patientSupportExists) {
+      throw new ConflictException('Apoio já cadastrado para esse paciente');
+    }
 
-//     const patientSupport = await this.patientSupportsRepository.create(
-//       createPatientSupportDto,
-//     );
-//     if (!patientSupport) {
-//       throw new BadRequestException('Erro ao criar apoio!');
-//     }
-//     return patientSupport;
-//   }
+    const entity = this.repo.create({
+      patient_id: patientId,
+      ...createDto,
+    });
+    return this.repo.save(entity);
+  }
 
-//   public async findAll() {
-//     const patientSupports = await this.patientSupportsRepository.findAll();
+  async findAllByPatient(patientId: string): Promise<PatientSupport[]> {
+    return this.repo.find({ where: { patient_id: patientId } });
+  }
 
-//     return patientSupports;
-//   }
+  async findById(id: string): Promise<PatientSupport> {
+    const parse = updatePatientSupportParamsSchema.safeParse({ id });
+    if (!parse.success) {
+      throw new BadRequestException(parse.error.format());
+    }
+    const { id: validId } = parse.data;
 
-//   public async findById(id: number) {
-//     const patientSupports = await this.patientSupportsRepository.findById(id);
+    const support = await this.repo.findOneBy({ id: validId });
+    if (!support) {
+      throw new NotFoundException('Apoio não encontrado');
+    }
+    return support;
+  }
 
-//     if (!patientSupports) {
-//       throw new NotFoundException('Apoio não encontrado.');
-//     }
+  async update(
+    id: string,
+    updateDto: UpdatePatientSupportDto,
+  ): Promise<PatientSupport> {
+    await this.findById(id);
 
-//     return patientSupports;
-//   }
+    const parsedDto = updatePatientSupportSchema.safeParse(updateDto);
+    if (!parsedDto.success) {
+      throw new BadRequestException(parsedDto.error.format());
+    }
 
-//   public async remove(id: number) {
-//     const supportExists = await this.patientSupportsRepository.findById(id);
+    const support = await this.repo.preload({ id, ...parsedDto.data });
+    if (!support) {
+      throw new NotFoundException('Apoio não encontrado');
+    }
+    return this.repo.save(support);
+  }
 
-//     if (!supportExists) {
-//       throw new NotFoundException('Apoio não encontrado.');
-//     }
-
-//     const patientSupports =
-//       await this.patientSupportsRepository.remove(supportExists);
-
-//     return patientSupports;
-//   }
-// }
+  async remove(id: string): Promise<PatientSupport> {
+    const support = await this.findById(id);
+    return this.repo.remove(support);
+  }
+}

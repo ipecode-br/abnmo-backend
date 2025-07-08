@@ -8,11 +8,11 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-// import { Patient } from '@/domain/entities/patient';
-import { PatientSuppoprtSchema } from '../schemas/patient-support';
+//import { Patient } from '@/domain/entities/patient';
+import { PatientSupportSchema } from '../schemas/patient-support';
 
 @Entity('support')
-export class PatientSupport implements PatientSuppoprtSchema {
+export class PatientSupport implements PatientSupportSchema {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -33,10 +33,9 @@ export class PatientSupport implements PatientSuppoprtSchema {
 
   @UpdateDateColumn({ type: 'timestamp' })
   updated_at: Date;
-
   /*
   @ManyToOne(() => Patient)
   @JoinColumn({ name: patient_id })
   patient: Patient;
-  */
+*/
 }
