@@ -23,6 +23,7 @@ export type PatientSupportSchema = z.infer<typeof patientSupportSchema>;
 //Create
 
 export const createPatientSupportSchema = patientSupportSchema.pick({
+  patient_id: true,
   name: true,
   phone: true,
   kinship: true,
@@ -31,6 +32,24 @@ export type CreatePatientSupportSchema = z.infer<
   typeof createPatientSupportSchema
 >;
 
+export const createPatientSupportResponseSchema = baseResponseSchema.extend({});
+export type CreatePatientSupportResponseSchema = z.infer<
+  typeof createPatientSupportResponseSchema
+>;
+
+export const findAllPatientsSupportResponseSchema = baseResponseSchema.extend({
+  data: z.array(patientSupportSchema),
+});
+export type FindAllPatientsSupportResponseSchema = z.infer<
+  typeof findAllPatientsSupportResponseSchema
+>;
+
+export const findOnePatientsSupportResponseSchema = baseResponseSchema.extend({
+  data: patientSupportSchema,
+});
+export type FindOnePatientsSupportResponseSchema = z.infer<
+  typeof findOnePatientsSupportResponseSchema
+>;
 //Update
 
 export const updatePatientSupportParamsSchema = z.object({
