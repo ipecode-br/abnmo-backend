@@ -5,14 +5,10 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-import {
-  AUTH_TOKENS,
-  type AuthTokenSchema,
-  type AuthTokenType,
-} from '../schemas/token';
+import { AUTH_TOKENS, type AuthTokenType } from '../schemas/token';
 
 @Entity('tokens')
-export class Token implements AuthTokenSchema {
+export class Token {
   @PrimaryGeneratedColumn({ type: 'integer' })
   id: number;
 

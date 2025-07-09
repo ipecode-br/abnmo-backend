@@ -38,46 +38,16 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
     @Body() body: SignInWithEmailDto,
   ): Promise<SignInWithEmailResponseSchema> {
-    const { accessToken, refreshToken } = await this.authService.signIn(body);
+    const { accessToken } = await this.authService.signIn(body);
 
     this.utilsService.setCookie(response, {
       name: COOKIES_MAPPER.access_token,
       value: accessToken,
     });
 
-    this.utilsService.setCookie(response, {
-      name: COOKIES_MAPPER.refresh_token,
-      value: refreshToken,
-    });
-
     return {
       success: true,
       message: 'Login realizado com sucesso.',
-    };
-  }
-
-  @Post('refresh')
-  @ApiOperation({ summary: 'Renova o access token a partir do refresh token' })
-  async refreshToken(
-    @Req() req: Request,
-    @Res({ passthrough: true }) res: Response,
-  ) {
-    const refreshToken = (req.cookies?.[COOKIES_MAPPER.refresh_token] ??
-      '') as string;
-    if (!refreshToken)
-      throw new UnauthorizedException('Refresh token ausente.');
-
-    const newAccessToken =
-      await this.authService.refreshAccessToken(refreshToken);
-
-    this.utilsService.setCookie(res, {
-      name: COOKIES_MAPPER.access_token,
-      value: newAccessToken,
-    });
-
-    return {
-      success: true,
-      message: 'Novo access token gerado.',
     };
   }
 
@@ -93,7 +63,7 @@ export class AuthController {
   ): Promise<SignInWithEmailResponseSchema> {
     const user = await this.usersService.create(createUserDto);
 
-    const { accessToken, refreshToken } = await this.authService.signIn({
+    const { accessToken } = await this.authService.signIn({
       email: user.email,
       password: createUserDto.password,
       rememberMe: false,
@@ -104,11 +74,6 @@ export class AuthController {
       value: accessToken,
     });
 
-    this.utilsService.setCookie(response, {
-      name: COOKIES_MAPPER.refresh_token,
-      value: refreshToken,
-    });
-
     this.logger.log(
       `Usuário registrado com sucesso: ${JSON.stringify({ id: user.id, email: user.email, timestamp: new Date() })}`,
     );
@@ -116,6 +81,29 @@ export class AuthController {
     return {
       success: true,
       message: 'Registro realizado com sucesso.',
+    };
+  }
+
+  @Post('logout')
+  @ApiOperation({ summary: 'Logout do usuário.' })
+  @ApiResponse({ status: 200, description: 'Logout realizado com sucesso.' })
+  @ApiResponse({ status: 401, description: 'Token ausente ou inválido.' })
+  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    const accessToken =
+      (req.cookies as Record<string, string>)?.[COOKIES_MAPPER.access_token] ??
+      '';
+
+    if (!accessToken) {
+      throw new UnauthorizedException('Token de acesso ausente.');
+    }
+
+    await this.authService.logout(accessToken);
+
+    this.utilsService.deleteCookie(res, COOKIES_MAPPER.access_token);
+
+    return {
+      success: true,
+      message: 'Logout realizado com sucesso.',
     };
   }
 }

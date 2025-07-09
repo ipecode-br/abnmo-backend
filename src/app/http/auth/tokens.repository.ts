@@ -11,7 +11,7 @@ export class TokensRepository {
     private readonly repo: Repository<Token>,
   ) {}
 
-  async saveRefreshToken(data: {
+  async saveAccessToken(data: {
     user_id: string;
     email: string;
     token: string;

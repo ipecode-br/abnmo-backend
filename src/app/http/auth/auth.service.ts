@@ -18,7 +18,6 @@ export class AuthService {
 
   async signIn({ email, password, rememberMe }: SignInWithEmailDto): Promise<{
     accessToken: string;
-    refreshToken: string;
   }> {
     const user = await this.usersRepository.findByEmail(email);
 
@@ -36,41 +35,27 @@ export class AuthService {
       );
     }
 
-    const payload = { sub: user.id };
-    const accessToken = await this.jwtService.signAsync(payload);
-
     const expiresIn = rememberMe ? '30d' : '8h';
-    const refreshToken = await this.jwtService.signAsync(payload, {
-      expiresIn,
-    });
+    const payload = { sub: user.id };
+
+    const accessToken = await this.jwtService.signAsync(payload, { expiresIn });
 
     const expiration = new Date();
     expiration.setHours(expiration.getHours() + (rememberMe ? 24 * 30 : 8));
 
-    await this.tokensRepository.saveRefreshToken({
+    await this.tokensRepository.saveAccessToken({
       user_id: user.id,
       email: user.email,
-      token: refreshToken,
+      token: accessToken,
       expires_at: expiration,
     });
 
     return {
       accessToken,
-      refreshToken,
     };
   }
 
-  async refreshAccessToken(refreshToken: string): Promise<string> {
-    try {
-      const payload = await this.jwtService.verifyAsync<{ sub: string }>(
-        refreshToken,
-      );
-
-      const accessToken = await this.jwtService.signAsync({ sub: payload.sub });
-
-      return accessToken;
-    } catch {
-      throw new UnauthorizedException('Refresh token inválido ou expirado.');
-    }
+  async logout(token: string): Promise<void> {
+    await this.tokensRepository.deleteToken(token);
   }
 }
