@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Logger,
   Post,
   Req,
   Res,
@@ -21,8 +20,6 @@ import { AuthService } from './auth.service';
 
 @Controller()
 export class AuthController {
-  private readonly logger = new Logger(AuthController.name);
-
   constructor(
     private authService: AuthService,
     private utilsService: UtilsService,
@@ -61,11 +58,13 @@ export class AuthController {
     @Body() createUserDto: CreateUserDto,
     @Res({ passthrough: true }) response: Response,
   ): Promise<SignInWithEmailResponseSchema> {
+    const password = createUserDto.password;
+
     const user = await this.usersService.create(createUserDto);
 
     const { accessToken } = await this.authService.signIn({
       email: user.email,
-      password: createUserDto.password,
+      password,
       rememberMe: false,
     });
 
@@ -73,10 +72,6 @@ export class AuthController {
       name: COOKIES_MAPPER.access_token,
       value: accessToken,
     });
-
-    this.logger.log(
-      `Usuário registrado com sucesso: ${JSON.stringify({ id: user.id, email: user.email, timestamp: new Date() })}`,
-    );
 
     return {
       success: true,
