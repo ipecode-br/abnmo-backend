@@ -4,39 +4,25 @@ import { Repository } from 'typeorm';
 
 import { Token } from '@/domain/entities/token';
 
+import type { CreateAuthTokenDto } from './auth.dtos';
+
 @Injectable()
 export class TokensRepository {
   constructor(
     @InjectRepository(Token)
-    private readonly repo: Repository<Token>,
+    private readonly tokensRepository: Repository<Token>,
   ) {}
 
-  async saveAccessToken(data: {
-    user_id: string;
-    email: string;
-    token: string;
-    expires_at: Date;
-  }) {
-    const token = this.repo.create({
-      user_id: data.user_id,
-      email: data.email,
-      token: data.token,
-      type: 'access_token',
-      expires_at: data.expires_at,
-    });
-
-    await this.repo.save(token);
+  async saveToken(data: CreateAuthTokenDto) {
+    const token = this.tokensRepository.create(data);
+    await this.tokensRepository.save(token);
   }
 
-  async findValidToken(token: string) {
-    return this.repo.findOne({
-      where: {
-        token,
-      },
-    });
+  async findToken(token: string) {
+    return this.tokensRepository.findOne({ where: { token } });
   }
 
   async deleteToken(token: string) {
-    await this.repo.delete({ token });
+    await this.tokensRepository.delete({ token });
   }
 }

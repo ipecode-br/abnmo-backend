@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
 import { Hasher } from '@/domain/cryptography/hasher';
+import { AUTH_TOKENS_MAPPER } from '@/domain/schemas/token';
 
 import { UsersRepository } from '../users/users.repository';
 import type { SignInWithEmailDto } from './auth.dtos';
@@ -21,7 +22,7 @@ export class AuthService {
   }> {
     const user = await this.usersRepository.findByEmail(email);
 
-    if (!user || !user.password) {
+    if (!user) {
       throw new UnauthorizedException(
         'Credenciais inválidas. Por favor, tente novamente.',
       );
@@ -43,10 +44,10 @@ export class AuthService {
     const expiration = new Date();
     expiration.setHours(expiration.getHours() + (rememberMe ? 24 * 30 : 8));
 
-    await this.tokensRepository.saveAccessToken({
+    await this.tokensRepository.saveToken({
       user_id: user.id,
-      email: user.email,
       token: accessToken,
+      type: AUTH_TOKENS_MAPPER.access_token,
       expires_at: expiration,
     });
 
