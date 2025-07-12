@@ -2,13 +2,13 @@ import {
   Body,
   Controller,
   Post,
-  Req,
   Res,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import type { Request, Response } from 'express';
+import type { Response } from 'express';
 
+import { Cookies } from '@/common/decorators/cookies';
 import { COOKIES_MAPPER } from '@/domain/cookies';
 import type { SignInWithEmailResponseSchema } from '@/domain/schemas/auth';
 import { UtilsService } from '@/utils/utils.service';
@@ -83,18 +83,17 @@ export class AuthController {
   @ApiOperation({ summary: 'Logout do usuário.' })
   @ApiResponse({ status: 200, description: 'Logout realizado com sucesso.' })
   @ApiResponse({ status: 401, description: 'Token ausente ou inválido.' })
-  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    const accessToken =
-      (req.cookies as Record<string, string>)?.[COOKIES_MAPPER.access_token] ??
-      '';
-
+  async logout(
+    @Res({ passthrough: true }) response: Response,
+    @Cookies('access_token') accessToken: string,
+  ) {
     if (!accessToken) {
       throw new UnauthorizedException('Token de acesso ausente.');
     }
 
     await this.authService.logout(accessToken);
 
-    this.utilsService.deleteCookie(res, COOKIES_MAPPER.access_token);
+    this.utilsService.deleteCookie(response, COOKIES_MAPPER.access_token);
 
     return {
       success: true,
