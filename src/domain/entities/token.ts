@@ -5,18 +5,19 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-import { AUTH_TOKENS, type AuthTokenType } from '../schemas/token';
+import {
+  AUTH_TOKENS,
+  type AuthTokenSchema,
+  type AuthTokenType,
+} from '../schemas/token';
 
 @Entity('tokens')
-export class Token {
+export class Token implements AuthTokenSchema {
   @PrimaryGeneratedColumn({ type: 'integer' })
   id: number;
 
   @Column('uuid')
   user_id: string;
-
-  @Column({ type: 'varchar', length: 255 })
-  email: string;
 
   @Column({ type: 'varchar', length: 255 })
   token: string;
