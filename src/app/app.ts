@@ -39,7 +39,16 @@ export async function createNestApp(adapter?: ExpressAdapter) {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('/swagger', app, document);
+  SwaggerModule.setup('/swagger', app, document, {
+    swaggerOptions: {
+      withCredentials: true,
+      persistAuthorization: true,
+      requestInterceptor: (request: { credentials?: string }) => {
+        request.credentials = 'include';
+        return request;
+      },
+    },
+  });
 
   return app;
 }
