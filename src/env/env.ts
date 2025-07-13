@@ -6,7 +6,7 @@ export const envSchema = z.object({
     .default('development'),
 
   // API
-  API_BASE_URL: z.string().url().optional(),
+  API_BASE_URL: z.string().url(),
   API_PORT: z.coerce.number().default(3333),
 
   // APP
