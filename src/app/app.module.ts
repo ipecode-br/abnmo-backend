@@ -8,6 +8,8 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './http/auth/auth.module';
+// import { DiagnosticsModule } from './http/diagnostics/diagnostics.module';
+import { PatientsModule } from './http/patients/patients.module';
 import { UsersModule } from './http/users/users.module';
 
 // TODO: uncomment modules
@@ -21,7 +23,7 @@ import { UsersModule } from './http/users/users.module';
     DatabaseModule,
     AuthModule,
     UsersModule,
-    // PatientsModule,
+    PatientsModule,
     // PatientSupportsModule,
     // DiagnosticsModule,
   ],

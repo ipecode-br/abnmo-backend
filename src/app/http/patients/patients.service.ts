@@ -1,109 +1,106 @@
-// import {
-//   ConflictException,
-//   Injectable,
-//   NotFoundException,
-// } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 // import { DiagnosticsRepository } from '@/app/http/diagnostics/diagnostics.repository';
-// import { UsersRepository } from '@/app/http/users/users.repository';
-// import type { Patient } from '@/domain/entities/patient';
-// import {
-//   FormType,
-//   PatientFormsStatus,
-//   PendingForm,
-// } from '@/domain/types/form-types';
+import { UsersRepository } from '@/app/http/users/users.repository';
+import type { Patient } from '@/domain/entities/patient';
+import {
+  FormType,
+  PatientFormsStatus,
+  PendingForm,
+} from '@/domain/types/form-types';
 
-// import { CreatePatientDto } from './dto/create-patient.dto';
-// import { PatientsRepository } from './patients.repository';
-// import { validateTriagemForm } from './validators/form-validators';
+import { CreatePatientDto } from './dto/create-patient.dto';
+import { PatientsRepository } from './patients.repository';
+import { validateTriagemForm } from './validators/form-validators';
 
-// @Injectable()
-// export class PatientsService {
-//   constructor(
-//     private readonly patientsRepository: PatientsRepository,
-//     private readonly usersRepository: UsersRepository,
-//     private readonly diagnosticsRepository: DiagnosticsRepository,
-//   ) {}
+@Injectable()
+export class PatientsService {
+  constructor(
+    private readonly patientsRepository: PatientsRepository,
+    private readonly usersRepository: UsersRepository,
+    // private readonly diagnosticsRepository: DiagnosticsRepository,
+  ) {}
 
-//   async create(createPatientDto: CreatePatientDto): Promise<Patient> {
-//     const userExists = await this.usersRepository.findById(
-//       createPatientDto.id_user,
-//     );
+  async create(createPatientDto: CreatePatientDto): Promise<Patient> {
+    const userExists = await this.usersRepository.findById(
+      createPatientDto.user_id,
+    );
+    if (!userExists) {
+      throw new NotFoundException('Usuário não encontrado.');
+    }
+    // const diagnosticExists = await this.diagnosticsRepository.findById(
+    //   createPatientDto.id_diagnostic,
+    // );
 
-//     if (!userExists) {
-//       throw new NotFoundException('Usuário não encontrado.');
-//     }
+    // if (!diagnosticExists) {
+    //   throw new NotFoundException('Diagnóstico não encontrado.');
+    // }
 
-//     const diagnosticExists = await this.diagnosticsRepository.findById(
-//       createPatientDto.id_diagnostic,
-//     );
+    const patientExists = await this.patientsRepository.findByIdUsuario(
+      createPatientDto.user_id,
+    );
 
-//     if (!diagnosticExists) {
-//       throw new NotFoundException('Diagnóstico não encontrado.');
-//     }
+    if (patientExists) {
+      throw new ConflictException('Este paciente já possui um cadastro.');
+    }
 
-//     const patientExists = await this.patientsRepository.findByIdUsuario(
-//       createPatientDto.id_user,
-//     );
+    const patient = await this.patientsRepository.create(createPatientDto);
 
-//     if (patientExists) {
-//       throw new ConflictException('Este paciente já possui um cadastro.');
-//     }
+    return patient;
+  }
 
-//     const patient = await this.patientsRepository.create(createPatientDto);
+  async findAll(): Promise<Patient[]> {
+    const patients = await this.patientsRepository.findAll();
 
-//     return patient;
-//   }
+    return patients;
+  }
 
-//   async findAll(): Promise<Patient[]> {
-//     const patients = await this.patientsRepository.findAll();
+  async findById(id: string): Promise<Patient> {
+    const patient = await this.patientsRepository.findById(id);
+    if (!patient) {
+      throw new NotFoundException('Paciente não encontrado.');
+    }
 
-//     return patients;
-//   }
+    return patient;
+  }
 
-//   async findById(id: number): Promise<Patient> {
-//     const patient = await this.patientsRepository.findById(id);
+  async remove(id_paciente: string): Promise<Patient> {
+    const patientExists = await this.patientsRepository.findById(id_paciente);
 
-//     if (!patient) {
-//       throw new NotFoundException('Paciente não encontrado.');
-//     }
+    if (!patientExists) {
+      throw new NotFoundException('Paciente não encontrado.');
+    }
 
-//     return patient;
-//   }
+    const patient = await this.patientsRepository.remove(patientExists);
 
-//   async remove(id_paciente: number): Promise<Patient> {
-//     const patientExists = await this.patientsRepository.findById(id_paciente);
+    return patient;
+  }
 
-//     if (!patientExists) {
-//       throw new NotFoundException('Paciente não encontrado.');
-//     }
+  async getPatientFormsStatus(): Promise<PatientFormsStatus[]> {
+    const patients = await this.patientsRepository.getPatientsWithRelations();
 
-//     const patient = await this.patientsRepository.remove(patientExists);
+    return patients.map((patient) => {
+      const pendingForms: PendingForm[] = [];
+      const completedForms: FormType[] = [];
 
-//     return patient;
-//   }
+      // Validação do formulário de triagem
+      const triagemStatus = validateTriagemForm(patient);
+      if (triagemStatus) {
+        pendingForms.push(triagemStatus);
+      } else {
+        completedForms.push('triagem');
+      }
 
-//   async getPatientFormsStatus(): Promise<PatientFormsStatus[]> {
-//     const patients = await this.patientsRepository.getPatientsWithRelations();
-
-//     return patients.map((patient) => {
-//       const pendingForms: PendingForm[] = [];
-//       const completedForms: FormType[] = [];
-
-//       // Validação do formulário de triagem
-//       const triagemStatus = validateTriagemForm(patient);
-//       if (triagemStatus) {
-//         pendingForms.push(triagemStatus);
-//       } else {
-//         completedForms.push('triagem');
-//       }
-
-//       return {
-//         patientId: Number(patient.cpf), // Conversão explícita para number
-//         patientName: patient.user?.fullname || 'Não informado',
-//         pendingForms,
-//         completedForms,
-//       };
-//     });
-//   }
-// }
+      return {
+        patientId: Number(patient.cpf), // Conversão explícita para number
+        patientName: patient.user?.name || 'Não informado',
+        pendingForms,
+        completedForms,
+      };
+    });
+  }
+}
