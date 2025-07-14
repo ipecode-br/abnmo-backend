@@ -11,6 +11,7 @@ import { UtilsModule } from '@/utils/utils.module';
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { TokensRepository } from './tokens.repository';
 
 @Module({
@@ -29,8 +30,8 @@ import { TokensRepository } from './tokens.repository';
       }),
     }),
   ],
-  providers: [AuthService, TokensRepository],
+  providers: [AuthService, TokensRepository, JwtAuthGuard],
   controllers: [AuthController],
-  exports: [AuthService],
+  exports: [AuthService, JwtAuthGuard, TokensRepository],
 })
 export class AuthModule {}
