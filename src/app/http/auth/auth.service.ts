@@ -2,9 +2,11 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
 import { Hasher } from '@/domain/cryptography/hasher';
+import { AUTH_TOKENS_MAPPER } from '@/domain/schemas/token';
 
 import { UsersRepository } from '../users/users.repository';
 import type { SignInWithEmailDto } from './auth.dtos';
+import { TokensRepository } from './tokens.repository';
 
 @Injectable()
 export class AuthService {
@@ -12,15 +14,15 @@ export class AuthService {
     private readonly usersRepository: UsersRepository,
     private readonly jwtService: JwtService,
     private readonly hasher: Hasher,
+    private readonly tokensRepository: TokensRepository,
   ) {}
 
-  async signIn({
-    email,
-    password,
-  }: SignInWithEmailDto): Promise<{ accessToken: string }> {
+  async signIn({ email, password, rememberMe }: SignInWithEmailDto): Promise<{
+    accessToken: string;
+  }> {
     const user = await this.usersRepository.findByEmail(email);
 
-    if (!user || !user.password) {
+    if (!user) {
       throw new UnauthorizedException(
         'Credenciais inválidas. Por favor, tente novamente.',
       );
@@ -34,10 +36,27 @@ export class AuthService {
       );
     }
 
+    const expiresIn = rememberMe ? '30d' : '8h';
     const payload = { sub: user.id };
 
+    const accessToken = await this.jwtService.signAsync(payload, { expiresIn });
+
+    const expiration = new Date();
+    expiration.setHours(expiration.getHours() + (rememberMe ? 24 * 30 : 8));
+
+    await this.tokensRepository.saveToken({
+      user_id: user.id,
+      token: accessToken,
+      type: AUTH_TOKENS_MAPPER.access_token,
+      expires_at: expiration,
+    });
+
     return {
-      accessToken: await this.jwtService.signAsync(payload),
+      accessToken,
     };
+  }
+
+  async logout(token: string): Promise<void> {
+    await this.tokensRepository.deleteToken(token);
   }
 }

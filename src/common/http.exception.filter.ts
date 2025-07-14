@@ -8,6 +8,8 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 
+type ZodValidationErrors = Array<{ field: string; error: string }>;
+
 @Catch(HttpException)
 export class HttpExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(HttpExceptionFilter.name);
@@ -18,6 +20,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = 'Erro interno do servidor.';
+    let zodValidationErrors: ZodValidationErrors | undefined;
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
@@ -32,9 +35,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
       const responseObject = response as {
         message?: string;
         error?: string;
+        errors?: ZodValidationErrors;
       };
 
       const responseMessage = responseObject.message ?? responseObject.error;
+      zodValidationErrors = responseObject.errors;
 
       if (responseMessage) {
         message = responseMessage;
@@ -46,6 +51,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     response.status(status).json({
       success: false,
       message,
+      errors: zodValidationErrors,
     });
   }
 }

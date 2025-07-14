@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { CryptographyModule } from '@/app/cryptography/cryptography.module';
+import { Token } from '@/domain/entities/token';
 import { EnvModule } from '@/env/env.module';
 import { EnvService } from '@/env/env.service';
 import { UtilsModule } from '@/utils/utils.module';
@@ -9,9 +11,11 @@ import { UtilsModule } from '@/utils/utils.module';
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { TokensRepository } from './tokens.repository';
 
 @Module({
   imports: [
+    TypeOrmModule.forFeature([Token]),
     EnvModule,
     CryptographyModule,
     UsersModule,
@@ -21,11 +25,11 @@ import { AuthService } from './auth.service';
       inject: [EnvService],
       useFactory: (envService: EnvService) => ({
         secret: envService.get('JWT_SECRET'),
-        signOptions: { expiresIn: '1d' },
+        signOptions: { expiresIn: '8h' },
       }),
     }),
   ],
-  providers: [AuthService],
+  providers: [AuthService, TokensRepository],
   controllers: [AuthController],
   exports: [AuthService],
 })

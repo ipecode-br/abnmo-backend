@@ -5,6 +5,7 @@ import { baseResponseSchema } from './base';
 export const signInWithEmailSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
+  rememberMe: z.boolean().default(false),
 });
 export type SignInWithEmailSchema = z.infer<typeof signInWithEmailSchema>;
 
