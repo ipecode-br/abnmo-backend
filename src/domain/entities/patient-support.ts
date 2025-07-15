@@ -11,7 +11,7 @@ import {
 //import { Patient } from '@/domain/entities/patient';
 import { PatientSupportSchema } from '../schemas/patient-support';
 
-@Entity('support')
+@Entity('patient_support')
 export class PatientSupport implements PatientSupportSchema {
   @PrimaryGeneratedColumn('uuid')
   id: string;
