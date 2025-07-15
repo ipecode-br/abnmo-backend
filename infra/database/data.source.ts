@@ -4,6 +4,7 @@ import { DataSource } from 'typeorm';
 // import { Diagnostic } from '@/domain/entities/diagnostic';
 // import { Patient } from '@/domain/entities/patient';
 import { PatientSupport } from '@/domain/entities/patient-support';
+import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 
 config();
@@ -18,6 +19,7 @@ const dataSource = new DataSource({
   database: process.env.DB_DATABASE,
   entities: [
     User,
+    Token,
     // Patient,
     PatientSupport,
     // Diagnostic

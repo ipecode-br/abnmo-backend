@@ -1,6 +1,7 @@
 import {
   ConflictException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 
@@ -12,13 +13,15 @@ import { UsersRepository } from './users.repository';
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(
-    private readonly userRepository: UsersRepository,
+    private readonly usersRepository: UsersRepository,
     private readonly hasher: Hasher,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    const userExists = await this.userRepository.findByEmail(
+    const userExists = await this.usersRepository.findByEmail(
       createUserDto.email,
     );
 
@@ -31,11 +34,17 @@ export class UsersService {
     const hashPassword = await this.hasher.hash(createUserDto.password);
     createUserDto.password = hashPassword;
 
-    return this.userRepository.create(createUserDto);
+    const user = await this.usersRepository.create(createUserDto);
+
+    this.logger.log(
+      `Usuário registrado com sucesso: ${JSON.stringify({ id: user.id, email: user.email, timestamp: new Date() })}`,
+    );
+
+    return user;
   }
 
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
-    const user = await this.userRepository.findById(id);
+    const user = await this.usersRepository.findById(id);
 
     if (!user) {
       throw new NotFoundException('Usuário não encontrado.');
@@ -43,16 +52,16 @@ export class UsersService {
 
     Object.assign(user, updateUserDto);
 
-    return await this.userRepository.update(user);
+    return await this.usersRepository.update(user);
   }
 
   async remove(id: string): Promise<User> {
-    const user = await this.userRepository.findById(id);
+    const user = await this.usersRepository.findById(id);
 
     if (!user) {
       throw new NotFoundException('Usuário não encontrado.');
     }
 
-    return this.userRepository.remove(user);
+    return await this.usersRepository.remove(user);
   }
 }

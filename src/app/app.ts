@@ -22,13 +22,17 @@ export async function createNestApp(adapter?: ExpressAdapter) {
 
   app.useGlobalPipes(new GlobalZodValidationPipe());
   app.useGlobalFilters(new HttpExceptionFilter());
-  app.enableCors({
-    origin: envService.get('APP_URL'),
-    allowedHeaders: ['Authorization', 'Content-Type', 'Content-Length'],
-    methods: ['OPTIONS', 'GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
-    credentials: true,
-  });
-  app.use(cookieParser(envService.get('JWT_SECRET')));
+
+  if (envService.get('APP_ENVIRONMENT') === 'local') {
+    app.enableCors({
+      origin: envService.get('APP_URL'),
+      allowedHeaders: ['Authorization', 'Content-Type', 'Content-Length'],
+      methods: ['OPTIONS', 'GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
+      credentials: true,
+    });
+  }
+
+  app.use(cookieParser(envService.get('COOKIE_SECRET')));
 
   const config = new DocumentBuilder()
     .setTitle('SVM - Sistema Viver Melhor')
@@ -39,7 +43,16 @@ export async function createNestApp(adapter?: ExpressAdapter) {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('/swagger', app, document);
+  SwaggerModule.setup('/swagger', app, document, {
+    swaggerOptions: {
+      withCredentials: true,
+      persistAuthorization: true,
+      requestInterceptor: (request: { credentials?: string }) => {
+        request.credentials = 'include';
+        return request;
+      },
+    },
+  });
 
   return app;
 }

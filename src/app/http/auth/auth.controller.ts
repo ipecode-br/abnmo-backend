@@ -1,7 +1,14 @@
-import { Body, Controller, Logger, Post, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  Res,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import type { Response } from 'express';
 
+import { Cookies } from '@/common/decorators/cookies';
 import { COOKIES_MAPPER } from '@/domain/cookies';
 import type { SignInWithEmailResponseSchema } from '@/domain/schemas/auth';
 import { UtilsService } from '@/utils/utils.service';
@@ -13,8 +20,6 @@ import { AuthService } from './auth.service';
 
 @Controller()
 export class AuthController {
-  private readonly logger = new Logger(AuthController.name);
-
   constructor(
     private authService: AuthService,
     private utilsService: UtilsService,
@@ -51,18 +56,48 @@ export class AuthController {
   @ApiResponse({ status: 409, description: 'E-mail já registrado.' })
   async register(
     @Body() createUserDto: CreateUserDto,
+    @Res({ passthrough: true }) response: Response,
   ): Promise<SignInWithEmailResponseSchema> {
+    const password = createUserDto.password;
+
     const user = await this.usersService.create(createUserDto);
 
-    // TODO: create and set a access_token cookie after registering the user
+    const { accessToken } = await this.authService.signIn({
+      email: user.email,
+      password,
+      rememberMe: false,
+    });
 
-    this.logger.log(
-      `Usuário registrado com sucesso: ${JSON.stringify({ id: user.id, email: user.email, timestamp: new Date() })}`,
-    );
+    this.utilsService.setCookie(response, {
+      name: COOKIES_MAPPER.access_token,
+      value: accessToken,
+    });
 
     return {
       success: true,
       message: 'Registro realizado com sucesso.',
+    };
+  }
+
+  @Post('logout')
+  @ApiOperation({ summary: 'Logout do usuário.' })
+  @ApiResponse({ status: 200, description: 'Logout realizado com sucesso.' })
+  @ApiResponse({ status: 401, description: 'Token ausente ou inválido.' })
+  async logout(
+    @Res({ passthrough: true }) response: Response,
+    @Cookies('access_token') accessToken: string,
+  ) {
+    if (!accessToken) {
+      throw new UnauthorizedException('Token de acesso ausente.');
+    }
+
+    await this.authService.logout(accessToken);
+
+    this.utilsService.deleteCookie(response, COOKIES_MAPPER.access_token);
+
+    return {
+      success: true,
+      message: 'Logout realizado com sucesso.',
     };
   }
 }

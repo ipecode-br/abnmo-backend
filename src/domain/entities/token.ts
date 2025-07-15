@@ -20,9 +20,6 @@ export class Token implements AuthTokenSchema {
   user_id: string;
 
   @Column({ type: 'varchar', length: 255 })
-  email: string;
-
-  @Column({ type: 'varchar', length: 255 })
   token: string;
 
   @Column({ type: 'enum', enum: AUTH_TOKENS })
