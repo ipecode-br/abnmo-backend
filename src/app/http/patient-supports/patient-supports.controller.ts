@@ -1,183 +1,115 @@
-// import {
-//   Body,
-//   Controller,
-//   Delete,
-//   Get,
-//   Logger,
-//   Param,
-//   ParseIntPipe,
-//   Post,
-// } from '@nestjs/common';
-// import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  NotFoundException,
+  Param,
+  Post,
+} from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-// import { PatientSupport } from '@/domain/entities/patient-support';
-// import { EnvelopeDTO } from '@/utils/envelope.dto';
-// import { validateDto } from '@/utils/validate.dto';
+import {
+  CreatePatientSupportResponseSchema,
+  DeletePatientSupportResponseSchema,
+  FindAllPatientsSupportResponseSchema,
+  FindOnePatientsSupportResponseSchema,
+} from '@/domain/schemas/patient-support';
 
-// import { CreatePatientSupportDto } from './dto/create-patient-support.dto';
-// import { PatientSupportsService } from './patient-supports.service';
+import { CreatePatientSupportDto } from './dto/create-patient-support.dto';
+import { PatientSupportsRepository } from './patient-supports.repository';
+import { PatientSupportsService } from './patient-supports.service';
 
-// @ApiTags('Apoios')
-// @Controller('patient-supports')
-// export class PatientSupportsController {
-//   private readonly logger = new Logger(PatientSupportsController.name);
+@ApiTags('Rede de apoio')
+@Controller('patients/:patientId/patient-supports')
+export class PatientSupportsController {
+  constructor(
+    private readonly patientSupportsService: PatientSupportsService,
+    private readonly patientSupportsRepository: PatientSupportsRepository,
+  ) {}
 
-//   constructor(
-//     private readonly patientSupportsService: PatientSupportsService,
-//   ) {}
+  @Post()
+  @ApiOperation({
+    summary: 'Registra um novo contato de apoio para um paciente',
+  })
+  @ApiResponse({ status: 201, description: 'Apoio criado com sucesso' })
+  @ApiResponse({ status: 400, description: 'Dados inválidos' })
+  async create(
+    @Param('patientId') patientId: string,
+    @Body() createPatientSupportDto: CreatePatientSupportDto,
+  ): Promise<CreatePatientSupportResponseSchema> {
+    await this.patientSupportsService.create(
+      patientId,
+      createPatientSupportDto,
+    );
 
-//   @Post()
-//   @ApiOperation({ summary: 'Cria um novo apoio' })
-//   @ApiResponse({
-//     status: 201,
-//     description: 'Apoio criado com sucesso',
-//     type: PatientSupport,
-//   })
-//   @ApiResponse({
-//     status: 409,
-//     description: 'Apoio já cadastrado para esse paciente',
-//   })
-//   public async create(
-//     @Body() createPatientSupportDto: CreatePatientSupportDto,
-//   ): Promise<EnvelopeDTO<PatientSupport, null>> {
-//     try {
-//       await validateDto(createPatientSupportDto);
+    return {
+      success: true,
+      message: 'Contato de apoio registrado com sucesso.',
+    };
+  }
 
-//       const support = await this.patientSupportsService.create(
-//         createPatientSupportDto,
-//       );
+  @Get()
+  @ApiOperation({ summary: 'Lista todos os contatos de apoio de um paciente' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de contatos de apoio retornada com sucesso',
+  })
+  async findAll(
+    @Param('patientId') patientId: string,
+  ): Promise<FindAllPatientsSupportResponseSchema> {
+    const patientSupports =
+      await this.patientSupportsService.findAllByPatientId(patientId);
 
-//       if (!support) {
-//         this.logger.error('Falha ao criar o apoio.');
-//         return {
-//           success: false,
-//           message: 'Erro ao criar apoio',
-//           data: undefined,
-//         };
-//       }
+    return {
+      success: true,
+      message: 'Lista de contatos de apoio retornada com sucesso.',
+      data: {
+        patient_supports: patientSupports,
+        total: patientSupports.length,
+      },
+    };
+  }
 
-//       this.logger.log(`Apoio criado com sucesso: ${JSON.stringify(support)}`);
-//       return {
-//         success: true,
-//         message: 'Apoio criado com sucesso',
-//         data: support,
-//       };
-//     } catch (error: unknown) {
-//       this.logger.error(
-//         `Erro ao criar apoio: ${error instanceof Error ? error.message : 'Erro ao criar apoio'}`,
-//       );
-//       return {
-//         success: false,
-//         message:
-//           error instanceof Error
-//             ? error.message
-//             : 'Erro interno ao criar apoio',
-//         data: undefined,
-//       };
-//     }
-//   }
+  @Get(':id')
+  @ApiOperation({ summary: 'Busca um contato de apoio pelo ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Contato de apoio retornado com sucesso.',
+  })
+  @ApiResponse({ status: 400, description: 'ID inválido.' })
+  @ApiResponse({ status: 404, description: 'Contato de apoio não encontrado.' })
+  async findById(
+    @Param('id') id: string,
+  ): Promise<FindOnePatientsSupportResponseSchema> {
+    const patientSupport = await this.patientSupportsRepository.findById(id);
 
-//   @Get()
-//   @ApiOperation({ summary: 'Lista todos os apoios' })
-//   @ApiResponse({
-//     status: 200,
-//     description: 'Lista de apoios',
-//     type: [PatientSupport],
-//   })
-//   public async findAll(): Promise<EnvelopeDTO<PatientSupport[], null>> {
-//     try {
-//       const supports = await this.patientSupportsService.findAll();
-//       if (!supports) {
-//         return {
-//           success: false,
-//           message: 'Erro ao buscar lista de apoios!',
-//           data: undefined,
-//         };
-//       }
-//       return {
-//         success: true,
-//         message: 'Lista de suportes retornada com sucesso!',
-//         data: supports,
-//       };
-//     } catch (error) {
-//       return {
-//         success: false,
-//         message:
-//           error instanceof Error
-//             ? error.message
-//             : 'Erro interno ao buscar lista de apoios!',
-//         data: undefined,
-//       };
-//     }
-//   }
+    if (!patientSupport) {
+      throw new NotFoundException('Contato de apoio não encontrado.');
+    }
 
-//   @Get(':id')
-//   @ApiOperation({ summary: 'Busca um apoio pelo ID' })
-//   @ApiResponse({
-//     status: 200,
-//     description: 'Apoio encontrado',
-//     type: PatientSupport,
-//   })
-//   @ApiResponse({ status: 404, description: 'Apoio não encontrado' })
-//   public async findById(
-//     @Param('id', ParseIntPipe) id: number,
-//   ): Promise<EnvelopeDTO<PatientSupport, null>> {
-//     try {
-//       const support = await this.patientSupportsService.findById(id);
-//       if (!support) {
-//         this.logger.log(`Apoio não encontrado`);
-//         return {
-//           success: false,
-//           message: 'Apoio não encontrado',
-//           data: undefined,
-//         };
-//       }
-//       return {
-//         success: true,
-//         message: 'Apoio  encontrado',
-//         data: support,
-//       };
-//     } catch (error) {
-//       return {
-//         success: false,
-//         message:
-//           error instanceof Error ? error.message : 'Erro ao buscar apoio',
-//         data: undefined,
-//       };
-//     }
-//   }
+    return {
+      success: true,
+      message: 'Contato de apoio retornado com sucesso.',
+      data: patientSupport,
+    };
+  }
 
-//   @Delete(':id')
-//   @ApiOperation({ summary: 'Remove um apoio pelo ID' })
-//   @ApiResponse({ status: 200, description: 'Apoio removido com sucesso' })
-//   @ApiResponse({ status: 404, description: 'Apoio não encontrado' })
-//   public async remove(
-//     @Param('id', ParseIntPipe) id: number,
-//   ): Promise<EnvelopeDTO<PatientSupport, null>> {
-//     try {
-//       const support = await this.patientSupportsService.remove(id);
-//       if (!support) {
-//         return {
-//           success: false,
-//           message: 'Apoio não encontrado',
-//           data: undefined,
-//         };
-//       }
+  @Delete(':id')
+  @ApiOperation({ summary: 'Remove um contato de apoio pelo ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Contato de apoio removido com sucesso',
+  })
+  @ApiResponse({ status: 404, description: 'Contato de apoio não encontrado' })
+  async remove(
+    @Param('id') id: string,
+  ): Promise<DeletePatientSupportResponseSchema> {
+    await this.patientSupportsService.remove(id);
 
-//       return {
-//         success: true,
-//         message: 'Apoio removido com sucesso!',
-//         data: support,
-//       };
-//     } catch (error: any) {
-//       return {
-//         success: false,
-//         message:
-//           error instanceof Error
-//             ? error.message
-//             : 'Erro interno ao remover apoio!',
-//         data: undefined,
-//       };
-//     }
-//   }
-// }
+    return {
+      success: true,
+      message: 'Contato de apoio removido com sucesso.',
+    };
+  }
+}

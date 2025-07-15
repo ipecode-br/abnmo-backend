@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { PatientSupport } from '@/domain/entities/patient-support';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { EnvModule } from '@/env/env.module';
@@ -8,7 +9,6 @@ import { EnvService } from '@/env/env.service';
 
 // import { Diagnostic } from '@/domain/entities/diagnostic';
 // import { Patient } from '@/domain/entities/patient';
-// import { PatientSupport } from '@/domain/entities/patient-support';
 
 // TODO: uncomment entities
 @Module({
@@ -27,7 +27,7 @@ import { EnvService } from '@/env/env.service';
           User,
           Token,
           // Patient,
-          // PatientSupport,
+          PatientSupport,
           // Diagnostic
         ],
         migrations: [__dirname + 'infra/database/migrations/**/*.ts'],

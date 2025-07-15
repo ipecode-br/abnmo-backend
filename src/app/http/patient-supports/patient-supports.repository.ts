@@ -1,61 +1,47 @@
-// import { Injectable } from '@nestjs/common';
-// import { InjectRepository } from '@nestjs/typeorm';
-// import { Repository } from 'typeorm';
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
-// import { PatientSupport } from '@/domain/entities/patient-support';
+import { PatientSupport } from '@/domain/entities/patient-support';
 
-// import { CreatePatientSupportDto } from './dto/create-patient-support.dto';
+import { CreatePatientSupportDto } from './dto/create-patient-support.dto';
 
-// @Injectable()
-// export class PatientSupportsRepository {
-//   constructor(
-//     @InjectRepository(PatientSupport)
-//     private readonly patientSupportsRepository: Repository<PatientSupport>,
-//   ) {}
+@Injectable()
+export class PatientSupportsRepository {
+  constructor(
+    @InjectRepository(PatientSupport)
+    private readonly patientSupportsRepository: Repository<PatientSupport>,
+  ) {}
 
-//   public async findAll(): Promise<PatientSupport[]> {
-//     const patientSupports = await this.patientSupportsRepository.find({
-//       relations: ['paciente'],
-//     });
+  public async findById(id: string): Promise<PatientSupport | null> {
+    return await this.patientSupportsRepository.findOne({
+      where: { id: id },
+    });
+  }
 
-//     return patientSupports;
-//   }
+  public async findAllByPatientId(
+    patientId: string,
+  ): Promise<PatientSupport[]> {
+    return await this.patientSupportsRepository.find({
+      where: { patient_id: patientId },
+    });
+  }
 
-//   public async findById(id: number): Promise<PatientSupport | null> {
-//     const patientSupport = await this.patientSupportsRepository.findOne({
-//       where: {
-//         id_support: id,
-//       },
-//       relations: ['paciente'],
-//     });
+  public async create(
+    createPatientSupportDto: CreatePatientSupportDto,
+  ): Promise<PatientSupport> {
+    const patientSupportCreated = this.patientSupportsRepository.create(
+      createPatientSupportDto,
+    );
 
-//     return patientSupport;
-//   }
+    return await this.patientSupportsRepository.save(patientSupportCreated);
+  }
 
-//   public async create(
-//     support: CreatePatientSupportDto,
-//   ): Promise<PatientSupport> {
-//     const patientSupportCreated =
-//       this.patientSupportsRepository.create(support);
+  public async update(patientSupport: PatientSupport): Promise<PatientSupport> {
+    return await this.patientSupportsRepository.save(patientSupport);
+  }
 
-//     const patientSupportSaved = await this.patientSupportsRepository.save(
-//       patientSupportCreated,
-//     );
-
-//     return patientSupportSaved;
-//   }
-
-//   public async update(support: PatientSupport): Promise<PatientSupport> {
-//     const patientSupportUpdated =
-//       await this.patientSupportsRepository.save(support);
-
-//     return patientSupportUpdated;
-//   }
-
-//   public async remove(support: PatientSupport): Promise<PatientSupport> {
-//     const patientSupportDeleted =
-//       await this.patientSupportsRepository.remove(support);
-
-//     return patientSupportDeleted;
-//   }
-// }
+  public async remove(patientSupport: PatientSupport): Promise<PatientSupport> {
+    return await this.patientSupportsRepository.remove(patientSupport);
+  }
+}

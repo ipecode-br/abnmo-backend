@@ -1,65 +1,100 @@
-// import {
-//   BadRequestException,
-//   Injectable,
-//   NotFoundException,
-// } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 
-// import { PatientsRepository } from '@/app/http/patients/patients.repository';
+import { PatientSupport } from '@/domain/entities/patient-support';
 
-// import { CreatePatientSupportDto } from './dto/create-patient-support.dto';
-// import { PatientSupportsRepository } from './patient-supports.repository';
+import {
+  CreatePatientSupportDto,
+  UpdatePatientSupportDto,
+} from './dto/create-patient-support.dto';
+import { PatientSupportsRepository } from './patient-supports.repository';
 
-// @Injectable()
-// export class PatientSupportsService {
-//   constructor(
-//     private readonly patientSupportsRepository: PatientSupportsRepository,
-//     private readonly patientsRepository: PatientsRepository,
-//   ) {}
+@Injectable()
+export class PatientSupportsService {
+  private readonly logger = new Logger(PatientSupportsService.name);
 
-//   public async create(createPatientSupportDto: CreatePatientSupportDto) {
-//     const patientExists = await this.patientsRepository.findById(
-//       createPatientSupportDto.id_paciente,
-//     );
+  constructor(
+    // private readonly patientsRepository: PatientsRepository,
+    private readonly patientSupportsRepository: PatientSupportsRepository,
+  ) {}
 
-//     if (!patientExists) {
-//       throw new NotFoundException('Paciente não encontrado.');
-//     }
+  async create(
+    patientId: string,
+    createPatientSupportDto: CreatePatientSupportDto,
+  ): Promise<PatientSupport> {
+    // TODO: uncomment after PatientsRepository is available
+    // const patientExists = await this.patientsRepository.findById(patientId);
 
-//     const patientSupport = await this.patientSupportsRepository.create(
-//       createPatientSupportDto,
-//     );
-//     if (!patientSupport) {
-//       throw new BadRequestException('Erro ao criar apoio!');
-//     }
-//     return patientSupport;
-//   }
+    // if (!patientExists) {
+    //   throw new NotFoundException('Paciente não encontrado.');
+    // }
 
-//   public async findAll() {
-//     const patientSupports = await this.patientSupportsRepository.findAll();
+    const patientSupport = await this.patientSupportsRepository.create({
+      ...createPatientSupportDto,
+      patient_id: patientId,
+    });
 
-//     return patientSupports;
-//   }
+    if (!patientSupport) {
+      throw new InternalServerErrorException(
+        'Não foi possível registrar o contato de apoio.',
+      );
+    }
 
-//   public async findById(id: number) {
-//     const patientSupports = await this.patientSupportsRepository.findById(id);
+    this.logger.log(
+      `Contato registrado com sucesso: ${JSON.stringify({ id: patientSupport.id, patientId: patientSupport.patient_id, timestamp: new Date() })}`,
+    );
 
-//     if (!patientSupports) {
-//       throw new NotFoundException('Apoio não encontrado.');
-//     }
+    return patientSupport;
+  }
 
-//     return patientSupports;
-//   }
+  async findAllByPatientId(patientId: string): Promise<PatientSupport[]> {
+    // TODO: uncomment after PatientsRepository is available
+    // const patientExists = await this.patientsRepository.findById(patientId);
 
-//   public async remove(id: number) {
-//     const supportExists = await this.patientSupportsRepository.findById(id);
+    // if (!patientExists) {
+    //   throw new NotFoundException('Paciente não encontrado.');
+    // }
 
-//     if (!supportExists) {
-//       throw new NotFoundException('Apoio não encontrado.');
-//     }
+    return await this.patientSupportsRepository.findAllByPatientId(patientId);
+  }
 
-//     const patientSupports =
-//       await this.patientSupportsRepository.remove(supportExists);
+  async update(
+    id: string,
+    updatePatientsSupportDto: UpdatePatientSupportDto,
+  ): Promise<PatientSupport> {
+    const patientSupport = await this.patientSupportsRepository.findById(id);
 
-//     return patientSupports;
-//   }
-// }
+    if (!patientSupport) {
+      throw new NotFoundException('Contato de apoio não encontrado.');
+    }
+
+    Object.assign(patientSupport, updatePatientsSupportDto);
+
+    const patientSupportUpdated =
+      await this.patientSupportsRepository.update(patientSupport);
+
+    this.logger.log(
+      `Contato de apoio atualizado com sucesso: ${JSON.stringify({ id: patientSupportUpdated.id, patientId: patientSupportUpdated.patient_id, timestamp: new Date() })}`,
+    );
+
+    return patientSupportUpdated;
+  }
+
+  async remove(id: string): Promise<void> {
+    const patientSupport = await this.patientSupportsRepository.findById(id);
+
+    if (!patientSupport) {
+      throw new NotFoundException('Contato de apoio não encontrado.');
+    }
+
+    await this.patientSupportsRepository.remove(patientSupport);
+
+    this.logger.log(
+      `Contato de apoio removido com sucesso: ${JSON.stringify({ id: patientSupport.id, patientId: patientSupport.patient_id, timestamp: new Date() })}`,
+    );
+  }
+}

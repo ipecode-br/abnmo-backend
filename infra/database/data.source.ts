@@ -1,12 +1,11 @@
 import { config } from 'dotenv';
 import { DataSource } from 'typeorm';
 
-import { Token } from '@/domain/entities/token';
-import { User } from '@/domain/entities/user';
-
 // import { Diagnostic } from '@/domain/entities/diagnostic';
 // import { Patient } from '@/domain/entities/patient';
-// import { PatientSupport } from '@/domain/entities/patient-support';
+import { PatientSupport } from '@/domain/entities/patient-support';
+import { Token } from '@/domain/entities/token';
+import { User } from '@/domain/entities/user';
 
 config();
 
@@ -22,7 +21,7 @@ const dataSource = new DataSource({
     User,
     Token,
     // Patient,
-    // PatientSupport,
+    PatientSupport,
     // Diagnostic
   ],
   migrations: ['infra/database/migrations/**/*.ts'],
