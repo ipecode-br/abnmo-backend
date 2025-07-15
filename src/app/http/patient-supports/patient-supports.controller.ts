@@ -3,7 +3,7 @@ import {
   Controller,
   Delete,
   Get,
-  Logger,
+  NotFoundException,
   Param,
   Post,
 } from '@nestjs/common';
@@ -17,19 +17,21 @@ import {
 } from '@/domain/schemas/patient-support';
 
 import { CreatePatientSupportDto } from './dto/create-patient-support.dto';
+import { PatientSupportsRepository } from './patient-supports.repository';
 import { PatientSupportsService } from './patient-supports.service';
 
 @ApiTags('Apoios')
 @Controller('patients/:patientId/patient-supports')
 export class PatientSupportsController {
-  private readonly logger = new Logger(PatientSupportsController.name);
-
   constructor(
     private readonly patientSupportsService: PatientSupportsService,
+    private readonly patientSupportsRepository: PatientSupportsRepository,
   ) {}
 
   @Post()
-  @ApiOperation({ summary: 'Cria um novo apoio para um paciente' })
+  @ApiOperation({
+    summary: 'Registra um novo contato de apoio para um paciente',
+  })
   @ApiResponse({ status: 201, description: 'Apoio criado com sucesso' })
   @ApiResponse({ status: 400, description: 'Dados inválidos' })
   async create(
@@ -48,76 +50,66 @@ export class PatientSupportsController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Lista todos os apoios de um paciente' })
+  @ApiOperation({ summary: 'Lista todos os contatos de apoio de um paciente' })
   @ApiResponse({
     status: 200,
-    description: 'Lista de apoios retornada com sucesso.',
+    description: 'Lista de contatos de apoio retornada com sucesso',
   })
   async findAll(
     @Param('patientId') patientId: string,
   ): Promise<FindAllPatientsSupportResponseSchema> {
-    const supportsList = await this.findAll(patientId);
-
-    this.logger.log(
-      `Lista de apoios buscada para o paciente ${patientId}: ${supportsList.data.length} items encontrados`,
-    );
+    const patientSupports =
+      await this.patientSupportsService.findAllByPatientId(patientId);
 
     return {
       success: true,
-      message: `Lista de Apoio retornada com sucesso`,
-      data: supportsList.data,
+      message: 'Lista de contatos de apoio retornada com sucesso.',
+      data: {
+        patient_supports: patientSupports,
+        total: patientSupports.length,
+      },
     };
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Busca um apoio pelo ID' })
-  @ApiResponse({ status: 200, description: 'Apoio encontrado.' })
+  @ApiOperation({ summary: 'Busca um contato de apoio pelo ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Contato de apoio retornado com sucesso.',
+  })
   @ApiResponse({ status: 400, description: 'ID inválido.' })
-  @ApiResponse({ status: 404, description: 'Apoio não encontrado.' })
+  @ApiResponse({ status: 404, description: 'Contato de apoio não encontrado.' })
   async findById(
     @Param('id') id: string,
   ): Promise<FindOnePatientsSupportResponseSchema> {
-    const support = await this.findById(id);
+    const patientSupport = await this.patientSupportsRepository.findById(id);
 
-    this.logger.log(
-      `Apoio buscado com sucesso: ${JSON.stringify({
-        id: support.data.id,
-        patientID: support.data.patient_id,
-        timestamp: new Date(),
-      })}`,
-    );
+    if (!patientSupport) {
+      throw new NotFoundException('Contato de apoio não encontrado.');
+    }
 
     return {
       success: true,
-      message: `Apoio retornado com sucesso.`,
-      data: support.data,
+      message: 'Contato de apoio retornado com sucesso.',
+      data: patientSupport,
     };
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Remove um apoio pelo ID' })
+  @ApiOperation({ summary: 'Remove um contato de apoio pelo ID' })
   @ApiResponse({
     status: 200,
-    description: 'Apoio removido com sucesso.',
+    description: 'Contato de apoio removido com sucesso',
   })
-  @ApiResponse({ status: 404, description: 'Apoio não encontrado' })
-  @ApiResponse({ status: 400, description: 'ID inválido.' })
+  @ApiResponse({ status: 404, description: 'Contato de apoio não encontrado' })
   async remove(
     @Param('id') id: string,
   ): Promise<DeletePatientSupportResponseSchema> {
-    const supportDelete = await this.patientSupportsService.remove(id);
-
-    this.logger.log(
-      `Apoio removido com sucesso: ${JSON.stringify({
-        id: supportDelete.id,
-        patientId: supportDelete.patient_id,
-        timestamp: new Date(),
-      })}`,
-    );
+    await this.patientSupportsService.remove(id);
 
     return {
       success: true,
-      message: `Apoio retornado com sucesso`,
+      message: 'Contato de apoio removido com sucesso.',
     };
   }
 }

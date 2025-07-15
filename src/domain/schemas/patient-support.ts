@@ -38,7 +38,10 @@ export type CreatePatientSupportResponseSchema = z.infer<
 >;
 
 export const findAllPatientsSupportResponseSchema = baseResponseSchema.extend({
-  data: z.array(patientSupportSchema),
+  data: z.object({
+    patient_supports: z.array(patientSupportSchema),
+    total: z.number(),
+  }),
 });
 export type FindAllPatientsSupportResponseSchema = z.infer<
   typeof findAllPatientsSupportResponseSchema
@@ -50,6 +53,7 @@ export const findOnePatientsSupportResponseSchema = baseResponseSchema.extend({
 export type FindOnePatientsSupportResponseSchema = z.infer<
   typeof findOnePatientsSupportResponseSchema
 >;
+
 //Update
 
 export const updatePatientSupportParamsSchema = z.object({
