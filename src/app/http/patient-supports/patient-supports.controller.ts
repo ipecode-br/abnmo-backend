@@ -30,28 +30,20 @@ export class PatientSupportsController {
 
   @Post()
   @ApiOperation({ summary: 'Cria um novo apoio para um paciente' })
-  @ApiResponse({ status: 201, description: 'Apoio criado com sucesso.' })
+  @ApiResponse({ status: 201, description: 'Apoio criado com sucesso' })
   @ApiResponse({ status: 400, description: 'Dados inválidos' })
-  @ApiResponse({
-    status: 409,
-    description: 'Apoio já cadastrado para esse paciente',
-  })
   async create(
     @Param('patientId') patientId: string,
     @Body() createPatientSupportDto: CreatePatientSupportDto,
   ): Promise<CreatePatientSupportResponseSchema> {
-    const patientSupport = await this.patientSupportsService.create(
+    await this.patientSupportsService.create(
       patientId,
       createPatientSupportDto,
     );
 
-    this.logger.log(
-      `Contato registrado com sucesso: ${JSON.stringify({ id: patientSupport.id, patientId: patientSupport.patient_id, timestamp: new Date() })}`,
-    );
-
     return {
       success: true,
-      message: 'Contato registrado com sucesso.',
+      message: 'Contato de apoio registrado com sucesso.',
     };
   }
 
