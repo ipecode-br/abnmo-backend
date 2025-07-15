@@ -13,49 +13,35 @@ export class PatientSupportsRepository {
     private readonly patientSupportsRepository: Repository<PatientSupport>,
   ) {}
 
-  public async findAll(): Promise<PatientSupport[]> {
-    const patientSupports = await this.patientSupportsRepository.find({
-      relations: ['paciente'],
+  public async findById(id: string): Promise<PatientSupport | null> {
+    return await this.patientSupportsRepository.findOne({
+      where: { id: id },
     });
-
-    return patientSupports;
   }
 
-  public async findById(id: string): Promise<PatientSupport | null> {
-    const patientSupport = await this.patientSupportsRepository.findOne({
-      where: {
-        id: id,
-      },
-      relations: ['paciente'],
+  public async findAllByPatientId(
+    patientId: string,
+  ): Promise<PatientSupport[]> {
+    return await this.patientSupportsRepository.find({
+      where: { patient_id: patientId },
     });
-
-    return patientSupport;
   }
 
   public async create(
-    support: CreatePatientSupportDto,
+    createPatientSupportDto: CreatePatientSupportDto,
   ): Promise<PatientSupport> {
-    const patientSupportCreated =
-      this.patientSupportsRepository.create(support);
-
-    const patientSupportSaved = await this.patientSupportsRepository.save(
-      patientSupportCreated,
+    const patientSupportCreated = this.patientSupportsRepository.create(
+      createPatientSupportDto,
     );
 
-    return patientSupportSaved;
+    return await this.patientSupportsRepository.save(patientSupportCreated);
   }
 
-  public async update(support: PatientSupport): Promise<PatientSupport> {
-    const patientSupportUpdated =
-      await this.patientSupportsRepository.save(support);
-
-    return patientSupportUpdated;
+  public async update(patientSupport: PatientSupport): Promise<PatientSupport> {
+    return await this.patientSupportsRepository.save(patientSupport);
   }
 
-  public async remove(support: PatientSupport): Promise<PatientSupport> {
-    const patientSupportDeleted =
-      await this.patientSupportsRepository.remove(support);
-
-    return patientSupportDeleted;
+  public async remove(patientSupport: PatientSupport): Promise<PatientSupport> {
+    return await this.patientSupportsRepository.remove(patientSupport);
   }
 }
