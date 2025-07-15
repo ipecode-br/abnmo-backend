@@ -20,7 +20,7 @@ import { CreatePatientSupportDto } from './dto/create-patient-support.dto';
 import { PatientSupportsRepository } from './patient-supports.repository';
 import { PatientSupportsService } from './patient-supports.service';
 
-@ApiTags('Apoios')
+@ApiTags('Rede de apoio')
 @Controller('patients/:patientId/patient-supports')
 export class PatientSupportsController {
   constructor(

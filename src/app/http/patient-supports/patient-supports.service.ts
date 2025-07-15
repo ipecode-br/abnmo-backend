@@ -18,6 +18,7 @@ export class PatientSupportsService {
   private readonly logger = new Logger(PatientSupportsService.name);
 
   constructor(
+    // private readonly patientsRepository: PatientsRepository,
     private readonly patientSupportsRepository: PatientSupportsRepository,
   ) {}
 
@@ -25,12 +26,12 @@ export class PatientSupportsService {
     patientId: string,
     createPatientSupportDto: CreatePatientSupportDto,
   ): Promise<PatientSupport> {
-    const patientExists =
-      await this.patientSupportsRepository.findById(patientId);
+    // TODO: uncomment after PatientsRepository is available
+    // const patientExists = await this.patientsRepository.findById(patientId);
 
-    if (!patientExists) {
-      throw new NotFoundException('Paciente não encontrado.');
-    }
+    // if (!patientExists) {
+    //   throw new NotFoundException('Paciente não encontrado.');
+    // }
 
     const patientSupport = await this.patientSupportsRepository.create({
       ...createPatientSupportDto,
@@ -50,27 +51,50 @@ export class PatientSupportsService {
     return patientSupport;
   }
 
+  async findAllByPatientId(patientId: string): Promise<PatientSupport[]> {
+    // TODO: uncomment after PatientsRepository is available
+    // const patientExists = await this.patientsRepository.findById(patientId);
+
+    // if (!patientExists) {
+    //   throw new NotFoundException('Paciente não encontrado.');
+    // }
+
+    return await this.patientSupportsRepository.findAllByPatientId(patientId);
+  }
+
   async update(
     id: string,
     updatePatientsSupportDto: UpdatePatientSupportDto,
   ): Promise<PatientSupport> {
-    const supportExists = await this.patientSupportsRepository.findById(id);
+    const patientSupport = await this.patientSupportsRepository.findById(id);
 
-    if (!supportExists)
-      throw new NotFoundException('Apoio do paciente não encontrado.');
+    if (!patientSupport) {
+      throw new NotFoundException('Contato de apoio não encontrado.');
+    }
 
-    Object.assign(supportExists, updatePatientsSupportDto);
+    Object.assign(patientSupport, updatePatientsSupportDto);
 
-    return this.patientSupportsRepository.update(supportExists);
+    const patientSupportUpdated =
+      await this.patientSupportsRepository.update(patientSupport);
+
+    this.logger.log(
+      `Contato de apoio atualizado com sucesso: ${JSON.stringify({ id: patientSupportUpdated.id, patientId: patientSupportUpdated.patient_id, timestamp: new Date() })}`,
+    );
+
+    return patientSupportUpdated;
   }
-  async remove(id: string): Promise<PatientSupport> {
-    const support = await this.patientSupportsRepository.findById(id);
 
-    if (!support)
-      throw new NotFoundException(
-        `Apoio do paciente com ID ${id} não encontrado.`,
-      );
+  async remove(id: string): Promise<void> {
+    const patientSupport = await this.patientSupportsRepository.findById(id);
 
-    return this.patientSupportsRepository.remove(support);
+    if (!patientSupport) {
+      throw new NotFoundException('Contato de apoio não encontrado.');
+    }
+
+    await this.patientSupportsRepository.remove(patientSupport);
+
+    this.logger.log(
+      `Contato de apoio removido com sucesso: ${JSON.stringify({ id: patientSupport.id, patientId: patientSupport.patient_id, timestamp: new Date() })}`,
+    );
   }
 }
