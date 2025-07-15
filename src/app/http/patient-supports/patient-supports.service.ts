@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 
 import { PatientSupport } from '@/domain/entities/patient-support';
 
@@ -10,23 +15,39 @@ import { PatientSupportsRepository } from './patient-supports.repository';
 
 @Injectable()
 export class PatientSupportsService {
+  private readonly logger = new Logger(PatientSupportsService.name);
+
   constructor(
     private readonly patientSupportsRepository: PatientSupportsRepository,
   ) {}
 
   async create(
     patientId: string,
-    createDto: CreatePatientSupportDto,
+    createPatientSupportDto: CreatePatientSupportDto,
   ): Promise<PatientSupport> {
     const patientExists =
       await this.patientSupportsRepository.findById(patientId);
 
-    if (!patientExists) throw new NotFoundException('Paciente não encontrado.');
+    if (!patientExists) {
+      throw new NotFoundException('Paciente não encontrado.');
+    }
 
-    return this.patientSupportsRepository.create({
-      ...createDto,
+    const patientSupport = await this.patientSupportsRepository.create({
+      ...createPatientSupportDto,
       patient_id: patientId,
     });
+
+    if (!patientSupport) {
+      throw new InternalServerErrorException(
+        'Não foi possível registrar o contato de apoio.',
+      );
+    }
+
+    this.logger.log(
+      `Contato registrado com sucesso: ${JSON.stringify({ id: patientSupport.id, patientId: patientSupport.patient_id, timestamp: new Date() })}`,
+    );
+
+    return patientSupport;
   }
 
   async update(
