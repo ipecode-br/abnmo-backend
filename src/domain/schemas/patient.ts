@@ -25,9 +25,8 @@ export const patientSchema = z
       .regex(/^\d+$/)
       .refine((num) => num.length === 11),
     cpf: z.string().min(11).max(11),
-    state: z.string(),
+    state: z.string().min(2).max(2),
     city: z.string(),
-    url_photo: z.string().url().nullable(),
     // medical report
     has_disability: z.boolean().default(false),
     disability_desc: z.string().nullable(),
@@ -35,7 +34,6 @@ export const patientSchema = z
     take_medication: z.boolean().default(false),
     medication_desc: z.string().nullable(),
     has_nmo_diagnosis: z.boolean().default(false),
-    // filename_diagnostic: z.string().nullable(),
     created_at: z.coerce.date(),
     updated_at: z.coerce.date(),
   })
@@ -55,7 +53,10 @@ export type CreatePatientResponseSchema = z.infer<
 >;
 
 export const findAllPatientsResponseSchema = baseResponseSchema.extend({
-  data: z.array(patientSchema),
+  data: z.object({
+    patients: z.array(patientSchema),
+    total: z.number(),
+  }),
 });
 export type FindAllPatientsResponseSchema = z.infer<
   typeof findAllPatientsResponseSchema
