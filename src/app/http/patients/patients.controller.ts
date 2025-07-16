@@ -3,13 +3,12 @@ import {
   Controller,
   Delete,
   Get,
-  Logger,
+  NotFoundException,
   Param,
   Post,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-import { Patient } from '@/domain/entities/patient';
 import {
   CreatePatientResponseSchema,
   DeletePatientResponseSchema,
@@ -17,37 +16,28 @@ import {
   FindOnePatientResponseSchema,
 } from '@/domain/schemas/patient';
 
-import { CreatePatientDto } from './dto/create-patient.dto';
+import { CreatePatientDto } from './patients.dtos';
+import { PatientsRepository } from './patients.repository';
 import { PatientsService } from './patients.service';
 
 @ApiTags('Pacientes')
 @Controller('patients')
 export class PatientsController {
-  private readonly logger = new Logger(PatientsController.name);
-
-  constructor(private readonly patientsService: PatientsService) {}
+  constructor(
+    private readonly patientsService: PatientsService,
+    private readonly patientsRepository: PatientsRepository,
+  ) {}
 
   @Post()
-  @ApiOperation({ summary: 'Cria um novo paciente' })
-  @ApiResponse({
-    status: 201,
-    description: 'Paciente criado com sucesso',
-    type: Patient,
-  })
-  @ApiResponse({
-    status: 209,
-    description: 'Paciente já cadastrado',
-  })
+  @ApiOperation({ summary: 'Cadastra um novo paciente' })
   public async create(
     @Body() createPatientDto: CreatePatientDto,
   ): Promise<CreatePatientResponseSchema> {
-    const patient = await this.patientsService.create(createPatientDto);
-
-    this.logger.log(`Paciente criado com sucesso: ${JSON.stringify(patient)}`);
+    await this.patientsService.create(createPatientDto);
 
     return {
       success: true,
-      message: 'Paciente criado com sucesso',
+      message: 'Cadastro realizado com sucesso.',
     };
   }
 
@@ -55,39 +45,34 @@ export class PatientsController {
   @ApiOperation({ summary: 'Lista todos os pacientes' })
   @ApiResponse({
     status: 200,
-    description: 'Lista de pacientes',
-    type: [Patient],
+    description: 'Lista de pacientes retornada com sucesso',
   })
   public async findAll(): Promise<FindAllPatientsResponseSchema> {
-    const patients = await this.patientsService.findAll();
+    const patients = await this.patientsRepository.findAll();
 
-    this.logger.log(
-      `Lista de pacientes: ${patients.length} itens encontrados `,
-    );
     return {
       success: true,
-      message: 'Lista de pacientes retornada com sucesso!',
-      data: patients,
+      message: 'Lista de pacientes retornada com sucesso.',
+      data: { patients, total: patients.length },
     };
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Busca um paciente pelo ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Paciente encontrado',
-    type: Patient,
-  })
+  @ApiResponse({ status: 200, description: 'Paciente retornado com sucesso' })
   @ApiResponse({ status: 404, description: 'Paciente não encontrado' })
   public async findById(
     @Param('id') id: string,
   ): Promise<FindOnePatientResponseSchema> {
-    const patient = await this.patientsService.findById(id);
+    const patient = await this.patientsRepository.findById(id);
 
-    this.logger.log(`Paciente encontrado: ${JSON.stringify(patient)}`);
+    if (!patient) {
+      throw new NotFoundException('Paciente não encontrado.');
+    }
+
     return {
       success: true,
-      message: 'Paciente encontrado',
+      message: 'Paciente retornado com sucesso.',
       data: patient,
     };
   }
@@ -99,14 +84,11 @@ export class PatientsController {
   public async remove(
     @Param('id') id: string,
   ): Promise<DeletePatientResponseSchema> {
-    const patient = await this.patientsService.remove(id);
+    await this.patientsService.remove(id);
 
-    this.logger.log(
-      `Paciente removido com sucesso: ${JSON.stringify(patient)}`,
-    );
     return {
       success: true,
-      message: '`Paciente removido com sucesso',
+      message: 'Paciente removido com sucesso.',
     };
   }
 
