@@ -1,10 +1,9 @@
 import { config } from 'dotenv';
 import { DataSource } from 'typeorm';
 
-
+import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
-import { Patient } from '@/domain/entities/patient';
 // import { Diagnostic } from '@/domain/entities/diagnostic';
 // import { PatientSupport } from '@/domain/entities/patient-support';
 

@@ -10,7 +10,6 @@ export const validateTriagemForm = (patient: Patient): PendingForm | null => {
   if (!patient.state) missingFields.push('state');
   if (!patient.phone) missingFields.push('whatsapp');
   if (!patient.cpf) missingFields.push('cpf');
-  if (!patient.url_photo) missingFields.push('url_photo');
   if (patient.has_disability === undefined)
     missingFields.push('have_disability');
   if (patient.need_legal_assistance === undefined)
