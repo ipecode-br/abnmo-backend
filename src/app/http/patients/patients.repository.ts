@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
 
-import { CreatePatientDto } from './dto/create-patient.dto';
+import { CreatePatientDto } from './patients.dtos';
 
 @Injectable()
 export class PatientsRepository {
@@ -14,60 +14,57 @@ export class PatientsRepository {
   ) {}
 
   public async findAll(): Promise<Patient[]> {
-    const patients = await this.patientsRepository.find({
-      relations: ['user'],
+    return await this.patientsRepository.find({
+      relations: { user: true },
+      select: {
+        user: {
+          name: true,
+          email: true,
+          avatar_url: true,
+        },
+      },
     });
-
-    return patients;
   }
 
   public async findById(id: string): Promise<Patient | null> {
-    const patient = await this.patientsRepository.findOne({
-      where: {
-        user_id: id,
+    return await this.patientsRepository.findOne({
+      relations: { user: true },
+      where: { id },
+      select: {
+        user: {
+          name: true,
+          email: true,
+          avatar_url: true,
+        },
       },
-      relations: ['user'],
     });
-
-    return patient;
   }
 
-  public async findByIdUsuario(user_id: string): Promise<Patient | null> {
-    const patient = await this.patientsRepository.findOne({
-      where: {
-        user_id,
+  public async findByUserId(userId: string): Promise<Patient | null> {
+    return await this.patientsRepository.findOne({
+      relations: { user: true },
+      where: { user_id: userId },
+      select: {
+        user: {
+          name: true,
+          email: true,
+          avatar_url: true,
+        },
       },
-      relations: ['user'],
     });
-
-    return patient;
   }
 
   public async create(patient: CreatePatientDto): Promise<Patient> {
-    const patientCreated = this.patientsRepository.create({
-      ...patient,
-      url_photo: patient.url_photo ?? null,
-      disability_desc: patient.disability_desc ?? null,
-      medication_desc: patient.medication_desc ?? null,
-      // diagnostic: { id: patient.id_diagnostic },
-      // filename_diagnostic: patient.filename_diagnostic ?? null,
-    });
-
-    const patientSaved = await this.patientsRepository.save(patientCreated);
-
-    return patientSaved;
+    const patientCreated = this.patientsRepository.create(patient);
+    return await this.patientsRepository.save(patientCreated);
   }
 
   public async update(patient: Patient): Promise<Patient> {
-    const patientUpdated = await this.patientsRepository.save(patient);
-
-    return patientUpdated;
+    return await this.patientsRepository.save(patient);
   }
 
   public async remove(patient: Patient): Promise<Patient> {
-    const patientDeleted = await this.patientsRepository.remove(patient);
-
-    return patientDeleted;
+    return await this.patientsRepository.remove(patient);
   }
 
   public async getFormsStatus(): Promise<{
@@ -89,7 +86,6 @@ export class PatientsRepository {
         patient.state,
         patient.phone,
         patient.cpf,
-        patient.url_photo,
         patient.has_disability !== undefined,
         patient.need_legal_assistance !== undefined,
         patient.take_medication !== undefined,
