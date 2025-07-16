@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { baseResponseSchema } from './base';
+
 // Entity
 
 export const GENDERS = [
@@ -18,9 +20,12 @@ export const patientSchema = z
     user_id: z.string().uuid(),
     gender: z.enum(GENDERS).default('prefer_not_to_say'),
     date_of_birth: z.coerce.date(),
-    phone: z.string(),
+    phone: z
+      .string()
+      .regex(/^\d+$/)
+      .refine((num) => num.length === 11),
     cpf: z.string().min(11).max(11),
-    state: z.string(),
+    state: z.string().min(2).max(2),
     city: z.string(),
     // medical report
     has_disability: z.boolean().default(false),
@@ -34,3 +39,37 @@ export const patientSchema = z
   })
   .strict();
 export type PatientSchema = z.infer<typeof patientSchema>;
+
+export const createPatientSchema = patientSchema.omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+export type CreatePatientSchema = z.infer<typeof createPatientSchema>;
+
+export const createPatientResponseSchema = baseResponseSchema.extend({});
+export type CreatePatientResponseSchema = z.infer<
+  typeof createPatientResponseSchema
+>;
+
+export const findAllPatientsResponseSchema = baseResponseSchema.extend({
+  data: z.object({
+    patients: z.array(patientSchema),
+    total: z.number(),
+  }),
+});
+export type FindAllPatientsResponseSchema = z.infer<
+  typeof findAllPatientsResponseSchema
+>;
+
+export const findOnePatientResponseSchema = baseResponseSchema.extend({
+  data: patientSchema,
+});
+export type FindOnePatientResponseSchema = z.infer<
+  typeof findOnePatientResponseSchema
+>;
+
+export const deletePatientResponseSchema = baseResponseSchema.extend({});
+export type DeletePatientResponseSchema = z.infer<
+  typeof deletePatientResponseSchema
+>;

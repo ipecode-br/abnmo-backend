@@ -10,7 +10,7 @@ import { PatientSupport } from '@/domain/entities/patient-support';
 import {
   CreatePatientSupportDto,
   UpdatePatientSupportDto,
-} from './dto/create-patient-support.dto';
+} from './patient-supports.dtos';
 import { PatientSupportsRepository } from './patient-supports.repository';
 
 @Injectable()

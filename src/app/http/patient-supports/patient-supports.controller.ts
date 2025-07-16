@@ -16,7 +16,7 @@ import {
   FindOnePatientsSupportResponseSchema,
 } from '@/domain/schemas/patient-support';
 
-import { CreatePatientSupportDto } from './dto/create-patient-support.dto';
+import { CreatePatientSupportDto } from './patient-supports.dtos';
 import { PatientSupportsRepository } from './patient-supports.repository';
 import { PatientSupportsService } from './patient-supports.service';
 

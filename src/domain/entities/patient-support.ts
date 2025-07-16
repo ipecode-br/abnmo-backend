@@ -2,14 +2,14 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  //JoinColumn,
-  //ManyToOne,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
-//import { Patient } from '@/domain/entities/patient';
 import { PatientSupportSchema } from '../schemas/patient-support';
+import { Patient } from './patient';
 
 @Entity('patient_support')
 export class PatientSupport implements PatientSupportSchema {
@@ -33,9 +33,8 @@ export class PatientSupport implements PatientSupportSchema {
 
   @UpdateDateColumn({ type: 'timestamp' })
   updated_at: Date;
-  /*
+
   @ManyToOne(() => Patient)
-  @JoinColumn({ name: patient_id })
+  @JoinColumn({ name: 'patient_id' })
   patient: Patient;
-*/
 }

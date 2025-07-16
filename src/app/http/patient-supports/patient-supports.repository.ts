@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 
 import { PatientSupport } from '@/domain/entities/patient-support';
 
-import { CreatePatientSupportDto } from './dto/create-patient-support.dto';
+import { CreatePatientSupportDto } from './patient-supports.dtos';
 
 @Injectable()
 export class PatientSupportsRepository {
