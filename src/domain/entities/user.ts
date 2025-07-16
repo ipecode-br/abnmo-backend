@@ -2,7 +2,9 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToOne,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
 import {
@@ -10,6 +12,7 @@ import {
   type UserRoleType,
   type UserSchema,
 } from '../schemas/user';
+import { Patient } from './patient';
 
 @Entity('users')
 export class User implements UserSchema {
@@ -34,6 +37,9 @@ export class User implements UserSchema {
   @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
 
-  @CreateDateColumn({ type: 'timestamp' })
+  @UpdateDateColumn({ type: 'timestamp' })
   updated_at: Date;
+
+  @OneToOne(() => Patient, (patient) => patient.user)
+  patient: Patient;
 }
