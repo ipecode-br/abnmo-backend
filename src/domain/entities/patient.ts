@@ -3,6 +3,7 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  OneToMany,
   // OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
@@ -13,6 +14,7 @@ import {
 import { User } from '@/domain/entities/user';
 
 import { GENDERS, GenderType, PatientSchema } from '../schemas/patient';
+import { PatientSupport } from './patient-support';
 
 @Entity('patients')
 export class Patient implements PatientSchema {
@@ -68,6 +70,6 @@ export class Patient implements PatientSchema {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  // @OneToMany(() => PatientSupport, (support) => support.patient)
-  // support: PatientSupport[];
+  @OneToMany(() => PatientSupport, (support) => support.patient)
+  supports: PatientSupport[];
 }
