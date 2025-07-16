@@ -1,46 +1,38 @@
 import {
   ConflictException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 
-// import { DiagnosticsRepository } from '@/app/http/diagnostics/diagnostics.repository';
 import { UsersRepository } from '@/app/http/users/users.repository';
-import type { Patient } from '@/domain/entities/patient';
 import {
   FormType,
   PatientFormsStatus,
   PendingForm,
 } from '@/domain/types/form-types';
 
-import { CreatePatientDto } from './dto/create-patient.dto';
+import { CreatePatientDto } from './patients.dtos';
 import { PatientsRepository } from './patients.repository';
 import { validateTriagemForm } from './validators/form-validators';
 
 @Injectable()
 export class PatientsService {
+  private readonly logger = new Logger(PatientsService.name);
+
   constructor(
     private readonly patientsRepository: PatientsRepository,
     private readonly usersRepository: UsersRepository,
-    // private readonly diagnosticsRepository: DiagnosticsRepository,
   ) {}
 
-  async create(createPatientDto: CreatePatientDto): Promise<Patient> {
-    const userExists = await this.usersRepository.findById(
-      createPatientDto.user_id,
-    );
-    if (!userExists) {
+  async create(createPatientDto: CreatePatientDto): Promise<void> {
+    const user = await this.usersRepository.findById(createPatientDto.user_id);
+
+    if (!user) {
       throw new NotFoundException('Usuário não encontrado.');
     }
-    // const diagnosticExists = await this.diagnosticsRepository.findById(
-    //   createPatientDto.id_diagnostic,
-    // );
 
-    // if (!diagnosticExists) {
-    //   throw new NotFoundException('Diagnóstico não encontrado.');
-    // }
-
-    const patientExists = await this.patientsRepository.findByIdUsuario(
+    const patientExists = await this.patientsRepository.findByUserId(
       createPatientDto.user_id,
     );
 
@@ -50,34 +42,23 @@ export class PatientsService {
 
     const patient = await this.patientsRepository.create(createPatientDto);
 
-    return patient;
+    this.logger.log(
+      `Paciente cadastrado com sucesso: ${JSON.stringify({ id: patient.id, userId: patient.user_id, timestamp: new Date() })}`,
+    );
   }
 
-  async findAll(): Promise<Patient[]> {
-    const patients = await this.patientsRepository.findAll();
+  async remove(patientId: string): Promise<void> {
+    const patient = await this.patientsRepository.findById(patientId);
 
-    return patients;
-  }
-
-  async findById(id: string): Promise<Patient> {
-    const patient = await this.patientsRepository.findById(id);
     if (!patient) {
       throw new NotFoundException('Paciente não encontrado.');
     }
 
-    return patient;
-  }
+    await this.patientsRepository.remove(patient);
 
-  async remove(id_paciente: string): Promise<Patient> {
-    const patientExists = await this.patientsRepository.findById(id_paciente);
-
-    if (!patientExists) {
-      throw new NotFoundException('Paciente não encontrado.');
-    }
-
-    const patient = await this.patientsRepository.remove(patientExists);
-
-    return patient;
+    this.logger.log(
+      `Paciente removido com sucesso: ${JSON.stringify({ id: patient.id, userId: patient.user_id, timestamp: new Date() })}`,
+    );
   }
 
   async getPatientFormsStatus(): Promise<PatientFormsStatus[]> {
@@ -96,7 +77,7 @@ export class PatientsService {
       }
 
       return {
-        patientId: Number(patient.cpf), // Conversão explícita para number
+        patientId: Number(patient.cpf),
         patientName: patient.user?.name || 'Não informado',
         pendingForms,
         completedForms,
