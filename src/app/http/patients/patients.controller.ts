@@ -5,6 +5,7 @@ import {
   Get,
   NotFoundException,
   Param,
+  Patch,
   Post,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -14,6 +15,7 @@ import {
   DeletePatientResponseSchema,
   FindAllPatientsResponseSchema,
   FindOnePatientResponseSchema,
+  InactivatePatientResponseSchema,
 } from '@/domain/schemas/patient';
 
 import { CreatePatientDto } from './patients.dtos';
@@ -120,5 +122,21 @@ export class PatientsController {
         data: [],
       };
     }
+  }
+
+  @Patch(':id/inactivate')
+  @ApiOperation({ summary: 'Inativa o Paciente pelo ID' })
+  @ApiResponse({ status: 200, description: 'Paciente inativado com sucesso' })
+  @ApiResponse({ status: 404, description: 'Paciente não encontrado' })
+  @ApiResponse({ status: 409, description: 'Paciente já está inativo' })
+  async inactivatePatient(
+    @Param('id') id: string,
+  ): Promise<InactivatePatientResponseSchema> {
+    await this.patientsService.deactivatePatient(id);
+
+    return {
+      success: true,
+      message: 'Paciente inativado com sucesso.',
+    };
   }
 }
