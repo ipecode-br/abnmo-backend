@@ -13,7 +13,13 @@ import {
 // import { PatientSupport } from '@/domain/entities/patient-support';
 import { User } from '@/domain/entities/user';
 
-import { GENDERS, GenderType, PatientSchema } from '../schemas/patient';
+import {
+  GENDERS,
+  GenderType,
+  PatientSchema,
+  STATUS,
+  StatusType,
+} from '../schemas/patient';
 import { PatientSupport } from './patient-support';
 
 @Entity('patients')
@@ -59,6 +65,9 @@ export class Patient implements PatientSchema {
 
   @Column({ type: 'tinyint', width: 1, default: 0 })
   has_nmo_diagnosis: boolean;
+
+  @Column({ type: 'enum', enum: STATUS })
+  status: StatusType;
 
   @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
