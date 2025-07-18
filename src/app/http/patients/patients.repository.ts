@@ -110,10 +110,7 @@ export class PatientsRepository {
     });
   }
 
-  public async setPatientInactive(id: string): Promise<Patient> {
-    return this.patientsRepository.save({
-      id,
-      status: 'inactive',
-    });
+  public async deactivate(id: string): Promise<Patient> {
+    return this.patientsRepository.save({ id, status: 'inactive' });
   }
 }

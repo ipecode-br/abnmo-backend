@@ -89,14 +89,14 @@ export class PatientsService {
     const patient = await this.patientsRepository.findById(id);
 
     if (!patient) {
-      throw new NotFoundException('Paciente não encontrado!');
+      throw new NotFoundException('Paciente não encontrado.');
     }
 
     if (patient.status == 'inactive') {
       throw new ConflictException('Paciente já está inativo.');
     }
 
-    await this.patientsRepository.setPatientInactive(id);
+    await this.patientsRepository.deactivate(id);
 
     this.logger.log(
       `Paciente inativado com sucesso: ${JSON.stringify({ id: patient.id, userId: patient.user_id, timestamp: new Date() })}`,
