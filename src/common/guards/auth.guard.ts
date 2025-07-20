@@ -4,22 +4,38 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 
-import { UsersRepository } from '../../users/users.repository';
+import { UsersRepository } from '@/app/http/users/users.repository';
+import type { Cookie } from '@/domain/cookies';
+import type { UserSchema } from '@/domain/schemas/user';
+
+import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 
 @Injectable()
-export class JwtAuthGuard implements CanActivate {
+export class AuthGuard implements CanActivate {
   constructor(
+    private readonly reflector: Reflector,
     private readonly jwtService: JwtService,
     private readonly usersRepository: UsersRepository,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    if (isPublic) {
+      return true;
+    }
+
     const request = context.switchToHttp().getRequest<{
-      signedCookies?: { access_token?: string };
-      user?: unknown;
+      signedCookies?: Record<Cookie, string>;
+      user?: UserSchema;
     }>();
+
     const token = request.signedCookies?.access_token;
 
     if (!token) {
@@ -27,19 +43,21 @@ export class JwtAuthGuard implements CanActivate {
     }
 
     try {
-      const decoded: { user_id?: string } = this.jwtService.verify(token);
+      const tokenPaylod = this.jwtService.verify<{ sub?: string }>(token);
+      const userId = tokenPaylod.sub;
 
-      if (!decoded?.user_id) {
+      if (!userId) {
         throw new UnauthorizedException('Token inválido.');
       }
 
-      const user = await this.usersRepository.findById(decoded.user_id);
+      const user = await this.usersRepository.findById(userId);
 
       if (!user) {
         throw new UnauthorizedException('Usuário não encontrado.');
       }
 
       request.user = user;
+
       return true;
     } catch (error) {
       console.error('Auth error:', error);
