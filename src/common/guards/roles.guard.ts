@@ -20,8 +20,13 @@ export class RolesGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
+    const roles = this.reflector.getAllAndMerge(Roles, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
 
-    if (isPublic) {
+    // Bypass validation for public routes or when no role is provided to compare
+    if (isPublic || !roles || roles.length === 0) {
       return true;
     }
 
@@ -34,11 +39,6 @@ export class RolesGuard implements CanActivate {
         'Você não tem permissão para executar esta ação.',
       );
     }
-
-    const roles = this.reflector.getAllAndMerge(Roles, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
 
     const isAllowed = roles.includes(user.role);
 
