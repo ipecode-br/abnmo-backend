@@ -1,109 +1,116 @@
-// import { Injectable } from '@nestjs/common';
-// import { InjectRepository } from '@nestjs/typeorm';
-// import { Repository } from 'typeorm';
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
-// import { Patient } from '@/domain/entities/patient';
+import { Patient } from '@/domain/entities/patient';
 
-// import { CreatePatientDto } from './dto/create-patient.dto';
+import { CreatePatientDto } from './patients.dtos';
 
-// @Injectable()
-// export class PatientsRepository {
-//   constructor(
-//     @InjectRepository(Patient)
-//     private readonly patientsRepository: Repository<Patient>,
-//   ) {}
+@Injectable()
+export class PatientsRepository {
+  constructor(
+    @InjectRepository(Patient)
+    private readonly patientsRepository: Repository<Patient>,
+  ) {}
 
-//   public async findAll(): Promise<Patient[]> {
-//     const patients = await this.patientsRepository.find({
-//       relations: ['support', 'diagnostic', 'user'],
-//     });
+  public async findAll(): Promise<Patient[]> {
+    return await this.patientsRepository.find({
+      relations: { user: true },
+      select: {
+        user: {
+          name: true,
+          email: true,
+          avatar_url: true,
+        },
+      },
+    });
+  }
 
-//     return patients;
-//   }
+  public async findById(id: string): Promise<Patient | null> {
+    return await this.patientsRepository.findOne({
+      relations: { user: true },
+      where: { id },
+      select: {
+        user: {
+          name: true,
+          email: true,
+          avatar_url: true,
+        },
+      },
+    });
+  }
 
-//   public async findById(id: number): Promise<Patient | null> {
-//     const patient = await this.patientsRepository.findOne({
-//       where: {
-//         id_user: id,
-//       },
-//       relations: ['support', 'diagnostic', 'user'],
-//     });
+  public async findByUserId(userId: string): Promise<Patient | null> {
+    return await this.patientsRepository.findOne({
+      relations: { user: true },
+      where: { user_id: userId },
+      select: {
+        user: {
+          name: true,
+          email: true,
+          avatar_url: true,
+        },
+      },
+    });
+  }
 
-//     return patient;
-//   }
+  public async create(patient: CreatePatientDto): Promise<Patient> {
+    const patientCreated = this.patientsRepository.create(patient);
+    return await this.patientsRepository.save(patientCreated);
+  }
 
-//   public async findByIdUsuario(id_user: number): Promise<Patient | null> {
-//     const patient = await this.patientsRepository.findOne({
-//       where: {
-//         id_user,
-//       },
-//       relations: ['support', 'diagnostic', 'user'],
-//     });
+  public async update(patient: Patient): Promise<Patient> {
+    return await this.patientsRepository.save(patient);
+  }
 
-//     return patient;
-//   }
+  public async remove(patient: Patient): Promise<Patient> {
+    return await this.patientsRepository.remove(patient);
+  }
 
-//   public async create(patient: CreatePatientDto): Promise<Patient> {
-//     const patientCreated = this.patientsRepository.create(patient);
+  public async getFormsStatus(): Promise<{
+    completeForms: Patient[];
+    pendingForms: Patient[];
+  }> {
+    const allPatients = await this.patientsRepository.find({
+      relations: ['user'],
+    });
 
-//     const patientSaved = await this.patientsRepository.save(patientCreated);
+    const completeForms: Patient[] = [];
+    const pendingForms: Patient[] = [];
 
-//     return patientSaved;
-//   }
+    allPatients.forEach((patient) => {
+      const patientComplete = [
+        patient.gender,
+        patient.date_of_birth,
+        patient.city,
+        patient.state,
+        patient.phone,
+        patient.cpf,
+        patient.has_disability !== undefined,
+        patient.need_legal_assistance !== undefined,
+        patient.take_medication !== undefined,
+        // patient.diagnostic?.id,
+      ].every((field) => field !== undefined && field !== null && field !== '');
 
-//   public async update(patient: Patient): Promise<Patient> {
-//     const patientUpdated = await this.patientsRepository.save(patient);
+      // const supportComplete = patient.support && patient.support.length > 0;
 
-//     return patientUpdated;
-//   }
+      if (patientComplete) {
+        completeForms.push(patient);
+      } else {
+        pendingForms.push(patient);
+      }
+    });
 
-//   public async remove(patient: Patient): Promise<Patient> {
-//     const patientDeleted = await this.patientsRepository.remove(patient);
+    return { completeForms, pendingForms };
+  }
 
-//     return patientDeleted;
-//   }
+  public async getPatientsWithRelations(): Promise<Patient[]> {
+    return this.patientsRepository.find({
+      relations: ['user'], // Adicione outras relações conforme necessário
+    });
+  }
 
-//   public async getFormsStatus(): Promise<{
-//     completeForms: Patient[];
-//     pendingForms: Patient[];
-//   }> {
-//     const allPatients = await this.patientsRepository.find({
-//       relations: ['support', 'user'],
-//     });
-
-//     const completeForms: Patient[] = [];
-//     const pendingForms: Patient[] = [];
-
-//     allPatients.forEach((patient) => {
-//       const patientComplete = [
-//         patient.desc_gender,
-//         patient.birth_of_date,
-//         patient.city,
-//         patient.state,
-//         patient.whatsapp,
-//         patient.cpf,
-//         patient.url_photo,
-//         patient.have_disability !== undefined,
-//         patient.need_legal_help !== undefined,
-//         patient.use_medicine !== undefined,
-//         patient.id_diagnostic,
-//       ].every((field) => field !== undefined && field !== null && field !== '');
-
-//       const supportComplete = patient.support && patient.support.length > 0;
-
-//       if (patientComplete && supportComplete) {
-//         completeForms.push(patient);
-//       } else {
-//         pendingForms.push(patient);
-//       }
-//     });
-
-//     return { completeForms, pendingForms };
-//   }
-
-//   public async getPatientsWithRelations(): Promise<Patient[]> {
-//     return this.patientsRepository.find({
-//       relations: ['user', 'support'], // Adicione outras relações conforme necessário
-//     });
-//   }
-// }
+  public async deactivate(id: string): Promise<Patient> {
+    return this.patientsRepository.save({ id, status: 'inactive' });
+  }
+}

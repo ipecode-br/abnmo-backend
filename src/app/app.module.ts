@@ -8,9 +8,10 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './http/auth/auth.module';
+import { PatientSupportsModule } from './http/patient-supports/patient-supports.module';
+import { PatientsModule } from './http/patients/patients.module';
 import { UsersModule } from './http/users/users.module';
 
-// TODO: uncomment modules
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -21,9 +22,8 @@ import { UsersModule } from './http/users/users.module';
     DatabaseModule,
     AuthModule,
     UsersModule,
-    // PatientsModule,
-    // PatientSupportsModule,
-    // DiagnosticsModule,
+    PatientsModule,
+    PatientSupportsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

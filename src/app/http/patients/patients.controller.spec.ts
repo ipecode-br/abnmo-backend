@@ -1,21 +1,21 @@
-// import { Test, TestingModule } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 
-// import { PatientsController } from './patients.controller';
-// import { PatientsService } from './patients.service';
+import { PatientsController } from './patients.controller';
+import { PatientsService } from './patients.service';
 
-// describe('PatientController', () => {
-//   let controller: PatientsController;
+describe('PatientController', () => {
+  let controller: PatientsController;
 
-//   beforeEach(async () => {
-//     const module: TestingModule = await Test.createTestingModule({
-//       controllers: [PatientsController],
-//       providers: [PatientsService],
-//     }).compile();
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [PatientsController],
+      providers: [PatientsService],
+    }).compile();
 
-//     controller = module.get<PatientsController>(PatientsController);
-//   });
+    controller = module.get<PatientsController>(PatientsController);
+  });
 
-//   it('should be defined', () => {
-//     expect(controller).toBeDefined();
-//   });
-// });
+  it('should be defined', () => {
+    expect(controller).toBeDefined();
+  });
+});

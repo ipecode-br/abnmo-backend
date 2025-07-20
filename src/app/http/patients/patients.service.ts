@@ -1,109 +1,105 @@
-// import {
-//   ConflictException,
-//   Injectable,
-//   NotFoundException,
-// } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 
-// import { DiagnosticsRepository } from '@/app/http/diagnostics/diagnostics.repository';
-// import { UsersRepository } from '@/app/http/users/users.repository';
-// import type { Patient } from '@/domain/entities/patient';
-// import {
-//   FormType,
-//   PatientFormsStatus,
-//   PendingForm,
-// } from '@/domain/types/form-types';
+import { UsersRepository } from '@/app/http/users/users.repository';
+import {
+  FormType,
+  PatientFormsStatus,
+  PendingForm,
+} from '@/domain/types/form-types';
 
-// import { CreatePatientDto } from './dto/create-patient.dto';
-// import { PatientsRepository } from './patients.repository';
-// import { validateTriagemForm } from './validators/form-validators';
+import { CreatePatientDto } from './patients.dtos';
+import { PatientsRepository } from './patients.repository';
+import { validateTriagemForm } from './validators/form-validators';
 
-// @Injectable()
-// export class PatientsService {
-//   constructor(
-//     private readonly patientsRepository: PatientsRepository,
-//     private readonly usersRepository: UsersRepository,
-//     private readonly diagnosticsRepository: DiagnosticsRepository,
-//   ) {}
+@Injectable()
+export class PatientsService {
+  private readonly logger = new Logger(PatientsService.name);
 
-//   async create(createPatientDto: CreatePatientDto): Promise<Patient> {
-//     const userExists = await this.usersRepository.findById(
-//       createPatientDto.id_user,
-//     );
+  constructor(
+    private readonly patientsRepository: PatientsRepository,
+    private readonly usersRepository: UsersRepository,
+  ) {}
 
-//     if (!userExists) {
-//       throw new NotFoundException('Usuário não encontrado.');
-//     }
+  async create(createPatientDto: CreatePatientDto): Promise<void> {
+    const user = await this.usersRepository.findById(createPatientDto.user_id);
 
-//     const diagnosticExists = await this.diagnosticsRepository.findById(
-//       createPatientDto.id_diagnostic,
-//     );
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado.');
+    }
 
-//     if (!diagnosticExists) {
-//       throw new NotFoundException('Diagnóstico não encontrado.');
-//     }
+    const patientExists = await this.patientsRepository.findByUserId(
+      createPatientDto.user_id,
+    );
 
-//     const patientExists = await this.patientsRepository.findByIdUsuario(
-//       createPatientDto.id_user,
-//     );
+    if (patientExists) {
+      throw new ConflictException('Este paciente já possui um cadastro.');
+    }
 
-//     if (patientExists) {
-//       throw new ConflictException('Este paciente já possui um cadastro.');
-//     }
+    const patient = await this.patientsRepository.create(createPatientDto);
 
-//     const patient = await this.patientsRepository.create(createPatientDto);
+    this.logger.log(
+      `Paciente cadastrado com sucesso: ${JSON.stringify({ id: patient.id, userId: patient.user_id, timestamp: new Date() })}`,
+    );
+  }
 
-//     return patient;
-//   }
+  async remove(patientId: string): Promise<void> {
+    const patient = await this.patientsRepository.findById(patientId);
 
-//   async findAll(): Promise<Patient[]> {
-//     const patients = await this.patientsRepository.findAll();
+    if (!patient) {
+      throw new NotFoundException('Paciente não encontrado.');
+    }
 
-//     return patients;
-//   }
+    await this.patientsRepository.remove(patient);
 
-//   async findById(id: number): Promise<Patient> {
-//     const patient = await this.patientsRepository.findById(id);
+    this.logger.log(
+      `Paciente removido com sucesso: ${JSON.stringify({ id: patient.id, userId: patient.user_id, timestamp: new Date() })}`,
+    );
+  }
 
-//     if (!patient) {
-//       throw new NotFoundException('Paciente não encontrado.');
-//     }
+  async getPatientFormsStatus(): Promise<PatientFormsStatus[]> {
+    const patients = await this.patientsRepository.getPatientsWithRelations();
 
-//     return patient;
-//   }
+    return patients.map((patient) => {
+      const pendingForms: PendingForm[] = [];
+      const completedForms: FormType[] = [];
 
-//   async remove(id_paciente: number): Promise<Patient> {
-//     const patientExists = await this.patientsRepository.findById(id_paciente);
+      // Validação do formulário de triagem
+      const triagemStatus = validateTriagemForm(patient);
+      if (triagemStatus) {
+        pendingForms.push(triagemStatus);
+      } else {
+        completedForms.push('triagem');
+      }
 
-//     if (!patientExists) {
-//       throw new NotFoundException('Paciente não encontrado.');
-//     }
+      return {
+        patientId: Number(patient.cpf),
+        patientName: patient.user?.name || 'Não informado',
+        pendingForms,
+        completedForms,
+      };
+    });
+  }
 
-//     const patient = await this.patientsRepository.remove(patientExists);
+  async deactivatePatient(id: string): Promise<void> {
+    const patient = await this.patientsRepository.findById(id);
 
-//     return patient;
-//   }
+    if (!patient) {
+      throw new NotFoundException('Paciente não encontrado.');
+    }
 
-//   async getPatientFormsStatus(): Promise<PatientFormsStatus[]> {
-//     const patients = await this.patientsRepository.getPatientsWithRelations();
+    if (patient.status == 'inactive') {
+      throw new ConflictException('Paciente já está inativo.');
+    }
 
-//     return patients.map((patient) => {
-//       const pendingForms: PendingForm[] = [];
-//       const completedForms: FormType[] = [];
+    await this.patientsRepository.deactivate(id);
 
-//       // Validação do formulário de triagem
-//       const triagemStatus = validateTriagemForm(patient);
-//       if (triagemStatus) {
-//         pendingForms.push(triagemStatus);
-//       } else {
-//         completedForms.push('triagem');
-//       }
-
-//       return {
-//         patientId: Number(patient.cpf), // Conversão explícita para number
-//         patientName: patient.user?.fullname || 'Não informado',
-//         pendingForms,
-//         completedForms,
-//       };
-//     });
-//   }
-// }
+    this.logger.log(
+      `Paciente inativado com sucesso: ${JSON.stringify({ id: patient.id, userId: patient.user_id, timestamp: new Date() })}`,
+    );
+  }
+}
