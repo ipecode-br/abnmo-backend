@@ -18,7 +18,6 @@ import {
 import { FindAllPatientsSupportResponseSchema } from '@/domain/schemas/patient-support';
 
 import { PatientSupportsRepository } from '../patient-supports/patient-supports.repository';
-import { PatientSupportsService } from '../patient-supports/patient-supports.service';
 import { CreatePatientDto } from './patients.dtos';
 import { PatientsRepository } from './patients.repository';
 import { PatientsService } from './patients.service';
@@ -29,8 +28,7 @@ export class PatientsController {
   constructor(
     private readonly patientsService: PatientsService,
     private readonly patientsRepository: PatientsRepository,
-    private readonly patientsSupportService: PatientSupportsService,
-    private readonly patientsSupportRepository: PatientSupportsRepository,
+    private readonly patientsSupportsRepository: PatientSupportsRepository,
   ) {}
 
   @Post()
@@ -127,18 +125,23 @@ export class PatientsController {
     }
   }
 
-  // ----------  PATIENTS-SUPPORTS ----------
   @Get(':id/patient-supports')
   @ApiOperation({ summary: 'Lista todos os contatos de apoio de um paciente' })
   @ApiResponse({
     status: 200,
     description: 'Lista de contatos de apoio retornada com sucesso',
   })
-  async findAllPatientSupport(
+  async findAllPatientSupports(
     @Param('id') patientId: string,
   ): Promise<FindAllPatientsSupportResponseSchema> {
+    const patient = await this.patientsRepository.findById(patientId);
+
+    if (!patient) {
+      throw new NotFoundException('Paciente não encontrado.');
+    }
+
     const patientSupports =
-      await this.patientsSupportRepository.findAllByPatientId(patientId);
+      await this.patientsSupportsRepository.findAllByPatientId(patientId);
 
     return {
       success: true,

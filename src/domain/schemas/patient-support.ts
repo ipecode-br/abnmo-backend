@@ -73,9 +73,7 @@ export type UpdatePatientSupportSchema = z.infer<
   typeof updatePatientSupportSchema
 >;
 
-export const updatePatientSupportResponseSchema = baseResponseSchema.extend({
-  data: patientSupportSchema,
-});
+export const updatePatientSupportResponseSchema = baseResponseSchema.extend({});
 export type UpdatePatientSupportResponseSchema = z.infer<
   typeof updatePatientSupportResponseSchema
 >;
