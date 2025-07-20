@@ -54,19 +54,19 @@ export class PatientSupportsController {
     };
   }
 
-  @Post(':id')
+  @Post(':patientId')
   @ApiOperation({
     summary: 'Registra um novo contato de apoio para um paciente',
   })
   @ApiResponse({ status: 201, description: 'Apoio criado com sucesso' })
   @ApiResponse({ status: 400, description: 'Dados inválidos' })
   async createPatientSupport(
-    @Param('id') support_id: string,
+    @Param('patientId') patientId: string,
     @Body() createPatientSupportDto: CreatePatientSupportDto,
   ): Promise<CreatePatientSupportResponseSchema> {
     await this.patientSupportsService.create(
       createPatientSupportDto,
-      support_id,
+      patientId,
     );
 
     return {
