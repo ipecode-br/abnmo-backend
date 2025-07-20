@@ -9,6 +9,7 @@ import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 import { Cookies } from '@/common/decorators/cookies';
+import { Public } from '@/common/decorators/public.decorator';
 import { COOKIES_MAPPER } from '@/domain/cookies';
 import type { SignInWithEmailResponseSchema } from '@/domain/schemas/auth';
 import { UtilsService } from '@/utils/utils.service';
@@ -18,6 +19,7 @@ import { UsersService } from '../users/users.service';
 import { SignInWithEmailDto } from './auth.dtos';
 import { AuthService } from './auth.service';
 
+@Public()
 @Controller()
 export class AuthController {
   constructor(
