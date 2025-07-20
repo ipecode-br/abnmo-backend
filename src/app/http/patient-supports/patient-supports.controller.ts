@@ -85,17 +85,13 @@ export class PatientSupportsController {
   @ApiResponse({ status: 404, description: 'Contato de apoio não encontrado.' })
   async updatePatientSupport(
     @Param('id') id: string,
-    @Body() updateDto: UpdatePatientSupportDto,
+    @Body() updatePatientSupportDto: UpdatePatientSupportDto,
   ): Promise<UpdatePatientSupportResponseSchema> {
-    const patientSupport = await this.patientSupportsService.update(
-      id,
-      updateDto,
-    );
+    await this.patientSupportsService.update(id, updatePatientSupportDto);
 
     return {
       success: true,
       message: 'Contato de apoio atualizado com sucesso.',
-      data: patientSupport,
     };
   }
 
