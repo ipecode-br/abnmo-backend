@@ -6,70 +6,29 @@ import {
   NotFoundException,
   Param,
   Post,
+  Put,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import {
   CreatePatientSupportResponseSchema,
   DeletePatientSupportResponseSchema,
-  FindAllPatientsSupportResponseSchema,
   FindOnePatientsSupportResponseSchema,
+  UpdatePatientSupportResponseSchema,
 } from '@/domain/schemas/patient-support';
 
-import { CreatePatientSupportDto } from './patient-supports.dtos';
+import { CreatePatientSupportDto } from '../patient-supports/patient-supports.dtos';
+import { UpdatePatientSupportDto } from './patient-supports.dtos';
 import { PatientSupportsRepository } from './patient-supports.repository';
 import { PatientSupportsService } from './patient-supports.service';
 
 @ApiTags('Rede de apoio')
-@Controller('patients/:patientId/patient-supports')
+@Controller('patient-supports')
 export class PatientSupportsController {
   constructor(
     private readonly patientSupportsService: PatientSupportsService,
     private readonly patientSupportsRepository: PatientSupportsRepository,
   ) {}
-
-  @Post()
-  @ApiOperation({
-    summary: 'Registra um novo contato de apoio para um paciente',
-  })
-  @ApiResponse({ status: 201, description: 'Apoio criado com sucesso' })
-  @ApiResponse({ status: 400, description: 'Dados inválidos' })
-  async create(
-    @Param('patientId') patientId: string,
-    @Body() createPatientSupportDto: CreatePatientSupportDto,
-  ): Promise<CreatePatientSupportResponseSchema> {
-    await this.patientSupportsService.create(
-      patientId,
-      createPatientSupportDto,
-    );
-
-    return {
-      success: true,
-      message: 'Contato de apoio registrado com sucesso.',
-    };
-  }
-
-  @Get()
-  @ApiOperation({ summary: 'Lista todos os contatos de apoio de um paciente' })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de contatos de apoio retornada com sucesso',
-  })
-  async findAll(
-    @Param('patientId') patientId: string,
-  ): Promise<FindAllPatientsSupportResponseSchema> {
-    const patientSupports =
-      await this.patientSupportsService.findAllByPatientId(patientId);
-
-    return {
-      success: true,
-      message: 'Lista de contatos de apoio retornada com sucesso.',
-      data: {
-        patient_supports: patientSupports,
-        total: patientSupports.length,
-      },
-    };
-  }
 
   @Get(':id')
   @ApiOperation({ summary: 'Busca um contato de apoio pelo ID' })
@@ -91,6 +50,51 @@ export class PatientSupportsController {
     return {
       success: true,
       message: 'Contato de apoio retornado com sucesso.',
+      data: patientSupport,
+    };
+  }
+
+  @Post(':id')
+  @ApiOperation({
+    summary: 'Registra um novo contato de apoio para um paciente',
+  })
+  @ApiResponse({ status: 201, description: 'Apoio criado com sucesso' })
+  @ApiResponse({ status: 400, description: 'Dados inválidos' })
+  async createPatientSupport(
+    @Param('id') support_id: string,
+    @Body() createPatientSupportDto: CreatePatientSupportDto,
+  ): Promise<CreatePatientSupportResponseSchema> {
+    await this.patientSupportsService.create(
+      createPatientSupportDto,
+      support_id,
+    );
+
+    return {
+      success: true,
+      message: 'Contato de apoio registrado com sucesso.',
+    };
+  }
+
+  @Put(':id')
+  @ApiOperation({ summary: 'Atualiza um contato de apoio por ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Contato de apoio atualizado com sucesso',
+  })
+  @ApiResponse({ status: 400, description: 'ID inválido.' })
+  @ApiResponse({ status: 404, description: 'Contato de apoio não encontrado.' })
+  async updatePatientSupport(
+    @Param('id') id: string,
+    @Body() updateDto: UpdatePatientSupportDto,
+  ): Promise<UpdatePatientSupportResponseSchema> {
+    const patientSupport = await this.patientSupportsService.update(
+      id,
+      updateDto,
+    );
+
+    return {
+      success: true,
+      message: 'Contato de apoio atualizado com sucesso.',
       data: patientSupport,
     };
   }

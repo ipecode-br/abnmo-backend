@@ -23,8 +23,8 @@ export class PatientSupportsService {
   ) {}
 
   async create(
-    patientId: string,
     createPatientSupportDto: CreatePatientSupportDto,
+    patientId: string,
   ): Promise<PatientSupport> {
     // TODO: uncomment after PatientsRepository is available
     // const patientExists = await this.patientsRepository.findById(patientId);
