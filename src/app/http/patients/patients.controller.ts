@@ -7,7 +7,7 @@ import {
   Param,
   Post,
 } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import {
   CreatePatientResponseSchema,
@@ -29,7 +29,36 @@ export class PatientsController {
   ) {}
 
   @Post()
-  @ApiOperation({ summary: 'Cadastra um novo paciente' })
+  @ApiOperation({
+    summary: 'Cadastra um novo paciente',
+    description: `
+    Dois modos de operação:
+    1. Com user_id existente: associa a um usuário já cadastrado
+    2. Sem user_id: cria novo usuário automaticamente (requer email e name)
+    `,
+  })
+  @ApiBody({
+    type: CreatePatientDto,
+    description: 'Dados para criação do paciente',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Paciente criado com sucesso',
+    type: CreatePatientDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description:
+      'Requisição inválida - email e name são obrigatórios quando não fornecer user_id',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Usuário não encontrado (quando fornecer user_id)',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Conflito - paciente já cadastrado para este usuário',
+  })
   public async create(
     @Body() createPatientDto: CreatePatientDto,
   ): Promise<CreatePatientResponseSchema> {

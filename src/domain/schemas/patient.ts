@@ -17,7 +17,9 @@ export type GenderType = (typeof GENDERS)[number];
 export const patientSchema = z
   .object({
     id: z.string().uuid(),
-    user_id: z.string().uuid(),
+    user_id: z.string().uuid().optional(),
+    email: z.string().email().optional(),
+    name: z.string().optional(),
     gender: z.enum(GENDERS).default('prefer_not_to_say'),
     date_of_birth: z.coerce.date(),
     phone: z
@@ -40,11 +42,37 @@ export const patientSchema = z
   .strict();
 export type PatientSchema = z.infer<typeof patientSchema>;
 
-export const createPatientSchema = patientSchema.omit({
-  id: true,
-  created_at: true,
-  updated_at: true,
-});
+export const createPatientSchema = patientSchema
+  .omit({
+    id: true,
+    created_at: true,
+    updated_at: true,
+  })
+  .extend({
+    user_id: z
+      .string()
+      .uuid()
+      .optional()
+      .describe('ID do usuário existente (opcional)'),
+    email: z
+      .string()
+      .email()
+      .optional()
+      .describe('Obrigatório quando não fornecer user_id'),
+    name: z
+      .string()
+      .optional()
+      .describe('Obrigatório quando não fornecer user_id'),
+  })
+  .superRefine((data, ctx) => {
+    if (!data.user_id && (!data.email || !data.name)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Email e name são obrigatórios quando não fornecer user_id',
+        path: ['email'],
+      });
+    }
+  });
 export type CreatePatientSchema = z.infer<typeof createPatientSchema>;
 
 export const createPatientResponseSchema = baseResponseSchema.extend({});

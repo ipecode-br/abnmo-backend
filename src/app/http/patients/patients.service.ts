@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   Logger,
@@ -12,6 +13,7 @@ import {
   PendingForm,
 } from '@/domain/types/form-types';
 
+import { UsersService } from '../users/users.service';
 import { CreatePatientDto } from './patients.dtos';
 import { PatientsRepository } from './patients.repository';
 import { validateTriagemForm } from './validators/form-validators';
@@ -23,27 +25,53 @@ export class PatientsService {
   constructor(
     private readonly patientsRepository: PatientsRepository,
     private readonly usersRepository: UsersRepository,
+    private readonly usersService: UsersService,
   ) {}
 
   async create(createPatientDto: CreatePatientDto): Promise<void> {
-    const user = await this.usersRepository.findById(createPatientDto.user_id);
+    let userId = createPatientDto.user_id;
 
+    if (!userId) {
+      if (!createPatientDto.email || !createPatientDto.name) {
+        throw new BadRequestException(
+          'Quando user_id não é fornecido, email e name são obrigatórios',
+        );
+      }
+
+      const randomPassword = Math.random().toString(36).slice(-8);
+
+      const user = await this.usersService.create({
+        email: createPatientDto.email,
+        name: createPatientDto.name,
+        password: randomPassword,
+      });
+
+      userId = user.id;
+    }
+
+    const user = await this.usersRepository.findById(userId);
     if (!user) {
       throw new NotFoundException('Usuário não encontrado.');
     }
 
-    const patientExists = await this.patientsRepository.findByUserId(
-      createPatientDto.user_id,
-    );
-
+    const patientExists = await this.patientsRepository.findByUserId(userId);
     if (patientExists) {
       throw new ConflictException('Este paciente já possui um cadastro.');
     }
 
-    const patient = await this.patientsRepository.create(createPatientDto);
+    const patientData = {
+      ...createPatientDto,
+      user_id: userId,
+    };
+
+    const patient = await this.patientsRepository.create(patientData);
 
     this.logger.log(
-      `Paciente cadastrado com sucesso: ${JSON.stringify({ id: patient.id, userId: patient.user_id, timestamp: new Date() })}`,
+      `Paciente cadastrado com sucesso: ${JSON.stringify({
+        id: patient.id,
+        userId: patient.user_id,
+        timestamp: new Date(),
+      })}`,
     );
   }
 
