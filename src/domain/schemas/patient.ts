@@ -13,11 +13,13 @@ export const GENDERS = [
   'prefer_not_to_say',
 ] as const;
 export type GenderType = (typeof GENDERS)[number];
+export const STATUS = ['active', 'inactive'] as const;
+export type StatusType = (typeof STATUS)[number];
 
 export const patientSchema = z
   .object({
     id: z.string().uuid(),
-    user_id: z.string().uuid().optional(),
+    user_id: z.string().uuid(),
     email: z.string().email().optional(),
     name: z.string().optional(),
     gender: z.enum(GENDERS).default('prefer_not_to_say'),
@@ -42,35 +44,45 @@ export const patientSchema = z
   .strict();
 export type PatientSchema = z.infer<typeof patientSchema>;
 
-export const createPatientSchema = patientSchema
-  .omit({
-    id: true,
-    created_at: true,
-    updated_at: true,
-  })
-  .extend({
-    user_id: z
+export const createPatientSchema = z
+  .object({
+    user_id: z.string().uuid().optional(),
+
+    email: z.string().email().optional(),
+    name: z.string().optional(),
+
+    gender: z.enum(GENDERS).default('prefer_not_to_say'),
+    date_of_birth: z.coerce.date(),
+    phone: z
       .string()
-      .uuid()
-      .optional()
-      .describe('ID do usuário existente (opcional)'),
-    email: z
-      .string()
-      .email()
-      .optional()
-      .describe('Obrigatório quando não fornecer user_id'),
-    name: z
-      .string()
-      .optional()
-      .describe('Obrigatório quando não fornecer user_id'),
+      .regex(/^\d+$/)
+      .refine((num) => num.length === 11),
+    cpf: z.string().min(11).max(11),
+    state: z.string().min(2).max(2),
+    city: z.string(),
+    has_disability: z.boolean().default(false),
+    disability_desc: z.string().nullable(),
+    need_legal_assistance: z.boolean().default(false),
+    take_medication: z.boolean().default(false),
+    medication_desc: z.string().nullable(),
+    has_nmo_diagnosis: z.boolean().default(false),
   })
   .superRefine((data, ctx) => {
-    if (!data.user_id && (!data.email || !data.name)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Email e name são obrigatórios quando não fornecer user_id',
-        path: ['email'],
-      });
+    if (!data.user_id) {
+      if (!data.email) {
+        ctx.addIssue({
+          path: ['email'],
+          code: z.ZodIssueCode.custom,
+          message: 'Email é obrigatório quando não fornecer user_id',
+        });
+      }
+      if (!data.name) {
+        ctx.addIssue({
+          path: ['name'],
+          code: z.ZodIssueCode.custom,
+          message: 'Name é obrigatório quando não fornecer user_id',
+        });
+      }
     }
   });
 export type CreatePatientSchema = z.infer<typeof createPatientSchema>;
@@ -100,4 +112,9 @@ export type FindOnePatientResponseSchema = z.infer<
 export const deletePatientResponseSchema = baseResponseSchema.extend({});
 export type DeletePatientResponseSchema = z.infer<
   typeof deletePatientResponseSchema
+>;
+
+export const inactivatePatientResponseSchema = baseResponseSchema.extend({});
+export type InactivatePatientResponseSchema = z.infer<
+  typeof inactivatePatientResponseSchema
 >;

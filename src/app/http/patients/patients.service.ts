@@ -32,17 +32,19 @@ export class PatientsService {
     let userId = createPatientDto.user_id;
 
     if (!userId) {
-      if (!createPatientDto.email || !createPatientDto.name) {
+      const { email, name } = createPatientDto;
+
+      if (!email || !name) {
         throw new BadRequestException(
-          'Quando user_id não é fornecido, email e name são obrigatórios',
+          'Email e nome são obrigatórios quando não fornecer user_id.',
         );
       }
 
       const randomPassword = Math.random().toString(36).slice(-8);
 
       const user = await this.usersService.create({
-        email: createPatientDto.email,
-        name: createPatientDto.name,
+        email,
+        name,
         password: randomPassword,
       });
 
