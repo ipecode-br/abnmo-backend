@@ -1,9 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-
 import { Patient } from '@/domain/entities/patient';
-
 import { CreatePatientDto, FindAllPatientDto } from './patients.dtos';
 
 @Injectable()
@@ -150,7 +148,9 @@ export class PatientsRepository {
 
   public async getPatientsWithRelations(): Promise<Patient[]> {
     return this.patientsRepository.find({
-      relations: ['user'], // Adicione outras relações conforme necessário
+      relations: {
+        user:true
+      }, // Adicione outras relações conforme necessário
     });
   }
 
