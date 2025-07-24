@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
 
-import { CreatePatientDto } from './patients.dtos';
+import { CreatePatientDto, FindAllPatientDto } from './patients.dtos';
 
 @Injectable()
 export class PatientsRepository {
@@ -13,17 +13,61 @@ export class PatientsRepository {
     private readonly patientsRepository: Repository<Patient>,
   ) {}
 
-  public async findAll(): Promise<Patient[]> {
-    return await this.patientsRepository.find({
-      relations: { user: true },
-      select: {
-        user: {
-          name: true,
-          email: true,
-          avatar_url: true,
-        },
-      },
-    });
+  public async findAll(filters: FindAllPatientDto): Promise<Patient[]> {
+    const {
+      search,
+      order = 'DESC',
+      orderBy,
+      status,
+      startDate,
+      endDate,
+      page = 1,
+    } = filters;
+
+    const query = this.patientsRepository
+      .createQueryBuilder('patient')
+      .leftJoinAndSelect('patient.user', 'user')
+      .select([
+        'patient',
+        'user.id',
+        'user.name',
+        'user.email',
+        'user.avatar_url',
+      ]);
+
+    if (search) {
+      if (search.includes('@')) {
+        query.andWhere(`user.email = :search`, { search });
+      } else {
+        query.andWhere(`user.name LIKE :search`, { search: `%${search}%` });
+      }
+    }
+
+    if (status) {
+      query.andWhere('patient.status = :status', { status });
+    }
+
+    if (startDate && endDate) {
+      query.andWhere('patient.created_at BETWEEN :startDate AND :endDate', {
+        startDate,
+        endDate,
+      });
+    }
+
+    const orderField =
+      orderBy === 'name'
+        ? 'user.name'
+        : orderBy === 'status'
+          ? 'patient.status'
+          : 'patient.created_at';
+    query.orderBy(orderField, order);
+
+    const PAGE_SIZE = 10;
+    if (page) {
+      query.skip((page - 1) * PAGE_SIZE).take(PAGE_SIZE);
+    }
+
+    return await query.getMany();
   }
 
   public async findById(id: string): Promise<Patient | null> {

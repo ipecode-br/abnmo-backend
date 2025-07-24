@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
@@ -20,7 +21,7 @@ import {
 import { FindAllPatientsSupportResponseSchema } from '@/domain/schemas/patient-support';
 
 import { PatientSupportsRepository } from '../patient-supports/patient-supports.repository';
-import { CreatePatientDto } from './patients.dtos';
+import { CreatePatientDto, FindAllPatientDto } from './patients.dtos';
 import { PatientsRepository } from './patients.repository';
 import { PatientsService } from './patients.service';
 
@@ -52,8 +53,11 @@ export class PatientsController {
     status: 200,
     description: 'Lista de pacientes retornada com sucesso',
   })
-  public async findAll(): Promise<FindAllPatientsResponseSchema> {
-    const patients = await this.patientsRepository.findAll();
+  public async findAll(
+    @Query()
+    filters: FindAllPatientDto,
+  ): Promise<FindAllPatientsResponseSchema> {
+    const patients = await this.patientsRepository.findAll(filters);
 
     return {
       success: true,
