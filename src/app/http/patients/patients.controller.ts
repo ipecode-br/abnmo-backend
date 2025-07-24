@@ -10,7 +10,6 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-
 import {
   CreatePatientResponseSchema,
   DeletePatientResponseSchema,
@@ -19,7 +18,6 @@ import {
   InactivatePatientResponseSchema,
 } from '@/domain/schemas/patient';
 import { FindAllPatientsSupportResponseSchema } from '@/domain/schemas/patient-support';
-
 import { PatientSupportsRepository } from '../patient-supports/patient-supports.repository';
 import { CreatePatientDto, FindAllPatientDto } from './patients.dtos';
 import { PatientsRepository } from './patients.repository';
