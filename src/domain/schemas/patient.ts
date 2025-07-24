@@ -14,8 +14,14 @@ export const GENDERS = [
 ] as const;
 export type GenderType = (typeof GENDERS)[number];
 
-export const STATUS = ['active', 'inactive'] as const;
+export const STATUS = ['active', 'inactive', 'ACTIVE', 'INACTIVE'] as const;
 export type StatusType = (typeof STATUS)[number];
+
+export const ORDER = ['ASC', 'DESC'] as const;
+export type OrderType = (typeof ORDER)[number];
+
+export const ORDERBY = ['name', 'status', 'date'] as const;
+export type OrderByType = (typeof ORDERBY)[number];
 
 export const patientSchema = z
   .object({
@@ -55,6 +61,40 @@ export const createPatientResponseSchema = baseResponseSchema.extend({});
 export type CreatePatientResponseSchema = z.infer<
   typeof createPatientResponseSchema
 >;
+
+export const findAllPatientSchema = z
+  .object({
+    search: z.union([z.coerce.string().min(1), z.string().email()]).optional(),
+    order: z.enum(ORDER).optional(),
+    orderBy: z.enum(ORDERBY).optional(),
+    status: z.enum(STATUS).optional(),
+    startDate: z
+      .string()
+      .refine((val) => !isNaN(new Date(val).getTime()), {
+        message: 'Formato de data inválido',
+      })
+      .optional(),
+    endDate: z
+      .string()
+      .refine((val) => !isNaN(new Date(val).getTime()), {
+        message: 'Formato de data inválido',
+      })
+      .optional(),
+    page: z.coerce.number().int().positive().min(1).optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.startDate && data.endDate) {
+        return data.endDate >= data.startDate;
+      }
+      return true;
+    },
+    {
+      message: 'A data final deve ser maior ou igual à data inicial',
+      path: ['endDate'],
+    },
+  );
+export type FindAllPatientSchema = z.infer<typeof findAllPatientSchema>;
 
 export const findAllPatientsResponseSchema = baseResponseSchema.extend({
   data: z.object({
