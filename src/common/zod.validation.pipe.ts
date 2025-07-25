@@ -33,7 +33,7 @@ export class GlobalZodValidationPipe
       return schema.parse(value) as unknown;
     } catch (error) {
       if (error instanceof ZodError) {
-        const errorMessages = error.issues.map((issue) => ({
+        const fieldErrors = error.issues.map((issue) => ({
           field: issue.path.join('.') || 'root',
           error: issue.message,
         }));
@@ -41,7 +41,7 @@ export class GlobalZodValidationPipe
         throw new BadRequestException({
           success: false,
           message: 'Os dados enviados são inválidos.',
-          errors: errorMessages,
+          fields: fieldErrors,
         });
       }
 
