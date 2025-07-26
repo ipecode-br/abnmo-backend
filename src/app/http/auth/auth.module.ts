@@ -28,7 +28,7 @@ import { TokensRepository } from './tokens.repository';
       inject: [EnvService],
       useFactory: (envService: EnvService) => ({
         secret: envService.get('JWT_SECRET'),
-        signOptions: { expiresIn: '8h' },
+        signOptions: { expiresIn: '12h' },
       }),
     }),
   ],

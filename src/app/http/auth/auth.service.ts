@@ -36,13 +36,13 @@ export class AuthService {
       );
     }
 
-    const expiresIn = rememberMe ? '30d' : '8h';
+    const expiresIn = rememberMe ? '30d' : '12h';
     const payload = { sub: user.id };
 
     const accessToken = await this.jwtService.signAsync(payload, { expiresIn });
 
     const expiration = new Date();
-    expiration.setHours(expiration.getHours() + (rememberMe ? 24 * 30 : 8));
+    expiration.setHours(expiration.getHours() + (rememberMe ? 24 * 30 : 12));
 
     await this.tokensRepository.saveToken({
       user_id: user.id,

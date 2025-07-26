@@ -91,7 +91,7 @@ Cria uma nova conta de usuário.
 
 - JWT assinado;
 - Armazenado no banco de dados para permitir revogação;
-- Expiração baseada em configuração (8h padrão ou 30d para `rememberMe`).
+- Expiração baseada em configuração (12h padrão ou 30d para `rememberMe`).
 
 ### Senhas:
 
