@@ -64,4 +64,18 @@ export class UsersService {
 
     return await this.usersRepository.remove(user);
   }
+
+  async getProfile(id: string): Promise<Omit<User, 'password'>> {
+    const user = await this.usersRepository.findById(id);
+
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado.');
+    }
+
+    // IMPORTANT: DO NOT RETURN USER PASSWORD
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...userWithoutPassword } = user;
+
+    return userWithoutPassword;
+  }
 }
