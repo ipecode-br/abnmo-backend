@@ -25,8 +25,8 @@ export class RolesGuard implements CanActivate {
       context.getClass(),
     ]);
 
-    // Bypass validation for public routes or when no role is provided to compare
-    if (isPublic || !roles || roles.length === 0) {
+    // Skip validation for public routes
+    if (isPublic) {
       return true;
     }
 
@@ -40,7 +40,7 @@ export class RolesGuard implements CanActivate {
       );
     }
 
-    const isAllowed = roles.includes(user.role);
+    const isAllowed = roles.includes(user.role) || user.role === 'admin';
 
     if (!isAllowed) {
       throw new UnauthorizedException(
