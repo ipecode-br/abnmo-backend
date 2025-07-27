@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
 import { Hasher } from '@/domain/cryptography/hasher';
@@ -10,6 +10,8 @@ import { TokensRepository } from './tokens.repository';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly usersRepository: UsersRepository,
     private readonly jwtService: JwtService,
@@ -50,6 +52,11 @@ export class AuthService {
       type: AUTH_TOKENS_MAPPER.access_token,
       expires_at: expiration,
     });
+
+    this.logger.log(
+      { id: user.id, email: user.email },
+      'Usuário logado com sucesso',
+    );
 
     return {
       accessToken,

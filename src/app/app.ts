@@ -3,6 +3,7 @@ import type { ExpressAdapter } from '@nestjs/platform-express';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
+import { Logger } from 'nestjs-pino';
 import { patchNestJsSwagger } from 'nestjs-zod';
 
 import { HttpExceptionFilter } from '@/common/http.exception.filter';
@@ -15,8 +16,12 @@ export async function createNestApp(adapter?: ExpressAdapter) {
   patchNestJsSwagger();
 
   const app = adapter
-    ? await NestFactory.create<NestExpressApplication>(AppModule, adapter)
-    : await NestFactory.create<NestExpressApplication>(AppModule);
+    ? await NestFactory.create<NestExpressApplication>(AppModule, adapter, {
+        logger: false,
+      })
+    : await NestFactory.create<NestExpressApplication>(AppModule, {
+        logger: false,
+      });
 
   const envService = app.get(EnvService);
 
@@ -31,6 +36,7 @@ export async function createNestApp(adapter?: ExpressAdapter) {
   });
 
   app.use(cookieParser(envService.get('COOKIE_SECRET')));
+  app.useLogger(app.get(Logger));
 
   const config = new DocumentBuilder()
     .setTitle('SVM - Sistema Viver Melhor')
