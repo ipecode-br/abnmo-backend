@@ -45,7 +45,8 @@ export class PatientSupportsService {
     }
 
     this.logger.log(
-      `Contato de apoio registrado com sucesso: ${JSON.stringify({ id: patientSupport.id, patientId: patientSupport.patient_id, timestamp: new Date() })}`,
+      { id: patientSupport.id, patientId: patientSupport.patient_id },
+      'Contato de apoio registrado com sucesso',
     );
 
     return patientSupport;
@@ -64,7 +65,7 @@ export class PatientSupportsService {
   async update(
     id: string,
     updatePatientsSupportDto: UpdatePatientSupportDto,
-  ): Promise<PatientSupport> {
+  ): Promise<void> {
     const patientSupport = await this.patientSupportsRepository.findById(id);
 
     if (!patientSupport) {
@@ -73,14 +74,12 @@ export class PatientSupportsService {
 
     Object.assign(patientSupport, updatePatientsSupportDto);
 
-    const patientSupportUpdated =
-      await this.patientSupportsRepository.update(patientSupport);
+    await this.patientSupportsRepository.update(patientSupport);
 
     this.logger.log(
-      `Contato de apoio atualizado com sucesso: ${JSON.stringify({ id: patientSupportUpdated.id, patientId: patientSupportUpdated.patient_id, timestamp: new Date() })}`,
+      { id: patientSupport.id, patientId: patientSupport.patient_id },
+      'Contato de apoio atualizado com sucesso',
     );
-
-    return patientSupportUpdated;
   }
 
   async remove(id: string): Promise<void> {
@@ -93,7 +92,8 @@ export class PatientSupportsService {
     await this.patientSupportsRepository.remove(patientSupport);
 
     this.logger.log(
-      `Contato de apoio removido com sucesso: ${JSON.stringify({ id: patientSupport.id, patientId: patientSupport.patient_id, timestamp: new Date() })}`,
+      { id: patientSupport.id, patientId: patientSupport.patient_id },
+      'Contato de apoio atualizado com sucesso',
     );
   }
 }
