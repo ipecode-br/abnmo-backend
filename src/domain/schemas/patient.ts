@@ -22,8 +22,6 @@ export const patientSchema = z
   .object({
     id: z.string().uuid(),
     user_id: z.string().uuid(),
-    email: z.string().email().optional(),
-    name: z.string().optional(),
     gender: z.enum(GENDERS).default('prefer_not_to_say'),
     date_of_birth: z.coerce.date(),
     phone: z
@@ -46,47 +44,31 @@ export const patientSchema = z
   .strict();
 export type PatientSchema = z.infer<typeof patientSchema>;
 
-export const createPatientSchema = z
-  .object({
+export const createPatientSchema = patientSchema
+  .omit({ id: true, created_at: true, updated_at: true })
+  .extend({
     user_id: z.string().uuid().optional(),
-
-    email: z.string().email().optional(),
     name: z.string().optional(),
-
-    gender: z.enum(GENDERS).default('prefer_not_to_say'),
-    date_of_birth: z.coerce.date(),
-    phone: z
-      .string()
-      .regex(/^\d+$/)
-      .refine((num) => num.length === 11),
-    cpf: z.string().min(11).max(11),
-    state: z.enum(BRAZILIAN_STATES),
-    city: z.string(),
-    has_disability: z.boolean().default(false),
-    disability_desc: z.string().nullable(),
-    need_legal_assistance: z.boolean().default(false),
-    take_medication: z.boolean().default(false),
-    medication_desc: z.string().nullable(),
-    has_nmo_diagnosis: z.boolean().default(false),
+    email: z.string().email().optional(),
   })
-  .superRefine((data, ctx) => {
-    if (!data.user_id) {
-      if (!data.email) {
-        ctx.addIssue({
-          path: ['email'],
-          code: z.ZodIssueCode.custom,
-          message: 'Email é obrigatório quando não fornecer user_id',
-        });
+  .refine(
+    (data) => {
+      const hasNameAndEmail = !!data.name && !!data.email;
+      if (!data.user_id && !hasNameAndEmail) {
+        return false;
       }
-      if (!data.name) {
-        ctx.addIssue({
-          path: ['name'],
-          code: z.ZodIssueCode.custom,
-          message: 'Name é obrigatório quando não fornecer user_id',
-        });
+      if (data.user_id) {
+        data.name = undefined;
+        data.email = undefined;
       }
-    }
-  });
+      return true;
+    },
+    {
+      message:
+        'Fields `name` and `email` are required when `user_id` is not provided.',
+      path: ['root'],
+    },
+  );
 export type CreatePatientSchema = z.infer<typeof createPatientSchema>;
 
 export const createPatientResponseSchema = baseResponseSchema.extend({});
