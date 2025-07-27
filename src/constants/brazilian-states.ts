@@ -1,4 +1,4 @@
-export const brazilianStates = [
+export const BRAZILIAN_STATES = [
   'AC',
   'AL',
   'AP',
@@ -26,4 +26,5 @@ export const brazilianStates = [
   'SP',
   'SE',
   'TO',
-];
+] as const;
+export type BrazilianStateType = (typeof BRAZILIAN_STATES)[number];

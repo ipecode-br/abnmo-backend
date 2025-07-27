@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { BRAZILIAN_STATES } from '@/constants/brazilian-states';
+
 import { baseResponseSchema } from './base';
 
 // Entity
@@ -29,7 +31,7 @@ export const patientSchema = z
       .regex(/^\d+$/)
       .refine((num) => num.length === 11),
     cpf: z.string().min(11).max(11),
-    state: z.string().min(2).max(2),
+    state: z.enum(BRAZILIAN_STATES),
     city: z.string(),
     // medical report
     has_disability: z.boolean().default(false),
@@ -58,7 +60,7 @@ export const createPatientSchema = z
       .regex(/^\d+$/)
       .refine((num) => num.length === 11),
     cpf: z.string().min(11).max(11),
-    state: z.string().min(2).max(2),
+    state: z.enum(BRAZILIAN_STATES),
     city: z.string(),
     has_disability: z.boolean().default(false),
     disability_desc: z.string().nullable(),

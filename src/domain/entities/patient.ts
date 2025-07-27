@@ -4,13 +4,15 @@ import {
   Entity,
   JoinColumn,
   OneToMany,
-  // OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
-// import { PatientSupport } from '@/domain/entities/patient-support';
+import {
+  BRAZILIAN_STATES,
+  type BrazilianStateType,
+} from '@/constants/brazilian-states';
 import { User } from '@/domain/entities/user';
 
 import { GENDERS, GenderType, PatientSchema } from '../schemas/patient';
@@ -36,8 +38,8 @@ export class Patient implements PatientSchema {
   @Column({ type: 'char', length: 11, nullable: false })
   cpf: string;
 
-  @Column({ type: 'char', length: 2, nullable: false })
-  state: string;
+  @Column({ type: 'enum', enum: BRAZILIAN_STATES, nullable: false })
+  state: BrazilianStateType;
 
   @Column({ type: 'varchar', length: 50, nullable: false })
   city: string;
