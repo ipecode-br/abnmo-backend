@@ -16,12 +16,8 @@ export async function createNestApp(adapter?: ExpressAdapter) {
   patchNestJsSwagger();
 
   const app = adapter
-    ? await NestFactory.create<NestExpressApplication>(AppModule, adapter, {
-        logger: false,
-      })
-    : await NestFactory.create<NestExpressApplication>(AppModule, {
-        logger: false,
-      });
+    ? await NestFactory.create<NestExpressApplication>(AppModule, adapter)
+    : await NestFactory.create<NestExpressApplication>(AppModule);
 
   const envService = app.get(EnvService);
 
