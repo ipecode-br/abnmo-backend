@@ -12,6 +12,7 @@ Autentica um usuário com e-mail e senha.
 
 #### Regras de negócio
 
+- **Permissão**: `pública`
 - O usuário deve fornecer e-mail e senha válidos;
 - A senha deve ter no mínimo 8 caracteres;
 - O sistema verifica se as credenciais correspondem a um usuário existente;
@@ -39,9 +40,11 @@ Cria uma nova conta de usuário.
 
 #### Regras de negócio
 
+- **Permissão**: `pública`
 - Todos os campos obrigatórios devem ser fornecidos;
 - O e-mail deve ser único no sistema;
 - A senha deve ter no mínimo 8 caracteres, contendo letras maiúscula e minúscula, número e caractere especial;
+- O usuário será registrado com a _role_ `patient` por padrão;
 - Após registro, o usuário é automaticamente autenticado.
 
 #### Especificações técnicas
@@ -65,6 +68,7 @@ Cria uma nova conta de usuário.
 
 #### Regras de negócio
 
+- **Permissão**: `pública`
 - Requer um token de acesso válido;
 - Remove o token do banco de dados;
 - Limpa o cookie de acesso.
