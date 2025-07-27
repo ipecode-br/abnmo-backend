@@ -25,21 +25,21 @@ import { UsersModule } from './http/users/users.module';
       imports: [EnvModule],
       inject: [EnvService],
       useFactory: (envService: EnvService) => {
-        const isProduction = envService.get('NODE_ENV') === 'production';
+        const isLocal = envService.get('APP_ENVIRONMENT') === 'local';
         return {
           pinoHttp: {
             autoLogging: false,
             formatters: { level: (label) => ({ level: label }) },
-            transport: isProduction
-              ? undefined
-              : {
+            transport: isLocal
+              ? {
                   target: 'pino-pretty',
                   options: {
                     colorize: true,
                     translateTime: 'UTC:yyyy-mm-dd HH:MM:ss.l',
                     ignore: 'req,res',
                   },
-                },
+                }
+              : undefined,
           },
         };
       },
