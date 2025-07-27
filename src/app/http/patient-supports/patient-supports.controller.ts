@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
+import { Roles } from '@/common/decorators/roles.decorator';
 import {
   CreatePatientSupportResponseSchema,
   DeletePatientSupportResponseSchema,
@@ -31,6 +32,7 @@ export class PatientSupportsController {
   ) {}
 
   @Get(':id')
+  @Roles(['manager', 'nurse', 'specialist', 'patient'])
   @ApiOperation({ summary: 'Busca um contato de apoio pelo ID' })
   @ApiResponse({
     status: 200,
@@ -55,6 +57,7 @@ export class PatientSupportsController {
   }
 
   @Post(':patientId')
+  @Roles(['manager', 'nurse', 'patient'])
   @ApiOperation({
     summary: 'Registra um novo contato de apoio para um paciente',
   })
@@ -76,6 +79,7 @@ export class PatientSupportsController {
   }
 
   @Put(':id')
+  @Roles(['manager', 'nurse', 'patient'])
   @ApiOperation({ summary: 'Atualiza um contato de apoio por ID' })
   @ApiResponse({
     status: 200,
@@ -96,6 +100,7 @@ export class PatientSupportsController {
   }
 
   @Delete(':id')
+  @Roles(['manager', 'nurse', 'patient'])
   @ApiOperation({ summary: 'Remove um contato de apoio pelo ID' })
   @ApiResponse({
     status: 200,
