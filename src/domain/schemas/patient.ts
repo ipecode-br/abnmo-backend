@@ -77,6 +77,22 @@ export const createPatientSchema = patientSchema
   );
 export type CreatePatientSchema = z.infer<typeof createPatientSchema>;
 
+export const updatePatientParamsSchema = z.object({
+  id: z.string().uuid(),
+});
+export type UpdatePatientParamsSchema = z.infer<
+  typeof updatePatientParamsSchema
+>;
+
+export const updatePatientSchema = patientSchema.omit({
+  id: true,
+  user_id: true,
+  created_at: true,
+  updated_at: true,
+  status: true,
+});
+export type UpdatePatientSchema = z.infer<typeof updatePatientSchema>;
+
 export const createPatientResponseSchema = baseResponseSchema.extend({});
 export type CreatePatientResponseSchema = z.infer<
   typeof createPatientResponseSchema

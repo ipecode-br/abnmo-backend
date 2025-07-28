@@ -33,6 +33,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-lambda": "^3.806.0",
+    "@fnando/cpf": "1.0.2",
     "@nestjs/class-validator": "^0.13.1",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.0",

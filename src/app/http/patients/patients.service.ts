@@ -1,3 +1,4 @@
+import { isValid } from '@fnando/cpf';
 import {
   BadRequestException,
   ConflictException,
@@ -15,7 +16,7 @@ import {
 } from '@/domain/types/form-types';
 
 import { UsersService } from '../users/users.service';
-import { CreatePatientDto } from './patients.dtos';
+import { CreatePatientDto, UpdatePatientDto } from './patients.dtos';
 import { PatientsRepository } from './patients.repository';
 import { validateTriagemForm } from './validators/form-validators';
 
@@ -77,6 +78,39 @@ export class PatientsService {
     this.logger.log(
       { id: patient.id, userId: patient.user_id, email: user.email },
       'Paciente cadastrado com sucesso',
+    );
+  }
+
+  async update(id: string, updatePatientDto: UpdatePatientDto): Promise<void> {
+    const patient = await this.patientsRepository.findById(id);
+
+    if (!patient) {
+      throw new NotFoundException('Paciente não encontrado.');
+    }
+
+    if (updatePatientDto.cpf && updatePatientDto.cpf !== patient.cpf) {
+      const existingPatient = await this.patientsRepository.findByCpf(
+        updatePatientDto.cpf,
+      );
+
+      if (existingPatient) {
+        throw new ConflictException('CPF já está em uso por outro paciente.');
+      }
+
+      patient.cpf = updatePatientDto.cpf;
+    }
+
+    //verifica se o CPF é válido. Depois trocar para uma validação mais robusta que use API de validação de CPF
+    if (!isValid(updatePatientDto.cpf)) {
+      throw new BadRequestException('CPF inválido.');
+    }
+
+    const updatedPatient = { ...patient, ...updatePatientDto };
+    await this.patientsRepository.update(updatedPatient);
+
+    this.logger.log(
+      { id: updatedPatient.id, userId: updatedPatient.user_id },
+      'Paciente atualizado com sucesso',
     );
   }
 
