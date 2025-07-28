@@ -62,7 +62,7 @@ Cria uma nova conta de usuário.
 
 ### 3. Logout do usuário
 
- Encerra a sessão do usuário.
+Encerra a sessão do usuário.
 
 **Rota**: `POST /logout`
 
