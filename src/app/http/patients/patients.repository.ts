@@ -3,8 +3,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
+import type { PatientOrderByType } from '@/domain/schemas/patient';
 
-import { CreatePatientDto } from './patients.dtos';
+import { CreatePatientDto, FindAllPatientQueryDto } from './patients.dtos';
 
 @Injectable()
 export class PatientsRepository {
@@ -13,17 +14,58 @@ export class PatientsRepository {
     private readonly patientsRepository: Repository<Patient>,
   ) {}
 
-  public async findAll(): Promise<Patient[]> {
-    return await this.patientsRepository.find({
-      relations: { user: true },
-      select: {
-        user: {
-          name: true,
-          email: true,
-          avatar_url: true,
-        },
-      },
-    });
+  public async findAll(
+    filters: FindAllPatientQueryDto,
+  ): Promise<{ patients: Patient[]; total: number }> {
+    const { search, order, orderBy, status, startDate, endDate, page } =
+      filters;
+
+    const PAGE_SIZE = 10;
+    const ORDER_BY: Record<PatientOrderByType, string> = {
+      name: 'user.name',
+      status: 'patient.status',
+      date: 'patient.created_at',
+    };
+
+    const query = this.patientsRepository
+      .createQueryBuilder('patient')
+      .leftJoinAndSelect('patient.user', 'user')
+      .select([
+        'patient',
+        'user.id',
+        'user.name',
+        'user.email',
+        'user.avatar_url',
+      ]);
+
+    if (search) {
+      query.andWhere(`user.name LIKE :search`, { search: `%${search}%` });
+      query.andWhere(`user.email LIKE :search`, { search: `%${search}%` });
+    }
+
+    if (status) {
+      query.andWhere('patient.status = :status', { status });
+    }
+
+    if (startDate && endDate) {
+      query.andWhere('patient.created_at BETWEEN :startDate AND :endDate', {
+        startDate,
+        endDate,
+      });
+    }
+
+    if (startDate && !endDate) {
+      query.andWhere('patient.created_at >= :startDate', { startDate });
+    }
+
+    const total = await query.getCount();
+
+    query.orderBy(ORDER_BY[orderBy], order);
+    query.skip((page - 1) * PAGE_SIZE).take(PAGE_SIZE);
+
+    const patients = await query.getMany();
+
+    return { patients, total };
   }
 
   public async findById(id: string): Promise<Patient | null> {
@@ -106,7 +148,9 @@ export class PatientsRepository {
 
   public async getPatientsWithRelations(): Promise<Patient[]> {
     return this.patientsRepository.find({
-      relations: ['user'], // Adicione outras relações conforme necessário
+      relations: {
+        user: true,
+      }, // Adicione outras relações conforme necessário
     });
   }
 

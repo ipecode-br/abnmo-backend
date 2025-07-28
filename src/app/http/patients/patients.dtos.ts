@@ -1,5 +1,10 @@
 import { createZodDto } from 'nestjs-zod';
 
-import { createPatientSchema } from '@/domain/schemas/patient';
-
+import {
+  createPatientSchema,
+  findAllPatientsQuerySchema,
+} from '@/domain/schemas/patient';
 export class CreatePatientDto extends createZodDto(createPatientSchema) {}
+export class FindAllPatientQueryDto extends createZodDto(
+  findAllPatientsQuerySchema,
+) {}

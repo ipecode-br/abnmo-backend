@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
@@ -21,7 +22,7 @@ import {
 import { FindAllPatientsSupportResponseSchema } from '@/domain/schemas/patient-support';
 
 import { PatientSupportsRepository } from '../patient-supports/patient-supports.repository';
-import { CreatePatientDto } from './patients.dtos';
+import { CreatePatientDto, FindAllPatientQueryDto } from './patients.dtos';
 import { PatientsRepository } from './patients.repository';
 import { PatientsService } from './patients.service';
 
@@ -58,13 +59,15 @@ export class PatientsController {
   @Get()
   @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Lista todos os pacientes' })
-  public async findAll(): Promise<FindAllPatientsResponseSchema> {
-    const patients = await this.patientsRepository.findAll();
+  public async findAll(
+    @Query() filters: FindAllPatientQueryDto,
+  ): Promise<FindAllPatientsResponseSchema> {
+    const { patients, total } = await this.patientsRepository.findAll(filters);
 
     return {
       success: true,
       message: 'Lista de pacientes retornada com sucesso.',
-      data: { patients, total: patients.length },
+      data: { patients, total },
     };
   }
 
@@ -90,9 +93,6 @@ export class PatientsController {
   @Patch(':id/inactivate')
   @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Inativa o Paciente pelo ID' })
-  @ApiResponse({ status: 200, description: 'Paciente inativado com sucesso' })
-  @ApiResponse({ status: 404, description: 'Paciente não encontrado' })
-  @ApiResponse({ status: 409, description: 'Paciente já está inativo' })
   async inactivatePatient(
     @Param('id') id: string,
   ): Promise<InactivatePatientResponseSchema> {
@@ -107,10 +107,6 @@ export class PatientsController {
   @Get(':id/patient-supports')
   @Roles(['manager', 'nurse', 'specialist', 'patient'])
   @ApiOperation({ summary: 'Lista todos os contatos de apoio de um paciente' })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de contatos de apoio retornada com sucesso',
-  })
   async findAllPatientSupports(
     @Param('id') patientId: string,
   ): Promise<FindAllPatientsSupportResponseSchema> {

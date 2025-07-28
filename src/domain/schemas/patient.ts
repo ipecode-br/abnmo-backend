@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { BRAZILIAN_STATES } from '@/constants/brazilian-states';
 
 import { baseResponseSchema } from './base';
+import { baseQuerySchema } from './query';
 
 // Entity
 
@@ -15,11 +16,12 @@ export const GENDERS = [
   'prefer_not_to_say',
 ] as const;
 export type GenderType = (typeof GENDERS)[number];
-export const STATUS = ['active', 'inactive'] as const;
-export type StatusType = (typeof STATUS)[number];
 
-export const STATUS = ['active', 'inactive'] as const;
-export type StatusType = (typeof STATUS)[number];
+export const PATIENT_STATUS = ['active', 'inactive'] as const;
+export type PatientStatusType = (typeof PATIENT_STATUS)[number];
+
+export const PATIENT_ORDER_BY = ['name', 'status', 'date'] as const;
+export type PatientOrderByType = (typeof PATIENT_ORDER_BY)[number];
 
 export const patientSchema = z
   .object({
@@ -41,7 +43,7 @@ export const patientSchema = z
     take_medication: z.boolean().default(false),
     medication_desc: z.string().nullable(),
     has_nmo_diagnosis: z.boolean().default(false),
-    status: z.enum(STATUS).default('active'),
+    status: z.enum(PATIENT_STATUS).default('active'),
     created_at: z.coerce.date(),
     updated_at: z.coerce.date(),
   })
@@ -78,6 +80,30 @@ export type CreatePatientSchema = z.infer<typeof createPatientSchema>;
 export const createPatientResponseSchema = baseResponseSchema.extend({});
 export type CreatePatientResponseSchema = z.infer<
   typeof createPatientResponseSchema
+>;
+
+export const findAllPatientsQuerySchema = baseQuerySchema
+  .pick({ search: true, order: true, page: true })
+  .extend({
+    status: z.enum(PATIENT_STATUS).optional(),
+    orderBy: z.enum(PATIENT_ORDER_BY).optional().default('name'),
+    startDate: z.string().datetime().optional(),
+    endDate: z.string().datetime().optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.startDate && data.endDate) {
+        return data.startDate < data.endDate;
+      }
+      return true;
+    },
+    {
+      message: 'It should be greater than `startDate`',
+      path: ['endDate'],
+    },
+  );
+export type FindAllPatientsQuerySchema = z.infer<
+  typeof findAllPatientsQuerySchema
 >;
 
 export const findAllPatientsResponseSchema = baseResponseSchema.extend({
