@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 
 import { UsersRepository } from '@/app/http/users/users.repository';
+import type { UserSchema } from '@/domain/schemas/user';
 import {
   FormType,
   PatientFormsStatus,
@@ -29,41 +30,46 @@ export class PatientsService {
   ) {}
 
   async create(createPatientDto: CreatePatientDto): Promise<void> {
-    let userId = createPatientDto.user_id;
+    let user: UserSchema | null = null;
 
-    if (!userId) {
+    if (!createPatientDto.user_id) {
       const { email, name } = createPatientDto;
 
       if (!email || !name) {
         throw new BadRequestException(
-          'Email e nome são obrigatórios quando não fornecer user_id.',
+          'E-mail e nome são obrigatórios quando o ID do usuário não for fornecido.',
         );
       }
 
       const randomPassword = Math.random().toString(36).slice(-8);
-
-      const user = await this.usersService.create({
+      const newUser = await this.usersService.create({
         email,
         name,
         password: randomPassword,
       });
-
-      userId = user.id;
+      user = newUser;
     }
 
-    const user = await this.usersRepository.findById(userId);
+    if (createPatientDto.user_id) {
+      const registeredUser = await this.usersRepository.findById(
+        createPatientDto.user_id,
+      );
+      user = registeredUser;
+    }
+
     if (!user) {
       throw new NotFoundException('Usuário não encontrado.');
     }
 
-    const patientExists = await this.patientsRepository.findByUserId(userId);
+    const patientExists = await this.patientsRepository.findByUserId(user.id);
+
     if (patientExists) {
       throw new ConflictException('Este paciente já possui um cadastro.');
     }
 
     const patientData = {
       ...createPatientDto,
-      user_id: userId,
+      user_id: user.id,
     };
 
     const patient = await this.patientsRepository.create(patientData);

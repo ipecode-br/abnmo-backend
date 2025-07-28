@@ -7,7 +7,7 @@ import {
   Param,
   Post,
 } from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import {
   CreatePatientResponseSchema,
@@ -33,31 +33,9 @@ export class PatientsController {
     summary: 'Cadastra um novo paciente',
     description: `
     Dois modos de operação:
-    1. Com user_id existente: associa a um usuário já cadastrado
-    2. Sem user_id: cria novo usuário automaticamente (requer email e name)
+    1. Com "user_id" existente: associa a um usuário já cadastrado (ignora os campos "email" e "name")
+    2. Sem "user_id": cria novo usuário automaticamente ("email" e "name" são obrigatórios)
     `,
-  })
-  @ApiBody({
-    type: CreatePatientDto,
-    description: 'Dados para criação do paciente',
-  })
-  @ApiResponse({
-    status: 201,
-    description: 'Paciente criado com sucesso',
-    type: CreatePatientDto,
-  })
-  @ApiResponse({
-    status: 400,
-    description:
-      'Requisição inválida - email e name são obrigatórios quando não fornecer user_id',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Usuário não encontrado (quando fornecer user_id)',
-  })
-  @ApiResponse({
-    status: 409,
-    description: 'Conflito - paciente já cadastrado para este usuário',
   })
   public async create(
     @Body() createPatientDto: CreatePatientDto,
@@ -72,10 +50,6 @@ export class PatientsController {
 
   @Get()
   @ApiOperation({ summary: 'Lista todos os pacientes' })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de pacientes retornada com sucesso',
-  })
   public async findAll(): Promise<FindAllPatientsResponseSchema> {
     const patients = await this.patientsRepository.findAll();
 
@@ -88,8 +62,6 @@ export class PatientsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Busca um paciente pelo ID' })
-  @ApiResponse({ status: 200, description: 'Paciente retornado com sucesso' })
-  @ApiResponse({ status: 404, description: 'Paciente não encontrado' })
   public async findById(
     @Param('id') id: string,
   ): Promise<FindOnePatientResponseSchema> {
@@ -108,8 +80,6 @@ export class PatientsController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Remove um paciente pelo ID' })
-  @ApiResponse({ status: 200, description: 'Paciente removido com sucesso' })
-  @ApiResponse({ status: 404, description: 'Paciente não encontrado' })
   public async remove(
     @Param('id') id: string,
   ): Promise<DeletePatientResponseSchema> {
@@ -123,10 +93,6 @@ export class PatientsController {
 
   @Get('forms/status')
   @ApiOperation({ summary: 'Lista formulários pendentes por paciente' })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de formulários pendentes por paciente',
-  })
   public async getFormsStatus() {
     try {
       const formsStatus = await this.patientsService.getPatientFormsStatus();
