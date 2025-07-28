@@ -4,7 +4,7 @@ Este documento descreve o formato padrão de todas as respostas retornadas pela 
 
 ## Schema base de resposta
 
-Todas as respostas seguem o formato do *schema* **baseResponseSchema** (`src/domain/schemas/base.ts`).
+Todas as respostas seguem o formato do _schema_ **baseResponseSchema** (`src/domain/schemas/base.ts`).
 
 ### Quando há dados retornados
 
@@ -49,7 +49,6 @@ Quando ocorrem erros de validação, a resposta segue este formato:
 ```
 
 Os erros contidos dentro da propriedade `fields` servem para orientar o desenvolvimento da aplicação Front-End e **não** devem ser utilizados para exibição ao usuário. Os dados devem ser validados pela aplicação Front-End antes de realizar a requisição, evitando requisições desnecessárias.
-
 
 ## Especificações técnicas
 
