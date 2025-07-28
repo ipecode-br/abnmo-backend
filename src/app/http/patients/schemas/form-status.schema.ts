@@ -1,15 +1,15 @@
-export class PendingFormSchema {
-  formType: string;
+// export class PendingFormSchema {
+//   formType: string;
 
-  missingFields: string[];
-}
+//   missingFields: string[];
+// }
 
-export class PatientFormsStatusSchema {
-  patientId: number;
+// export class PatientFormsStatusSchema {
+//   patientId: number;
 
-  patientName: string;
+//   patientName: string;
 
-  pendingForms: PendingFormSchema[];
+//   pendingForms: PendingFormSchema[];
 
-  completedForms: string[];
-}
+//   completedForms: string[];
+// }

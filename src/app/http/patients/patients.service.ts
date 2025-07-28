@@ -1,72 +1,117 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 
-import { DiagnosticsRepository } from '@/app/http/diagnostics/diagnostics.repository';
 import { UsersRepository } from '@/app/http/users/users.repository';
-import type { Patient } from '@/domain/entities/patient';
+import type { UserSchema } from '@/domain/schemas/user';
 import {
   FormType,
   PatientFormsStatus,
   PendingForm,
 } from '@/domain/types/form-types';
 
-import { CreatePatientDto } from './dto/create-patient.dto';
-import { FindPatientDto } from './dto/find-patient.dto';
+import { UsersService } from '../users/users.service';
+import { CreatePatientDto } from './patients.dtos';
 import { PatientsRepository } from './patients.repository';
 import { validateTriagemForm } from './validators/form-validators';
 
 @Injectable()
 export class PatientsService {
+  private readonly logger = new Logger(PatientsService.name);
+
   constructor(
     private readonly patientsRepository: PatientsRepository,
     private readonly usersRepository: UsersRepository,
-    private readonly diagnosticsRepository: DiagnosticsRepository,
+    private readonly usersService: UsersService,
   ) {}
-  async create(createPatientDto: CreatePatientDto): Promise<Patient> {
-    const userExists = await this.usersRepository.findById(
-      createPatientDto.id_user,
-    );
-    if (!userExists) {
+
+  async create(createPatientDto: CreatePatientDto): Promise<void> {
+    let user: UserSchema | null = null;
+
+    if (!createPatientDto.user_id) {
+      const { email, name } = createPatientDto;
+
+      if (!email || !name) {
+        throw new BadRequestException(
+          'E-mail e nome são obrigatórios quando o ID do usuário não for fornecido.',
+        );
+      }
+
+      const randomPassword = Math.random().toString(36).slice(-8);
+      const newUser = await this.usersService.create({
+        email,
+        name,
+        password: randomPassword,
+      });
+      user = newUser;
+    }
+
+    if (createPatientDto.user_id) {
+      const registeredUser = await this.usersRepository.findById(
+        createPatientDto.user_id,
+      );
+      user = registeredUser;
+    }
+
+    if (!user) {
       throw new NotFoundException('Usuário não encontrado.');
     }
-    const diagnosticExists = await this.diagnosticsRepository.findById(
-      createPatientDto.id_diagnostic,
-    );
-    if (!diagnosticExists) {
-      throw new NotFoundException('Diagnóstico não encontrado.');
-    }
-    const patientExists = await this.patientsRepository.findByIdUsuario(
-      createPatientDto.id_user,
-    );
+
+    const patientExists = await this.patientsRepository.findByUserId(user.id);
+
     if (patientExists) {
       throw new ConflictException('Este paciente já possui um cadastro.');
     }
-    const patient = await this.patientsRepository.create(createPatientDto);
-    return patient;
+
+    const patientData = {
+      ...createPatientDto,
+      user_id: user.id,
+    };
+
+    const patient = await this.patientsRepository.create(patientData);
+
+    this.logger.log(
+      { id: patient.id, userId: patient.user_id, email: user.email },
+      'Paciente cadastrado com sucesso',
+    );
   }
 
-  async findAll(filters: FindPatientDto): Promise<Patient[]> {
-    return this.patientsRepository.findAllWithFilters(filters);
-  }
-
-  async findById(id: number): Promise<Patient> {
+  async deactivatePatient(id: string): Promise<void> {
     const patient = await this.patientsRepository.findById(id);
+
     if (!patient) {
       throw new NotFoundException('Paciente não encontrado.');
     }
-    return patient;
+
+    if (patient.status == 'inactive') {
+      throw new ConflictException('Paciente já está inativo.');
+    }
+
+    await this.patientsRepository.deactivate(id);
+
+    this.logger.log(
+      { id: patient.id, userId: patient.user_id },
+      'Paciente inativado com sucesso',
+    );
   }
-  async remove(id_paciente: number): Promise<Patient> {
-    const patientExists = await this.patientsRepository.findById(id_paciente);
-    if (!patientExists) {
+
+  async remove(patientId: string): Promise<void> {
+    const patient = await this.patientsRepository.findById(patientId);
+
+    if (!patient) {
       throw new NotFoundException('Paciente não encontrado.');
     }
-    const patient = await this.patientsRepository.remove(patientExists);
 
-    return patient;
+    await this.patientsRepository.remove(patient);
+
+    this.logger.log(
+      { id: patient.id, userId: patient.user_id },
+      'Paciente removido com sucesso',
+    );
   }
 
   async getPatientFormsStatus(): Promise<PatientFormsStatus[]> {
@@ -85,8 +130,8 @@ export class PatientsService {
       }
 
       return {
-        patientId: Number(patient.cpf), // Conversão explícita para number
-        patientName: patient.user?.fullname || 'Não informado',
+        patientId: Number(patient.cpf),
+        patientName: patient.user?.name || 'Não informado',
         pendingForms,
         completedForms,
       };

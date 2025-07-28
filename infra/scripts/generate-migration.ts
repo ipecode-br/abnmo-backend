@@ -9,7 +9,7 @@ if (!name) {
   process.exit(1);
 }
 
-const migrationsDir = path.join(__dirname, '../migrations');
+const migrationsDir = path.join(__dirname, '../database/migrations');
 const outputPath = path.join(migrationsDir, name);
 
 const command = [

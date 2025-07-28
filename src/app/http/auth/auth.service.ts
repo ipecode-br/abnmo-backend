@@ -1,41 +1,69 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
-import { BcryptHasher } from '@/app/cryptography/bcrypt-hasher';
+import { Hasher } from '@/domain/cryptography/hasher';
+import { AUTH_TOKENS_MAPPER } from '@/domain/schemas/token';
 
-import { UsersService } from '../users/users.service';
+import { UsersRepository } from '../users/users.repository';
+import type { SignInWithEmailDto } from './auth.dtos';
+import { TokensRepository } from './tokens.repository';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
-    private usersService: UsersService,
-    private jwtService: JwtService,
-    private bcript: BcryptHasher,
+    private readonly usersRepository: UsersRepository,
+    private readonly jwtService: JwtService,
+    private readonly hasher: Hasher,
+    private readonly tokensRepository: TokensRepository,
   ) {}
 
-  async signIn(
-    email: string,
-    password: string,
-  ): Promise<{ access_token: string }> {
-    const user = await this.usersService.findByEmail(email);
+  async signIn({ email, password, rememberMe }: SignInWithEmailDto): Promise<{
+    accessToken: string;
+  }> {
+    const user = await this.usersRepository.findByEmail(email);
+
     if (!user) {
-      throw new UnauthorizedException('Usuário não enconbtrado!');
+      throw new UnauthorizedException(
+        'Credenciais inválidas. Por favor, tente novamente.',
+      );
     }
 
-    if (!user.data?.password) {
-      throw new UnauthorizedException('Senha não encontrada para o usuário!');
-    }
-    const verifyPassword = await this.bcript.compare(
-      password,
-      user.data.password,
-    );
+    const verifyPassword = await this.hasher.compare(password, user.password);
+
     if (!verifyPassword) {
-      throw new UnauthorizedException('Usuário não autorizado');
+      throw new UnauthorizedException(
+        'Credenciais inválidas. Por favor, tente novamente.',
+      );
     }
 
-    const payload = { sub: user.data.id, username: user.data.email };
+    const expiresIn = rememberMe ? '30d' : '12h';
+    const payload = { sub: user.id };
+
+    const accessToken = await this.jwtService.signAsync(payload, { expiresIn });
+
+    const expiration = new Date();
+    expiration.setHours(expiration.getHours() + (rememberMe ? 24 * 30 : 12));
+
+    await this.tokensRepository.saveToken({
+      user_id: user.id,
+      token: accessToken,
+      type: AUTH_TOKENS_MAPPER.access_token,
+      expires_at: expiration,
+    });
+
+    this.logger.log(
+      { id: user.id, email: user.email },
+      'Usuário logado com sucesso',
+    );
+
     return {
-      access_token: await this.jwtService.signAsync(payload),
+      accessToken,
     };
+  }
+
+  async logout(token: string): Promise<void> {
+    await this.tokensRepository.deleteToken(token);
   }
 }

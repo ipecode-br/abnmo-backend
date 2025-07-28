@@ -1,30 +1,44 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { BcryptHasher } from '@/app/cryptography/bcrypt-hasher';
+import { CryptographyModule } from '@/app/cryptography/cryptography.module';
+import { AuthGuard } from '@/common/guards/auth.guard';
+import { RolesGuard } from '@/common/guards/roles.guard';
+import { Token } from '@/domain/entities/token';
 import { EnvModule } from '@/env/env.module';
 import { EnvService } from '@/env/env.service';
+import { UtilsModule } from '@/utils/utils.module';
 
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
-import { AuthGuard } from './auth.guard';
 import { AuthService } from './auth.service';
+import { TokensRepository } from './tokens.repository';
 
 @Module({
   imports: [
-    UsersModule,
+    TypeOrmModule.forFeature([Token]),
     EnvModule,
+    CryptographyModule,
+    UsersModule,
+    UtilsModule,
     JwtModule.registerAsync({
-      imports: [EnvModule, BcryptHasher],
+      imports: [EnvModule],
       inject: [EnvService],
       useFactory: (envService: EnvService) => ({
         secret: envService.get('JWT_SECRET'),
-        signOptions: { expiresIn: '1d' },
+        signOptions: { expiresIn: '12h' },
       }),
     }),
   ],
-  providers: [AuthService, BcryptHasher, AuthGuard],
+  providers: [
+    AuthService,
+    TokensRepository,
+    { provide: APP_GUARD, useClass: AuthGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
+  ],
   controllers: [AuthController],
-  exports: [AuthService, AuthGuard, JwtModule, BcryptHasher],
+  exports: [AuthService, TokensRepository],
 })
 export class AuthModule {}

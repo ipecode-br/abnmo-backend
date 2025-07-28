@@ -1,60 +1,58 @@
-import { APIGatewayProxyEvent } from 'aws-lambda';
-import { Request } from 'express';
+import { NestFactory } from '@nestjs/core';
+import type { ExpressAdapter } from '@nestjs/platform-express';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import cookieParser from 'cookie-parser';
+import { Logger } from 'nestjs-pino';
+import { patchNestJsSwagger } from 'nestjs-zod';
 
-interface AppEvent {
-  body: Record<string, unknown>;
-  headers: Record<string, string | undefined>;
-  method: string;
+import { HttpExceptionFilter } from '@/common/http.exception.filter';
+import { EnvService } from '@/env/env.service';
+
+import { GlobalZodValidationPipe } from '../common/zod.validation.pipe';
+import { AppModule } from './app.module';
+
+export async function createNestApp(adapter?: ExpressAdapter) {
+  patchNestJsSwagger();
+
+  const app = adapter
+    ? await NestFactory.create<NestExpressApplication>(AppModule, adapter)
+    : await NestFactory.create<NestExpressApplication>(AppModule);
+
+  const envService = app.get(EnvService);
+
+  app.useGlobalPipes(new GlobalZodValidationPipe());
+  app.useGlobalFilters(new HttpExceptionFilter());
+
+  app.enableCors({
+    origin: envService.get('APP_URL'),
+    allowedHeaders: ['Authorization', 'Content-Type', 'Content-Length'],
+    methods: ['OPTIONS', 'GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
+    credentials: true,
+  });
+
+  app.use(cookieParser(envService.get('COOKIE_SECRET')));
+  app.useLogger(app.get(Logger));
+
+  const config = new DocumentBuilder()
+    .setTitle('SVM - Sistema Viver Melhor')
+    .setDescription(
+      'Esta documentação lista as rotas disponíveis da aplicação, bem como seus respectivos requisitos e dados retornados.',
+    )
+    .setVersion('0.0.1')
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('/swagger', app, document, {
+    swaggerOptions: {
+      withCredentials: true,
+      persistAuthorization: true,
+      requestInterceptor: (request: { credentials?: string }) => {
+        request.credentials = 'include';
+        return request;
+      },
+    },
+  });
+
+  return app;
 }
-
-function isApiGatewayEvent(event: unknown): event is APIGatewayProxyEvent {
-  return (
-    typeof event === 'object' &&
-    event !== null &&
-    'httpMethod' in event &&
-    'headers' in event
-  );
-}
-
-export const normalizeEvent = (
-  event: APIGatewayProxyEvent | Request,
-): AppEvent => {
-  if (isApiGatewayEvent(event)) {
-    let parsedBody: Record<string, unknown> = {};
-
-    try {
-      parsedBody =
-        typeof event.body === 'string'
-          ? (JSON.parse(event.body) as Record<string, unknown>)
-          : {};
-    } catch {
-      parsedBody = {};
-    }
-
-    return {
-      body: parsedBody,
-      headers: event.headers as Record<string, string | undefined>,
-      method: event.httpMethod,
-    };
-  }
-
-  const expressHeaders: Record<string, string | undefined> = {};
-  for (const [key, value] of Object.entries(event.headers)) {
-    expressHeaders[key] = Array.isArray(value) ? value.join(', ') : value;
-  }
-
-  return {
-    body: event.body as Record<string, unknown>,
-    headers: expressHeaders,
-    method: event.method,
-  };
-};
-
-export const app = (event: APIGatewayProxyEvent | Request) => {
-  const normalizedEvent = normalizeEvent(event);
-
-  return {
-    message: `Hello from ${process.env.AWS_LAMBDA_FUNCTION_NAME ? 'Lambda' : 'Local'}`,
-    receivedData: normalizedEvent,
-  };
-};

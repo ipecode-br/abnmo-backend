@@ -1,65 +1,99 @@
 import {
-  BadRequestException,
   Injectable,
+  InternalServerErrorException,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 
-import { PatientsRepository } from '@/app/http/patients/patients.repository';
+import { PatientSupport } from '@/domain/entities/patient-support';
 
-import { CreatePatientSupportDto } from './dto/create-patient-support.dto';
+import { PatientsRepository } from '../patients/patients.repository';
+import {
+  CreatePatientSupportDto,
+  UpdatePatientSupportDto,
+} from './patient-supports.dtos';
 import { PatientSupportsRepository } from './patient-supports.repository';
 
 @Injectable()
 export class PatientSupportsService {
+  private readonly logger = new Logger(PatientSupportsService.name);
+
   constructor(
-    private readonly patientSupportsRepository: PatientSupportsRepository,
     private readonly patientsRepository: PatientsRepository,
+    private readonly patientSupportsRepository: PatientSupportsRepository,
   ) {}
 
-  public async create(createPatientSupportDto: CreatePatientSupportDto) {
-    const patientExists = await this.patientsRepository.findById(
-      createPatientSupportDto.id_paciente,
-    );
+  async create(
+    createPatientSupportDto: CreatePatientSupportDto,
+    patientId: string,
+  ): Promise<PatientSupport> {
+    const patientExists = await this.patientsRepository.findById(patientId);
 
     if (!patientExists) {
       throw new NotFoundException('Paciente não encontrado.');
     }
 
-    const patientSupport = await this.patientSupportsRepository.create(
-      createPatientSupportDto,
-    );
+    const patientSupport = await this.patientSupportsRepository.create({
+      ...createPatientSupportDto,
+      patient_id: patientId,
+    });
+
     if (!patientSupport) {
-      throw new BadRequestException('Erro ao criar apoio!');
+      throw new InternalServerErrorException(
+        'Não foi possível registrar o contato de apoio.',
+      );
     }
+
+    this.logger.log(
+      { id: patientSupport.id, patientId: patientSupport.patient_id },
+      'Contato de apoio registrado com sucesso',
+    );
+
     return patientSupport;
   }
 
-  public async findAll() {
-    const patientSupports = await this.patientSupportsRepository.findAll();
+  async findAllByPatientId(patientId: string): Promise<PatientSupport[]> {
+    const patientExists = await this.patientsRepository.findById(patientId);
 
-    return patientSupports;
-  }
-
-  public async findById(id: number) {
-    const patientSupports = await this.patientSupportsRepository.findById(id);
-
-    if (!patientSupports) {
-      throw new NotFoundException('Apoio não encontrado.');
+    if (!patientExists) {
+      throw new NotFoundException('Paciente não encontrado.');
     }
 
-    return patientSupports;
+    return await this.patientSupportsRepository.findAllByPatientId(patientId);
   }
 
-  public async remove(id: number) {
-    const supportExists = await this.patientSupportsRepository.findById(id);
+  async update(
+    id: string,
+    updatePatientsSupportDto: UpdatePatientSupportDto,
+  ): Promise<void> {
+    const patientSupport = await this.patientSupportsRepository.findById(id);
 
-    if (!supportExists) {
-      throw new NotFoundException('Apoio não encontrado.');
+    if (!patientSupport) {
+      throw new NotFoundException('Contato de apoio não encontrado.');
     }
 
-    const patientSupports =
-      await this.patientSupportsRepository.remove(supportExists);
+    Object.assign(patientSupport, updatePatientsSupportDto);
 
-    return patientSupports;
+    await this.patientSupportsRepository.update(patientSupport);
+
+    this.logger.log(
+      { id: patientSupport.id, patientId: patientSupport.patient_id },
+      'Contato de apoio atualizado com sucesso',
+    );
+  }
+
+  async remove(id: string): Promise<void> {
+    const patientSupport = await this.patientSupportsRepository.findById(id);
+
+    if (!patientSupport) {
+      throw new NotFoundException('Contato de apoio não encontrado.');
+    }
+
+    await this.patientSupportsRepository.remove(patientSupport);
+
+    this.logger.log(
+      { id: patientSupport.id, patientId: patientSupport.patient_id },
+      'Contato de apoio atualizado com sucesso',
+    );
   }
 }

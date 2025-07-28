@@ -1,12 +1,24 @@
 import { z } from 'zod';
 
 export const envSchema = z.object({
-  // API
   NODE_ENV: z
-    .enum(['development', 'test', 'homolog', 'production'])
+    .enum(['production', 'development', 'test'])
     .default('development'),
-  API_BASE_URL: z.string().url(),
-  API_PORT: z.coerce.number().min(1),
+
+  // API
+  API_BASE_URL: z.string().url().optional(),
+  API_PORT: z.coerce.number().default(3333),
+
+  // APP
+  APP_URL: z.string().url(),
+  APP_ENVIRONMENT: z
+    .enum(['production', 'development', 'homolog', 'local'])
+    .default('local'),
+
+  // Secrets
+  COOKIE_DOMAIN: z.string().optional(),
+  COOKIE_SECRET: z.string().min(1),
+  JWT_SECRET: z.string().min(1),
 
   // Database
   DB_HOST: z.string().min(1),
@@ -14,9 +26,6 @@ export const envSchema = z.object({
   DB_DATABASE: z.string().min(1),
   DB_USERNAME: z.string().min(1),
   DB_PASSWORD: z.string().min(1),
-
-  // Jwt
-  JWT_SECRET: z.string(),
 });
 
 export type Env = z.infer<typeof envSchema>;

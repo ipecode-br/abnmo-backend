@@ -3,9 +3,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
+import type { PatientOrderByType } from '@/domain/schemas/patient';
 
-import { CreatePatientDto } from './dto/create-patient.dto';
-import { FindPatientDto } from './dto/find-patient.dto';
+import { CreatePatientDto, FindAllPatientQueryDto } from './patients.dtos';
 
 @Injectable()
 export class PatientsRepository {
@@ -14,20 +14,34 @@ export class PatientsRepository {
     private readonly patientsRepository: Repository<Patient>,
   ) {}
 
-  public async findAllWithFilters(filters: FindPatientDto): Promise<Patient[]> {
-    const {
-      status,
-      startDate,
-      endDate,
-      sortBy = 'created_at',
-      order = 'ASC',
-    } = filters;
+  public async findAll(
+    filters: FindAllPatientQueryDto,
+  ): Promise<{ patients: Patient[]; total: number }> {
+    const { search, order, orderBy, status, startDate, endDate, page } =
+      filters;
+
+    const PAGE_SIZE = 10;
+    const ORDER_BY: Record<PatientOrderByType, string> = {
+      name: 'user.name',
+      status: 'patient.status',
+      date: 'patient.created_at',
+    };
 
     const query = this.patientsRepository
       .createQueryBuilder('patient')
-      .leftJoinAndSelect('patient.supports', 'support')
-      .leftJoinAndSelect('patient.diagnostic', 'diagnostic')
-      .leftJoinAndSelect('patient.user', 'user');
+      .leftJoinAndSelect('patient.user', 'user')
+      .select([
+        'patient',
+        'user.id',
+        'user.name',
+        'user.email',
+        'user.avatar_url',
+      ]);
+
+    if (search) {
+      query.andWhere(`user.name LIKE :search`, { search: `%${search}%` });
+      query.andWhere(`user.email LIKE :search`, { search: `%${search}%` });
+    }
 
     if (status) {
       query.andWhere('patient.status = :status', { status });
@@ -40,45 +54,59 @@ export class PatientsRepository {
       });
     }
 
-    if (sortBy) {
-      query.orderBy(`patient.${sortBy}`, order);
+    if (startDate && !endDate) {
+      query.andWhere('patient.created_at >= :startDate', { startDate });
     }
-    return await query.getMany();
+
+    const total = await query.getCount();
+
+    query.orderBy(ORDER_BY[orderBy], order);
+    query.skip((page - 1) * PAGE_SIZE).take(PAGE_SIZE);
+
+    const patients = await query.getMany();
+
+    return { patients, total };
   }
 
-  public async findById(id: number): Promise<Patient | null> {
-    const patient = await this.patientsRepository.findOne({
-      where: {
-        id_user: id,
+  public async findById(id: string): Promise<Patient | null> {
+    return await this.patientsRepository.findOne({
+      relations: { user: true },
+      where: { id },
+      select: {
+        user: {
+          name: true,
+          email: true,
+          avatar_url: true,
+        },
       },
-      relations: ['support', 'diagnostic', 'user'],
     });
-
-    return patient;
   }
-  public async findByIdUsuario(id_user: number): Promise<Patient | null> {
-    const patient = await this.patientsRepository.findOne({
-      where: {
-        id_user,
+
+  public async findByUserId(userId: string): Promise<Patient | null> {
+    return await this.patientsRepository.findOne({
+      relations: { user: true },
+      where: { user_id: userId },
+      select: {
+        user: {
+          name: true,
+          email: true,
+          avatar_url: true,
+        },
       },
-      relations: ['support', 'diagnostic', 'user'],
     });
-
-    return patient;
   }
+
   public async create(patient: CreatePatientDto): Promise<Patient> {
     const patientCreated = this.patientsRepository.create(patient);
-    const patientSaved = await this.patientsRepository.save(patientCreated);
-    return patientSaved;
+    return await this.patientsRepository.save(patientCreated);
   }
-  public async update(patient: Patient): Promise<Patient> {
-    const patientUpdated = await this.patientsRepository.save(patient);
-    return patientUpdated;
-  }
-  public async remove(patient: Patient): Promise<Patient> {
-    const patientDeleted = await this.patientsRepository.remove(patient);
 
-    return patientDeleted;
+  public async update(patient: Patient): Promise<Patient> {
+    return await this.patientsRepository.save(patient);
+  }
+
+  public async remove(patient: Patient): Promise<Patient> {
+    return await this.patientsRepository.remove(patient);
   }
 
   public async getFormsStatus(): Promise<{
@@ -86,7 +114,7 @@ export class PatientsRepository {
     pendingForms: Patient[];
   }> {
     const allPatients = await this.patientsRepository.find({
-      relations: ['support', 'user'],
+      relations: ['user'],
     });
 
     const completeForms: Patient[] = [];
@@ -94,22 +122,21 @@ export class PatientsRepository {
 
     allPatients.forEach((patient) => {
       const patientComplete = [
-        patient.desc_gender,
-        patient.birth_of_date,
+        patient.gender,
+        patient.date_of_birth,
         patient.city,
         patient.state,
-        patient.whatsapp,
+        patient.phone,
         patient.cpf,
-        patient.url_photo,
-        patient.have_disability !== undefined,
-        patient.need_legal_help !== undefined,
-        patient.use_medicine !== undefined,
-        patient.id_diagnostic,
+        patient.has_disability !== undefined,
+        patient.need_legal_assistance !== undefined,
+        patient.take_medication !== undefined,
+        // patient.diagnostic?.id,
       ].every((field) => field !== undefined && field !== null && field !== '');
 
-      const supportComplete = patient.support && patient.support.length > 0;
+      // const supportComplete = patient.support && patient.support.length > 0;
 
-      if (patientComplete && supportComplete) {
+      if (patientComplete) {
         completeForms.push(patient);
       } else {
         pendingForms.push(patient);
@@ -121,7 +148,13 @@ export class PatientsRepository {
 
   public async getPatientsWithRelations(): Promise<Patient[]> {
     return this.patientsRepository.find({
-      relations: ['user', 'support'], // Adicione outras relações conforme necessário
+      relations: {
+        user: true,
+      }, // Adicione outras relações conforme necessário
     });
+  }
+
+  public async deactivate(id: string): Promise<Patient> {
+    return this.patientsRepository.save({ id, status: 'inactive' });
   }
 }

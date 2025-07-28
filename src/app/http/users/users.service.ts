@@ -1,119 +1,92 @@
 import {
-  BadRequestException,
+  ConflictException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
-import * as bcrypt from 'bcryptjs';
 
-import { BcryptHasher } from '@/app/cryptography/bcrypt-hasher';
+import { Hasher } from '@/domain/cryptography/hasher';
 import type { User } from '@/domain/entities/user';
-import { EnvelopeDTO } from '@/utils/envelope.dto';
 
-import { AuthDto } from '../auth/dto/auth.dto';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import type { CreateUserDto, UpdateUserDto } from './users.dtos';
 import { UsersRepository } from './users.repository';
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(
-    private readonly userRepository: UsersRepository,
-    private bcryptHasher: BcryptHasher,
+    private readonly usersRepository: UsersRepository,
+    private readonly hasher: Hasher,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    const userExists = await this.userRepository.findByEmail(
+    const userExists = await this.usersRepository.findByEmail(
       createUserDto.email,
     );
 
     if (userExists) {
-      throw new BadRequestException('Já existe um usuário com este e-mail.');
-    }
-
-    createUserDto.flag_login_facebook =
-      createUserDto.flag_login_facebook ?? false;
-    createUserDto.flag_login_gmail = createUserDto.flag_login_gmail ?? false;
-    createUserDto.flag_active = createUserDto.flag_active ?? true;
-    createUserDto.flag_is_removed = createUserDto.flag_is_removed ?? false;
-    if (createUserDto.password) {
-      createUserDto.password = await this.bcryptHasher.hash(
-        createUserDto.password,
+      throw new ConflictException(
+        'Já existe uma conta cadastrada com este e-mail. Tente fazer login ou clique em "Esqueceu sua senha?" para recuperar o acesso.',
       );
     }
-    // if (!createUserDto.createdAt) {
-    //   createUserDto.createdAt = new Date();
-    // }
-    const user = this.userRepository.create(createUserDto);
+
+    const hashPassword = await this.hasher.hash(createUserDto.password);
+    createUserDto.password = hashPassword;
+
+    const user = await this.usersRepository.create(createUserDto);
+
+    this.logger.log(
+      { id: user.id, email: user.email },
+      'Usuário registrado com sucesso',
+    );
+
     return user;
   }
 
-  async findAll(): Promise<User[]> {
-    return await this.userRepository.findAll();
-  }
-
-  async findByEmail(email: string): Promise<EnvelopeDTO<AuthDto, undefined>> {
-    const user = await this.userRepository.findByEmail(email);
+  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+    const user = await this.usersRepository.findById(id);
 
     if (!user) {
       throw new NotFoundException('Usuário não encontrado.');
     }
 
-    const modelUserDto = new AuthDto();
-    modelUserDto.id = user.id;
-    modelUserDto.email = user?.email;
-    modelUserDto.token_oauth = user.token_oauth;
-    if (user.password) {
-      modelUserDto.password = user.password;
-    }
-    return {
-      success: true,
-      message: 'Usuario retornado para o login!',
-      data: modelUserDto,
-    };
+    Object.assign(user, updateUserDto);
+
+    this.logger.log(
+      { id: user.id, email: user.email },
+      'Usuário atualizado com sucesso',
+    );
+
+    return await this.usersRepository.update(user);
   }
-  async findById(id: number): Promise<User> {
-    const user = await this.userRepository.findById(id);
+
+  async remove(id: string): Promise<User> {
+    const user = await this.usersRepository.findById(id);
 
     if (!user) {
       throw new NotFoundException('Usuário não encontrado.');
     }
 
-    return user;
+    this.logger.log(
+      { id: user.id, email: user.email },
+      'Usuário removido com sucesso',
+    );
+
+    return await this.usersRepository.remove(user);
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
-    const userExists = await this.userRepository.findById(id);
+  async getProfile(id: string): Promise<Omit<User, 'password'>> {
+    const user = await this.usersRepository.findById(id);
 
-    if (!userExists) {
+    if (!user) {
       throw new NotFoundException('Usuário não encontrado.');
     }
 
-    // Verifica se a senha foi enviada no update
-    if (updateUserDto.password) {
-      const saltRounds = 10;
-      updateUserDto.password = await bcrypt.hash(
-        updateUserDto.password,
-        saltRounds,
-      );
-    }
+    // IMPORTANT: DO NOT RETURN USER PASSWORD
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...userWithoutPassword } = user;
 
-    //Atualiza os campos alterados
-    Object.assign(userExists, updateUserDto);
-
-    const user = await this.userRepository.update(userExists);
-
-    return user;
-  }
-
-  async remove(id: number): Promise<User> {
-    const userExists = await this.userRepository.findById(id);
-
-    if (!userExists) {
-      throw new NotFoundException('Usuário não encontrado.');
-    }
-
-    const user = await this.userRepository.remove(userExists);
-
-    return user;
+    return userWithoutPassword;
   }
 }

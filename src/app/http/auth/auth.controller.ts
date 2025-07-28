@@ -1,50 +1,108 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  Res,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import type { Response } from 'express';
 
-import { EnvelopeDTO } from '@/utils/envelope.dto';
+import { Cookies } from '@/common/decorators/cookies';
+import { Public } from '@/common/decorators/public.decorator';
+import { COOKIES_MAPPER } from '@/domain/cookies';
+import type { SignInWithEmailResponseSchema } from '@/domain/schemas/auth';
+import { UtilsService } from '@/utils/utils.service';
 
+import { CreateUserDto } from '../users/users.dtos';
+import { UsersService } from '../users/users.service';
+import { SignInWithEmailDto } from './auth.dtos';
 import { AuthService } from './auth.service';
-import { AuthDto } from './dto/auth.dto';
 
+@Public()
 @Controller()
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private utilsService: UtilsService,
+    private usersService: UsersService,
+  ) {}
+
   @Post('login')
-  @ApiOperation({ summary: 'Login' })
-  @ApiResponse({ status: 201, description: 'Login feito com sucesso' })
-  @ApiResponse({ status: 400, description: 'Dados inválidos' })
-  @ApiResponse({ status: 500, description: 'Erro interno no servidor' })
-  @ApiBody({ type: AuthDto })
+  @ApiBody({ type: SignInWithEmailDto })
+  @ApiOperation({ summary: 'Login do usuário.' })
+  @ApiResponse({ status: 201, description: 'Login realizado com sucesso.' })
+  @ApiResponse({ status: 401, description: 'Credenciais inválidas.' })
   async signIn(
-    @Body()
-    authDto: AuthDto,
-  ): Promise<EnvelopeDTO<string, undefined>> {
-    try {
-      const data = await this.authService.signIn(
-        authDto.email,
-        authDto.password,
-      );
-      if (!data) {
-        return {
-          success: false,
-          message: 'Erro ao ralizar login!',
-          data: undefined,
-        };
-      }
-      return {
-        success: true,
-        message: 'Login realizado com sucesso!',
-        data: data.access_token,
-      };
-    } catch (error: unknown) {
-      return {
-        success: false,
-        message:
-          error instanceof Error
-            ? error.message
-            : 'Erro interno ao realizar login!',
-        data: undefined,
-      };
+    @Res({ passthrough: true }) response: Response,
+    @Body() body: SignInWithEmailDto,
+  ): Promise<SignInWithEmailResponseSchema> {
+    const TWELVE_HOURS_IN_MS = 1000 * 60 * 60 * 12;
+
+    const { accessToken } = await this.authService.signIn(body);
+
+    this.utilsService.setCookie(response, {
+      name: COOKIES_MAPPER.access_token,
+      value: accessToken,
+      maxAge: body.rememberMe ? TWELVE_HOURS_IN_MS * 60 : TWELVE_HOURS_IN_MS,
+    });
+
+    return {
+      success: true,
+      message: 'Login realizado com sucesso.',
+    };
+  }
+
+  @Post('register')
+  @ApiBody({ type: CreateUserDto })
+  @ApiOperation({ summary: 'Registro de um novo usuário.' })
+  @ApiResponse({ status: 201, description: 'Registro realizado com sucesso.' })
+  @ApiResponse({ status: 400, description: 'Dados inválidos.' })
+  @ApiResponse({ status: 409, description: 'E-mail já registrado.' })
+  async register(
+    @Body() createUserDto: CreateUserDto,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<SignInWithEmailResponseSchema> {
+    const password = createUserDto.password;
+
+    const user = await this.usersService.create(createUserDto);
+
+    const { accessToken } = await this.authService.signIn({
+      email: user.email,
+      password,
+      rememberMe: false,
+    });
+
+    this.utilsService.setCookie(response, {
+      name: COOKIES_MAPPER.access_token,
+      value: accessToken,
+    });
+
+    return {
+      success: true,
+      message: 'Registro realizado com sucesso.',
+    };
+  }
+
+  @Post('logout')
+  @ApiOperation({ summary: 'Logout do usuário.' })
+  @ApiResponse({ status: 200, description: 'Logout realizado com sucesso.' })
+  @ApiResponse({ status: 401, description: 'Token ausente ou inválido.' })
+  async logout(
+    @Res({ passthrough: true }) response: Response,
+    @Cookies('access_token') accessToken: string,
+  ) {
+    if (!accessToken) {
+      throw new UnauthorizedException('Token de acesso ausente.');
     }
+
+    await this.authService.logout(accessToken);
+
+    this.utilsService.deleteCookie(response, COOKIES_MAPPER.access_token);
+
+    return {
+      success: true,
+      message: 'Logout realizado com sucesso.',
+    };
   }
 }

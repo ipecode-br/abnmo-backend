@@ -3,202 +3,154 @@ import {
   Controller,
   Delete,
   Get,
-  Logger,
+  NotFoundException,
   Param,
-  ParseIntPipe,
+  Patch,
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
-import { Patient } from '@/domain/entities/patient';
-import { PatientFormsStatus } from '@/domain/types/form-types';
-import { EnvelopeDTO } from '@/utils/envelope.dto';
-import { validateDto } from '@/utils/validate.dto';
+import { Roles } from '@/common/decorators/roles.decorator';
+import {
+  CreatePatientResponseSchema,
+  DeletePatientResponseSchema,
+  FindAllPatientsResponseSchema,
+  FindOnePatientResponseSchema,
+  InactivatePatientResponseSchema,
+} from '@/domain/schemas/patient';
+import { FindAllPatientsSupportResponseSchema } from '@/domain/schemas/patient-support';
 
-import { CreatePatientDto } from './dto/create-patient.dto';
-import { FindPatientDto } from './dto/find-patient.dto';
+import { PatientSupportsRepository } from '../patient-supports/patient-supports.repository';
+import { CreatePatientDto, FindAllPatientQueryDto } from './patients.dtos';
+import { PatientsRepository } from './patients.repository';
 import { PatientsService } from './patients.service';
 
 @ApiTags('Pacientes')
 @Controller('patients')
 export class PatientsController {
-  private readonly logger = new Logger(PatientsController.name);
-
-  constructor(private readonly patientsService: PatientsService) {}
+  constructor(
+    private readonly patientsService: PatientsService,
+    private readonly patientsRepository: PatientsRepository,
+    private readonly patientsSupportsRepository: PatientSupportsRepository,
+  ) {}
 
   @Post()
-  @ApiOperation({ summary: 'Cria um novo paciente' })
-  @ApiResponse({
-    status: 201,
-    description: 'Paciente criado com sucesso',
-    type: Patient,
-  })
-  @ApiResponse({
-    status: 209,
-    description: 'Paciente já cadastrado',
+  @Roles(['manager', 'nurse'])
+  @ApiOperation({
+    summary: 'Cadastra um novo paciente',
+    description: `
+    Dois modos de operação:
+    1. Com "user_id" existente: associa a um usuário já cadastrado (ignora os campos "email" e "name")
+    2. Sem "user_id": cria novo usuário automaticamente ("email" e "name" são obrigatórios)
+    `,
   })
   public async create(
     @Body() createPatientDto: CreatePatientDto,
-  ): Promise<EnvelopeDTO<Patient, null>> {
-    try {
-      await validateDto(createPatientDto);
+  ): Promise<CreatePatientResponseSchema> {
+    await this.patientsService.create(createPatientDto);
 
-      const patient = await this.patientsService.create(createPatientDto);
-      if (!patient) {
-        return {
-          success: false,
-          message: 'Erro ao criar paciente',
-          data: undefined,
-        };
-      }
-      this.logger.log(
-        `Paciente criado com sucesso: ${JSON.stringify(patient)}`,
-      );
-      return {
-        success: true,
-        message: 'Paciente criado com sucesso',
-        data: undefined,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message:
-          error instanceof Error
-            ? error.message
-            : 'Erro interno ao criar paciente',
-        data: undefined,
-      };
-    }
+    return {
+      success: true,
+      message: 'Cadastro realizado com sucesso.',
+    };
   }
 
   @Get()
-  @ApiOperation({ summary: 'Lista pacientes com filtros e ordenação' })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de pacientes',
-    type: [Patient],
-  })
+  @Roles(['manager', 'nurse'])
+  @ApiOperation({ summary: 'Lista todos os pacientes' })
   public async findAll(
-    @Query() filters: FindPatientDto,
-  ): Promise<EnvelopeDTO<Patient[], null>> {
-    try {
-      const patients = await this.patientsService.findAll(filters);
-      if (!patients) {
-        return {
-          success: false,
-          message: 'Erro ao listas todos os pacientes!',
-          data: undefined,
-        };
-      }
-      return {
-        success: true,
-        message: 'Lista de pacientes retornada com sucesso!',
-        data: patients,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message:
-          error instanceof Error
-            ? error.message
-            : 'Erro interno ao listas todos os pacientes!',
-        data: undefined,
-      };
-    }
+    @Query() filters: FindAllPatientQueryDto,
+  ): Promise<FindAllPatientsResponseSchema> {
+    const { patients, total } = await this.patientsRepository.findAll(filters);
+
+    return {
+      success: true,
+      message: 'Lista de pacientes retornada com sucesso.',
+      data: { patients, total },
+    };
   }
 
   @Get(':id')
+  @Roles(['manager', 'nurse', 'specialist'])
   @ApiOperation({ summary: 'Busca um paciente pelo ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Paciente encontrado',
-    type: Patient,
-  })
-  @ApiResponse({ status: 404, description: 'Paciente não encontrado' })
   public async findById(
-    @Param('id', ParseIntPipe) id: number,
-  ): Promise<EnvelopeDTO<Patient, null>> {
-    try {
-      const patient = await this.patientsService.findById(id);
-      if (!patient) {
-        return {
-          success: false,
-          message: 'Erro ao encontrar paciente!',
-          data: undefined,
-        };
-      }
-      this.logger.log(`Paciente encontrado`);
-      return {
-        success: true,
-        message: 'Paciente encontrado',
-        data: patient,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message:
-          error instanceof Error
-            ? error.message
-            : 'Erro interno ao encontrar paciente!',
-        data: undefined,
-      };
+    @Param('id') id: string,
+  ): Promise<FindOnePatientResponseSchema> {
+    const patient = await this.patientsRepository.findById(id);
+
+    if (!patient) {
+      throw new NotFoundException('Paciente não encontrado.');
     }
+
+    return {
+      success: true,
+      message: 'Paciente retornado com sucesso.',
+      data: patient,
+    };
+  }
+
+  @Patch(':id/inactivate')
+  @Roles(['manager', 'nurse'])
+  @ApiOperation({ summary: 'Inativa o Paciente pelo ID' })
+  async inactivatePatient(
+    @Param('id') id: string,
+  ): Promise<InactivatePatientResponseSchema> {
+    await this.patientsService.deactivatePatient(id);
+
+    return {
+      success: true,
+      message: 'Paciente inativado com sucesso.',
+    };
+  }
+
+  @Get(':id/patient-supports')
+  @Roles(['manager', 'nurse', 'specialist', 'patient'])
+  @ApiOperation({ summary: 'Lista todos os contatos de apoio de um paciente' })
+  async findAllPatientSupports(
+    @Param('id') patientId: string,
+  ): Promise<FindAllPatientsSupportResponseSchema> {
+    const patient = await this.patientsRepository.findById(patientId);
+
+    if (!patient) {
+      throw new NotFoundException('Paciente não encontrado.');
+    }
+
+    const patientSupports =
+      await this.patientsSupportsRepository.findAllByPatientId(patientId);
+
+    return {
+      success: true,
+      message: 'Lista de contatos de apoio retornada com sucesso.',
+      data: {
+        patient_supports: patientSupports,
+        total: patientSupports.length,
+      },
+    };
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Remove um paciente pelo ID' })
-  @ApiResponse({ status: 200, description: 'Paciente removido com sucesso' })
-  @ApiResponse({ status: 404, description: 'Paciente não encontrado' })
   public async remove(
-    @Param('id', ParseIntPipe) id: number,
-  ): Promise<EnvelopeDTO<Patient, null>> {
-    try {
-      const patient = await this.patientsService.remove(id);
-      if (!patient) {
-        return {
-          success: false,
-          message: 'Erro ao remover paciente!',
-          data: undefined,
-        };
-      }
+    @Param('id') id: string,
+  ): Promise<DeletePatientResponseSchema> {
+    await this.patientsService.remove(id);
 
-      this.logger.log(
-        `Paciente removido com sucesso: ${JSON.stringify(patient)}`,
-      );
-      return {
-        success: true,
-        message: '`Paciente removido com sucesso',
-        data: patient,
-      };
-    } catch (error: any) {
-      return {
-        success: false,
-        message:
-          error instanceof Error
-            ? error.message
-            : 'Erro interno ao remover paciente!',
-        data: undefined,
-      };
-    }
+    return {
+      success: true,
+      message: 'Paciente removido com sucesso.',
+    };
   }
 
   @Get('forms/status')
   @ApiOperation({ summary: 'Lista formulários pendentes por paciente' })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de formulários pendentes por paciente',
-  })
-  public async getFormsStatus(): Promise<
-    EnvelopeDTO<PatientFormsStatus[], null>
-  > {
+  public async getFormsStatus() {
     try {
       const formsStatus = await this.patientsService.getPatientFormsStatus();
       const pendingCount = formsStatus.reduce(
         (total, patient) => total + patient.pendingForms.length,
         0,
       );
-
       return {
         success: true,
         message: `${pendingCount} formulário(s) pendente(s) no total`,
