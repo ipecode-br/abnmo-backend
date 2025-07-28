@@ -16,14 +16,12 @@ export const GENDERS = [
   'prefer_not_to_say',
 ] as const;
 export type GenderType = (typeof GENDERS)[number];
-export const STATUS = ['active', 'inactive'] as const;
-export type StatusType = (typeof STATUS)[number];
 
-export const STATUS = ['active', 'inactive'] as const;
-export type StatusType = (typeof STATUS)[number];
+export const PATIENT_STATUS = ['active', 'inactive'] as const;
+export type PatientStatusType = (typeof PATIENT_STATUS)[number];
 
-export const ORDER_BY = ['name', 'status', 'date'] as const;
-export type OrderByType = (typeof ORDER_BY)[number];
+export const PATIENT_ORDER_BY = ['name', 'status', 'date'] as const;
+export type PatientOrderByType = (typeof PATIENT_ORDER_BY)[number];
 
 export const patientSchema = z
   .object({
@@ -45,7 +43,7 @@ export const patientSchema = z
     take_medication: z.boolean().default(false),
     medication_desc: z.string().nullable(),
     has_nmo_diagnosis: z.boolean().default(false),
-    status: z.enum(STATUS).default('active'),
+    status: z.enum(PATIENT_STATUS).default('active'),
     created_at: z.coerce.date(),
     updated_at: z.coerce.date(),
   })
@@ -87,8 +85,8 @@ export type CreatePatientResponseSchema = z.infer<
 export const findAllPatientsQuerySchema = baseQuerySchema
   .pick({ search: true, order: true, page: true })
   .extend({
-    status: z.enum(STATUS).optional(),
-    orderBy: z.enum(ORDER_BY).optional(),
+    status: z.enum(PATIENT_STATUS).optional(),
+    orderBy: z.enum(PATIENT_ORDER_BY).optional().default('name'),
     startDate: z.string().datetime().optional(),
     endDate: z.string().datetime().optional(),
   })

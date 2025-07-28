@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
+import type { PatientOrderByType } from '@/domain/schemas/patient';
 
 import { CreatePatientDto, FindAllPatientQueryDto } from './patients.dtos';
 
@@ -13,16 +14,18 @@ export class PatientsRepository {
     private readonly patientsRepository: Repository<Patient>,
   ) {}
 
-  public async findAll(filters: FindAllPatientQueryDto): Promise<Patient[]> {
-    const {
-      search,
-      order = 'DESC',
-      orderBy,
-      status,
-      startDate,
-      endDate,
-      page = 1,
-    } = filters;
+  public async findAll(
+    filters: FindAllPatientQueryDto,
+  ): Promise<{ patients: Patient[]; total: number }> {
+    const { search, order, orderBy, status, startDate, endDate, page } =
+      filters;
+
+    const PAGE_SIZE = 10;
+    const ORDER_BY: Record<PatientOrderByType, string> = {
+      name: 'user.name',
+      status: 'patient.status',
+      date: 'patient.created_at',
+    };
 
     const query = this.patientsRepository
       .createQueryBuilder('patient')
@@ -36,11 +39,8 @@ export class PatientsRepository {
       ]);
 
     if (search) {
-      if (search.includes('@')) {
-        query.andWhere(`user.email = :search`, { search });
-      } else {
-        query.andWhere(`user.name LIKE :search`, { search: `%${search}%` });
-      }
+      query.andWhere(`user.name LIKE :search`, { search: `%${search}%` });
+      query.andWhere(`user.email LIKE :search`, { search: `%${search}%` });
     }
 
     if (status) {
@@ -54,20 +54,18 @@ export class PatientsRepository {
       });
     }
 
-    const orderField =
-      orderBy === 'name'
-        ? 'user.name'
-        : orderBy === 'status'
-          ? 'patient.status'
-          : 'patient.created_at';
-    query.orderBy(orderField, order);
-
-    const PAGE_SIZE = 10;
-    if (page) {
-      query.skip((page - 1) * PAGE_SIZE).take(PAGE_SIZE);
+    if (startDate && !endDate) {
+      query.andWhere('patient.created_at >= :startDate', { startDate });
     }
 
-    return await query.getMany();
+    const total = await query.getCount();
+
+    query.orderBy(ORDER_BY[orderBy], order);
+    query.skip((page - 1) * PAGE_SIZE).take(PAGE_SIZE);
+
+    const patients = await query.getMany();
+
+    return { patients, total };
   }
 
   public async findById(id: string): Promise<Patient | null> {

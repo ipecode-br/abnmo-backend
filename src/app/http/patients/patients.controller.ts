@@ -59,19 +59,15 @@ export class PatientsController {
   @Get()
   @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Lista todos os pacientes' })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de pacientes retornada com sucesso',
-  })
   public async findAll(
     @Query() filters: FindAllPatientQueryDto,
   ): Promise<FindAllPatientsResponseSchema> {
-    const patients = await this.patientsRepository.findAll(filters);
+    const { patients, total } = await this.patientsRepository.findAll(filters);
 
     return {
       success: true,
       message: 'Lista de pacientes retornada com sucesso.',
-      data: { patients, total: patients.length },
+      data: { patients, total },
     };
   }
 
@@ -97,9 +93,6 @@ export class PatientsController {
   @Patch(':id/inactivate')
   @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Inativa o Paciente pelo ID' })
-  @ApiResponse({ status: 200, description: 'Paciente inativado com sucesso' })
-  @ApiResponse({ status: 404, description: 'Paciente não encontrado' })
-  @ApiResponse({ status: 409, description: 'Paciente já está inativo' })
   async inactivatePatient(
     @Param('id') id: string,
   ): Promise<InactivatePatientResponseSchema> {
@@ -114,10 +107,6 @@ export class PatientsController {
   @Get(':id/patient-supports')
   @Roles(['manager', 'nurse', 'specialist', 'patient'])
   @ApiOperation({ summary: 'Lista todos os contatos de apoio de um paciente' })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de contatos de apoio retornada com sucesso',
-  })
   async findAllPatientSupports(
     @Param('id') patientId: string,
   ): Promise<FindAllPatientsSupportResponseSchema> {
