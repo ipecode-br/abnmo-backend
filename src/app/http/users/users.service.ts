@@ -37,7 +37,8 @@ export class UsersService {
     const user = await this.usersRepository.create(createUserDto);
 
     this.logger.log(
-      `Usuário registrado com sucesso: ${JSON.stringify({ id: user.id, email: user.email, timestamp: new Date() })}`,
+      { id: user.id, email: user.email },
+      'Usuário registrado com sucesso',
     );
 
     return user;
@@ -52,6 +53,11 @@ export class UsersService {
 
     Object.assign(user, updateUserDto);
 
+    this.logger.log(
+      { id: user.id, email: user.email },
+      'Usuário atualizado com sucesso',
+    );
+
     return await this.usersRepository.update(user);
   }
 
@@ -62,6 +68,25 @@ export class UsersService {
       throw new NotFoundException('Usuário não encontrado.');
     }
 
+    this.logger.log(
+      { id: user.id, email: user.email },
+      'Usuário removido com sucesso',
+    );
+
     return await this.usersRepository.remove(user);
+  }
+
+  async getProfile(id: string): Promise<Omit<User, 'password'>> {
+    const user = await this.usersRepository.findById(id);
+
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado.');
+    }
+
+    // IMPORTANT: DO NOT RETURN USER PASSWORD
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...userWithoutPassword } = user;
+
+    return userWithoutPassword;
   }
 }

@@ -20,6 +20,7 @@ export class UsersRepository {
   public async findById(id: string): Promise<User | null> {
     return await this.usersRepository.findOne({
       where: { id },
+      relations: { patient: true },
     });
   }
 

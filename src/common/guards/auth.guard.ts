@@ -43,8 +43,8 @@ export class AuthGuard implements CanActivate {
     }
 
     try {
-      const tokenPaylod = this.jwtService.verify<{ sub?: string }>(token);
-      const userId = tokenPaylod.sub;
+      const tokenPayload = this.jwtService.verify<{ sub?: string }>(token);
+      const userId = tokenPayload.sub;
 
       if (!userId) {
         throw new UnauthorizedException('Token inválido.');

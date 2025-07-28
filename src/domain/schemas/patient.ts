@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { BRAZILIAN_STATES } from '@/constants/brazilian-states';
+
 import { baseResponseSchema } from './base';
 import { baseQuerySchema } from './query';
 
@@ -14,6 +16,8 @@ export const GENDERS = [
   'prefer_not_to_say',
 ] as const;
 export type GenderType = (typeof GENDERS)[number];
+export const STATUS = ['active', 'inactive'] as const;
+export type StatusType = (typeof STATUS)[number];
 
 export const STATUS = ['active', 'inactive'] as const;
 export type StatusType = (typeof STATUS)[number];
@@ -32,7 +36,7 @@ export const patientSchema = z
       .regex(/^\d+$/)
       .refine((num) => num.length === 11),
     cpf: z.string().min(11).max(11),
-    state: z.string().min(2).max(2),
+    state: z.enum(BRAZILIAN_STATES),
     city: z.string(),
     // medical report
     has_disability: z.boolean().default(false),
@@ -48,11 +52,31 @@ export const patientSchema = z
   .strict();
 export type PatientSchema = z.infer<typeof patientSchema>;
 
-export const createPatientSchema = patientSchema.omit({
-  id: true,
-  created_at: true,
-  updated_at: true,
-});
+export const createPatientSchema = patientSchema
+  .omit({ id: true, created_at: true, updated_at: true })
+  .extend({
+    user_id: z.string().uuid().optional(),
+    name: z.string().optional(),
+    email: z.string().email().optional(),
+  })
+  .refine(
+    (data) => {
+      const hasNameAndEmail = !!data.name && !!data.email;
+      if (!data.user_id && !hasNameAndEmail) {
+        return false;
+      }
+      if (data.user_id) {
+        data.name = undefined;
+        data.email = undefined;
+      }
+      return true;
+    },
+    {
+      message:
+        'Fields `name` and `email` are required when `user_id` is not provided.',
+      path: ['root'],
+    },
+  );
 export type CreatePatientSchema = z.infer<typeof createPatientSchema>;
 
 export const createPatientResponseSchema = baseResponseSchema.extend({});

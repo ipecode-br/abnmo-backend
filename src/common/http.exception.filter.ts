@@ -35,11 +35,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
       const responseObject = response as {
         message?: string;
         error?: string;
-        errors?: ZodValidationErrors;
+        fields?: ZodValidationErrors;
       };
 
       const responseMessage = responseObject.message ?? responseObject.error;
-      zodValidationErrors = responseObject.errors;
+      zodValidationErrors = responseObject.fields;
 
       if (responseMessage) {
         message = responseMessage;
@@ -51,7 +51,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     response.status(status).json({
       success: false,
       message,
-      errors: zodValidationErrors,
+      fields: zodValidationErrors,
     });
   }
 }

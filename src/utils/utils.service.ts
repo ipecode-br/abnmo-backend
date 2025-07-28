@@ -19,7 +19,7 @@ export class UtilsService {
     response.cookie(name, value, {
       domain: this.envService.get('COOKIE_DOMAIN'),
       httpOnly: true,
-      maxAge: 1000 * 60 * 60 * 8, // 8 hours
+      maxAge: 1000 * 60 * 60 * 12, // 8 hours
       path: '/',
       sameSite: 'lax',
       secure: this.envService.get('APP_ENVIRONMENT') !== 'local',

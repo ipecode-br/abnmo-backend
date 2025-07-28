@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   Logger,
@@ -6,12 +7,14 @@ import {
 } from '@nestjs/common';
 
 import { UsersRepository } from '@/app/http/users/users.repository';
+import type { UserSchema } from '@/domain/schemas/user';
 import {
   FormType,
   PatientFormsStatus,
   PendingForm,
 } from '@/domain/types/form-types';
 
+import { UsersService } from '../users/users.service';
 import { CreatePatientDto } from './patients.dtos';
 import { PatientsRepository } from './patients.repository';
 import { validateTriagemForm } from './validators/form-validators';
@@ -23,27 +26,76 @@ export class PatientsService {
   constructor(
     private readonly patientsRepository: PatientsRepository,
     private readonly usersRepository: UsersRepository,
+    private readonly usersService: UsersService,
   ) {}
 
   async create(createPatientDto: CreatePatientDto): Promise<void> {
-    const user = await this.usersRepository.findById(createPatientDto.user_id);
+    let user: UserSchema | null = null;
+
+    if (!createPatientDto.user_id) {
+      const { email, name } = createPatientDto;
+
+      if (!email || !name) {
+        throw new BadRequestException(
+          'E-mail e nome são obrigatórios quando o ID do usuário não for fornecido.',
+        );
+      }
+
+      const randomPassword = Math.random().toString(36).slice(-8);
+      const newUser = await this.usersService.create({
+        email,
+        name,
+        password: randomPassword,
+      });
+      user = newUser;
+    }
+
+    if (createPatientDto.user_id) {
+      const registeredUser = await this.usersRepository.findById(
+        createPatientDto.user_id,
+      );
+      user = registeredUser;
+    }
 
     if (!user) {
       throw new NotFoundException('Usuário não encontrado.');
     }
 
-    const patientExists = await this.patientsRepository.findByUserId(
-      createPatientDto.user_id,
-    );
+    const patientExists = await this.patientsRepository.findByUserId(user.id);
 
     if (patientExists) {
       throw new ConflictException('Este paciente já possui um cadastro.');
     }
 
-    const patient = await this.patientsRepository.create(createPatientDto);
+    const patientData = {
+      ...createPatientDto,
+      user_id: user.id,
+    };
+
+    const patient = await this.patientsRepository.create(patientData);
 
     this.logger.log(
-      `Paciente cadastrado com sucesso: ${JSON.stringify({ id: patient.id, userId: patient.user_id, timestamp: new Date() })}`,
+      { id: patient.id, userId: patient.user_id, email: user.email },
+      'Paciente cadastrado com sucesso',
+    );
+  }
+
+  async deactivatePatient(id: string): Promise<void> {
+    const patient = await this.patientsRepository.findById(id);
+
+    if (!patient) {
+      throw new NotFoundException('Paciente não encontrado.');
+    }
+
+    if (patient.status == 'inactive') {
+      throw new ConflictException('Paciente já está inativo.');
+    }
+
+    await this.patientsRepository.deactivate(id);
+
+    this.logger.log(
+      { id: patient.id, userId: patient.user_id },
+      'Paciente inativado com sucesso',
     );
   }
 
@@ -57,7 +109,8 @@ export class PatientsService {
     await this.patientsRepository.remove(patient);
 
     this.logger.log(
-      `Paciente removido com sucesso: ${JSON.stringify({ id: patient.id, userId: patient.user_id, timestamp: new Date() })}`,
+      { id: patient.id, userId: patient.user_id },
+      'Paciente removido com sucesso',
     );
   }
 
@@ -83,23 +136,5 @@ export class PatientsService {
         completedForms,
       };
     });
-  }
-
-  async deactivatePatient(id: string): Promise<void> {
-    const patient = await this.patientsRepository.findById(id);
-
-    if (!patient) {
-      throw new NotFoundException('Paciente não encontrado.');
-    }
-
-    if (patient.status == 'inactive') {
-      throw new ConflictException('Paciente já está inativo.');
-    }
-
-    await this.patientsRepository.deactivate(id);
-
-    this.logger.log(
-      `Paciente inativado com sucesso: ${JSON.stringify({ id: patient.id, userId: patient.user_id, timestamp: new Date() })}`,
-    );
   }
 }

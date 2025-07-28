@@ -37,11 +37,14 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
     @Body() body: SignInWithEmailDto,
   ): Promise<SignInWithEmailResponseSchema> {
+    const TWELVE_HOURS_IN_MS = 1000 * 60 * 60 * 12;
+
     const { accessToken } = await this.authService.signIn(body);
 
     this.utilsService.setCookie(response, {
       name: COOKIES_MAPPER.access_token,
       value: accessToken,
+      maxAge: body.rememberMe ? TWELVE_HOURS_IN_MS * 60 : TWELVE_HOURS_IN_MS,
     });
 
     return {

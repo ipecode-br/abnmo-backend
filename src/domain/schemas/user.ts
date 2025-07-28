@@ -54,13 +54,6 @@ export type UpdateUserSchema = z.infer<typeof updateUserSchema>;
 export const updateUserResponseSchema = baseResponseSchema.extend({});
 export type UpdateUserResponseSchema = z.infer<typeof updateUserResponseSchema>;
 
-// Delete
-
-export const deleteUserParamsSchema = z.object({
-  id: z.string().uuid(),
-});
-export type DeleteUserParamsSchema = z.infer<typeof deleteUserParamsSchema>;
-
 export const disableUserResponseSchema = baseResponseSchema.extend({});
 export type DisableUserResponseSchema = z.infer<
   typeof disableUserResponseSchema
@@ -68,3 +61,12 @@ export type DisableUserResponseSchema = z.infer<
 
 export const deleteUserResponseSchema = baseResponseSchema.extend({});
 export type DeleteUserResponseSchema = z.infer<typeof deleteUserResponseSchema>;
+
+export const getUserProfileResponseSchema = baseResponseSchema
+  .extend({
+    data: userSchema.omit({ password: true }),
+  })
+  .strict();
+export type GetUserProfileResponseSchema = z.infer<
+  typeof getUserProfileResponseSchema
+>;
