@@ -3,6 +3,7 @@ import type { ExpressAdapter } from '@nestjs/platform-express';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
+import { Logger } from 'nestjs-pino';
 import { patchNestJsSwagger } from 'nestjs-zod';
 
 import { HttpExceptionFilter } from '@/common/http.exception.filter';
@@ -23,16 +24,15 @@ export async function createNestApp(adapter?: ExpressAdapter) {
   app.useGlobalPipes(new GlobalZodValidationPipe());
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  if (envService.get('APP_ENVIRONMENT') === 'local') {
-    app.enableCors({
-      origin: envService.get('APP_URL'),
-      allowedHeaders: ['Authorization', 'Content-Type', 'Content-Length'],
-      methods: ['OPTIONS', 'GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
-      credentials: true,
-    });
-  }
+  app.enableCors({
+    origin: envService.get('APP_URL'),
+    allowedHeaders: ['Authorization', 'Content-Type', 'Content-Length'],
+    methods: ['OPTIONS', 'GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
+    credentials: true,
+  });
 
   app.use(cookieParser(envService.get('COOKIE_SECRET')));
+  app.useLogger(app.get(Logger));
 
   const config = new DocumentBuilder()
     .setTitle('SVM - Sistema Viver Melhor')

@@ -9,6 +9,7 @@ import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 import { Cookies } from '@/common/decorators/cookies';
+import { Public } from '@/common/decorators/public.decorator';
 import { COOKIES_MAPPER } from '@/domain/cookies';
 import type { SignInWithEmailResponseSchema } from '@/domain/schemas/auth';
 import { UtilsService } from '@/utils/utils.service';
@@ -18,6 +19,7 @@ import { UsersService } from '../users/users.service';
 import { SignInWithEmailDto } from './auth.dtos';
 import { AuthService } from './auth.service';
 
+@Public()
 @Controller()
 export class AuthController {
   constructor(
@@ -35,11 +37,14 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
     @Body() body: SignInWithEmailDto,
   ): Promise<SignInWithEmailResponseSchema> {
+    const TWELVE_HOURS_IN_MS = 1000 * 60 * 60 * 12;
+
     const { accessToken } = await this.authService.signIn(body);
 
     this.utilsService.setCookie(response, {
       name: COOKIES_MAPPER.access_token,
       value: accessToken,
+      maxAge: body.rememberMe ? TWELVE_HOURS_IN_MS * 60 : TWELVE_HOURS_IN_MS,
     });
 
     return {

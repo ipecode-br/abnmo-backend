@@ -18,6 +18,9 @@ export type GenderType = (typeof GENDERS)[number];
 export const STATUS = ['active', 'inactive'] as const;
 export type StatusType = (typeof STATUS)[number];
 
+export const STATUS = ['active', 'inactive'] as const;
+export type StatusType = (typeof STATUS)[number];
+
 export const patientSchema = z
   .object({
     id: z.string().uuid(),
@@ -38,6 +41,7 @@ export const patientSchema = z
     take_medication: z.boolean().default(false),
     medication_desc: z.string().nullable(),
     has_nmo_diagnosis: z.boolean().default(false),
+    status: z.enum(STATUS).default('active'),
     created_at: z.coerce.date(),
     updated_at: z.coerce.date(),
   })

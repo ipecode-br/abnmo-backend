@@ -109,4 +109,8 @@ export class PatientsRepository {
       relations: ['user'], // Adicione outras relações conforme necessário
     });
   }
+
+  public async deactivate(id: string): Promise<Patient> {
+    return this.patientsRepository.save({ id, status: 'inactive' });
+  }
 }

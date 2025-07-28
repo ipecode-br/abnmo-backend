@@ -75,11 +75,27 @@ export class PatientsService {
     const patient = await this.patientsRepository.create(patientData);
 
     this.logger.log(
-      `Paciente cadastrado com sucesso: ${JSON.stringify({
-        id: patient.id,
-        userId: patient.user_id,
-        timestamp: new Date(),
-      })}`,
+      { id: patient.id, userId: patient.user_id, email: user.email },
+      'Paciente cadastrado com sucesso',
+    );
+  }
+
+  async deactivatePatient(id: string): Promise<void> {
+    const patient = await this.patientsRepository.findById(id);
+
+    if (!patient) {
+      throw new NotFoundException('Paciente não encontrado.');
+    }
+
+    if (patient.status == 'inactive') {
+      throw new ConflictException('Paciente já está inativo.');
+    }
+
+    await this.patientsRepository.deactivate(id);
+
+    this.logger.log(
+      { id: patient.id, userId: patient.user_id },
+      'Paciente inativado com sucesso',
     );
   }
 
@@ -93,7 +109,8 @@ export class PatientsService {
     await this.patientsRepository.remove(patient);
 
     this.logger.log(
-      `Paciente removido com sucesso: ${JSON.stringify({ id: patient.id, userId: patient.user_id, timestamp: new Date() })}`,
+      { id: patient.id, userId: patient.user_id },
+      'Paciente removido com sucesso',
     );
   }
 

@@ -6,72 +6,33 @@ import {
   NotFoundException,
   Param,
   Post,
+  Put,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
+import { Roles } from '@/common/decorators/roles.decorator';
 import {
   CreatePatientSupportResponseSchema,
   DeletePatientSupportResponseSchema,
-  FindAllPatientsSupportResponseSchema,
   FindOnePatientsSupportResponseSchema,
+  UpdatePatientSupportResponseSchema,
 } from '@/domain/schemas/patient-support';
 
-import { CreatePatientSupportDto } from './patient-supports.dtos';
+import { CreatePatientSupportDto } from '../patient-supports/patient-supports.dtos';
+import { UpdatePatientSupportDto } from './patient-supports.dtos';
 import { PatientSupportsRepository } from './patient-supports.repository';
 import { PatientSupportsService } from './patient-supports.service';
 
 @ApiTags('Rede de apoio')
-@Controller('patients/:patientId/patient-supports')
+@Controller('patient-supports')
 export class PatientSupportsController {
   constructor(
     private readonly patientSupportsService: PatientSupportsService,
     private readonly patientSupportsRepository: PatientSupportsRepository,
   ) {}
 
-  @Post()
-  @ApiOperation({
-    summary: 'Registra um novo contato de apoio para um paciente',
-  })
-  @ApiResponse({ status: 201, description: 'Apoio criado com sucesso' })
-  @ApiResponse({ status: 400, description: 'Dados inválidos' })
-  async create(
-    @Param('patientId') patientId: string,
-    @Body() createPatientSupportDto: CreatePatientSupportDto,
-  ): Promise<CreatePatientSupportResponseSchema> {
-    await this.patientSupportsService.create(
-      patientId,
-      createPatientSupportDto,
-    );
-
-    return {
-      success: true,
-      message: 'Contato de apoio registrado com sucesso.',
-    };
-  }
-
-  @Get()
-  @ApiOperation({ summary: 'Lista todos os contatos de apoio de um paciente' })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de contatos de apoio retornada com sucesso',
-  })
-  async findAll(
-    @Param('patientId') patientId: string,
-  ): Promise<FindAllPatientsSupportResponseSchema> {
-    const patientSupports =
-      await this.patientSupportsService.findAllByPatientId(patientId);
-
-    return {
-      success: true,
-      message: 'Lista de contatos de apoio retornada com sucesso.',
-      data: {
-        patient_supports: patientSupports,
-        total: patientSupports.length,
-      },
-    };
-  }
-
   @Get(':id')
+  @Roles(['manager', 'nurse', 'specialist', 'patient'])
   @ApiOperation({ summary: 'Busca um contato de apoio pelo ID' })
   @ApiResponse({
     status: 200,
@@ -95,7 +56,51 @@ export class PatientSupportsController {
     };
   }
 
+  @Post(':patientId')
+  @Roles(['manager', 'nurse', 'patient'])
+  @ApiOperation({
+    summary: 'Registra um novo contato de apoio para um paciente',
+  })
+  @ApiResponse({ status: 201, description: 'Apoio criado com sucesso' })
+  @ApiResponse({ status: 400, description: 'Dados inválidos' })
+  async createPatientSupport(
+    @Param('patientId') patientId: string,
+    @Body() createPatientSupportDto: CreatePatientSupportDto,
+  ): Promise<CreatePatientSupportResponseSchema> {
+    await this.patientSupportsService.create(
+      createPatientSupportDto,
+      patientId,
+    );
+
+    return {
+      success: true,
+      message: 'Contato de apoio registrado com sucesso.',
+    };
+  }
+
+  @Put(':id')
+  @Roles(['manager', 'nurse', 'patient'])
+  @ApiOperation({ summary: 'Atualiza um contato de apoio por ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Contato de apoio atualizado com sucesso',
+  })
+  @ApiResponse({ status: 400, description: 'ID inválido.' })
+  @ApiResponse({ status: 404, description: 'Contato de apoio não encontrado.' })
+  async updatePatientSupport(
+    @Param('id') id: string,
+    @Body() updatePatientSupportDto: UpdatePatientSupportDto,
+  ): Promise<UpdatePatientSupportResponseSchema> {
+    await this.patientSupportsService.update(id, updatePatientSupportDto);
+
+    return {
+      success: true,
+      message: 'Contato de apoio atualizado com sucesso.',
+    };
+  }
+
   @Delete(':id')
+  @Roles(['manager', 'nurse', 'patient'])
   @ApiOperation({ summary: 'Remove um contato de apoio pelo ID' })
   @ApiResponse({
     status: 200,
