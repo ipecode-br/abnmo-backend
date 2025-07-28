@@ -8,7 +8,7 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { Roles } from '@/common/decorators/roles.decorator';
 import {
@@ -36,7 +36,14 @@ export class PatientsController {
 
   @Post()
   @Roles(['manager', 'nurse'])
-  @ApiOperation({ summary: 'Cadastra um novo paciente' })
+  @ApiOperation({
+    summary: 'Cadastra um novo paciente',
+    description: `
+    Dois modos de operação:
+    1. Com "user_id" existente: associa a um usuário já cadastrado (ignora os campos "email" e "name")
+    2. Sem "user_id": cria novo usuário automaticamente ("email" e "name" são obrigatórios)
+    `,
+  })
   public async create(
     @Body() createPatientDto: CreatePatientDto,
   ): Promise<CreatePatientResponseSchema> {
@@ -51,10 +58,6 @@ export class PatientsController {
   @Get()
   @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Lista todos os pacientes' })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de pacientes retornada com sucesso',
-  })
   public async findAll(): Promise<FindAllPatientsResponseSchema> {
     const patients = await this.patientsRepository.findAll();
 
@@ -68,8 +71,6 @@ export class PatientsController {
   @Get(':id')
   @Roles(['manager', 'nurse', 'specialist'])
   @ApiOperation({ summary: 'Busca um paciente pelo ID' })
-  @ApiResponse({ status: 200, description: 'Paciente retornado com sucesso' })
-  @ApiResponse({ status: 404, description: 'Paciente não encontrado' })
   public async findById(
     @Param('id') id: string,
   ): Promise<FindOnePatientResponseSchema> {
@@ -134,8 +135,6 @@ export class PatientsController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Remove um paciente pelo ID' })
-  @ApiResponse({ status: 200, description: 'Paciente removido com sucesso' })
-  @ApiResponse({ status: 404, description: 'Paciente não encontrado' })
   public async remove(
     @Param('id') id: string,
   ): Promise<DeletePatientResponseSchema> {
@@ -149,10 +148,6 @@ export class PatientsController {
 
   @Get('forms/status')
   @ApiOperation({ summary: 'Lista formulários pendentes por paciente' })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de formulários pendentes por paciente',
-  })
   public async getFormsStatus() {
     try {
       const formsStatus = await this.patientsService.getPatientFormsStatus();
