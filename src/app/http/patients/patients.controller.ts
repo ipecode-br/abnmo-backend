@@ -10,6 +10,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+
 import {
   CreatePatientResponseSchema,
   DeletePatientResponseSchema,
@@ -18,8 +19,9 @@ import {
   InactivatePatientResponseSchema,
 } from '@/domain/schemas/patient';
 import { FindAllPatientsSupportResponseSchema } from '@/domain/schemas/patient-support';
+
 import { PatientSupportsRepository } from '../patient-supports/patient-supports.repository';
-import { CreatePatientDto, FindAllPatientDto } from './patients.dtos';
+import { CreatePatientDto, FindAllPatientQueryDto } from './patients.dtos';
 import { PatientsRepository } from './patients.repository';
 import { PatientsService } from './patients.service';
 
@@ -52,8 +54,7 @@ export class PatientsController {
     description: 'Lista de pacientes retornada com sucesso',
   })
   public async findAll(
-    @Query()
-    filters: FindAllPatientDto,
+    @Query() filters: FindAllPatientQueryDto,
   ): Promise<FindAllPatientsResponseSchema> {
     const patients = await this.patientsRepository.findAll(filters);
 
