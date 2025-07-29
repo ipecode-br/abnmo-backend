@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { BRAZILIAN_STATES } from '@/constants/brazilian-states';
+import { CPF_REGEX } from '@/constants/regex';
 
 import { baseResponseSchema } from './base';
 import { baseQuerySchema } from './query';
@@ -33,7 +34,9 @@ export const patientSchema = z
       .string()
       .regex(/^\d+$/)
       .refine((num) => num.length === 11),
-    cpf: z.string().min(11).max(11),
+    cpf: z
+      .string()
+      .regex(CPF_REGEX, 'CPF deve conter apenas numeros e ter 11 dígitos.'),
     state: z.enum(BRAZILIAN_STATES),
     city: z.string(),
     // medical report
@@ -76,13 +79,6 @@ export const createPatientSchema = patientSchema
     },
   );
 export type CreatePatientSchema = z.infer<typeof createPatientSchema>;
-
-export const updatePatientParamsSchema = z.object({
-  id: z.string().uuid(),
-});
-export type UpdatePatientParamsSchema = z.infer<
-  typeof updatePatientParamsSchema
->;
 
 export const updatePatientSchema = patientSchema.omit({
   id: true,

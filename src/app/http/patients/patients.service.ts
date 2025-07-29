@@ -1,4 +1,3 @@
-import { isValid } from '@fnando/cpf';
 import {
   BadRequestException,
   ConflictException,
@@ -88,25 +87,23 @@ export class PatientsService {
       throw new NotFoundException('Paciente não encontrado.');
     }
 
-    if (updatePatientDto.cpf && updatePatientDto.cpf !== patient.cpf) {
-      const existingPatient = await this.patientsRepository.findByCpf(
-        updatePatientDto.cpf,
-      );
+    const updatedPatient = { ...patient, ...updatePatientDto };
 
-      if (existingPatient) {
+    try {
+      await this.patientsRepository.update(updatedPatient);
+    } catch (error: unknown) {
+      if (
+        error instanceof Error &&
+        error.message.toLowerCase().includes('cpf') &&
+        error.message.toLowerCase().includes('unique')
+      ) {
         throw new ConflictException('CPF já está em uso por outro paciente.');
       }
 
-      patient.cpf = updatePatientDto.cpf;
+      throw error;
     }
 
-    //verifica se o CPF é válido. Depois trocar para uma validação mais robusta que use API de validação de CPF
-    if (!isValid(updatePatientDto.cpf)) {
-      throw new BadRequestException('CPF inválido.');
-    }
-
-    const updatedPatient = { ...patient, ...updatePatientDto };
-    await this.patientsRepository.update(updatedPatient);
+    Object.assign(patient, updatePatientDto);
 
     this.logger.log(
       { id: updatedPatient.id, userId: updatedPatient.user_id },

@@ -41,7 +41,7 @@ export class Patient implements PatientSchema {
   @Column({ type: 'char', length: 11, nullable: false })
   phone: string;
 
-  @Column({ type: 'char', length: 11, nullable: false })
+  @Column({ type: 'char', length: 11, nullable: false, unique: true })
   cpf: string;
 
   @Column({ type: 'enum', enum: BRAZILIAN_STATES, nullable: false })

@@ -13,6 +13,7 @@ import {
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { Roles } from '@/common/decorators/roles.decorator';
+import { BaseResponseSchema } from '@/domain/schemas/base';
 import {
   CreatePatientResponseSchema,
   DeletePatientResponseSchema,
@@ -27,7 +28,6 @@ import {
   CreatePatientDto,
   FindAllPatientQueryDto,
   UpdatePatientDto,
-  UpdatePatientParamsDto,
 } from './patients.dtos';
 import { PatientsRepository } from './patients.repository';
 import { PatientsService } from './patients.service';
@@ -151,11 +151,14 @@ export class PatientsController {
   @Put(':id')
   @ApiOperation({ summary: 'Atualiza um paciente pelo ID' })
   async update(
-    @Param() { id }: UpdatePatientParamsDto,
+    @Param('id') id: string,
     @Body() updatePatientDto: UpdatePatientDto,
-  ): Promise<{ message: string }> {
+  ): Promise<BaseResponseSchema> {
     await this.patientsService.update(id, updatePatientDto);
-    return { message: 'Paciente atualizado com sucesso.' };
+    return {
+      success: true,
+      message: 'Paciente atualizado com sucesso',
+    };
   }
 
   @Get('forms/status')

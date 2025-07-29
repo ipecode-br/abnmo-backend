@@ -109,12 +109,6 @@ export class PatientsRepository {
     return await this.patientsRepository.remove(patient);
   }
 
-  public async findByCpf(cpf: string): Promise<Patient | null> {
-    return await this.patientsRepository.findOne({
-      where: { cpf },
-    });
-  }
-
   public async getFormsStatus(): Promise<{
     completeForms: Patient[];
     pendingForms: Patient[];
