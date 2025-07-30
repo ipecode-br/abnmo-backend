@@ -26,6 +26,12 @@ export const envSchema = z.object({
   DB_DATABASE: z.string().min(1),
   DB_USERNAME: z.string().min(1),
   DB_PASSWORD: z.string().min(1),
+
+  // AWS
+  AWS_REGION: z.string().min(1),
+  AWS_ACCESS_KEY_ID: z.string().min(1),
+  AWS_SECRET_ACCESS_KEY: z.string().min(1),
+  AWS_SES_FROM_EMAIL: z.string().email(),
 });
 
 export type Env = z.infer<typeof envSchema>;
