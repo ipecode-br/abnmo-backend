@@ -59,7 +59,7 @@ export class PatientSupportsController {
   }
 
   @Post(':patientId')
-  @Roles(['admin', 'nurse', 'manager', 'patient'])
+  @Roles(['nurse', 'manager', 'patient'])
   @ApiOperation({
     summary: 'Registra um novo contato de apoio para um paciente',
   })
@@ -71,14 +71,9 @@ export class PatientSupportsController {
     @Body() createPatientSupportDto: CreatePatientSupportDto,
     @CurrentUser() user: UserSchema,
   ): Promise<CreatePatientSupportResponseSchema> {
-    const isPatientAccessingOwnData =
-      user.role === 'patient' && user.id === patientId;
-    const isAdminNurseOrManager = ['admin', 'nurse', 'manager'].includes(
-      user.role,
-    );
-    if (!isPatientAccessingOwnData && !isAdminNurseOrManager) {
+    if (user.role === 'patient' && user.id !== patientId) {
       throw new ForbiddenException(
-        'Você não tem permissão para criar apoios para este paciente.',
+        'Você não tem permissão para registrar contatos de apoio para este paciente.',
       );
     }
     await this.patientSupportsService.create(
@@ -93,7 +88,7 @@ export class PatientSupportsController {
   }
 
   @Put(':id')
-  @Roles(['admin', 'nurse', 'manager', 'patient'])
+  @Roles(['nurse', 'manager', 'patient'])
   @ApiOperation({ summary: 'Atualiza um contato de apoio por ID' })
   @ApiResponse({
     status: 200,
@@ -131,7 +126,7 @@ export class PatientSupportsController {
   }
 
   @Delete(':id')
-  @Roles(['admin', 'nurse', 'manager', 'patient'])
+  @Roles(['nurse', 'manager', 'patient'])
   @ApiOperation({ summary: 'Remove um contato de apoio pelo ID' })
   @ApiResponse({
     status: 200,
