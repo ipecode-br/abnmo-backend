@@ -4,6 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { CryptographyModule } from '@/app/cryptography/cryptography.module';
+import { MailModule } from '@/app/mail/mail.module';
 import { AuthGuard } from '@/common/guards/auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import { Token } from '@/domain/entities/token';
@@ -23,6 +24,7 @@ import { TokensRepository } from './tokens.repository';
     CryptographyModule,
     UsersModule,
     UtilsModule,
+    MailModule,
     JwtModule.registerAsync({
       imports: [EnvModule],
       inject: [EnvService],

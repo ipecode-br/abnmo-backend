@@ -1,10 +1,13 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
+import { MailService } from '@/app/mail/mail.service';
 import { Hasher } from '@/domain/cryptography/hasher';
 import { AUTH_TOKENS_MAPPER } from '@/domain/schemas/token';
 
+import type { CreateUserDto } from '../users/users.dtos';
 import { UsersRepository } from '../users/users.repository';
+import { UsersService } from '../users/users.service';
 import type { SignInWithEmailDto } from './auth.dtos';
 import { TokensRepository } from './tokens.repository';
 
@@ -14,10 +17,26 @@ export class AuthService {
 
   constructor(
     private readonly usersRepository: UsersRepository,
+    private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly hasher: Hasher,
     private readonly tokensRepository: TokensRepository,
+    private readonly mailService: MailService,
   ) {}
+
+  async register(createUserDto: CreateUserDto): Promise<void> {
+    await this.usersService.create(createUserDto);
+
+    // TODO: update content with link to verify e-mail
+    const subject = 'Verifique seu e-mail de cadastro';
+    const body = `
+      <h2>Confirme seu e-mail</h2>
+      <p>Para concluir o seu cadastro em nossa plataforma, confirme a verificação do seu e-mail através do link abaixo:</p>
+      <a href="link">Confirmar e-mail</a>
+    `;
+
+    await this.mailService.sendEmail(createUserDto.email, subject, body);
+  }
 
   async signIn({ email, password, rememberMe }: SignInWithEmailDto): Promise<{
     accessToken: string;
@@ -53,14 +72,9 @@ export class AuthService {
       expires_at: expiration,
     });
 
-    this.logger.log(
-      { id: user.id, email: user.email },
-      'Usuário logado com sucesso',
-    );
+    this.logger.log({ id: user.id, email: user.email }, 'User logged in');
 
-    return {
-      accessToken,
-    };
+    return { accessToken };
   }
 
   async logout(token: string): Promise<void> {
