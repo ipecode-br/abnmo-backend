@@ -7,7 +7,6 @@ export const UPPERCASE_REGEX = /^(?=.*[A-Z]).*$/;
 export const LOWERCASE_REGEX = /^(?=.*[a-z]).*$/;
 export const SPECIAL_CHAR_REGEX = /^(?=.*\W).*$/;
 export const NON_SPECIAL_CHAR_REGEX = /^[a-zA-ZÀ-ÿ\s'-]{1,50}$/;
-export const CPF_REGEX = /^\d{11}$/;
 
 /*
   (?=.*\d)    should contain at least 1 digit

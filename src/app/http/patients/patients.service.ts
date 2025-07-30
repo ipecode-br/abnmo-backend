@@ -87,10 +87,10 @@ export class PatientsService {
       throw new NotFoundException('Paciente não encontrado.');
     }
 
-    const updatedPatient = { ...patient, ...updatePatientDto };
+    Object.assign(patient, updatePatientDto);
 
     try {
-      await this.patientsRepository.update(updatedPatient);
+      await this.patientsRepository.update(patient);
     } catch (error: unknown) {
       if (
         error instanceof Error &&
@@ -103,11 +103,9 @@ export class PatientsService {
       throw error;
     }
 
-    Object.assign(patient, updatePatientDto);
-
     this.logger.log(
-      { id: updatedPatient.id, userId: updatedPatient.user_id },
-      'Paciente atualizado com sucesso',
+      { id: patient.id, userId: patient.user_id },
+      'Patient updated successfully',
     );
   }
 

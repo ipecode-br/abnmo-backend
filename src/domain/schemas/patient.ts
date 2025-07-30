@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import { BRAZILIAN_STATES } from '@/constants/brazilian-states';
-import { CPF_REGEX } from '@/constants/regex';
+import { NUMBER_REGEX } from '@/constants/regex';
 
 import { baseResponseSchema } from './base';
 import { baseQuerySchema } from './query';
@@ -30,13 +30,8 @@ export const patientSchema = z
     user_id: z.string().uuid(),
     gender: z.enum(GENDERS).default('prefer_not_to_say'),
     date_of_birth: z.coerce.date(),
-    phone: z
-      .string()
-      .regex(/^\d+$/)
-      .refine((num) => num.length === 11),
-    cpf: z
-      .string()
-      .regex(CPF_REGEX, 'CPF deve conter apenas numeros e ter 11 dígitos.'),
+    phone: z.string().min(10).max(11).regex(NUMBER_REGEX),
+    cpf: z.string().max(11),
     state: z.enum(BRAZILIAN_STATES),
     city: z.string(),
     // medical report
