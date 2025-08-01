@@ -87,24 +87,31 @@ export class PatientsService {
       throw new NotFoundException('Paciente não encontrado.');
     }
 
-    Object.assign(patient, updatePatientDto);
+    if (updatePatientDto.cpf && updatePatientDto.cpf !== patient.cpf) {
+      const existingPatient = await this.patientsRepository.findByCpf(
+        updatePatientDto.cpf,
+      );
 
-    try {
-      await this.patientsRepository.update(patient);
-    } catch (error: unknown) {
-      if (
-        error instanceof Error &&
-        error.message.toLowerCase().includes('cpf') &&
-        error.message.toLowerCase().includes('unique')
-      ) {
-        throw new ConflictException('CPF já está em uso por outro paciente.');
+      if (existingPatient) {
+        this.logger.error(
+          {
+            id: patient.id,
+            userId: patient.user_id,
+            email: patient.user.email,
+          },
+          'Patient update failed: CPF already registered',
+        );
+
+        throw new ConflictException('Este CPF já está cadastrado.');
       }
-
-      throw error;
     }
 
+    Object.assign(patient, updatePatientDto);
+
+    await this.patientsRepository.update(patient);
+
     this.logger.log(
-      { id: patient.id, userId: patient.user_id },
+      { id: patient.id, userId: patient.user_id, email: patient.user.email },
       'Patient updated successfully',
     );
   }

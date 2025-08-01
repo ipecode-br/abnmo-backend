@@ -157,7 +157,7 @@ export class PatientsController {
     await this.patientsService.update(id, updatePatientDto);
     return {
       success: true,
-      message: 'Paciente atualizado com sucesso',
+      message: 'Paciente atualizado com sucesso.',
     };
   }
 
