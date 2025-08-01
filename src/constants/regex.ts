@@ -1,5 +1,6 @@
 export const NON_NUMBER_REGEX = /\D/g;
 export const NUMBER_REGEX = /\d/;
+export const ONLY_NUMBERS_REGEX = /^\d+$/;
 
 export const NAME_REGEX =
   /^(?!\s)(?!.*\s{2})[A-Za-zÀ-ÿ]+(?: [A-Za-zÀ-ÿ]+){1,49}$/;
