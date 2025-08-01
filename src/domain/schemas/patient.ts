@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import { BRAZILIAN_STATES } from '@/constants/brazilian-states';
-import { NUMBER_REGEX } from '@/constants/regex';
+import { ONLY_NUMBERS_REGEX } from '@/constants/regex';
 
 import { baseResponseSchema } from './base';
 import { baseQuerySchema } from './query';
@@ -30,7 +30,11 @@ export const patientSchema = z
     user_id: z.string().uuid(),
     gender: z.enum(GENDERS).default('prefer_not_to_say'),
     date_of_birth: z.coerce.date(),
-    phone: z.string().min(10).max(11).regex(NUMBER_REGEX),
+    phone: z
+      .string()
+      .min(10)
+      .max(11)
+      .regex(ONLY_NUMBERS_REGEX, 'Only numbers are accepted'),
     cpf: z.string().max(11),
     state: z.enum(BRAZILIAN_STATES),
     city: z.string(),
