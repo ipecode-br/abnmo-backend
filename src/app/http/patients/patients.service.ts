@@ -88,11 +88,11 @@ export class PatientsService {
     }
 
     if (updatePatientDto.cpf && updatePatientDto.cpf !== patient.cpf) {
-      const existingPatient = await this.patientsRepository.findByCpf(
+      const patientWithSameCpf = await this.patientsRepository.findByCpf(
         updatePatientDto.cpf,
       );
 
-      if (existingPatient) {
+      if (patientWithSameCpf) {
         this.logger.error(
           {
             id: patient.id,
