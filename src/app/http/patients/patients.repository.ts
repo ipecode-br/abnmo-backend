@@ -3,7 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
-import type { PatientOrderByType } from '@/domain/schemas/patient';
+import type {
+  PatientOrderByType,
+  PatientStatisticsResult,
+} from '@/domain/schemas/patient';
 
 import { CreatePatientDto, FindAllPatientQueryDto } from './patients.dtos';
 
@@ -160,5 +163,23 @@ export class PatientsRepository {
 
   public async deactivate(id: string): Promise<Patient> {
     return this.patientsRepository.save({ id, status: 'inactive' });
+  }
+
+  public async getPatientStatisticsByPeriod(
+    startDate: Date,
+    endDate: Date,
+  ): Promise<PatientStatisticsResult[]> {
+    const results = await this.patientsRepository
+      .createQueryBuilder('patient')
+      .select('patient.gender', 'gender')
+      .addSelect('COUNT(*)', 'total')
+      .where('patient.created_at BETWEEN :start AND :end', {
+        start: startDate,
+        end: endDate,
+      })
+      .groupBy('patient.gender')
+      .getRawMany<PatientStatisticsResult>();
+
+    return results;
   }
 }
