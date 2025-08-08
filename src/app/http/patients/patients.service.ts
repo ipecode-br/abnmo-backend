@@ -15,7 +15,11 @@ import {
 } from '@/domain/types/form-types';
 
 import { UsersService } from '../users/users.service';
-import { CreatePatientDto, UpdatePatientDto } from './patients.dtos';
+import {
+  CreatePatientDto,
+  GetPatientStatisticsDto,
+  UpdatePatientDto,
+} from './patients.dtos';
 import { PatientsRepository } from './patients.repository';
 import { validateTriagemForm } from './validators/form-validators';
 
@@ -172,5 +176,46 @@ export class PatientsService {
         completedForms,
       };
     });
+  }
+
+  async getPatientStatistics(filters: GetPatientStatisticsDto) {
+    const { period } = filters;
+
+    const dateMap = {
+      'last-week': 7,
+      'last-month': 30,
+      'last-year': 365,
+    };
+
+    if (!dateMap[period]) throw new BadRequestException('Período inválido.');
+
+    const today = new Date();
+    const startOfToday = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+    );
+
+    const startDate = new Date(startOfToday);
+    startDate.setDate(startDate.getDate() - dateMap[period]);
+    const endDate = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+      23,
+      59,
+      59,
+      999,
+    );
+
+    const rawStats = await this.patientsRepository.getPatientStatisticsByPeriod(
+      startDate,
+      endDate,
+    );
+
+    return rawStats.map((row) => ({
+      gender: row.gender,
+      total: Number(row.total),
+    }));
   }
 }
