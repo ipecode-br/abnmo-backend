@@ -24,6 +24,12 @@ export type PatientStatusType = (typeof PATIENT_STATUS)[number];
 export const PATIENT_ORDER_BY = ['name', 'status', 'date'] as const;
 export type PatientOrderByType = (typeof PATIENT_ORDER_BY)[number];
 
+export const PATIENT_STATISTICS = ['gender', 'total'] as const;
+export type PatientStatisticsResult = {
+  gender: GenderType;
+  total: number;
+};
+
 export const patientSchema = z
   .object({
     id: z.string().uuid(),
@@ -142,4 +148,12 @@ export type DeletePatientResponseSchema = z.infer<
 export const inactivatePatientResponseSchema = baseResponseSchema.extend({});
 export type InactivatePatientResponseSchema = z.infer<
   typeof inactivatePatientResponseSchema
+>;
+
+export const getPatientStatisticsSchema = baseQuerySchema.pick({
+  type: true,
+  period: true,
+});
+export type GetPatientStatisticsSchema = z.infer<
+  typeof getPatientStatisticsSchema
 >;

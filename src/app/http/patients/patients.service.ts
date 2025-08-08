@@ -5,6 +5,13 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import {
+  endOfWeek,
+  startOfWeek,
+  subMonths,
+  subWeeks,
+  subYears,
+} from 'date-fns';
 
 import { UsersRepository } from '@/app/http/users/users.repository';
 import type { UserSchema } from '@/domain/schemas/user';
@@ -15,7 +22,11 @@ import {
 } from '@/domain/types/form-types';
 
 import { UsersService } from '../users/users.service';
-import { CreatePatientDto, UpdatePatientDto } from './patients.dtos';
+import {
+  CreatePatientDto,
+  GetPatientStatisticsDto,
+  UpdatePatientDto,
+} from './patients.dtos';
 import { PatientsRepository } from './patients.repository';
 import { validateTriagemForm } from './validators/form-validators';
 
@@ -172,5 +183,41 @@ export class PatientsService {
         completedForms,
       };
     });
+  }
+
+  async getPatientStatistics(filters: GetPatientStatisticsDto) {
+    const { period } = filters;
+
+    let startDate: Date;
+    let endDate: Date;
+
+    const today = new Date();
+
+    switch (period) {
+      case 'last-week':
+        startDate = startOfWeek(subWeeks(today, 1), { weekStartsOn: 0 });
+        endDate = endOfWeek(today, { weekStartsOn: 0 });
+        break;
+      case 'last-month':
+        startDate = startOfWeek(subMonths(today, 1), { weekStartsOn: 0 });
+        endDate = endOfWeek(today, { weekStartsOn: 0 });
+        break;
+      case 'last-year':
+        startDate = startOfWeek(subYears(today, 1), { weekStartsOn: 0 });
+        endDate = endOfWeek(today, { weekStartsOn: 0 });
+        break;
+      default:
+        throw new BadRequestException('Período inválido.');
+    }
+
+    const rawStats = await this.patientsRepository.getPatientStatisticsByPeriod(
+      startDate,
+      endDate,
+    );
+
+    return rawStats.map((row) => ({
+      gender: row.gender,
+      total: Number(row.total),
+    }));
   }
 }
