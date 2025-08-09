@@ -15,7 +15,7 @@ import {
 } from '@/domain/types/form-types';
 
 import { UsersService } from '../users/users.service';
-import { CreatePatientDto } from './patients.dtos';
+import { CreatePatientDto, UpdatePatientDto } from './patients.dtos';
 import { PatientsRepository } from './patients.repository';
 import { validateTriagemForm } from './validators/form-validators';
 
@@ -77,6 +77,42 @@ export class PatientsService {
     this.logger.log(
       { id: patient.id, userId: patient.user_id, email: user.email },
       'Paciente cadastrado com sucesso',
+    );
+  }
+
+  async update(id: string, updatePatientDto: UpdatePatientDto): Promise<void> {
+    const patient = await this.patientsRepository.findById(id);
+
+    if (!patient) {
+      throw new NotFoundException('Paciente não encontrado.');
+    }
+
+    if (updatePatientDto.cpf && updatePatientDto.cpf !== patient.cpf) {
+      const patientWithSameCpf = await this.patientsRepository.findByCpf(
+        updatePatientDto.cpf,
+      );
+
+      if (patientWithSameCpf) {
+        this.logger.error(
+          {
+            id: patient.id,
+            userId: patient.user_id,
+            email: patient.user.email,
+          },
+          'Patient update failed: CPF already registered',
+        );
+
+        throw new ConflictException('Este CPF já está cadastrado.');
+      }
+    }
+
+    Object.assign(patient, updatePatientDto);
+
+    await this.patientsRepository.update(patient);
+
+    this.logger.log(
+      { id: patient.id, userId: patient.user_id, email: patient.user.email },
+      'Patient updated successfully',
     );
   }
 

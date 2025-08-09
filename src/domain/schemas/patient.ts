@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { BRAZILIAN_STATES } from '@/constants/brazilian-states';
+import { ONLY_NUMBERS_REGEX } from '@/constants/regex';
 
 import { baseResponseSchema } from './base';
 import { baseQuerySchema } from './query';
@@ -31,9 +32,10 @@ export const patientSchema = z
     date_of_birth: z.coerce.date(),
     phone: z
       .string()
-      .regex(/^\d+$/)
-      .refine((num) => num.length === 11),
-    cpf: z.string().min(11).max(11),
+      .min(10)
+      .max(11)
+      .regex(ONLY_NUMBERS_REGEX, 'Only numbers are accepted'),
+    cpf: z.string().max(11),
     state: z.enum(BRAZILIAN_STATES),
     city: z.string(),
     // medical report
@@ -76,6 +78,15 @@ export const createPatientSchema = patientSchema
     },
   );
 export type CreatePatientSchema = z.infer<typeof createPatientSchema>;
+
+export const updatePatientSchema = patientSchema.omit({
+  id: true,
+  user_id: true,
+  created_at: true,
+  updated_at: true,
+  status: true,
+});
+export type UpdatePatientSchema = z.infer<typeof updatePatientSchema>;
 
 export const createPatientResponseSchema = baseResponseSchema.extend({});
 export type CreatePatientResponseSchema = z.infer<

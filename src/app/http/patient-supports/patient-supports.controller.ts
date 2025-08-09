@@ -9,7 +9,7 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
@@ -36,12 +36,6 @@ export class PatientSupportsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Busca um contato de apoio pelo ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Contato de apoio retornado com sucesso.',
-  })
-  @ApiResponse({ status: 400, description: 'ID inválido.' })
-  @ApiResponse({ status: 404, description: 'Contato de apoio não encontrado.' })
   async findById(
     @Param('id') id: string,
   ): Promise<FindOnePatientsSupportResponseSchema> {
@@ -63,9 +57,6 @@ export class PatientSupportsController {
   @ApiOperation({
     summary: 'Registra um novo contato de apoio para um paciente',
   })
-  @ApiResponse({ status: 201, description: 'Apoio criado com sucesso' })
-  @ApiResponse({ status: 400, description: 'Dados inválidos' })
-  @ApiResponse({ status: 403, description: 'Acesso negado' })
   async createPatientSupport(
     @Param('patientId') patientId: string,
     @Body() createPatientSupportDto: CreatePatientSupportDto,
@@ -90,14 +81,7 @@ export class PatientSupportsController {
 
   @Put(':id')
   @Roles(['nurse', 'manager', 'patient'])
-  @ApiOperation({ summary: 'Atualiza um contato de apoio por ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Contato de apoio atualizado com sucesso',
-  })
-  @ApiResponse({ status: 400, description: 'ID inválido.' })
-  @ApiResponse({ status: 403, description: 'Acesso negado' })
-  @ApiResponse({ status: 404, description: 'Contato de apoio não encontrado.' })
+  @ApiOperation({ summary: 'Atualiza um contato de apoio pelo ID' })
   async updatePatientSupport(
     @Param('id') id: string,
     @Body() updatePatientSupportDto: UpdatePatientSupportDto,
@@ -114,12 +98,6 @@ export class PatientSupportsController {
   @Delete(':id')
   @Roles(['nurse', 'manager', 'patient'])
   @ApiOperation({ summary: 'Remove um contato de apoio pelo ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Contato de apoio removido com sucesso',
-  })
-  @ApiResponse({ status: 403, description: 'Acesso negado' })
-  @ApiResponse({ status: 404, description: 'Contato de apoio não encontrado' })
   async remove(
     @Param('id') id: string,
     @CurrentUser() user: User,

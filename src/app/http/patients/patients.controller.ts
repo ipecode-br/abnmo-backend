@@ -7,11 +7,13 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { Roles } from '@/common/decorators/roles.decorator';
+import { BaseResponseSchema } from '@/domain/schemas/base';
 import {
   CreatePatientResponseSchema,
   DeletePatientResponseSchema,
@@ -22,7 +24,11 @@ import {
 import { FindAllPatientsSupportResponseSchema } from '@/domain/schemas/patient-support';
 
 import { PatientSupportsRepository } from '../patient-supports/patient-supports.repository';
-import { CreatePatientDto, FindAllPatientQueryDto } from './patients.dtos';
+import {
+  CreatePatientDto,
+  FindAllPatientQueryDto,
+  UpdatePatientDto,
+} from './patients.dtos';
 import { PatientsRepository } from './patients.repository';
 import { PatientsService } from './patients.service';
 
@@ -139,6 +145,19 @@ export class PatientsController {
     return {
       success: true,
       message: 'Paciente removido com sucesso.',
+    };
+  }
+
+  @Put(':id')
+  @ApiOperation({ summary: 'Atualiza um paciente pelo ID' })
+  async update(
+    @Param('id') id: string,
+    @Body() updatePatientDto: UpdatePatientDto,
+  ): Promise<BaseResponseSchema> {
+    await this.patientsService.update(id, updatePatientDto);
+    return {
+      success: true,
+      message: 'Paciente atualizado com sucesso.',
     };
   }
 

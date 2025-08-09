@@ -96,6 +96,10 @@ export class PatientsRepository {
     });
   }
 
+  public async findByCpf(cpf: string): Promise<Patient | null> {
+    return await this.patientsRepository.findOne({ where: { cpf } });
+  }
+
   public async create(patient: CreatePatientDto): Promise<Patient> {
     const patientCreated = this.patientsRepository.create(patient);
     return await this.patientsRepository.save(patientCreated);
