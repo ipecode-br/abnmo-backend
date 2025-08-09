@@ -13,13 +13,13 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
+import type { User } from '@/domain/entities/user';
 import {
   CreatePatientSupportResponseSchema,
   DeletePatientSupportResponseSchema,
   FindOnePatientsSupportResponseSchema,
   UpdatePatientSupportResponseSchema,
 } from '@/domain/schemas/patient-support';
-import { UserSchema } from '@/domain/schemas/user';
 
 import { CreatePatientSupportDto } from '../patient-supports/patient-supports.dtos';
 import { UpdatePatientSupportDto } from './patient-supports.dtos';
@@ -69,13 +69,14 @@ export class PatientSupportsController {
   async createPatientSupport(
     @Param('patientId') patientId: string,
     @Body() createPatientSupportDto: CreatePatientSupportDto,
-    @CurrentUser() user: UserSchema,
+    @CurrentUser() user: User,
   ): Promise<CreatePatientSupportResponseSchema> {
     if (user.role === 'patient' && user.id !== patientId) {
       throw new ForbiddenException(
         'Você não tem permissão para registrar contatos de apoio para este paciente.',
       );
     }
+
     await this.patientSupportsService.create(
       createPatientSupportDto,
       patientId,
@@ -100,24 +101,9 @@ export class PatientSupportsController {
   async updatePatientSupport(
     @Param('id') id: string,
     @Body() updatePatientSupportDto: UpdatePatientSupportDto,
-    @CurrentUser() user: UserSchema,
+    @CurrentUser() user: User,
   ): Promise<UpdatePatientSupportResponseSchema> {
-    const support = await this.patientSupportsRepository.findById(id);
-    if (!support) {
-      throw new NotFoundException('Contato de apoio não encontrado.');
-    }
-    const isPatientAccessingOwnData =
-      user.role === 'patient' && user.id === support.patient_id;
-    const isAdminNurseOrManager = ['admin', 'nurse', 'manager'].includes(
-      user.role,
-    );
-
-    if (!isPatientAccessingOwnData && !isAdminNurseOrManager) {
-      throw new ForbiddenException(
-        'Você não tem permissão para atualizar este contato de apoio.',
-      );
-    }
-    await this.patientSupportsService.update(id, updatePatientSupportDto);
+    await this.patientSupportsService.update(id, updatePatientSupportDto, user);
 
     return {
       success: true,
@@ -136,26 +122,9 @@ export class PatientSupportsController {
   @ApiResponse({ status: 404, description: 'Contato de apoio não encontrado' })
   async remove(
     @Param('id') id: string,
-    @CurrentUser() user: UserSchema,
+    @CurrentUser() user: User,
   ): Promise<DeletePatientSupportResponseSchema> {
-    const support = await this.patientSupportsRepository.findById(id);
-    if (!support) {
-      throw new NotFoundException('Contato de apoio não encontrado.');
-    }
-
-    const isPatientAccessingOwnData =
-      user.role === 'patient' && user.id === support.patient_id;
-
-    const isAdminNurseOrManager = ['admin', 'nurse', 'manager'].includes(
-      user.role,
-    );
-
-    if (!isPatientAccessingOwnData && !isAdminNurseOrManager) {
-      throw new ForbiddenException(
-        'Você não tem permissão para atualizar este contato de apoio.',
-      );
-    }
-    await this.patientSupportsService.remove(id);
+    await this.patientSupportsService.remove(id, user);
 
     return {
       success: true,
