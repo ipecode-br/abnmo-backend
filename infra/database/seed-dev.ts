@@ -12,12 +12,8 @@ import dataSource from './data.source';
 
 const DATABASE_DEV_NAME = 'abnmo_dev';
 
-async function hashPassword(password: string) {
-  return hash(password, 10);
-}
-
 async function main() {
-  const password = await hashPassword('12345678');
+  const password = await hash('12345678', 10);
 
   try {
     await dataSource.initialize();
@@ -59,8 +55,8 @@ async function main() {
     }
     console.log('👤 Users created successfully...');
 
-    console.log('👤 Creating 50 patients...');
-    for (let i = 0; i < 50; i++) {
+    console.log('👤 Creating 100 patients...');
+    for (let i = 0; i < 100; i++) {
       const user = userRepository.create({
         name: faker.person.fullName(),
         email: faker.internet.email().toLocaleLowerCase(),
