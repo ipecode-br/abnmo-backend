@@ -2,15 +2,18 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   NotFoundException,
   Param,
   Post,
   Put,
 } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
+import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
+import type { User } from '@/domain/entities/user';
 import {
   CreatePatientSupportResponseSchema,
   DeletePatientSupportResponseSchema,
@@ -32,14 +35,7 @@ export class PatientSupportsController {
   ) {}
 
   @Get(':id')
-  @Roles(['manager', 'nurse', 'specialist', 'patient'])
   @ApiOperation({ summary: 'Busca um contato de apoio pelo ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Contato de apoio retornado com sucesso.',
-  })
-  @ApiResponse({ status: 400, description: 'ID inválido.' })
-  @ApiResponse({ status: 404, description: 'Contato de apoio não encontrado.' })
   async findById(
     @Param('id') id: string,
   ): Promise<FindOnePatientsSupportResponseSchema> {
@@ -57,16 +53,21 @@ export class PatientSupportsController {
   }
 
   @Post(':patientId')
-  @Roles(['manager', 'nurse', 'patient'])
+  @Roles(['nurse', 'manager', 'patient'])
   @ApiOperation({
     summary: 'Registra um novo contato de apoio para um paciente',
   })
-  @ApiResponse({ status: 201, description: 'Apoio criado com sucesso' })
-  @ApiResponse({ status: 400, description: 'Dados inválidos' })
   async createPatientSupport(
     @Param('patientId') patientId: string,
     @Body() createPatientSupportDto: CreatePatientSupportDto,
+    @CurrentUser() user: User,
   ): Promise<CreatePatientSupportResponseSchema> {
+    if (user.role === 'patient' && user.id !== patientId) {
+      throw new ForbiddenException(
+        'Você não tem permissão para registrar contatos de apoio para este paciente.',
+      );
+    }
+
     await this.patientSupportsService.create(
       createPatientSupportDto,
       patientId,
@@ -79,19 +80,14 @@ export class PatientSupportsController {
   }
 
   @Put(':id')
-  @Roles(['manager', 'nurse', 'patient'])
-  @ApiOperation({ summary: 'Atualiza um contato de apoio por ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Contato de apoio atualizado com sucesso',
-  })
-  @ApiResponse({ status: 400, description: 'ID inválido.' })
-  @ApiResponse({ status: 404, description: 'Contato de apoio não encontrado.' })
+  @Roles(['nurse', 'manager', 'patient'])
+  @ApiOperation({ summary: 'Atualiza um contato de apoio pelo ID' })
   async updatePatientSupport(
     @Param('id') id: string,
     @Body() updatePatientSupportDto: UpdatePatientSupportDto,
+    @CurrentUser() user: User,
   ): Promise<UpdatePatientSupportResponseSchema> {
-    await this.patientSupportsService.update(id, updatePatientSupportDto);
+    await this.patientSupportsService.update(id, updatePatientSupportDto, user);
 
     return {
       success: true,
@@ -100,17 +96,13 @@ export class PatientSupportsController {
   }
 
   @Delete(':id')
-  @Roles(['manager', 'nurse', 'patient'])
+  @Roles(['nurse', 'manager', 'patient'])
   @ApiOperation({ summary: 'Remove um contato de apoio pelo ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Contato de apoio removido com sucesso',
-  })
-  @ApiResponse({ status: 404, description: 'Contato de apoio não encontrado' })
   async remove(
     @Param('id') id: string,
+    @CurrentUser() user: User,
   ): Promise<DeletePatientSupportResponseSchema> {
-    await this.patientSupportsService.remove(id);
+    await this.patientSupportsService.remove(id, user);
 
     return {
       success: true,
