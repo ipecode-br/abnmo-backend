@@ -1,10 +1,7 @@
 import { config } from 'dotenv';
 import { DataSource } from 'typeorm';
 
-import { Patient } from '@/domain/entities/patient';
-import { PatientSupport } from '@/domain/entities/patient-support';
-import { Token } from '@/domain/entities/token';
-import { User } from '@/domain/entities/user';
+import { DATABASE_ENTITIES } from '@/app/database/database.module';
 
 config();
 
@@ -15,7 +12,7 @@ const dataSource = new DataSource({
   username: process.env.DB_USERNAME,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
-  entities: [User, Token, Patient, PatientSupport],
+  entities: DATABASE_ENTITIES,
   migrations: ['infra/database/migrations/**/*.ts'],
   synchronize: false,
 });
