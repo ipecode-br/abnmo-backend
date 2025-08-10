@@ -1,7 +1,6 @@
 import {
   ForbiddenException,
   Injectable,
-  InternalServerErrorException,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
@@ -39,12 +38,6 @@ export class PatientSupportsService {
       ...createPatientSupportDto,
       patient_id: patientId,
     });
-
-    if (!patientSupport) {
-      throw new InternalServerErrorException(
-        'Não foi possível registrar o contato de apoio.',
-      );
-    }
 
     this.logger.log(
       { id: patientSupport.id, patientId: patientSupport.patient_id },

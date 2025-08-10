@@ -1,84 +1,99 @@
 # Contatos de Apoio
 
-Este documento descreve os endpoints, regras de negócio e especificações técnicas referentes ao gerenciamento de contatos de apoio vinculados a pacientes no sistema.
+Este documento descreve as rotas, regras de negócio e especificações técnicas referentes ao gerenciamento de contatos de apoio vinculados a pacientes no sistema.
 
-## Endpoints
-
-### 1. Criar contato de apoio
+## 1. Cadastrar contato de apoio
 
 Cria um novo contato de apoio vinculado a um paciente.
 
 **Rota**: `POST /patient-supports/:patientId`
 
-#### Regras de Negócio:
+### Regras de negócio
 
-- Apenas usuários com roles `admin`, `nurse`, `manager` ou o próprio paciente (`patient`) podem criar contatos;
-- Um paciente só pode criar contatos vinculados ao seu próprio `patientId`;
-- Todos os campos obrigatórios devem ser fornecidos e válidos.
+- **Permissões**: usuários `admin`, `nurse`, `manager` ou `patient`;
+- Um paciente só pode registrar contatos de apoio vinculados ao seu próprio cadastro.
 
-#### Especificações Técnicas:
+### Especificações técnicas
 
+- Request Params: `:patientId` (UUID do paciente)
 - Request Body: CreatePatientSupportDto (`src/app/http/patient-supports/patient-supports.dtos.ts`)
 
-### 2. Listar contatos de apoio
+### Fluxo
 
-Retorna uma lista de contatos de apoio.
+1. Verifica se o paciente existe;
+2. Executa a operação para registrar o contato de apoio;
+3. Em caso de sucesso, cria um log com dados da operação executada;
+4. Retorna a resposta com o resultado da operação.
 
-**Rota**: `GET /patient-supports`
+## 2. Buscar um contato de apoio
 
-#### Regras de Negócio:
-
-- Disponível para todos os usuários autenticados;
-
-### 3. Buscar contato de apoio por ID
-
-Retorna os detalhes de um contato de apoio específico.
+Retorna as informações de um contato de apoio específico.
 
 **Rota**: `GET /patient-supports/:id`
 
-#### Regras de Negócio:
+### Regras de negócio
 
-- Apenas usuários autenticados podem acessar;
-- Caso o usuário seja um paciente, ele só pode acessar seus próprios contatos.
+- **Permissões**: usuários autenticados;
+- Um paciente só pode visualizar informações do contato de apoio vinculado ao seu próprio cadastro;
 
-#### Especificações Técnicas:
+### Especificações técnicas
 
-- Parâmetro de rota: `id` (UUID do contato);
-- Verificação de permissão se `user.role === 'patient'`:
-  - O `user.id` deve ser igual ao `patientId` do contato.
+- Request Params: `:id` (UUID do contato de apoio).
 
-### 4. Atualizar contato de apoio
+### Fluxo
+
+1. Verifica se o contato de apoio existe;
+2. Retorna a resposta com o resultado da operação. Em caso de sucesso, retorna as informações do contato de apoio.
+
+## 3. Alterar contato de apoio
 
 Atualiza os dados de um contato de apoio existente.
 
 **Rota**: `PUT /patient-supports/:id`
 
-#### Especificações Técnicas:
+### Regras de negócio
 
-- Request Body: UpdatePatientSupportDto (`src/app/http/patient-supports/patient-supports.dtos.ts`);
-- Verificação de acesso baseada no `role` e `patientId`.
+- **Permissões**: usuários autenticados;
+- Um paciente só pode alterar informações do contato de apoio vinculado ao seu próprio cadastro;
 
-### 5. Remover contato de apoio
+### Especificações técnicas
 
-Remove um contato de apoio pelo seu ID.
+- Request Params: `:id` (UUID do contato de apoio);
+- Request Body: UpdatePatientSupportDto (`src/app/http/patient-supports/patient-supports.dtos.ts`).
+
+### Fluxo
+
+1. Verifica se o contato de apoio existe;
+2. Verifica se o usuário da requisição é um paciente. Se sim, verifica se o contato de apoio está vinculado a este paciente:
+   - Caso positivo: prossegue com a execução;
+   - Caso negativo: retorna erro de permissão e encerra a execução.
+3. Realiza a alteração do contato de apoio no banco de dados;
+4. Em caso de sucesso, cria um log com dados da operação executada;
+5. Retorna a resposta com o resultado da operação.
+
+## 4. Remover contato de apoio
+
+Remove um contato de apoio existente.
 
 **Rota**: `DELETE /patient-supports/:id`
 
-#### Regras de Negócio:
+### Regras de negócio
 
-- Apenas usuários com roles `admin`, `nurse`, `manager`, ou o paciente vinculado podem remover;
-- O contato deve existir;
-- Pacientes só podem remover seus próprios contatos.
+- **Permissões**: todos os usuários autenticados;
+- Um paciente só pode remover um contato de apoio vinculado ao seu próprio cadastro;
 
-#### Especificações Técnicas:
+### Especificações técnicas
 
-- Parâmetro de rota: `id` (UUID do contato de apoio);
-- Requer autenticação e verificação de permissão semelhante à rota de update.
+- Request Params: `:id` (UUID do contato de apoio).
 
-## Considerações Técnicas
+### Fluxo
 
-- Apenas usuários com roles `admin`, `nurse`, `manager`, ou o próprio paciente vinculado ao contato podem atualizar;
-- O contato deve existir;
-- O paciente só pode atualizar se o `patientId` do contato for igual ao `user.id`.
-- Os contatos são armazenados com referência ao `patientId`;
-- Operações de leitura, criação, atualização e remoção são transacionais;
+1. Verifica se o contato de apoio existe;
+2. Verifica se o usuário da requisição é um paciente. Se sim, verifica se o contato de apoio está vinculado a este paciente:
+
+- Caso positivo: prossegue com a execução;
+- Caso negativo: retorna erro de permissão e encerra a execução.
+
+3. Realiza a remoção do contato de apoio do banco de dados;
+4. Em caso de sucesso, cria um log com dados da operação executada;
+5. Retorna a resposta com o resultado da operação.
