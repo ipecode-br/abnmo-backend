@@ -3,7 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
-import type { PatientOrderByType } from '@/domain/schemas/patient';
+import type {
+  PatientOrderByType,
+  PatientTotalsResult,
+} from '@/domain/schemas/patient';
 
 import { CreatePatientDto, FindAllPatientQueryDto } from './patients.dtos';
 
@@ -160,5 +163,26 @@ export class PatientsRepository {
 
   public async deactivate(id: string): Promise<Patient> {
     return this.patientsRepository.save({ id, status: 'inactive' });
+  }
+
+  public async getPatientsStatisticsTotals(): Promise<PatientTotalsResult> {
+    const raw = await this.patientsRepository
+      .createQueryBuilder('patient')
+      .select('COUNT(*)', 'total')
+      .addSelect(
+        `SUM(CASE WHEN patient.status = 'active' THEN 1 ELSE 0 END)`,
+        'active',
+      )
+      .addSelect(
+        `SUM(CASE WHEN patient.status = 'inactive' THEN 1 ELSE 0 END)`,
+        'inactive',
+      )
+      .getRawOne<{ total: string; active: string; inactive: string }>();
+
+    return {
+      total: Number(raw?.total ?? 0),
+      active: Number(raw?.active ?? 0),
+      inactive: Number(raw?.inactive ?? 0),
+    };
   }
 }

@@ -23,6 +23,11 @@ export type PatientStatusType = (typeof PATIENT_STATUS)[number];
 
 export const PATIENT_ORDER_BY = ['name', 'status', 'date'] as const;
 export type PatientOrderByType = (typeof PATIENT_ORDER_BY)[number];
+export type PatientTotalsResult = {
+  total: number;
+  active: number;
+  inactive: number;
+};
 
 export const patientSchema = z
   .object({
@@ -142,4 +147,15 @@ export type DeletePatientResponseSchema = z.infer<
 export const inactivatePatientResponseSchema = baseResponseSchema.extend({});
 export type InactivatePatientResponseSchema = z.infer<
   typeof inactivatePatientResponseSchema
+>;
+
+export const getTotalsStatisticsResponseSchema = baseResponseSchema.extend({
+  data: z.object({
+    total: z.number(),
+    active: z.number(),
+    inactive: z.number(),
+  }),
+});
+export type GetPatientTotalsResponseSchema = z.infer<
+  typeof getTotalsStatisticsResponseSchema
 >;

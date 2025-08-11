@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 
 import { UsersRepository } from '@/app/http/users/users.repository';
+import { PatientTotalsResult } from '@/domain/schemas/patient';
 import type { UserSchema } from '@/domain/schemas/user';
 import {
   FormType,
@@ -172,5 +173,10 @@ export class PatientsService {
         completedForms,
       };
     });
+  }
+
+  async getTotals(): Promise<PatientTotalsResult> {
+    const data = await this.patientsRepository.getPatientsStatisticsTotals();
+    return data;
   }
 }
