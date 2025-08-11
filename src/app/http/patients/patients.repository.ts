@@ -40,7 +40,7 @@ export class PatientsRepository {
 
     if (search) {
       query.andWhere(`user.name LIKE :search`, { search: `%${search}%` });
-      query.andWhere(`user.email LIKE :search`, { search: `%${search}%` });
+      query.orWhere(`user.email LIKE :search`, { search: `%${search}%` });
     }
 
     if (status) {
