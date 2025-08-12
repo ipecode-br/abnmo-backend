@@ -48,9 +48,7 @@ export class PatientsService {
         password: randomPassword,
       });
       user = newUser;
-    }
-
-    if (createPatientDto.user_id) {
+    } else {
       const registeredUser = await this.usersRepository.findById(
         createPatientDto.user_id,
       );
@@ -66,9 +64,12 @@ export class PatientsService {
     if (patientExists) {
       throw new ConflictException('Este paciente já possui um cadastro.');
     }
-
     const patientData = {
       ...createPatientDto,
+      patientSupport: createPatientDto.patientSupport.map((support) => ({
+        ...support,
+        user_id: user.id,
+      })),
       user_id: user.id,
     };
 
