@@ -12,6 +12,7 @@ import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './http/auth/auth.module';
 import { PatientSupportsModule } from './http/patient-supports/patient-supports.module';
 import { PatientsModule } from './http/patients/patients.module';
+import { StatisticsModule } from './http/statistics/statistics.module';
 import { UsersModule } from './http/users/users.module';
 
 @Module({
@@ -49,6 +50,7 @@ import { UsersModule } from './http/users/users.module';
     UsersModule,
     PatientsModule,
     PatientSupportsModule,
+    StatisticsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
