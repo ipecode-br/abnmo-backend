@@ -9,6 +9,11 @@ export const signInWithEmailSchema = z.object({
 });
 export type SignInWithEmailSchema = z.infer<typeof signInWithEmailSchema>;
 
+export const resetPasswordSchema = z.object({
+  password: z.string().min(8).max(255),
+});
+export type ResetPasswordSchema = z.infer<typeof resetPasswordSchema>;
+
 export const signInWithEmailResponseSchema = baseResponseSchema.extend({});
 export type SignInWithEmailResponseSchema = z.infer<
   typeof signInWithEmailResponseSchema
