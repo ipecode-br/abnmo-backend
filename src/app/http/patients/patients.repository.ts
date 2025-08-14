@@ -3,10 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
-import type {
-  GetPatientsTotalResponseSchema,
-  PatientOrderByType,
-} from '@/domain/schemas/patient';
+import type { PatientOrderByType } from '@/domain/schemas/patient';
+import type { GetPatientsTotalResponseSchema } from '@/domain/schemas/statistics';
 
 import { CreatePatientDto, FindAllPatientQueryDto } from './patients.dtos';
 

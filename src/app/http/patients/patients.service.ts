@@ -7,7 +7,6 @@ import {
 } from '@nestjs/common';
 
 import { UsersRepository } from '@/app/http/users/users.repository';
-import type { GetPatientsTotalResponseSchema } from '@/domain/schemas/patient';
 import type { UserSchema } from '@/domain/schemas/user';
 import {
   FormType,
@@ -149,10 +148,6 @@ export class PatientsService {
       { id: patient.id, userId: patient.user_id },
       'Paciente removido com sucesso',
     );
-  }
-
-  async getPatientsTotal(): Promise<GetPatientsTotalResponseSchema['data']> {
-    return await this.patientsRepository.getPatientsTotal();
   }
 
   async getPatientFormsStatus(): Promise<PatientFormsStatus[]> {

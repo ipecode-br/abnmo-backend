@@ -186,17 +186,4 @@ export class PatientsController {
       };
     }
   }
-
-  @Get('statistics/total')
-  @Roles(['manager', 'nurse'])
-  @ApiOperation({ summary: 'Estatísticas totais de pacientes' })
-  async getPatientsTotalStatistic() {
-    const data = await this.patientsService.getPatientsTotal();
-
-    return {
-      success: true,
-      message: 'Estatísticas do total de pacientes retornada com sucesso.',
-      data,
-    };
-  }
 }

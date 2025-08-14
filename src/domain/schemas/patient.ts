@@ -143,14 +143,3 @@ export const inactivatePatientResponseSchema = baseResponseSchema.extend({});
 export type InactivatePatientResponseSchema = z.infer<
   typeof inactivatePatientResponseSchema
 >;
-
-export const getPatientsTotalResponseSchema = baseResponseSchema.extend({
-  data: z.object({
-    total: z.number(),
-    active: z.number(),
-    inactive: z.number(),
-  }),
-});
-export type GetPatientsTotalResponseSchema = z.infer<
-  typeof getPatientsTotalResponseSchema
->;
