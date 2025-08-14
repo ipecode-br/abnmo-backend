@@ -189,14 +189,13 @@ export class PatientsController {
 
   @Get('statistics/total')
   @Roles(['manager', 'nurse'])
-  @ApiOperation({
-    summary: 'Estatísticas totais de pacientes',
-  })
-  async getPatientStatisticsTotals() {
-    const data = await this.patientsService.getTotals();
+  @ApiOperation({ summary: 'Estatísticas totais de pacientes' })
+  async getPatientsTotalStatistic() {
+    const data = await this.patientsService.getPatientsTotal();
+
     return {
       success: true,
-      message: 'Estatísticas de pacientes retornada com sucesso.',
+      message: 'Estatísticas do total de pacientes retornada com sucesso.',
       data,
     };
   }

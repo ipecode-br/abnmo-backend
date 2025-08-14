@@ -4,8 +4,8 @@ import { Repository } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
 import type {
+  GetPatientsTotalResponseSchema,
   PatientOrderByType,
-  PatientTotalsResult,
 } from '@/domain/schemas/patient';
 
 import { CreatePatientDto, FindAllPatientQueryDto } from './patients.dtos';
@@ -157,7 +157,7 @@ export class PatientsRepository {
     return this.patientsRepository.find({
       relations: {
         user: true,
-      }, // Adicione outras relações conforme necessário
+      },
     });
   }
 
@@ -165,7 +165,9 @@ export class PatientsRepository {
     return this.patientsRepository.save({ id, status: 'inactive' });
   }
 
-  public async getPatientsStatisticsTotals(): Promise<PatientTotalsResult> {
+  public async getPatientsTotal(): Promise<
+    GetPatientsTotalResponseSchema['data']
+  > {
     const raw = await this.patientsRepository
       .createQueryBuilder('patient')
       .select('COUNT(*)', 'total')
