@@ -3,10 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
+import type { GenderType, PatientOrderByType } from '@/domain/schemas/patient';
 import type {
-  PatientOrderByType,
-  PatientStatisticsResult,
-} from '@/domain/schemas/patient';
+  GetPatientsTotalResponseSchema,
+  PatientsFilterQuery,
+} from '@/domain/schemas/statistics';
 
 import { CreatePatientDto, FindAllPatientQueryDto } from './patients.dtos';
 
@@ -43,7 +44,7 @@ export class PatientsRepository {
 
     if (search) {
       query.andWhere(`user.name LIKE :search`, { search: `%${search}%` });
-      query.andWhere(`user.email LIKE :search`, { search: `%${search}%` });
+      query.orWhere(`user.email LIKE :search`, { search: `%${search}%` });
     }
 
     if (status) {
@@ -157,7 +158,7 @@ export class PatientsRepository {
     return this.patientsRepository.find({
       relations: {
         user: true,
-      }, // Adicione outras relações conforme necessário
+      },
     });
   }
 
@@ -166,20 +167,44 @@ export class PatientsRepository {
   }
 
   public async getPatientStatisticsByPeriod(
+    filter: PatientsFilterQuery,
     startDate: Date,
     endDate: Date,
-  ): Promise<PatientStatisticsResult[]> {
+  ): Promise<{ gender: GenderType; total: number }[]> {
     const results = await this.patientsRepository
       .createQueryBuilder('patient')
-      .select('patient.gender', 'gender')
+      .select(`patient.${filter}`, filter)
       .addSelect('COUNT(*)', 'total')
       .where('patient.created_at BETWEEN :start AND :end', {
         start: startDate,
         end: endDate,
       })
-      .groupBy('patient.gender')
-      .getRawMany<PatientStatisticsResult>();
+      .groupBy(`patient.${filter}`)
+      .getRawMany<{ gender: GenderType; total: number }>();
 
     return results;
+  }
+
+  public async getPatientsTotal(): Promise<
+    GetPatientsTotalResponseSchema['data']
+  > {
+    const raw = await this.patientsRepository
+      .createQueryBuilder('patient')
+      .select('COUNT(*)', 'total')
+      .addSelect(
+        `SUM(CASE WHEN patient.status = 'active' THEN 1 ELSE 0 END)`,
+        'active',
+      )
+      .addSelect(
+        `SUM(CASE WHEN patient.status = 'inactive' THEN 1 ELSE 0 END)`,
+        'inactive',
+      )
+      .getRawOne<{ total: string; active: string; inactive: string }>();
+
+    return {
+      total: Number(raw?.total ?? 0),
+      active: Number(raw?.active ?? 0),
+      inactive: Number(raw?.inactive ?? 0),
+    };
   }
 }

@@ -211,6 +211,7 @@ export class PatientsService {
     }
 
     const rawStats = await this.patientsRepository.getPatientStatisticsByPeriod(
+      'gender',
       startDate,
       endDate,
     );
