@@ -27,7 +27,6 @@ import { PatientSupportsRepository } from '../patient-supports/patient-supports.
 import {
   CreatePatientDto,
   FindAllPatientQueryDto,
-  GetPatientStatisticsDto,
   UpdatePatientDto,
 } from './patients.dtos';
 import { PatientsRepository } from './patients.repository';
@@ -186,20 +185,5 @@ export class PatientsController {
         data: [],
       };
     }
-  }
-
-  @Get('statistics')
-  @Roles(['manager', 'nurse'])
-  @ApiOperation({
-    summary: 'Estatísticas de pacientes por tipo',
-  })
-  async getPatientStatistics(@Query() query: GetPatientStatisticsDto) {
-    const data = await this.patientsService.getPatientStatistics(query);
-
-    return {
-      success: true,
-      message: 'Estatísticas de pacientes por gênero retornada com sucesso.',
-      data,
-    };
   }
 }
