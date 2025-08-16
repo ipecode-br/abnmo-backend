@@ -92,7 +92,7 @@ export class PatientsService {
         email: user.email,
         supports: patientSupports,
       },
-      'Paciente cadastrado com sucesso',
+      'Paciente cadastrado com sucesso.',
     );
   }
 
