@@ -82,5 +82,5 @@ export class Patient implements PatientSchema {
   user: User;
 
   @OneToMany(() => PatientSupport, (support) => support.patient)
-  supports: PatientSupport[];
+  supports?: PatientSupport[];
 }

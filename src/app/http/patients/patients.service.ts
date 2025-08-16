@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 
 import { UsersRepository } from '@/app/http/users/users.repository';
+import { PatientSupport } from '@/domain/entities/patient-support';
 import type { UserSchema } from '@/domain/schemas/user';
 import {
   FormType,
@@ -14,6 +15,7 @@ import {
   PendingForm,
 } from '@/domain/types/form-types';
 
+import { PatientSupportsRepository } from '../patient-supports/patient-supports.repository';
 import { UsersService } from '../users/users.service';
 import { CreatePatientDto, UpdatePatientDto } from './patients.dtos';
 import { PatientsRepository } from './patients.repository';
@@ -27,6 +29,7 @@ export class PatientsService {
     private readonly patientsRepository: PatientsRepository,
     private readonly usersRepository: UsersRepository,
     private readonly usersService: UsersService,
+    private readonly patientSupportsRepository: PatientSupportsRepository,
   ) {}
 
   async create(createPatientDto: CreatePatientDto): Promise<void> {
@@ -64,19 +67,31 @@ export class PatientsService {
     if (patientExists) {
       throw new ConflictException('Este paciente já possui um cadastro.');
     }
-    const patientData = {
-      ...createPatientDto,
-      patientSupport: createPatientDto.patientSupport.map((support) => ({
-        ...support,
-        user_id: user.id,
-      })),
-      user_id: user.id,
-    };
 
-    const patient = await this.patientsRepository.create(patientData);
+    const patient = await this.patientsRepository.create({
+      ...createPatientDto,
+      user_id: user.id,
+    });
+
+    let patientSupports: PatientSupport[] = [];
+    if (createPatientDto.supports?.length) {
+      patientSupports = await Promise.all(
+        createPatientDto.supports.map((support) =>
+          this.patientSupportsRepository.create({
+            ...support,
+            patient_id: patient.id,
+          }),
+        ),
+      );
+    }
 
     this.logger.log(
-      { id: patient.id, userId: patient.user_id, email: user.email },
+      {
+        id: patient.id,
+        userId: patient.user_id,
+        email: user.email,
+        supports: patientSupports,
+      },
       'Paciente cadastrado com sucesso',
     );
   }

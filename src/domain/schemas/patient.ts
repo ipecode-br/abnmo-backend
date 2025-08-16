@@ -59,7 +59,7 @@ export const createPatientSchema = patientSchema
     user_id: z.string().uuid().optional(),
     name: z.string().optional(),
     email: z.string().email().optional(),
-    patientSupport: z.array(createPatientSupportSchema),
+    supports: z.array(createPatientSupportSchema).optional().default([]),
   })
   .refine(
     (data) => {
