@@ -10,3 +10,4 @@ export class FindAllPatientQueryDto extends createZodDto(
   findAllPatientsQuerySchema,
 ) {}
 export class UpdatePatientDto extends createZodDto(updatePatientSchema) {}
+//teste
