@@ -111,7 +111,7 @@ export const findAllPatientsQuerySchema = baseQuerySchema
       return true;
     },
     {
-      message: 'It should be greater than `startDate`',
+      message: 'It should be greater than `startDate`.',
       path: ['endDate'],
     },
   );
