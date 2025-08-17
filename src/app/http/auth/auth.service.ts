@@ -2,6 +2,7 @@ import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 
 import { CryptographyService } from '@/app/cryptography/crypography.service';
 import { AUTH_TOKENS_MAPPER } from '@/domain/schemas/token';
+import { EnvService } from '@/env/env.service';
 
 import type { CreateUserDto } from '../users/users.dtos';
 import { UsersRepository } from '../users/users.repository';
@@ -18,6 +19,7 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly cryptographyService: CryptographyService,
     private readonly tokensRepository: TokensRepository,
+    private readonly envService: EnvService,
   ) {}
 
   async register(createUserDto: CreateUserDto): Promise<void> {
@@ -77,5 +79,49 @@ export class AuthService {
 
   async logout(token: string): Promise<void> {
     await this.tokensRepository.deleteToken(token);
+  }
+
+  async forgotPassword(email: string): Promise<{ passwordResetToken: string }> {
+    const user = await this.usersRepository.findByEmail(email);
+
+    if (!user) {
+      this.logger.warn(
+        `Tentativa de recuperação de senha para email não cadastrado: ${email}`,
+      );
+      return { passwordResetToken: 'dummy_token' };
+    }
+
+    const payload = { sub: user.id };
+    const passwordResetToken = await this.cryptographyService.createToken(
+      AUTH_TOKENS_MAPPER.password_reset,
+      payload,
+      { expiresIn: '4h' },
+    );
+
+    const expiration = new Date();
+    expiration.setHours(expiration.getHours() + 4);
+
+    await this.tokensRepository.saveToken({
+      user_id: user.id,
+      token: passwordResetToken,
+      type: AUTH_TOKENS_MAPPER.password_reset,
+      expires_at: expiration,
+    });
+
+    const appUrl = this.envService.get('APP_URL');
+    const resetUrl = `${appUrl}/conta/nova-senha?token=${passwordResetToken}`;
+
+    // Log da URL (substituindo o envio de email por enquanto)
+    this.logger.log(
+      `URL de redefinição de senha para ${email}: ${resetUrl}`,
+      'Password Reset URL',
+    );
+
+    this.logger.log(
+      { id: user.id, email: user.email },
+      'Token de redefinição de senha gerado com sucesso',
+    );
+
+    return { passwordResetToken };
   }
 }

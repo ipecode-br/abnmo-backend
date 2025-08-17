@@ -11,11 +11,14 @@ import type { Response } from 'express';
 import { Cookies } from '@/common/decorators/cookies';
 import { Public } from '@/common/decorators/public.decorator';
 import { COOKIES_MAPPER } from '@/domain/cookies';
-import type { SignInWithEmailResponseSchema } from '@/domain/schemas/auth';
+import type {
+  RecoverPasswordResponseSchema,
+  SignInWithEmailResponseSchema,
+} from '@/domain/schemas/auth';
 import { UtilsService } from '@/utils/utils.service';
 
 import { CreateUserDto } from '../users/users.dtos';
-import { SignInWithEmailDto } from './auth.dtos';
+import { RecoverPasswordDto, SignInWithEmailDto } from './auth.dtos';
 import { AuthService } from './auth.service';
 
 @Public()
@@ -80,6 +83,31 @@ export class AuthController {
     return {
       success: true,
       message: 'Logout realizado com sucesso.',
+    };
+  }
+
+  @Post('recover-password')
+  @ApiOperation({ summary: 'Recuperação de senha' })
+  async recoverPassword(
+    @Res({ passthrough: true }) response: Response,
+    @Body() recoverPasswordDto: RecoverPasswordDto,
+  ): Promise<RecoverPasswordResponseSchema> {
+    const { passwordResetToken } = await this.authService.forgotPassword(
+      recoverPasswordDto.email,
+    );
+
+    const FOUR_HOURS_IN_MS = 1000 * 60 * 60 * 4;
+
+    this.utilsService.setCookie(response, {
+      name: COOKIES_MAPPER.password_reset,
+      value: passwordResetToken,
+      maxAge: FOUR_HOURS_IN_MS,
+    });
+
+    return {
+      success: true,
+      message:
+        'O link para redefinição de senha foi enviado ao e-mail solicitado.',
     };
   }
 }
