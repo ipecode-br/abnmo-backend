@@ -56,7 +56,7 @@ export class AuthService {
 
     const accessToken = await this.cryptographyService.createToken(
       AUTH_TOKENS_MAPPER.access_token,
-      { sub: user.id, userRole: user.role },
+      { sub: user.id, role: user.role },
       { expiresIn },
     );
 

@@ -33,7 +33,7 @@ export const createAuthTokenSchema = authTokenSchema.pick({
 });
 export type CreateAuthTokenSchema = z.infer<typeof createAuthTokenSchema>;
 
-export type AccessTokenPayloadType = { sub: string; userRole: UserRoleType };
+export type AccessTokenPayloadType = { sub: string; role: UserRoleType };
 export type PasswordResetPayloadType = { sub: string };
 
 export type AuthTokenPayloadByType = {
