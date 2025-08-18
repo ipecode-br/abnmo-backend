@@ -91,7 +91,7 @@ export class AuthController {
     @Body() resetPasswordDto: ResetPasswordDto,
   ) {
     if (!passwordResetToken) {
-      throw new UnauthorizedException('Token de redefinição de senha ausente');
+      throw new UnauthorizedException('Token de redefinição de senha ausente.');
     }
 
     const { accessToken } = await this.authService.resetPassword(

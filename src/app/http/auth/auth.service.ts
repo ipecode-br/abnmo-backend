@@ -105,6 +105,11 @@ export class AuthService {
     const hashedPassword = await this.hasher.hash(newPassword);
     await this.usersRepository.updatePassword(user.id, hashedPassword);
 
+    this.logger.log(
+      { userId: user.id, email: user.email },
+      'Password update successful',
+    );
+
     await this.tokensRepository.deleteToken(token);
 
     const { accessToken } = await this.signIn({
