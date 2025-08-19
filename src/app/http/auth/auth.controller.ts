@@ -90,6 +90,8 @@ export class AuthController {
     passwordResetToken: string,
     @Body() resetPasswordDto: ResetPasswordDto,
   ) {
+    const TWELVE_HOURS_IN_MS = 1000 * 60 * 60 * 12;
+
     if (!passwordResetToken) {
       throw new UnauthorizedException('Token de redefinição de senha ausente.');
     }
@@ -102,7 +104,7 @@ export class AuthController {
     this.utilsService.setCookie(response, {
       name: COOKIES_MAPPER.access_token,
       value: accessToken,
-      maxAge: 1000 * 60 * 60 * 12,
+      maxAge: TWELVE_HOURS_IN_MS,
     });
 
     return {

@@ -96,12 +96,14 @@ export class AuthService {
     }
 
     const user = await this.usersRepository.findById(tokenEntity.user_id);
+
     if (!user) {
       throw new UnauthorizedException('Usuário não encontrado.');
     }
 
     const hashedPassword =
       await this.cryptographyService.createHash(newPassword);
+
     await this.usersRepository.updatePassword(user.id, hashedPassword);
 
     this.logger.log(
