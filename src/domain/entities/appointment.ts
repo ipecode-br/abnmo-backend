@@ -14,7 +14,7 @@ import {
   AppointmentConditionType,
   AppointmentSchema,
   AppointmentStatusType,
-} from '../schemas/appointments';
+} from '../schemas/appointment';
 import { Patient } from './patient';
 
 @Entity('appointments')
