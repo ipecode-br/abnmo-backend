@@ -78,4 +78,47 @@ export class AuthService {
   async logout(token: string): Promise<void> {
     await this.tokensRepository.deleteToken(token);
   }
+
+  async resetPassword(
+    token: string,
+    newPassword: string,
+  ): Promise<{ accessToken: string }> {
+    const tokenEntity = await this.tokensRepository.findToken(token);
+
+    if (
+      !tokenEntity ||
+      tokenEntity.type !== AUTH_TOKENS_MAPPER.password_reset ||
+      tokenEntity.expires_at < new Date()
+    ) {
+      throw new UnauthorizedException(
+        'Token de redefinição de senha inválido ou expirado.',
+      );
+    }
+
+    const user = await this.usersRepository.findById(tokenEntity.user_id);
+
+    if (!user) {
+      throw new UnauthorizedException('Usuário não encontrado.');
+    }
+
+    const hashedPassword =
+      await this.cryptographyService.createHash(newPassword);
+
+    await this.usersRepository.updatePassword(user.id, hashedPassword);
+
+    this.logger.log(
+      { userId: user.id, email: user.email },
+      'Password update successfully',
+    );
+
+    await this.tokensRepository.deleteToken(token);
+
+    const { accessToken } = await this.signIn({
+      email: user.email,
+      password: newPassword,
+      rememberMe: false,
+    });
+
+    return { accessToken };
+  }
 }
