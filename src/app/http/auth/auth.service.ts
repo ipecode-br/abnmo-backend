@@ -107,7 +107,7 @@ export class AuthService {
 
     this.logger.log(
       { userId: user.id, email: user.email },
-      'Password update successful',
+      'Password update successful.',
     );
 
     await this.tokensRepository.deleteToken(token);

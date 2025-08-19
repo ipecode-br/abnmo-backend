@@ -107,7 +107,7 @@ export class AuthController {
 
     return {
       success: true,
-      message: 'Senha atualizada com sucesso',
+      message: 'Senha atualizada com sucesso.',
     };
   }
 }
