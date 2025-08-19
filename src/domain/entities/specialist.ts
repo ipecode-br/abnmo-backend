@@ -17,7 +17,7 @@ import {
 } from '../schemas/specialist';
 import { User } from './user';
 
-@Entity('specialists')
+@Entity('specialist')
 export class Specialist implements SpecialistSchema {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -41,7 +41,6 @@ export class Specialist implements SpecialistSchema {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  // Relacionamento Many to One -> Appointments
   //   @ManyToOne(() => Appointment, (appointment) => appointment.specialist)
   //   appointments: Appointment[];
 }
