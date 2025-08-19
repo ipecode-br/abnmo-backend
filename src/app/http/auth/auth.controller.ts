@@ -86,7 +86,7 @@ export class AuthController {
   @Post('reset-password')
   async resetPassword(
     @Res({ passthrough: true }) response: Response,
-    @Cookies(COOKIES_MAPPER.password_reset as 'password_reset')
+    @Cookies(COOKIES_MAPPER.password_reset)
     passwordResetToken: string,
     @Body() resetPasswordDto: ResetPasswordDto,
   ) {
