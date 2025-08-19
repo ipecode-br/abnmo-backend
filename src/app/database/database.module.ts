@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { Appointment } from '@/domain/entities/appointment';
 import { Patient } from '@/domain/entities/patient';
 import { PatientSupport } from '@/domain/entities/patient-support';
 import { Token } from '@/domain/entities/token';
@@ -8,7 +9,13 @@ import { User } from '@/domain/entities/user';
 import { EnvModule } from '@/env/env.module';
 import { EnvService } from '@/env/env.service';
 
-export const DATABASE_ENTITIES = [User, Token, Patient, PatientSupport];
+export const DATABASE_ENTITIES = [
+  User,
+  Token,
+  Patient,
+  PatientSupport,
+  Appointment,
+];
 
 @Module({
   imports: [
