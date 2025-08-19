@@ -18,7 +18,11 @@ import type {
 import { UtilsService } from '@/utils/utils.service';
 
 import { CreateUserDto } from '../users/users.dtos';
-import { RecoverPasswordDto, SignInWithEmailDto } from './auth.dtos';
+import {
+  RecoverPasswordDto,
+  ResetPasswordDto,
+  SignInWithEmailDto,
+} from './auth.dtos';
 import { AuthService } from './auth.service';
 
 @Public()
@@ -83,6 +87,36 @@ export class AuthController {
     return {
       success: true,
       message: 'Logout realizado com sucesso.',
+    };
+  }
+
+  @Post('reset-password')
+  async resetPassword(
+    @Res({ passthrough: true }) response: Response,
+    @Cookies(COOKIES_MAPPER.password_reset)
+    passwordResetToken: string,
+    @Body() resetPasswordDto: ResetPasswordDto,
+  ) {
+    const TWELVE_HOURS_IN_MS = 1000 * 60 * 60 * 12;
+
+    if (!passwordResetToken) {
+      throw new UnauthorizedException('Token de redefinição de senha ausente.');
+    }
+
+    const { accessToken } = await this.authService.resetPassword(
+      passwordResetToken,
+      resetPasswordDto.password,
+    );
+
+    this.utilsService.setCookie(response, {
+      name: COOKIES_MAPPER.access_token,
+      value: accessToken,
+      maxAge: TWELVE_HOURS_IN_MS,
+    });
+
+    return {
+      success: true,
+      message: 'Senha atualizada com sucesso.',
     };
   }
 

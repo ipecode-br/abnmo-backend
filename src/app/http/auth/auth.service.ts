@@ -86,12 +86,14 @@ export class AuthService {
 
     if (!user) {
       this.logger.warn(
-        `Tentativa de recuperação de senha para email não cadastrado: ${email}`,
+        { email },
+        'Attempt to recover password for non-registered email failed',
       );
       return { passwordResetToken: 'dummy_token' };
     }
 
     const payload = { sub: user.id };
+
     const passwordResetToken = await this.cryptographyService.createToken(
       AUTH_TOKENS_MAPPER.password_reset,
       payload,
@@ -111,17 +113,57 @@ export class AuthService {
     const appUrl = this.envService.get('APP_URL');
     const resetUrl = `${appUrl}/conta/nova-senha?token=${passwordResetToken}`;
 
-    // Log da URL (substituindo o envio de email por enquanto)
-    this.logger.log(
-      `URL de redefinição de senha para ${email}: ${resetUrl}`,
-      'Password Reset URL',
-    );
-
     this.logger.log(
       { id: user.id, email: user.email },
-      'Token de redefinição de senha gerado com sucesso',
+      'Reset password token generated successfully',
     );
 
+    // Log da URL (substituindo o envio de email por enquanto)
+    this.logger.log({ url: resetUrl }, 'Password reset URL');
+
     return { passwordResetToken };
+  }
+
+  async resetPassword(
+    token: string,
+    newPassword: string,
+  ): Promise<{ accessToken: string }> {
+    const tokenEntity = await this.tokensRepository.findToken(token);
+
+    if (
+      !tokenEntity ||
+      tokenEntity.type !== AUTH_TOKENS_MAPPER.password_reset ||
+      tokenEntity.expires_at < new Date()
+    ) {
+      throw new UnauthorizedException(
+        'Token de redefinição de senha inválido ou expirado.',
+      );
+    }
+
+    const user = await this.usersRepository.findById(tokenEntity.user_id);
+
+    if (!user) {
+      throw new UnauthorizedException('Usuário não encontrado.');
+    }
+
+    const hashedPassword =
+      await this.cryptographyService.createHash(newPassword);
+
+    await this.usersRepository.updatePassword(user.id, hashedPassword);
+
+    this.logger.log(
+      { userId: user.id, email: user.email },
+      'Password update successfully',
+    );
+
+    await this.tokensRepository.deleteToken(token);
+
+    const { accessToken } = await this.signIn({
+      email: user.email,
+      password: newPassword,
+      rememberMe: false,
+    });
+
+    return { accessToken };
   }
 }
