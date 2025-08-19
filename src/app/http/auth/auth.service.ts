@@ -1,8 +1,6 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 
-import { MailService } from '@/app/mail/mail.service';
-import { Hasher } from '@/domain/cryptography/hasher';
+import { CryptographyService } from '@/app/cryptography/crypography.service';
 import { AUTH_TOKENS_MAPPER } from '@/domain/schemas/token';
 
 import type { CreateUserDto } from '../users/users.dtos';
@@ -18,24 +16,18 @@ export class AuthService {
   constructor(
     private readonly usersRepository: UsersRepository,
     private readonly usersService: UsersService,
-    private readonly jwtService: JwtService,
-    private readonly hasher: Hasher,
+    private readonly cryptographyService: CryptographyService,
     private readonly tokensRepository: TokensRepository,
-    private readonly mailService: MailService,
   ) {}
 
   async register(createUserDto: CreateUserDto): Promise<void> {
     await this.usersService.create(createUserDto);
 
-    // TODO: update content with link to verify e-mail
-    const subject = 'Verifique seu e-mail de cadastro';
-    const body = `
-      <h2>Confirme seu e-mail</h2>
-      <p>Para concluir o seu cadastro em nossa plataforma, confirme a verificação do seu e-mail através do link abaixo:</p>
-      <a href="link">Confirmar e-mail</a>
-    `;
+    // TODO: create e-mail template builder
+    // const subject = 'Verifique seu e-mail de cadastro';
+    // const body = `<a href="link">Confirmar e-mail</a>`;
 
-    await this.mailService.sendEmail(createUserDto.email, subject, body);
+    // await this.mailService.sendEmail(createUserDto.email, subject, body);
   }
 
   async signIn({ email, password, rememberMe }: SignInWithEmailDto): Promise<{
@@ -49,7 +41,10 @@ export class AuthService {
       );
     }
 
-    const verifyPassword = await this.hasher.compare(password, user.password);
+    const verifyPassword = await this.cryptographyService.compareHash(
+      password,
+      user.password,
+    );
 
     if (!verifyPassword) {
       throw new UnauthorizedException(
@@ -58,9 +53,12 @@ export class AuthService {
     }
 
     const expiresIn = rememberMe ? '30d' : '12h';
-    const payload = { sub: user.id };
 
-    const accessToken = await this.jwtService.signAsync(payload, { expiresIn });
+    const accessToken = await this.cryptographyService.createToken(
+      AUTH_TOKENS_MAPPER.access_token,
+      { sub: user.id, role: user.role },
+      { expiresIn },
+    );
 
     const expiration = new Date();
     expiration.setHours(expiration.getHours() + (rememberMe ? 24 * 30 : 12));

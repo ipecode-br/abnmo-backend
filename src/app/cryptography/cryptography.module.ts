@@ -1,11 +1,23 @@
 import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
 
-import { Hasher } from '@/domain/cryptography/hasher';
+import { EnvModule } from '@/env/env.module';
+import { EnvService } from '@/env/env.service';
 
-import { BcryptHasher } from './bcrypt-hasher';
+import { CryptographyService } from './crypography.service';
 
 @Module({
-  providers: [{ provide: Hasher, useClass: BcryptHasher }],
-  exports: [Hasher],
+  imports: [
+    JwtModule.registerAsync({
+      imports: [EnvModule],
+      inject: [EnvService],
+      useFactory: (envService: EnvService) => ({
+        secret: envService.get('JWT_SECRET'),
+        signOptions: { expiresIn: '12h' },
+      }),
+    }),
+  ],
+  providers: [CryptographyService],
+  exports: [CryptographyService],
 })
 export class CryptographyModule {}

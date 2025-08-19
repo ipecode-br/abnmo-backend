@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import type { UserRoleType } from './user';
+
 export const AUTH_TOKENS_MAPPER = {
   access_token: 'access_token',
   password_reset: 'password_reset',
@@ -30,3 +32,11 @@ export const createAuthTokenSchema = authTokenSchema.pick({
   expires_at: true,
 });
 export type CreateAuthTokenSchema = z.infer<typeof createAuthTokenSchema>;
+
+export type AccessTokenPayloadType = { sub: string; role: UserRoleType };
+export type PasswordResetPayloadType = { sub: string };
+
+export type AuthTokenPayloadByType = {
+  [AUTH_TOKENS_MAPPER.access_token]: AccessTokenPayloadType;
+  [AUTH_TOKENS_MAPPER.password_reset]: PasswordResetPayloadType;
+};

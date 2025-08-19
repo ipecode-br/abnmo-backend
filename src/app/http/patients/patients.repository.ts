@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
 import type { PatientOrderByType } from '@/domain/schemas/patient';
+import type { GetPatientsTotalResponseSchema } from '@/domain/schemas/statistics';
 
 import { CreatePatientDto, FindAllPatientQueryDto } from './patients.dtos';
 
@@ -154,11 +155,34 @@ export class PatientsRepository {
     return this.patientsRepository.find({
       relations: {
         user: true,
-      }, // Adicione outras relações conforme necessário
+      },
     });
   }
 
   public async deactivate(id: string): Promise<Patient> {
     return this.patientsRepository.save({ id, status: 'inactive' });
+  }
+
+  public async getPatientsTotal(): Promise<
+    GetPatientsTotalResponseSchema['data']
+  > {
+    const raw = await this.patientsRepository
+      .createQueryBuilder('patient')
+      .select('COUNT(*)', 'total')
+      .addSelect(
+        `SUM(CASE WHEN patient.status = 'active' THEN 1 ELSE 0 END)`,
+        'active',
+      )
+      .addSelect(
+        `SUM(CASE WHEN patient.status = 'inactive' THEN 1 ELSE 0 END)`,
+        'inactive',
+      )
+      .getRawOne<{ total: string; active: string; inactive: string }>();
+
+    return {
+      total: Number(raw?.total ?? 0),
+      active: Number(raw?.active ?? 0),
+      inactive: Number(raw?.inactive ?? 0),
+    };
   }
 }
