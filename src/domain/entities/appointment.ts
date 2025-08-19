@@ -2,6 +2,8 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -13,6 +15,7 @@ import {
   AppointmentSchema,
   AppointmentStatusType,
 } from '../schemas/appointments';
+import { Patient } from './patient';
 
 @Entity('appointments')
 export class Appointment implements AppointmentSchema {
@@ -42,4 +45,8 @@ export class Appointment implements AppointmentSchema {
 
   @UpdateDateColumn({ type: 'timestamp' })
   updated_at: Date;
+
+  @ManyToOne(() => Patient, (patient) => patient.id)
+  @JoinColumn({ name: 'patient_id' })
+  patient: Patient;
 }
