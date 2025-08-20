@@ -7,6 +7,7 @@ import { MailModule } from '@/app/mail/mail.module';
 import { AuthGuard } from '@/common/guards/auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import { Token } from '@/domain/entities/token';
+import { EnvModule } from '@/env/env.module';
 import { UtilsModule } from '@/utils/utils.module';
 
 import { UsersModule } from '../users/users.module';
@@ -21,6 +22,7 @@ import { TokensRepository } from './tokens.repository';
     UsersModule,
     UtilsModule,
     MailModule,
+    EnvModule,
   ],
   providers: [
     AuthService,
