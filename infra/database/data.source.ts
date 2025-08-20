@@ -1,7 +1,7 @@
 import { config } from 'dotenv';
 import { DataSource } from 'typeorm';
 
-import { DATABASE_ENTITIES } from '@/app/database/database.module';
+import { DATABASE_ENTITIES } from '@/domain/entities/database';
 
 config();
 
