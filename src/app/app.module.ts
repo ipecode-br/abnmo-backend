@@ -9,6 +9,7 @@ import { EnvService } from '@/env/env.service';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
+import { AppointmentsModule } from './http/appointments/appointments.module';
 import { AuthModule } from './http/auth/auth.module';
 import { PatientSupportsModule } from './http/patient-supports/patient-supports.module';
 import { PatientsModule } from './http/patients/patients.module';
@@ -51,6 +52,7 @@ import { UsersModule } from './http/users/users.module';
     PatientsModule,
     PatientSupportsModule,
     StatisticsModule,
+    AppointmentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
