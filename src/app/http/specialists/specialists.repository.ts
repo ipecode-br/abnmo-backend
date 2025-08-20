@@ -8,6 +8,6 @@ import { Specialist } from '@/domain/entities/specialist';
 export class SpecialistsRepository {
   constructor(
     @InjectRepository(Specialist)
-    private readonly specialistRepository: Repository<Specialist>,
+    private readonly specialistsRepository: Repository<Specialist>,
   ) {}
 }

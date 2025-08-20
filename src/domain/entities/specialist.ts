@@ -17,7 +17,7 @@ import {
 } from '../schemas/specialist';
 import { User } from './user';
 
-@Entity('specialist')
+@Entity('specialists')
 export class Specialist implements SpecialistSchema {
   @PrimaryGeneratedColumn('uuid')
   id: string;
