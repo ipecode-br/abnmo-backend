@@ -3,13 +3,14 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
-  //   ManyToOne,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
-//import { Appointment } from '@/domain/entities/appointment';
+import { Appointment } from '@/domain/entities/appointment';
+
 import {
   SPECIALIST_STATUS,
   SpecialistSchema,
@@ -41,6 +42,6 @@ export class Specialist implements SpecialistSchema {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  //   @ManyToOne(() => Appointment, (appointment) => appointment.specialist)
-  //   appointments: Appointment[];
+  @OneToMany(() => Appointment, (appointment) => appointment.specialist_id)
+  appointments: Appointment[];
 }
