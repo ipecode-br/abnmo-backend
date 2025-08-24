@@ -28,18 +28,27 @@ jobs:
       - name: Run tests with coverage
         run: npm run test:cov
 
+      - name: Run linting
+        run: npm run lint:eslint:check
+
+      # CORREÇÃO: Usar a action oficial do SonarQube
       - name: SonarQube Scan
-        uses: sonarqube-quality-gate-action@master
+        uses: SonarSource/sonarqube-scan-action@v2
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        with:
-          scanMetadataReportFile: .scannerwork/report-task.txt
+
+      - name: SonarQube Quality Gate Check
+        uses: SonarSource/sonarqube-quality-gate-action@v1
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   pr-review-bot:
     name: PR Review Bot
     runs-on: ubuntu-latest
     needs: sonar-analysis
+    if: always() # Executa mesmo se o SonarQube falhar
 
     steps:
       - name: Checkout code
@@ -53,7 +62,7 @@ jobs:
       - name: Install bot dependencies
         run: |
           npm install @octokit/rest axios
-          npm install --save-dev @types/node typescript ts-node  # ← Adicione isso
+          npm install --save-dev @types/node typescript ts-node
 
       - name: Run PR Review Bot
         run: npx ts-node scripts/bot-review.ts

@@ -57,13 +57,27 @@ class SonarPRBot {
     });
     this.sonarUrl = process.env.SONAR_HOST_URL!;
     this.sonarToken = process.env.SONAR_TOKEN!;
-    this.projectKey = process.env.SONAR_PROJECT_KEY || 'abnmo-backend';
+    this.projectKey =
+      process.env.SONAR_PROJECT_KEY || 'ipecode-br_abnmo-backend';
+
+    // Debug das variáveis de ambiente
+    console.log('🔧 Configuração do bot:');
+    console.log(`- SONAR_HOST_URL: ${this.sonarUrl}`);
+    console.log(`- PROJECT_KEY: ${this.projectKey}`);
+    console.log(
+      `- GITHUB_TOKEN: ${process.env.GITHUB_TOKEN ? '✓ Configurado' : '✗ Não encontrado'}`,
+    );
+    console.log(
+      `- SONAR_TOKEN: ${this.sonarToken ? '✓ Configurado' : '✗ Não encontrado'}`,
+    );
   }
 
   async getSonarQubeResults(
     prKey: string,
   ): Promise<SonarMeasureResponse | null> {
     try {
+      console.log(`🔍 Buscando métricas para PR: ${prKey}`);
+
       const response: AxiosResponse<SonarMeasureResponse> = await axios.get(
         `${this.sonarUrl}/api/measures/component`,
         {
@@ -78,15 +92,30 @@ class SonarPRBot {
           },
         },
       );
+
+      console.log('✅ Métricas obtidas com sucesso');
+      console.log(
+        `📊 Número de métricas: ${response.data.component.measures.length}`,
+      );
+
       return response.data;
     } catch (error) {
-      console.error('Erro ao buscar dados do SonarQube:', error);
+      if (axios.isAxiosError(error)) {
+        console.error('❌ Erro na requisição do SonarQube:');
+        console.error(`Status: ${error.response?.status}`);
+        console.error(`Data: ${JSON.stringify(error.response?.data, null, 2)}`);
+        console.error(`URL: ${error.config?.url}`);
+      } else {
+        console.error('❌ Erro desconhecido:', error);
+      }
       return null;
     }
   }
 
   async getSonarQubeIssues(prKey: string): Promise<SonarIssue[]> {
     try {
+      console.log(`🔍 Buscando issues para PR: ${prKey}`);
+
       const response: AxiosResponse<SonarIssueResponse> = await axios.get(
         `${this.sonarUrl}/api/issues/search`,
         {
@@ -101,17 +130,28 @@ class SonarPRBot {
           },
         },
       );
+
+      console.log(`✅ Issues obtidos: ${response.data.issues.length}`);
       return response.data.issues;
     } catch (error) {
-      console.error('Erro ao buscar issues do SonarQube:', error);
+      if (axios.isAxiosError(error)) {
+        console.error('❌ Erro ao buscar issues:');
+        console.error(`Status: ${error.response?.status}`);
+        console.error(`Data: ${JSON.stringify(error.response?.data, null, 2)}`);
+      } else {
+        console.error('❌ Erro desconhecido:', error);
+      }
       return [];
     }
   }
 
   private formatMetrics(measures: SonarMeasure[]): FormattedMetrics {
+    console.log('📝 Formatando métricas...');
+
     const metrics: Record<string, string> = {};
     measures.forEach((measure) => {
       metrics[measure.metric] = measure.value;
+      console.log(`  ${measure.metric}: ${measure.value}`);
     });
 
     return {
@@ -247,6 +287,10 @@ class SonarPRBot {
       recommendations += `- 💨 **Muitos code smells (${metrics.codeSmells})**: Refatore o código seguindo as boas práticas do NestJS\n`;
     }
 
+    if (recommendations === `### 💡 Recomendações\n\n`) {
+      recommendations += `- ✅ **Excelente trabalho!** O código está seguindo as boas práticas de qualidade.\n`;
+    }
+
     return recommendations;
   }
 
@@ -257,6 +301,8 @@ class SonarPRBot {
     comment: string,
   ): Promise<void> {
     try {
+      console.log(`💬 Comentando no PR #${prNumber}...`);
+
       // Verifica se já existe um comentário do bot
       const comments = await this.octokit.rest.issues.listComments({
         owner,
@@ -276,7 +322,7 @@ class SonarPRBot {
           comment_id: botComment.id,
           body: comment,
         });
-        console.log('Comentário atualizado com sucesso');
+        console.log('✅ Comentário atualizado com sucesso');
       } else {
         // Cria um novo comentário
         await this.octokit.rest.issues.createComment({
@@ -285,10 +331,14 @@ class SonarPRBot {
           issue_number: prNumber,
           body: comment,
         });
-        console.log('Comentário criado com sucesso');
+        console.log('✅ Comentário criado com sucesso');
       }
     } catch (error) {
-      console.error('Erro ao comentar no PR:', error);
+      console.error('❌ Erro ao comentar no PR:', error);
+      if (axios.isAxiosError(error)) {
+        console.error(`Status: ${error.response?.status}`);
+        console.error(`Data: ${JSON.stringify(error.response?.data, null, 2)}`);
+      }
     }
   }
 
@@ -298,13 +348,32 @@ class SonarPRBot {
     prNumber: number,
     prKey: string,
   ): Promise<void> {
-    console.log(`Analisando PR #${prNumber} (${prKey})...`);
+    console.log(`🚀 Analisando PR #${prNumber} (chave: ${prKey})...`);
+    console.log(`📂 Repositório: ${owner}/${repo}`);
 
     const sonarData = await this.getSonarQubeResults(prKey);
     const issues = await this.getSonarQubeIssues(prKey);
 
     if (!sonarData) {
-      console.log('Dados do SonarQube não encontrados');
+      console.log(
+        '⚠️ Dados do SonarQube não encontrados - criando comentário básico',
+      );
+
+      const fallbackComment = `## 🔍 Análise SonarQube - Review Automatizado
+
+⚠️ **Não foi possível obter os dados de análise do SonarQube.**
+
+Possíveis causas:
+- A análise ainda não foi concluída
+- Erro na configuração do SonarQube
+- Pull Request não analisado
+
+Por favor, verifique os logs da action do SonarQube.
+
+---
+*🤖 Este comentário foi gerado automaticamente pelo bot de review da ABNMO*`;
+
+      await this.commentOnPR(owner, repo, prNumber, fallbackComment);
       return;
     }
 
@@ -312,11 +381,14 @@ class SonarPRBot {
     const comment = this.generateCommentBody(metrics, issues);
 
     await this.commentOnPR(owner, repo, prNumber, comment);
+    console.log('🎉 Review completo!');
   }
 }
 
 // Execução do bot
 const main = async (): Promise<void> => {
+  console.log('🤖 Iniciando PR Review Bot...');
+
   const bot = new SonarPRBot();
 
   const owner = process.env.GITHUB_REPOSITORY_OWNER || 'ipecode-br';
@@ -324,12 +396,27 @@ const main = async (): Promise<void> => {
   const prNumber = process.env.GITHUB_PR_NUMBER;
   const prKey = process.env.SONAR_PR_KEY || prNumber;
 
+  console.log('📋 Variáveis de ambiente:');
+  console.log(`- Owner: ${owner}`);
+  console.log(`- Repo: ${repo}`);
+  console.log(`- PR Number: ${prNumber}`);
+  console.log(`- PR Key: ${prKey}`);
+
   if (!prNumber || !prKey) {
-    console.log('Número do PR não fornecido');
+    console.error('❌ Número do PR não fornecido');
+    console.error('Verifique as variáveis GITHUB_PR_NUMBER e SONAR_PR_KEY');
     return;
   }
 
-  await bot.reviewPR(owner, repo, parseInt(prNumber), prKey);
+  try {
+    await bot.reviewPR(owner, repo, parseInt(prNumber), prKey);
+  } catch (error) {
+    console.error('❌ Erro fatal na execução do bot:', error);
+    process.exit(1);
+  }
 };
 
-main().catch(console.error);
+main().catch((error) => {
+  console.error('❌ Erro não capturado:', error);
+  process.exit(1);
+});
