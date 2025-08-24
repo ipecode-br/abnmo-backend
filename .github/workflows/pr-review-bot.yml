@@ -2,6 +2,7 @@ name: PR Review Bot
 
 on:
   pull_request:
+    branches: [dev, teste-bot]
     types: [opened, synchronize]
 
 jobs:
@@ -52,14 +53,15 @@ jobs:
       - name: Install bot dependencies
         run: |
           npm install @octokit/rest axios
+          npm install --save-dev @types/node typescript ts-node  # ← Adicione isso
 
       - name: Run PR Review Bot
-        run: node scripts/bot-review.js
+        run: npx ts-node scripts/bot-review.ts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-          SONAR_PROJECT_KEY: abnmo-backend
+          SONAR_PROJECT_KEY: ipecode-br_abnmo-backend
           GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
           GITHUB_REPOSITORY_NAME: ${{ github.event.repository.name }}
           GITHUB_PR_NUMBER: ${{ github.event.number }}
