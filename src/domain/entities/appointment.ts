@@ -16,6 +16,7 @@ import {
   AppointmentStatusType,
 } from '../schemas/appointment';
 import { Patient } from './patient';
+import { Specialist } from './specialist';
 
 @Entity('appointments')
 export class Appointment implements AppointmentSchema {
@@ -49,4 +50,8 @@ export class Appointment implements AppointmentSchema {
   @ManyToOne(() => Patient, (patient) => patient.id)
   @JoinColumn({ name: 'patient_id' })
   patient: Patient;
+
+  @ManyToOne(() => Specialist, (specialist) => specialist.appointments)
+  @JoinColumn({ name: 'specialist_id' })
+  specialist: Specialist;
 }
