@@ -12,4 +12,4 @@ import { SpecialistsService } from './specialists.service';
   providers: [SpecialistsService, SpecialistsRepository],
   exports: [SpecialistsRepository],
 })
-export class SpecialistModule {}
+export class SpecialistsModule {}
