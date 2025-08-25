@@ -47,7 +47,7 @@ export class Appointment implements AppointmentSchema {
   @UpdateDateColumn({ type: 'timestamp' })
   updated_at: Date;
 
-  @ManyToOne(() => Patient, (patient) => patient.id)
+  @ManyToOne(() => Patient, (patient) => patient.appointments)
   @JoinColumn({ name: 'patient_id' })
   patient: Patient;
 

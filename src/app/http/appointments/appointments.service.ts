@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import type { AppointmentsRepository } from './appointments.repository';
+import { AppointmentsRepository } from './appointments.repository';
 
 @Injectable()
 export class AppointmentsService {

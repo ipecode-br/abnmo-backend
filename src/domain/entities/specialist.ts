@@ -42,6 +42,6 @@ export class Specialist implements SpecialistSchema {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @OneToMany(() => Appointment, (appointment) => appointment.specialist_id)
+  @OneToMany(() => Appointment, (appointment) => appointment.specialist)
   appointments: Appointment[];
 }
