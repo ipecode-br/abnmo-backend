@@ -9,3 +9,8 @@ services:
       MYSQL_PASSWORD: ${DB_PASSWORD}
     ports:
       - '${DB_PORT}:3306'
+    volumes:
+      - abnmo_mysql_data:/var/lib/mysql
+
+volumes:
+  abnmo_mysql_data:
