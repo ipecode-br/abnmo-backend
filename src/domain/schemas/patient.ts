@@ -149,11 +149,3 @@ export const inactivatePatientResponseSchema = baseResponseSchema.extend({});
 export type InactivatePatientResponseSchema = z.infer<
   typeof inactivatePatientResponseSchema
 >;
-
-export const getPatientStatisticsSchema = baseQuerySchema.pick({
-  type: true,
-  period: true,
-});
-export type GetPatientStatisticsSchema = z.infer<
-  typeof getPatientStatisticsSchema
->;

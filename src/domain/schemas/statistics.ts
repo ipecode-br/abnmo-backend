@@ -2,36 +2,13 @@ import { z } from 'zod';
 
 import { baseResponseSchema } from './base';
 import { GENDERS } from './patient';
+import { baseQuerySchema } from './query';
 
 // Patients
 
-export const PATIENTS_FILTER_QUERY = ['gender', 'city'] as const;
-export type PatientsFilterQuery = (typeof PATIENTS_FILTER_QUERY)[number];
-
-export const patientQuerySchema = z.object({
-  filter: z.enum(PATIENTS_FILTER_QUERY),
-});
-
-export const PATIENT_PERIODS_QUERY = [
-  'last-year',
-  'last-month',
-  'last-week',
-] as const;
-export type PatientsPeriods = (typeof PATIENT_PERIODS_QUERY)[number];
-
-export const patientsStatisticsQuerySchema = z.object({
-  filter: z.enum(PATIENTS_FILTER_QUERY),
-  period: z.enum(PATIENT_PERIODS_QUERY).optional(),
-});
-
-export const patientsStatisticsResponseSchema = baseResponseSchema.extend({
-  data: z.array(
-    z.object({
-      gender: z.enum(GENDERS),
-      total: z.number(),
-    }),
-  ),
-});
+export const PATIENTS_STATISTIC_QUERY = ['gender', 'city'] as const;
+export type PatientsStatisticQueryType =
+  (typeof PATIENTS_STATISTIC_QUERY)[number];
 
 export const getPatientsTotalResponseSchema = baseResponseSchema.extend({
   data: z.object({
@@ -40,10 +17,22 @@ export const getPatientsTotalResponseSchema = baseResponseSchema.extend({
     inactive: z.number(),
   }),
 });
-
-export type patientsStatisticsResponse = z.infer<
-  typeof patientsStatisticsResponseSchema
->;
 export type GetPatientsTotalResponseSchema = z.infer<
   typeof getPatientsTotalResponseSchema
+>;
+
+export const getPatientsByGenderSchema = baseQuerySchema.pick({
+  period: true,
+});
+
+export const getPatientsByGenderResponseSchema = baseResponseSchema.extend({
+  data: z.array(
+    z.object({
+      gender: z.enum(GENDERS),
+      total: z.number(),
+    }),
+  ),
+});
+export type GetPatientsByGenderResponse = z.infer<
+  typeof getPatientsByGenderResponseSchema
 >;

@@ -3,10 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
-import type { GenderType, PatientOrderByType } from '@/domain/schemas/patient';
+import type { PatientOrderByType } from '@/domain/schemas/patient';
+import type { OrderType } from '@/domain/schemas/query';
 import type {
   GetPatientsTotalResponseSchema,
-  PatientsFilterQuery,
+  PatientsStatisticQueryType,
 } from '@/domain/schemas/statistics';
 
 import { CreatePatientDto, FindAllPatientQueryDto } from './patients.dtos';
@@ -166,25 +167,6 @@ export class PatientsRepository {
     return this.patientsRepository.save({ id, status: 'inactive' });
   }
 
-  public async getPatientStatisticsByPeriod(
-    filter: PatientsFilterQuery,
-    startDate: Date,
-    endDate: Date,
-  ): Promise<{ gender: GenderType; total: number }[]> {
-    const results = await this.patientsRepository
-      .createQueryBuilder('patient')
-      .select(`patient.${filter}`, filter)
-      .addSelect('COUNT(*)', 'total')
-      .where('patient.created_at BETWEEN :start AND :end', {
-        start: startDate,
-        end: endDate,
-      })
-      .groupBy(`patient.${filter}`)
-      .getRawMany<{ gender: GenderType; total: number }>();
-
-    return results;
-  }
-
   public async getPatientsTotal(): Promise<
     GetPatientsTotalResponseSchema['data']
   > {
@@ -206,5 +188,26 @@ export class PatientsRepository {
       active: Number(raw?.active ?? 0),
       inactive: Number(raw?.inactive ?? 0),
     };
+  }
+
+  public async getPatientsStatisticsByPeriod<T>(
+    query: PatientsStatisticQueryType,
+    startDate: Date,
+    endDate: Date,
+    order: OrderType = 'DESC',
+  ): Promise<T[]> {
+    const results = await this.patientsRepository
+      .createQueryBuilder('patient')
+      .select(`patient.${query}`, query)
+      .addSelect('COUNT(*)', 'total')
+      .where('patient.created_at BETWEEN :start AND :end', {
+        start: startDate,
+        end: endDate,
+      })
+      .groupBy(`patient.${query}`)
+      .orderBy(`total`, order)
+      .getRawMany<T>();
+
+    return results;
   }
 }
