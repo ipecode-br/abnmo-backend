@@ -4,7 +4,9 @@ import { BRAZILIAN_STATES } from '@/constants/brazilian-states';
 import { ONLY_NUMBERS_REGEX } from '@/constants/regex';
 
 import { baseResponseSchema } from './base';
+import { patientSupportSchema } from './patient-support';
 import { baseQuerySchema } from './query';
+import { userSchema } from './user';
 
 // Entity
 
@@ -23,6 +25,12 @@ export type PatientStatusType = (typeof PATIENT_STATUS)[number];
 
 export const PATIENT_ORDER_BY = ['name', 'status', 'date'] as const;
 export type PatientOrderByType = (typeof PATIENT_ORDER_BY)[number];
+
+export const PATIENT_STATISTICS = ['gender', 'total'] as const;
+export type PatientStatisticsResult = {
+  gender: GenderType;
+  total: number;
+};
 
 export const patientSchema = z
   .object({
@@ -128,7 +136,21 @@ export type FindAllPatientsResponseSchema = z.infer<
 >;
 
 export const findOnePatientResponseSchema = baseResponseSchema.extend({
-  data: patientSchema,
+  data: patientSchema.extend({
+    user: userSchema.pick({
+      email: true,
+      name: true,
+      avatar_url: true,
+    }),
+    supports: z.array(
+      patientSupportSchema.pick({
+        id: true,
+        name: true,
+        phone: true,
+        kinship: true,
+      }),
+    ),
+  }),
 });
 export type FindOnePatientResponseSchema = z.infer<
   typeof findOnePatientResponseSchema

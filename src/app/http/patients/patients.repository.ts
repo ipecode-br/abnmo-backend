@@ -4,7 +4,11 @@ import { Repository } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
 import type { PatientOrderByType } from '@/domain/schemas/patient';
-import type { GetPatientsTotalResponseSchema } from '@/domain/schemas/statistics';
+import type { OrderType } from '@/domain/schemas/query';
+import type {
+  GetPatientsTotalResponseSchema,
+  PatientsStatisticQueryType,
+} from '@/domain/schemas/statistics';
 
 import { CreatePatientDto, FindAllPatientQueryDto } from './patients.dtos';
 
@@ -71,13 +75,19 @@ export class PatientsRepository {
 
   public async findById(id: string): Promise<Patient | null> {
     return await this.patientsRepository.findOne({
-      relations: { user: true },
+      relations: { user: true, supports: true },
       where: { id },
       select: {
         user: {
           name: true,
           email: true,
           avatar_url: true,
+        },
+        supports: {
+          id: true,
+          name: true,
+          phone: true,
+          kinship: true,
         },
       },
     });
@@ -184,5 +194,26 @@ export class PatientsRepository {
       active: Number(raw?.active ?? 0),
       inactive: Number(raw?.inactive ?? 0),
     };
+  }
+
+  public async getPatientsStatisticsByPeriod<T>(
+    query: PatientsStatisticQueryType,
+    startDate: Date,
+    endDate: Date,
+    order: OrderType = 'DESC',
+  ): Promise<T[]> {
+    const results = await this.patientsRepository
+      .createQueryBuilder('patient')
+      .select(`patient.${query}`, query)
+      .addSelect('COUNT(*)', 'total')
+      .where('patient.created_at BETWEEN :start AND :end', {
+        start: startDate,
+        end: endDate,
+      })
+      .groupBy(`patient.${query}`)
+      .orderBy(`total`, order)
+      .getRawMany<T>();
+
+    return results;
   }
 }
