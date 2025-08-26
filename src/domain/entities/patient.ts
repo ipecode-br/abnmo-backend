@@ -22,6 +22,7 @@ import {
   PatientSchema,
   PatientStatusType,
 } from '../schemas/patient';
+import { Appointment } from './appointment';
 import { PatientSupport } from './patient-support';
 
 @Entity('patients')
@@ -83,4 +84,7 @@ export class Patient implements PatientSchema {
 
   @OneToMany(() => PatientSupport, (support) => support.patient)
   supports: PatientSupport[];
+
+  @OneToMany(() => Appointment, (appointment) => appointment.patient)
+  appointments: Appointment[];
 }

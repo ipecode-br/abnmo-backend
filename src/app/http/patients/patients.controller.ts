@@ -160,30 +160,4 @@ export class PatientsController {
       message: 'Paciente atualizado com sucesso.',
     };
   }
-
-  @Get('forms/status')
-  @ApiOperation({ summary: 'Lista formulários pendentes por paciente' })
-  public async getFormsStatus() {
-    try {
-      const formsStatus = await this.patientsService.getPatientFormsStatus();
-      const pendingCount = formsStatus.reduce(
-        (total, patient) => total + patient.pendingForms.length,
-        0,
-      );
-      return {
-        success: true,
-        message: `${pendingCount} formulário(s) pendente(s) no total`,
-        data: formsStatus,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message:
-          error instanceof Error
-            ? error.message
-            : 'Erro ao verificar formulários pendentes',
-        data: [],
-      };
-    }
-  }
 }

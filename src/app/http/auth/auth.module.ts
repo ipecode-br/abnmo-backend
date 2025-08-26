@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
-import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { CryptographyModule } from '@/app/cryptography/cryptography.module';
@@ -9,7 +8,6 @@ import { AuthGuard } from '@/common/guards/auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import { Token } from '@/domain/entities/token';
 import { EnvModule } from '@/env/env.module';
-import { EnvService } from '@/env/env.service';
 import { UtilsModule } from '@/utils/utils.module';
 
 import { UsersModule } from '../users/users.module';
@@ -20,19 +18,11 @@ import { TokensRepository } from './tokens.repository';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Token]),
-    EnvModule,
     CryptographyModule,
     UsersModule,
     UtilsModule,
     MailModule,
-    JwtModule.registerAsync({
-      imports: [EnvModule],
-      inject: [EnvService],
-      useFactory: (envService: EnvService) => ({
-        secret: envService.get('JWT_SECRET'),
-        signOptions: { expiresIn: '12h' },
-      }),
-    }),
+    EnvModule,
   ],
   providers: [
     AuthService,

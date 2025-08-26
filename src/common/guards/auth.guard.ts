@@ -5,10 +5,11 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { JwtService } from '@nestjs/jwt';
 
+import { CryptographyService } from '@/app/cryptography/crypography.service';
 import { UsersRepository } from '@/app/http/users/users.repository';
 import type { Cookie } from '@/domain/cookies';
+import type { AccessTokenPayloadType } from '@/domain/schemas/token';
 import type { UserSchema } from '@/domain/schemas/user';
 
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
@@ -17,7 +18,7 @@ import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 export class AuthGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
-    private readonly jwtService: JwtService,
+    private readonly cryptographyService: CryptographyService,
     private readonly usersRepository: UsersRepository,
   ) {}
 
@@ -43,7 +44,10 @@ export class AuthGuard implements CanActivate {
     }
 
     try {
-      const tokenPayload = this.jwtService.verify<{ sub?: string }>(token);
+      const tokenPayload =
+        await this.cryptographyService.verifyToken<AccessTokenPayloadType>(
+          token,
+        );
       const userId = tokenPayload.sub;
 
       if (!userId) {
