@@ -1,10 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { Patient } from '@/domain/entities/patient';
-import { PatientSupport } from '@/domain/entities/patient-support';
-import { Token } from '@/domain/entities/token';
-import { User } from '@/domain/entities/user';
+import { DATABASE_ENTITIES } from '@/domain/entities/database';
 import { EnvModule } from '@/env/env.module';
 import { EnvService } from '@/env/env.service';
 
@@ -20,7 +17,7 @@ import { EnvService } from '@/env/env.service';
         database: env.get('DB_DATABASE'),
         username: env.get('DB_USERNAME'),
         password: env.get('DB_PASSWORD'),
-        entities: [User, Token, Patient, PatientSupport],
+        entities: DATABASE_ENTITIES,
         migrations: [__dirname + 'infra/database/migrations/**/*.ts'],
         synchronize: false,
         extra: {

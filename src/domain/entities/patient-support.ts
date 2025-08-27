@@ -11,7 +11,7 @@ import {
 import { PatientSupportSchema } from '../schemas/patient-support';
 import { Patient } from './patient';
 
-@Entity('patient_support')
+@Entity('patient_supports')
 export class PatientSupport implements PatientSupportSchema {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -34,7 +34,7 @@ export class PatientSupport implements PatientSupportSchema {
   @UpdateDateColumn({ type: 'timestamp' })
   updated_at: Date;
 
-  @ManyToOne(() => Patient)
+  @ManyToOne(() => Patient, (patient) => patient.supports)
   @JoinColumn({ name: 'patient_id' })
   patient: Patient;
 }

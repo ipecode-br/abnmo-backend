@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import { Hasher } from '@/domain/cryptography/hasher';
+import { CryptographyService } from '@/app/cryptography/crypography.service';
 import type { User } from '@/domain/entities/user';
 
 import type { CreateUserDto, UpdateUserDto } from './users.dtos';
@@ -17,7 +17,7 @@ export class UsersService {
 
   constructor(
     private readonly usersRepository: UsersRepository,
-    private readonly hasher: Hasher,
+    private readonly cryptographyService: CryptographyService,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
@@ -31,14 +31,16 @@ export class UsersService {
       );
     }
 
-    const hashPassword = await this.hasher.hash(createUserDto.password);
+    const hashPassword = await this.cryptographyService.createHash(
+      createUserDto.password,
+    );
     createUserDto.password = hashPassword;
 
     const user = await this.usersRepository.create(createUserDto);
 
     this.logger.log(
       { id: user.id, email: user.email },
-      'Usuário registrado com sucesso',
+      'User registered successfully',
     );
 
     return user;
@@ -55,7 +57,7 @@ export class UsersService {
 
     this.logger.log(
       { id: user.id, email: user.email },
-      'Usuário atualizado com sucesso',
+      'User updated successfully',
     );
 
     return await this.usersRepository.update(user);
@@ -70,7 +72,7 @@ export class UsersService {
 
     this.logger.log(
       { id: user.id, email: user.email },
-      'Usuário removido com sucesso',
+      'User removed successfully',
     );
 
     return await this.usersRepository.remove(user);

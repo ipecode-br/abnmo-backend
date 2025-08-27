@@ -1,11 +1,12 @@
 import {
+  ForbiddenException,
   Injectable,
-  InternalServerErrorException,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
 
 import { PatientSupport } from '@/domain/entities/patient-support';
+import type { User } from '@/domain/entities/user';
 
 import { PatientsRepository } from '../patients/patients.repository';
 import {
@@ -38,15 +39,9 @@ export class PatientSupportsService {
       patient_id: patientId,
     });
 
-    if (!patientSupport) {
-      throw new InternalServerErrorException(
-        'Não foi possível registrar o contato de apoio.',
-      );
-    }
-
     this.logger.log(
       { id: patientSupport.id, patientId: patientSupport.patient_id },
-      'Contato de apoio registrado com sucesso',
+      'Support network created successfully',
     );
 
     return patientSupport;
@@ -65,11 +60,18 @@ export class PatientSupportsService {
   async update(
     id: string,
     updatePatientsSupportDto: UpdatePatientSupportDto,
+    user: User,
   ): Promise<void> {
     const patientSupport = await this.patientSupportsRepository.findById(id);
 
     if (!patientSupport) {
       throw new NotFoundException('Contato de apoio não encontrado.');
+    }
+
+    if (user.role === 'patient' && user.id !== patientSupport.patient_id) {
+      throw new ForbiddenException(
+        'Você não tem permissão para atualizar este contato de apoio.',
+      );
     }
 
     Object.assign(patientSupport, updatePatientsSupportDto);
@@ -78,22 +80,28 @@ export class PatientSupportsService {
 
     this.logger.log(
       { id: patientSupport.id, patientId: patientSupport.patient_id },
-      'Contato de apoio atualizado com sucesso',
+      'Support network updated successfully',
     );
   }
 
-  async remove(id: string): Promise<void> {
+  async remove(id: string, user: User): Promise<void> {
     const patientSupport = await this.patientSupportsRepository.findById(id);
 
     if (!patientSupport) {
       throw new NotFoundException('Contato de apoio não encontrado.');
     }
 
+    if (user.role === 'patient' && user.id !== patientSupport.patient_id) {
+      throw new ForbiddenException(
+        'Você não tem permissão para remover este contato de apoio.',
+      );
+    }
+
     await this.patientSupportsRepository.remove(patientSupport);
 
     this.logger.log(
       { id: patientSupport.id, patientId: patientSupport.patient_id },
-      'Contato de apoio atualizado com sucesso',
+      'Support network removed successfully',
     );
   }
 }

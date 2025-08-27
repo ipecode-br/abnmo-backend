@@ -5,7 +5,9 @@ import { ONLY_NUMBERS_REGEX } from '@/constants/regex';
 
 import { baseResponseSchema } from './base';
 import { createPatientSupportSchema } from './patient-support';
+import { patientSupportSchema } from './patient-support';
 import { baseQuerySchema } from './query';
+import { userSchema } from './user';
 
 // Entity
 
@@ -24,6 +26,12 @@ export type PatientStatusType = (typeof PATIENT_STATUS)[number];
 
 export const PATIENT_ORDER_BY = ['name', 'status', 'date'] as const;
 export type PatientOrderByType = (typeof PATIENT_ORDER_BY)[number];
+
+export const PATIENT_STATISTICS = ['gender', 'total'] as const;
+export type PatientStatisticsResult = {
+  gender: GenderType;
+  total: number;
+};
 
 export const patientSchema = z
   .object({
@@ -59,7 +67,16 @@ export const createPatientSchema = patientSchema
     user_id: z.string().uuid().optional(),
     name: z.string().optional(),
     email: z.string().email().optional(),
-    supports: z.array(createPatientSupportSchema).optional().default([]),
+    supports: z
+      .array(
+        createPatientSupportSchema.pick({
+          name: true,
+          phone: true,
+          kinship: true,
+        }),
+      )
+      .optional()
+      .default([]),
   })
   .refine(
     (data) => {
@@ -130,7 +147,21 @@ export type FindAllPatientsResponseSchema = z.infer<
 >;
 
 export const findOnePatientResponseSchema = baseResponseSchema.extend({
-  data: patientSchema,
+  data: patientSchema.extend({
+    user: userSchema.pick({
+      email: true,
+      name: true,
+      avatar_url: true,
+    }),
+    supports: z.array(
+      patientSupportSchema.pick({
+        id: true,
+        name: true,
+        phone: true,
+        kinship: true,
+      }),
+    ),
+  }),
 });
 export type FindOnePatientResponseSchema = z.infer<
   typeof findOnePatientResponseSchema
