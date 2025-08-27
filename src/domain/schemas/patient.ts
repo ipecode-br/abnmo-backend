@@ -4,6 +4,7 @@ import { BRAZILIAN_STATES } from '@/constants/brazilian-states';
 import { ONLY_NUMBERS_REGEX } from '@/constants/regex';
 
 import { baseResponseSchema } from './base';
+import { createPatientSupportSchema } from './patient-support';
 import { patientSupportSchema } from './patient-support';
 import { baseQuerySchema } from './query';
 import { userSchema } from './user';
@@ -66,6 +67,16 @@ export const createPatientSchema = patientSchema
     user_id: z.string().uuid().optional(),
     name: z.string().optional(),
     email: z.string().email().optional(),
+    supports: z
+      .array(
+        createPatientSupportSchema.pick({
+          name: true,
+          phone: true,
+          kinship: true,
+        }),
+      )
+      .optional()
+      .default([]),
   })
   .refine(
     (data) => {

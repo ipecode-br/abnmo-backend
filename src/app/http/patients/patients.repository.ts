@@ -95,13 +95,19 @@ export class PatientsRepository {
 
   public async findByUserId(userId: string): Promise<Patient | null> {
     return await this.patientsRepository.findOne({
-      relations: { user: true },
+      relations: { user: true, supports: true },
       where: { user_id: userId },
       select: {
         user: {
           name: true,
           email: true,
           avatar_url: true,
+        },
+        supports: {
+          id: true,
+          name: true,
+          phone: true,
+          kinship: true,
         },
       },
     });

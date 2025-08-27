@@ -34,7 +34,7 @@ export class PatientSupport implements PatientSupportSchema {
   @UpdateDateColumn({ type: 'timestamp' })
   updated_at: Date;
 
-  @ManyToOne(() => Patient)
+  @ManyToOne(() => Patient, (patient) => patient.supports)
   @JoinColumn({ name: 'patient_id' })
   patient: Patient;
 }

@@ -1,6 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { CryptographyModule } from '@/app/cryptography/cryptography.module';
 import { UsersModule } from '@/app/http/users/users.module';
 import { Patient } from '@/domain/entities/patient';
 
@@ -11,6 +12,7 @@ import { PatientsService } from './patients.service';
 
 @Module({
   imports: [
+    CryptographyModule,
     UsersModule,
     TypeOrmModule.forFeature([Patient]),
     forwardRef(() => PatientSupportsModule),
