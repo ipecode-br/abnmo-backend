@@ -21,17 +21,16 @@ export type GetPatientsTotalResponseSchema = z.infer<
   typeof getPatientsTotalResponseSchema
 >;
 
-export const getPatientsByGenderSchema = baseQuerySchema.pick({
-  period: true,
+export const getPatientsByPeriodSchema = baseQuerySchema.pick({ period: true });
+
+export const patientsByGenderSchema = z.object({
+  gender: z.enum(GENDERS),
+  total: z.number(),
 });
+export type PatientsByGenderType = z.infer<typeof patientsByGenderSchema>;
 
 export const getPatientsByGenderResponseSchema = baseResponseSchema.extend({
-  data: z.array(
-    z.object({
-      gender: z.enum(GENDERS),
-      total: z.number(),
-    }),
-  ),
+  data: z.array(patientsByGenderSchema),
 });
 export type GetPatientsByGenderResponse = z.infer<
   typeof getPatientsByGenderResponseSchema

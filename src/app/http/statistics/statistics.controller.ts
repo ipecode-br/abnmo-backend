@@ -2,9 +2,12 @@ import { Controller, Get, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { Roles } from '@/common/decorators/roles.decorator';
-import type { GetPatientsByGenderResponse } from '@/domain/schemas/statistics';
+import type {
+  GetPatientsByGenderResponse,
+  PatientsByGenderType,
+} from '@/domain/schemas/statistics';
 
-import { GetPatientsByGenderDto } from './statistics.dtos';
+import { GetPatientsByPeriodDto } from './statistics.dtos';
 import { StatisticsService } from './statistics.service';
 
 @ApiTags('Estatísticas')
@@ -29,9 +32,15 @@ export class StatisticsController {
   @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Estatísticas de pacientes por gênero' })
   async getPatientsByGender(
-    @Query() query: GetPatientsByGenderDto,
+    @Query() query: GetPatientsByPeriodDto,
   ): Promise<GetPatientsByGenderResponse> {
-    const data = await this.statisticsService.getPatientsByGender(query);
+    console.log(query);
+
+    const data =
+      await this.statisticsService.getPatientsByPeriod<PatientsByGenderType>(
+        'gender',
+        query,
+      );
 
     return {
       success: true,
