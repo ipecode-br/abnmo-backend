@@ -1,0 +1,138 @@
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
+import cookieParser from 'cookie-parser';
+import { DataSource } from 'typeorm';
+
+import { AppModule } from '@/app/app.module';
+import { HttpExceptionFilter } from '@/common/http.exception.filter';
+
+export class TestApp {
+  static async create(options: { silent?: boolean } = {}): Promise<{
+    app: INestApplication;
+    module: TestingModule;
+    dataSource: DataSource;
+  }> {
+    // Set NODE_ENV to test for proper configuration
+    process.env.NODE_ENV = 'test';
+
+    // Suppress NestJS logs during test setup if silent mode is enabled
+    const originalLogger = console.log;
+    const originalWarn = console.warn;
+    const originalError = console.error;
+
+    if (options.silent !== false) {
+      console.log = () => {};
+      console.warn = () => {};
+      console.error = () => {};
+    }
+
+    try {
+      const module: TestingModule = await Test.createTestingModule({
+        imports: [AppModule],
+      }).compile();
+
+      // Disable logger for the app instance
+      const app = module.createNestApplication({
+        logger: false,
+      });
+
+      // Configure app with the same middlewares as main app
+      app.use(cookieParser());
+      app.useGlobalPipes(new ValidationPipe({ transform: true }));
+      app.useGlobalFilters(new HttpExceptionFilter());
+
+      // Wait for the app to initialize
+      await app.init();
+
+      // Get the DataSource from the module
+      const dataSource = module.get<DataSource>(DataSource);
+
+      // Ensure the connection is established
+      if (!dataSource.isInitialized) {
+        await dataSource.initialize();
+      }
+
+      await this.setupTestDatabase(dataSource);
+
+      return { app, module, dataSource };
+    } finally {
+      // Restore console methods
+      if (options.silent !== false) {
+        console.log = originalLogger;
+        console.warn = originalWarn;
+        console.error = originalError;
+      }
+    }
+  }
+
+  static async setupTestDatabase(dataSource: DataSource): Promise<void> {
+    try {
+  static async setupTestDatabase(dataSource: DataSource): Promise<void> {
+    try {
+      if (process.env.NODE_ENV === 'test') {
+        const testSchema = process.env.DB_SCHEMA;
+        
+        if (testSchema) {
+          // Create test schema if it doesn't exist
+          await dataSource.query(`CREATE SCHEMA IF NOT EXISTS \`${testSchema}\``);
+          console.log(`Test schema '${testSchema}' ensured to exist`);
+          
+          // Set the default schema for this connection to the test schema
+          await dataSource.query(`USE \`${testSchema}\``);
+          console.log(`Switched to test schema '${testSchema}'`);
+        }
+
+        // Synchronize schema (create tables if they don't exist, update if needed)
+        await dataSource.synchronize(true); // true = drop existing tables and recreate
+        console.log('Test schema synchronized');
+      }
+    } catch (error) {
+      console.error('Error setting up test database:', error);
+      throw error;
+    }
+  }
+
+  static async clearDatabase(dataSource: DataSource): Promise<void> {
+    if (!dataSource || !dataSource.isInitialized) {
+      console.warn('DataSource not initialized, skipping database clear');
+      return;
+    }
+
+    try {
+      const entities = dataSource.entityMetadatas;
+
+      // Disable foreign key checks temporarily
+      await dataSource.query('SET FOREIGN_KEY_CHECKS = 0');
+
+      // Clear all tables
+      for (const entity of entities) {
+        const repository = dataSource.getRepository(entity.name);
+        await repository.clear();
+      }
+
+      // Re-enable foreign key checks
+      await dataSource.query('SET FOREIGN_KEY_CHECKS = 1');
+    } catch (error) {
+      console.error('Error clearing test database:', error);
+      throw error;
+    }
+  }
+
+  static async destroy(
+    app: INestApplication,
+    dataSource: DataSource,
+  ): Promise<void> {
+    try {
+      if (app) {
+        await app.close();
+      }
+
+      if (dataSource && dataSource.isInitialized) {
+        await dataSource.destroy();
+      }
+    } catch (error) {
+      console.error('Error destroying test app:', error);
+      // Don't throw here to avoid masking other test failures
+    }
+  }
+}
