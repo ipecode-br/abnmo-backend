@@ -26,6 +26,7 @@ export const envSchema = z.object({
   DB_DATABASE: z.string().min(1),
   DB_USERNAME: z.string().min(1),
   DB_PASSWORD: z.string().min(1),
+  DB_SCHEMA: z.string().optional(),
 
   // AWS
   AWS_REGION: z.string().min(1),

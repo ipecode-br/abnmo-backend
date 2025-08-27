@@ -1,26 +1,30 @@
 import { INestApplication } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
-import request from 'supertest';
-import { App } from 'supertest/types';
+import { DataSource } from 'typeorm';
 
-import { AppModule } from '@/app/app.module';
+import { getTestApp, getTestDataSource } from './setup';
 
 describe('AppController (e2e)', () => {
-  let app: INestApplication<App>;
+  let app: INestApplication;
+  let dataSource: DataSource;
 
-  beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
+  beforeAll(() => {
+    app = getTestApp();
+    dataSource = getTestDataSource();
   });
 
-  it('/ (GET)', () => {
-    return request(app.getHttpServer())
-      .get('/')
-      .expect(200)
-      .expect('Hello World!');
+  it('should have a working test environment', () => {
+    expect(app).toBeDefined();
+    expect(dataSource).toBeDefined();
+    expect(dataSource.isInitialized).toBe(true);
+  });
+
+  it('should have a clean database', async () => {
+    // Example test to verify database is clean
+    const entities = dataSource.entityMetadatas;
+
+    for (const entity of entities) {
+      const count = await dataSource.getRepository(entity.target).count();
+      expect(count).toBe(0);
+    }
   });
 });
