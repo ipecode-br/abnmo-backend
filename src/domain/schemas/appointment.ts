@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { baseResponseSchema } from './base';
+
 export const APPOINTMENT_STATUS = [
   'scheduled',
   'canceled',
@@ -26,3 +28,11 @@ export const appointmentSchema = z
   })
   .strict();
 export type AppointmentSchema = z.infer<typeof appointmentSchema>;
+
+export const cancelAppointmentResponseSchema = baseResponseSchema.extend({
+  data: appointmentSchema.optional(),
+});
+
+export type CancelAppointmentResponseSchema = z.infer<
+  typeof cancelAppointmentResponseSchema
+>;
