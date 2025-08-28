@@ -1,9 +1,13 @@
-import { Controller, Param, Patch } from '@nestjs/common';
+import { Body, Controller, Param, Patch, Put } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
-import { CancelAppointmentResponseSchema } from '@/domain/schemas/appointment';
+import {
+  CancelAppointmentResponseSchema,
+  UpdateAppointmentDto,
+  UpdateAppointmentResponseSchema,
+} from '@/domain/schemas/appointment';
 import { UserSchema } from '@/domain/schemas/user';
 
 import { AppointmentsService } from './appointments.service';
@@ -24,6 +28,21 @@ export class AppointmentsController {
     return {
       success: true,
       message: 'Atendimento cancelado com sucesso.',
+    };
+  }
+
+  @Put(':id')
+  @Roles(['nurse', 'manager', 'specialist'])
+  public async update(
+    @Param('id') id: string,
+    @Body() body: UpdateAppointmentDto,
+    @CurrentUser() user: UserSchema,
+  ): Promise<UpdateAppointmentResponseSchema> {
+    await this.appointmentsService.update(id, body, user);
+
+    return {
+      success: true,
+      message: 'Atendimento atualizado com sucesso.',
     };
   }
 }
