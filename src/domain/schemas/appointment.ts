@@ -29,10 +29,40 @@ export const appointmentSchema = z
   .strict();
 export type AppointmentSchema = z.infer<typeof appointmentSchema>;
 
-export const cancelAppointmentResponseSchema = baseResponseSchema.extend({
-  data: appointmentSchema.optional(),
-});
+// Schema de validação para update
+export const updateAppointmentSchema = z
+  .object({
+    date: z.coerce
+      .date()
+      .refine((date) => date > new Date(), {
+        message: 'A data do atendimento deve ser no futuro.',
+      })
+      .optional()
+      .nullable(),
+    status: z.enum(APPOINTMENT_STATUS).optional().nullable(),
+    condition: z.enum(APPOINTMENT_CONDITION).nullable().optional(),
+    annotation: z.string().nullable().optional(),
+  })
+  .refine(
+    (data) => {
+      return Object.keys(data).some(
+        (key) => data[key as keyof typeof data] !== undefined,
+      );
+    },
+    {
+      message: 'Pelo menos um campo deve ser fornecido para atualização.',
+    },
+  );
+
+export type UpdateAppointmentDto = z.infer<typeof updateAppointmentSchema>;
+
+export const cancelAppointmentResponseSchema = baseResponseSchema.extend({});
 
 export type CancelAppointmentResponseSchema = z.infer<
   typeof cancelAppointmentResponseSchema
+>;
+
+export const updateAppointmentResponseSchema = baseResponseSchema.extend({});
+export type UpdateAppointmentResponseSchema = z.infer<
+  typeof updateAppointmentResponseSchema
 >;

@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ForbiddenException,
   Injectable,
   Logger,
   NotFoundException,
@@ -25,23 +24,17 @@ export class AppointmentsService {
       throw new NotFoundException('Atendimento não encontrado.');
     }
 
-    if (!['nurse', 'manager', 'specialist'].includes(user.role)) {
-      throw new ForbiddenException(
-        'Você não tem permissão para cancelar atendimento.',
-      );
-    }
-
     if (appointment.status === 'canceled') {
       throw new BadRequestException('Este atendimento já está cancelado.');
     }
 
     appointment.status = 'canceled';
 
-    await this.appointmentsRepository.save(appointment);
+    await this.appointmentsRepository.deactivate(appointment);
 
     this.logger.log(
-      { id: appointment.id, user: user.id },
-      'Atendimento cancelado com sucesso.',
+      { id: appointment.id, userId: user.id },
+      'Appointment canceled successfully.',
     );
   }
 }

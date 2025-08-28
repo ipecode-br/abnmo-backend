@@ -15,7 +15,7 @@ export class AppointmentsRepository {
     return await this.appointmentsRepository.findOne({ where: { id } });
   }
 
-  public async save(appointment: Appointment): Promise<Appointment> {
+  public async deactivate(appointment: Appointment): Promise<Appointment> {
     return await this.appointmentsRepository.save(appointment);
   }
 }
