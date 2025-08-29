@@ -6,9 +6,9 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import { UpdateAppointmentDto } from '@/domain/schemas/appointment';
 import { UserSchema } from '@/domain/schemas/user';
 
+import { UpdateAppointmentDto } from './appointments.dtos';
 import { AppointmentsRepository } from './appointments.repository';
 
 @Injectable()
@@ -48,7 +48,7 @@ export class AppointmentsService {
 
   public async update(
     id: string,
-    payload: UpdateAppointmentDto,
+    updateAppointmentDto: UpdateAppointmentDto,
     user: UserSchema,
   ): Promise<void> {
     if (!['nurse', 'manager', 'specialist'].includes(user.role)) {
@@ -69,21 +69,7 @@ export class AppointmentsService {
       );
     }
 
-    if (payload.date !== undefined && payload.date !== null) {
-      appointment.date = payload.date;
-    }
-
-    if (payload.status !== undefined && payload.status !== null) {
-      appointment.status = payload.status;
-    }
-
-    if (payload.condition !== undefined) {
-      appointment.condition = payload.condition;
-    }
-
-    if (payload.annotation !== undefined) {
-      appointment.annotation = payload.annotation;
-    }
+    Object.assign(appointment, updateAppointmentDto);
 
     await this.appointmentsRepository.save(appointment);
 
