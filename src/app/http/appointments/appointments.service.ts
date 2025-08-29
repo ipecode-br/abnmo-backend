@@ -28,9 +28,7 @@ export class AppointmentsService {
       throw new BadRequestException('Este atendimento já está cancelado.');
     }
 
-    appointment.status = 'canceled';
-
-    await this.appointmentsRepository.deactivate(appointment);
+    await this.appointmentsRepository.cancel(appointment.id);
 
     this.logger.log(
       { id: appointment.id, userId: user.id },

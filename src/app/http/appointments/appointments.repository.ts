@@ -15,7 +15,7 @@ export class AppointmentsRepository {
     return await this.appointmentsRepository.findOne({ where: { id } });
   }
 
-  public async deactivate(appointment: Appointment): Promise<Appointment> {
-    return await this.appointmentsRepository.save(appointment);
+  public async cancel(id: string): Promise<Appointment> {
+    return await this.appointmentsRepository.save({ id, status: 'canceled' });
   }
 }
