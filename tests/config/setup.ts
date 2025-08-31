@@ -71,13 +71,44 @@ export const getTestDataSource = (): DataSource => {
   return global.__E2E_DATASOURCE__;
 };
 
-// Global cleanup for each test - only clear before tests, not after
-beforeEach(async () => {
+/**
+ * Force clear the test database - use only when test needs guaranteed clean state
+ */
+export const clearTestDatabase = async (): Promise<void> => {
   const dataSource = getTestDataSource();
-  await TestApp.clearDatabase(dataSource);
-});
+  await TestApp.forceClearDatabase(dataSource);
+};
 
-// Remove afterEach cleanup to avoid double clearing
+/**
+ * Check if database was recently cleared
+ */
+export const isDatabaseClean = (): boolean => {
+  return TestApp.wasRecentlyCleared();
+};
+
+// Database cleanup strategy:
+// - Clear database only when switching between test files or when explicitly needed
+// - Individual tests should clean up after themselves if they modify data
+// - This improves performance by reducing unnecessary database operations
+
+let lastClearedFile = '';
+
+beforeEach(async () => {
+  // Get current test file name
+  const currentFile = expect.getState().testPath?.split('/').pop() || '';
+
+  // Only clear database when switching between different test files
+  if (currentFile !== lastClearedFile && currentFile) {
+    const dataSource = getTestDataSource();
+
+    // Only clear if not recently cleared (respects cooldown)
+    if (!TestApp.wasRecentlyCleared()) {
+      await TestApp.clearDatabase(dataSource);
+    }
+
+    lastClearedFile = currentFile;
+  }
+});
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {

@@ -2,7 +2,7 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 
-import { getTestApp } from './setup';
+import { getTestApp } from '../config/setup';
 
 describe('Auth E2E Tests', () => {
   let app: INestApplication;

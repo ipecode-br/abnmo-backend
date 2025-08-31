@@ -1,19 +1,21 @@
 {
   "preset": "ts-jest",
   "moduleFileExtensions": ["js", "json", "ts"],
-  "rootDir": ".",
+  "rootDir": "..",
   "testEnvironment": "node",
-  "testRegex": ".e2e-spec.ts$",
+  "testRegex": "e2e/.+\\.e2e-spec\\.ts$",
   "collectCoverageFrom": ["**/*.(t|j)s"],
   "coverageDirectory": "../coverage",
   "maxWorkers": 1,
-  "setupFilesAfterEnv": ["<rootDir>/setup.ts"],
+  "setupFilesAfterEnv": ["<rootDir>/config/setup.ts"],
   "moduleNameMapper": {
     "^@/(.*)$": "<rootDir>/../src/$1"
   },
   "testTimeout": 30000,
   "verbose": false,
   "silent": true,
+  "forceExit": true,
+  "detectOpenHandles": false,
   "transform": {
     "^.+\\.(t|ts)$": [
       "ts-jest",
@@ -26,5 +28,7 @@
     ]
   },
   "cache": true,
-  "cacheDirectory": "/tmp/jest_cache"
+  "cacheDirectory": "/tmp/jest_cache",
+  "clearMocks": true,
+  "restoreMocks": true
 }

@@ -16,6 +16,9 @@ export class TestApp {
     dataSource: DataSource;
   } | null = null;
 
+  private static lastClearTime = 0;
+  private static clearCooldown = 100; // Minimum ms between clears
+
   static async create(
     options: { silent?: boolean; useCache?: boolean } = {},
   ): Promise<{
@@ -25,7 +28,13 @@ export class TestApp {
   }> {
     // Return cached app if available and cache is enabled
     if (options.useCache !== false && this.cachedApp) {
-      return this.cachedApp;
+      // Verify the cached app is still healthy
+      if (this.cachedApp.app && this.cachedApp.dataSource?.isInitialized) {
+        return this.cachedApp;
+      } else {
+        // Clear unhealthy cache
+        this.cachedApp = null;
+      }
     }
 
     // Set NODE_ENV to test for proper configuration
@@ -149,6 +158,12 @@ export class TestApp {
       return;
     }
 
+    // Implement cooldown to prevent excessive clearing
+    const now = Date.now();
+    if (now - this.lastClearTime < this.clearCooldown) {
+      return; // Skip if recently cleared
+    }
+
     try {
       const testSchema = process.env.DB_SCHEMA;
 
@@ -157,22 +172,31 @@ export class TestApp {
         await dataSource.query(`USE \`${testSchema}\``);
       }
 
-      // Use transaction for faster clearing
+      // Use transaction for faster clearing with optimized approach
       await dataSource.transaction(async (manager) => {
-        // Disable foreign key checks temporarily
+        // Disable foreign key checks temporarily for faster clearing
         await manager.query('SET FOREIGN_KEY_CHECKS = 0');
+        await manager.query('SET AUTOCOMMIT = 0');
 
         const entities = dataSource.entityMetadatas;
 
-        // Clear all tables using repository.clear() - this is reliable
-        for (const entity of entities) {
-          const repository = manager.getRepository(entity.name);
-          await repository.clear();
+        // Get all table names at once
+        const tableNames = entities.map((entity) => entity.tableName);
+
+        if (tableNames.length > 0) {
+          // Use TRUNCATE for faster clearing (resets auto-increment)
+          for (const tableName of tableNames) {
+            await manager.query(`TRUNCATE TABLE \`${tableName}\``);
+          }
         }
 
+        await manager.query('COMMIT');
         // Re-enable foreign key checks
         await manager.query('SET FOREIGN_KEY_CHECKS = 1');
+        await manager.query('SET AUTOCOMMIT = 1');
       });
+
+      this.lastClearTime = now;
     } catch (error) {
       console.error('Error clearing test database:', error);
       throw error;
@@ -202,5 +226,20 @@ export class TestApp {
 
   static clearCache(): void {
     this.cachedApp = null;
+  }
+
+  /**
+   * Force clear database - use sparingly, only when test requires clean state
+   */
+  static async forceClearDatabase(dataSource: DataSource): Promise<void> {
+    this.lastClearTime = 0; // Reset cooldown
+    await this.clearDatabase(dataSource);
+  }
+
+  /**
+   * Check if database was recently cleared (within cooldown period)
+   */
+  static wasRecentlyCleared(): boolean {
+    return Date.now() - this.lastClearTime < this.clearCooldown;
   }
 }

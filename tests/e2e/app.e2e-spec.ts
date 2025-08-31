@@ -1,7 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 
-import { getTestApp, getTestDataSource } from './setup';
+import { getTestApp, getTestDataSource } from '../config/setup';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;

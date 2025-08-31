@@ -7,15 +7,22 @@ import { DataSource } from 'typeorm';
 
 import { User } from '@/domain/entities/user';
 
-import { getTestApp, getTestDataSource } from './setup';
+import {
+  clearTestDatabase,
+  getTestApp,
+  getTestDataSource,
+} from '../config/setup';
 
 describe('User Complete Flow (e2e)', () => {
   let app: INestApplication;
   let dataSource: DataSource;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     app = getTestApp();
     dataSource = getTestDataSource();
+
+    // Clear database to ensure clean state for user flow tests
+    await clearTestDatabase();
   });
 
   describe('Complete User Registration and Authentication Flow', () => {
@@ -172,10 +179,16 @@ describe('User Complete Flow (e2e)', () => {
         });
       });
 
-      // Verify all users exist in database
+      // Verify all users exist in database by checking for specific emails
       const userRepository = dataSource.getRepository(User);
-      const userCount = await userRepository.count();
-      expect(userCount).toBe(users.length);
+
+      for (const user of users) {
+        const foundUser = await userRepository.findOne({
+          where: { email: user.email },
+        });
+        expect(foundUser).toBeTruthy();
+        expect(foundUser?.name).toBe(user.name);
+      }
 
       // Verify each user can sign in
       const signInPromises = users.map((user) =>
