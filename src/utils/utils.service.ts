@@ -1,11 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  endOfWeek,
-  startOfWeek,
-  subMonths,
-  subWeeks,
-  subYears,
-} from 'date-fns';
+import { startOfMonth, startOfWeek, startOfYear } from 'date-fns';
 import { type CookieOptions, Response } from 'express';
 
 import type { PeriodType } from '@/domain/schemas/query';
@@ -60,16 +54,16 @@ export class UtilsService {
 
     const periodMapper = {
       'last-week': {
-        startDate: startOfWeek(subWeeks(today, 1), { weekStartsOn: 0 }),
-        endDate: endOfWeek(today, { weekStartsOn: 0 }),
+        startDate: startOfWeek(today),
+        endDate: today,
       },
       'last-month': {
-        startDate: startOfWeek(subMonths(today, 1), { weekStartsOn: 0 }),
-        endDate: endOfWeek(today, { weekStartsOn: 0 }),
+        startDate: startOfMonth(today),
+        endDate: today,
       },
       'last-year': {
-        startDate: startOfWeek(subYears(today, 1), { weekStartsOn: 0 }),
-        endDate: endOfWeek(today, { weekStartsOn: 0 }),
+        startDate: startOfYear(today),
+        endDate: today,
       },
     };
 
