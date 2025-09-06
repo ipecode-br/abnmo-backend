@@ -1,7 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 
+import { api } from '../config/api-client';
 import { getTestApp } from '../config/setup';
 
 describe('Patients E2E Tests', () => {
@@ -16,7 +15,7 @@ describe('Patients E2E Tests', () => {
       // This endpoint likely requires authentication
       // We're just testing that it responds appropriately
 
-      const response = await request(app.getHttpServer()).get('/patients');
+      const response = await api(app).get('/patients').send();
 
       // We expect either success (200), unauthorized (401), or forbidden (403)
       // but not "Not Found" (404)
@@ -33,9 +32,7 @@ describe('Patients E2E Tests', () => {
       };
 
       // This endpoint likely requires authentication and specific data format
-      const response = await request(app.getHttpServer())
-        .post('/patients')
-        .send(patientData);
+      const response = await api(app).post('/patients').send(patientData);
 
       // We expect either success (201), validation error (400), or unauthorized (401)
       // but not "Not Found" (404)

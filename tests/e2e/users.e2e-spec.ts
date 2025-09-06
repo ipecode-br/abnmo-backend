@@ -1,12 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { DataSource } from 'typeorm';
 
 import { User } from '@/domain/entities/user';
 
+import { api } from '../config/api-client';
 import {
   clearTestDatabase,
   getTestApp,
@@ -34,10 +32,10 @@ describe('User Complete Flow (e2e)', () => {
         password: 'securePassword123',
       };
 
-      const registrationResponse = await request(app.getHttpServer())
+      const registrationResponse = await api(app)
         .post('/register')
-        .send(newUser)
-        .expect(201);
+        .expect(201)
+        .send(newUser);
 
       expect(registrationResponse.body).toMatchObject({
         success: true,
@@ -54,13 +52,10 @@ describe('User Complete Flow (e2e)', () => {
       expect(createdUser?.name).toBe(newUser.name);
 
       // Step 3: Sign in with the created user
-      const signInResponse = await request(app.getHttpServer())
-        .post('/login')
-        .send({
-          email: newUser.email,
-          password: newUser.password,
-        })
-        .expect(201);
+      const signInResponse = await api(app).post('/login').expect(201).send({
+        email: newUser.email,
+        password: newUser.password,
+      });
 
       expect(signInResponse.body).toMatchObject({
         success: true,
@@ -80,9 +75,9 @@ describe('User Complete Flow (e2e)', () => {
 
       // Step 5: Access a protected route using the authentication cookie
       // (Assuming there's a protected route like GET /users/profile)
-      const protectedResponse = await request(app.getHttpServer())
+      const protectedResponse = await api(app)
         .get('/users/profile')
-        .set('Cookie', authCookie as string)
+        .headers({ Cookie: authCookie as string })
         .expect(200);
 
       expect(protectedResponse.body).toMatchObject({
@@ -118,10 +113,10 @@ describe('User Complete Flow (e2e)', () => {
       ];
 
       for (const invalidUser of invalidUsers) {
-        const response = await request(app.getHttpServer())
+        const response = await api(app)
           .post('/register')
-          .send(invalidUser)
-          .expect(400);
+          .expect(400)
+          .send(invalidUser);
 
         expect(response.body).toHaveProperty('success', false);
         expect(response.body).toHaveProperty(
@@ -136,9 +131,7 @@ describe('User Complete Flow (e2e)', () => {
 
     it('should prevent access to protected routes without authentication', async () => {
       // Try to access protected route without authentication
-      const response = await request(app.getHttpServer())
-        .get('/users/profile')
-        .expect(401);
+      const response = await api(app).get('/users/profile').expect(401);
 
       expect(response.body).toHaveProperty('message');
 
@@ -166,7 +159,7 @@ describe('User Complete Flow (e2e)', () => {
 
       // Register all users concurrently
       const registrationPromises = users.map((user) =>
-        request(app.getHttpServer()).post('/register').send(user).expect(201),
+        api(app).post('/register').expect(201).send(user),
       );
 
       const responses = await Promise.all(registrationPromises);
@@ -192,13 +185,10 @@ describe('User Complete Flow (e2e)', () => {
 
       // Verify each user can sign in
       const signInPromises = users.map((user) =>
-        request(app.getHttpServer())
-          .post('/login')
-          .send({
-            email: user.email,
-            password: user.password,
-          })
-          .expect(201),
+        api(app).post('/login').expect(201).send({
+          email: user.email,
+          password: user.password,
+        }),
       );
 
       const signInResponses = await Promise.all(signInPromises);
@@ -209,6 +199,33 @@ describe('User Complete Flow (e2e)', () => {
           message: 'Login realizado com sucesso.',
         });
       });
+    });
+  });
+
+  describe('API Client Usage Examples', () => {
+    it('should demonstrate various API client patterns', async () => {
+      const userData = {
+        name: 'API Client User',
+        email: 'apiclient@example.com',
+        password: 'password123',
+      };
+
+      // Basic POST request
+      const response = await api(app).post('/register').send(userData);
+      expect([200, 201, 400, 409].includes(response.status)).toBe(true);
+
+      // Request with status expectation
+      const loginResponse = await api(app).post('/login').send({
+        email: userData.email,
+        password: userData.password,
+      });
+      expect([200, 201, 400, 401].includes(loginResponse.status)).toBe(true);
+
+      // GET request (no body needed)
+      const healthResponse = await api(app).get('/health').send();
+      expect([200, 404].includes(healthResponse.status)).toBe(true);
+
+      // The API client provides clean, readable request patterns
     });
   });
 });
