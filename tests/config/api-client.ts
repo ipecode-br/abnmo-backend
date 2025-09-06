@@ -1,7 +1,11 @@
 import { INestApplication } from '@nestjs/common';
+import { hash } from 'bcryptjs';
 import request, { Response } from 'supertest';
 
-import { getTestApp } from './setup';
+import { User } from '@/domain/entities/user';
+import type { UserRoleType } from '@/domain/schemas/user';
+
+import { getTestApp, getTestDataSource } from './setup';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
@@ -11,6 +15,75 @@ interface RequestOptions {
   headers?: Record<string, string>;
   query?: Record<string, string>;
   expect?: number | number[];
+}
+
+// User cache for better performance
+interface CachedUser {
+  email: string;
+  password: string;
+  role: UserRoleType;
+  id: string;
+  createdAt: number;
+}
+
+class UserCache {
+  private static cache = new Map<UserRoleType, CachedUser>();
+  private static cacheTimeout = 30000; // 30 seconds cache
+
+  static async getOrCreateUser(role: UserRoleType): Promise<CachedUser> {
+    const now = Date.now();
+    const cached = this.cache.get(role);
+
+    // Return cached user if valid and not expired
+    if (cached && now - cached.createdAt < this.cacheTimeout) {
+      // Verify user still exists in database
+      try {
+        const dataSource = getTestDataSource();
+        const userRepository = dataSource.getRepository(User);
+        const existingUser = await userRepository.findOne({
+          where: { id: cached.id },
+        });
+        if (existingUser) {
+          return cached;
+        }
+      } catch {
+        // If verification fails, remove from cache and create new
+      }
+    }
+
+    // Create new user
+    const dataSource = getTestDataSource();
+    const userRepository = dataSource.getRepository(User);
+
+    const timestamp = Date.now();
+    const email = `test-${role}-${timestamp}@example.com`;
+    const password = 'password123';
+    const hashedPassword = await hash(password, 10);
+
+    const user = userRepository.create({
+      name: `Test ${role} ${timestamp}`,
+      email,
+      password: hashedPassword,
+      role,
+    });
+
+    const savedUser = await userRepository.save(user);
+
+    const cachedUser: CachedUser = {
+      email,
+      password,
+      role,
+      id: savedUser.id,
+      createdAt: now,
+    };
+
+    this.cache.set(role, cachedUser);
+    return cachedUser;
+  }
+
+  static clear(): void {
+    this.cache.clear();
+  }
 }
 
 class ApiClient {
@@ -142,31 +215,205 @@ class ApiClient {
     };
   }
 
-  // Authentication helper
-  withAuth(token: string): ApiClient {
-    return new AuthenticatedApiClient(this.app, token);
+  // Authentication helper - for cookie-based auth
+  withCookie(cookieString: string): ApiClient {
+    return new CookieAuthenticatedApiClient(this.app, cookieString);
+  }
+
+  // Helper method to login and get authenticated client
+  async loginAs(credentials: {
+    email: string;
+    password: string;
+    rememberMe?: boolean;
+  }): Promise<AuthenticatedApiClient> {
+    const loginResponse = await this.post('/login').send(credentials);
+
+    if (loginResponse.status !== 201 && loginResponse.status !== 200) {
+      throw new Error(
+        `Login failed with status ${loginResponse.status}: ${JSON.stringify(
+          loginResponse.body,
+        )}`,
+      );
+    }
+
+    // Extract authentication cookie
+    const cookies = loginResponse.headers['set-cookie'] as unknown as string[];
+    const authCookie = cookies?.find((cookie: string) =>
+      cookie.startsWith('access_token='),
+    );
+
+    if (!authCookie) {
+      throw new Error('No access token cookie found in login response');
+    }
+
+    return new AuthenticatedApiClient(this.app, authCookie);
+  }
+
+  // Helper method to create a test user and login
+  async createUserAndLogin(userData: {
+    name: string;
+    email: string;
+    password: string;
+  }): Promise<AuthenticatedApiClient> {
+    // Register the user
+    const registerResponse = await this.post('/register').send(userData);
+
+    // Handle both success and conflict (user already exists) cases
+    if (
+      registerResponse.status !== 201 &&
+      registerResponse.status !== 200 &&
+      registerResponse.status !== 409 // Handle existing user case
+    ) {
+      throw new Error(
+        `Registration failed with status ${
+          registerResponse.status
+        }: ${JSON.stringify(registerResponse.body)}`,
+      );
+    }
+
+    // If user already exists (409), that's fine, just login
+    // Login with the user credentials
+    return this.loginAs({
+      email: userData.email,
+      password: userData.password,
+    });
+  }
+
+  /**
+   * Creates a user with specific role directly in database and login
+   * This bypasses the registration endpoint which only creates 'patient' users
+   * Uses caching for better performance
+   * @param role - User role to create
+   * @param userData - Optional user data (defaults will be used if not provided)
+   * @returns Authenticated API client for the created user
+   */
+  async createUserWithRoleAndLogin(
+    role: UserRoleType = 'patient',
+    userData?: Partial<{
+      name: string;
+      email: string;
+      password: string;
+    }>,
+  ): Promise<AuthenticatedApiClient> {
+    // If no custom userData is provided, use cached user for better performance
+    if (!userData) {
+      const cachedUser = await UserCache.getOrCreateUser(role);
+      return this.loginAs({
+        email: cachedUser.email,
+        password: cachedUser.password,
+      });
+    }
+
+    // Create new user with custom data (no caching)
+    const dataSource = getTestDataSource();
+    const userRepository = dataSource.getRepository(User);
+
+    // Generate unique email if not provided
+    const timestamp = Date.now();
+    const defaultUserData = {
+      name: `Test ${role} ${timestamp}`,
+      email: userData?.email || `test-${role}-${timestamp}@example.com`,
+      password: userData?.password || 'password123',
+    };
+
+    const finalUserData = { ...defaultUserData, ...userData };
+
+    // Hash the password
+    const hashedPassword = await hash(finalUserData.password, 10);
+
+    // Create user directly in database with the specified role
+    const user = userRepository.create({
+      name: finalUserData.name,
+      email: finalUserData.email,
+      password: hashedPassword,
+      role,
+    });
+
+    await userRepository.save(user);
+
+    // Login to get the authenticated client
+    return this.loginAs({
+      email: finalUserData.email,
+      password: finalUserData.password,
+    });
+  }
+
+  /**
+   * Convenience method to create and login as admin user
+   */
+  async createAdminAndLogin(
+    userData?: Partial<{ name: string; email: string; password: string }>,
+  ): Promise<AuthenticatedApiClient> {
+    return this.createUserWithRoleAndLogin('admin', userData);
+  }
+
+  /**
+   * Convenience method to create and login as nurse user
+   */
+  async createNurseAndLogin(
+    userData?: Partial<{ name: string; email: string; password: string }>,
+  ): Promise<AuthenticatedApiClient> {
+    return this.createUserWithRoleAndLogin('nurse', userData);
+  }
+
+  /**
+   * Convenience method to create and login as specialist user
+   */
+  async createSpecialistAndLogin(
+    userData?: Partial<{ name: string; email: string; password: string }>,
+  ): Promise<AuthenticatedApiClient> {
+    return this.createUserWithRoleAndLogin('specialist', userData);
+  }
+
+  /**
+   * Convenience method to create and login as manager user
+   */
+  async createManagerAndLogin(
+    userData?: Partial<{ name: string; email: string; password: string }>,
+  ): Promise<AuthenticatedApiClient> {
+    return this.createUserWithRoleAndLogin('manager', userData);
+  }
+
+  /**
+   * Convenience method to create and login as patient user (default role)
+   */
+  async createPatientAndLogin(
+    userData?: Partial<{ name: string; email: string; password: string }>,
+  ): Promise<AuthenticatedApiClient> {
+    return this.createUserWithRoleAndLogin('patient', userData);
   }
 }
 
-class AuthenticatedApiClient extends ApiClient {
-  private token: string;
+class CookieAuthenticatedApiClient extends ApiClient {
+  private cookieString: string;
 
-  constructor(app: INestApplication, token: string) {
+  constructor(app: INestApplication, cookieString: string) {
     super(app);
-    this.token = token;
+    this.cookieString = cookieString;
   }
 
-  // Override request method to include authentication
+  // Override request method to include cookie authentication
   async request(
     endpoint: string,
     options: RequestOptions = {},
   ): Promise<Response> {
     const headers = {
-      Authorization: `Bearer ${this.token}`,
+      Cookie: this.cookieString,
       ...options.headers,
     };
 
     return super.request(endpoint, { ...options, headers });
+  }
+}
+
+class AuthenticatedApiClient extends CookieAuthenticatedApiClient {
+  constructor(app: INestApplication, cookieString: string) {
+    super(app, cookieString);
+  }
+
+  // Additional helper methods for authenticated requests
+  async logout(): Promise<Response> {
+    return this.post('/logout').send({});
   }
 }
 
@@ -175,8 +422,13 @@ export function api(app?: INestApplication): ApiClient {
   return new ApiClient(app);
 }
 
-// Export the class for advanced usage
-export { ApiClient };
+// Clear user cache - should be called when database is cleared
+export function clearUserCache(): void {
+  UserCache.clear();
+}
+
+// Export the classes for advanced usage
+export { ApiClient, AuthenticatedApiClient, CookieAuthenticatedApiClient };
 
 // Type exports
 export type { HttpMethod, RequestOptions };

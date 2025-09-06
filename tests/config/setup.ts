@@ -2,6 +2,7 @@
 import { INestApplication } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 
+import { clearUserCache } from './api-client';
 import { TestApp } from './test-utils';
 
 declare global {
@@ -14,7 +15,7 @@ declare global {
 process.env.NODE_ENV = 'test';
 
 // Global test timeout
-jest.setTimeout(60000);
+jest.setTimeout(45000);
 
 // Global setup - create app once for all tests
 let globalApp: INestApplication;
@@ -77,6 +78,7 @@ export const getTestDataSource = (): DataSource => {
 export const clearTestDatabase = async (): Promise<void> => {
   const dataSource = getTestDataSource();
   await TestApp.forceClearDatabase(dataSource);
+  clearUserCache(); // Clear user cache when database is cleared
 };
 
 /**
@@ -104,6 +106,7 @@ beforeEach(async () => {
     // Only clear if not recently cleared (respects cooldown)
     if (!TestApp.wasRecentlyCleared()) {
       await TestApp.clearDatabase(dataSource);
+      clearUserCache(); // Clear user cache when database is cleared
     }
 
     lastClearedFile = currentFile;

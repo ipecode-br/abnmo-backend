@@ -17,7 +17,7 @@ export class TestApp {
   } | null = null;
 
   private static lastClearTime = 0;
-  private static clearCooldown = 100; // Minimum ms between clears
+  private static clearCooldown = 50; // Reduced from 100ms to 50ms
 
   static async create(
     options: { silent?: boolean; useCache?: boolean } = {},
@@ -64,6 +64,7 @@ export class TestApp {
       // Disable logger for the app instance
       const app = module.createNestApplication({
         logger: false,
+        bufferLogs: false,
       });
 
       // Configure app with the same middlewares as main app
@@ -174,9 +175,10 @@ export class TestApp {
 
       // Use transaction for faster clearing with optimized approach
       await dataSource.transaction(async (manager) => {
-        // Disable foreign key checks temporarily for faster clearing
+        // Disable foreign key checks and autocommit for faster operations
         await manager.query('SET FOREIGN_KEY_CHECKS = 0');
         await manager.query('SET AUTOCOMMIT = 0');
+        await manager.query('START TRANSACTION');
 
         const entities = dataSource.entityMetadatas;
 
@@ -184,14 +186,26 @@ export class TestApp {
         const tableNames = entities.map((entity) => entity.tableName);
 
         if (tableNames.length > 0) {
-          // Use TRUNCATE for faster clearing (resets auto-increment)
-          for (const tableName of tableNames) {
-            await manager.query(`TRUNCATE TABLE \`${tableName}\``);
+          // Use TRUNCATE for faster clearing (resets auto-increment) in parallel where possible
+          const truncatePromises = tableNames.map(async (tableName) => {
+            try {
+              await manager.query(`TRUNCATE TABLE \`${tableName}\``);
+            } catch {
+              // Fallback to DELETE if TRUNCATE fails (e.g., foreign key constraints)
+              await manager.query(`DELETE FROM \`${tableName}\``);
+            }
+          });
+
+          // Execute truncates in batches to avoid overwhelming the database
+          const batchSize = 5;
+          for (let i = 0; i < truncatePromises.length; i += batchSize) {
+            const batch = truncatePromises.slice(i, i + batchSize);
+            await Promise.all(batch);
           }
         }
 
         await manager.query('COMMIT');
-        // Re-enable foreign key checks
+        // Re-enable foreign key checks and autocommit
         await manager.query('SET FOREIGN_KEY_CHECKS = 1');
         await manager.query('SET AUTOCOMMIT = 1');
       });
@@ -241,5 +255,44 @@ export class TestApp {
    */
   static wasRecentlyCleared(): boolean {
     return Date.now() - this.lastClearTime < this.clearCooldown;
+  }
+}
+
+/**
+ * Authentication test helpers
+ */
+export class AuthTestHelpers {
+  /**
+   * Generate test user data with unique email
+   */
+  static generateTestUser(prefix = 'testuser'): {
+    name: string;
+    email: string;
+    password: string;
+  } {
+    const timestamp = Date.now();
+    const random = Math.floor(Math.random() * 1000);
+
+    return {
+      name: `Test User ${timestamp}`,
+      email: `${prefix}-${timestamp}-${random}@example.com`,
+      password: 'TestPassword123!',
+    };
+  }
+
+  /**
+   * Create multiple test users with unique emails
+   */
+  static generateTestUsers(
+    count: number,
+    prefix = 'testuser',
+  ): Array<{
+    name: string;
+    email: string;
+    password: string;
+  }> {
+    return Array.from({ length: count }, (_, index) =>
+      this.generateTestUser(`${prefix}-${index}`),
+    );
   }
 }

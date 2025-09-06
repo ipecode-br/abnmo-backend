@@ -3,7 +3,7 @@
   "moduleFileExtensions": ["js", "json", "ts"],
   "rootDir": "..",
   "testEnvironment": "node",
-  "testRegex": "e2e/.+\\.e2e-spec\\.ts$",
+  "testMatch": ["<rootDir>/e2e/**/*.spec.ts"],
   "collectCoverageFrom": ["**/*.(t|j)s"],
   "coverageDirectory": "../coverage",
   "maxWorkers": 1,
@@ -11,7 +11,7 @@
   "moduleNameMapper": {
     "^@/(.*)$": "<rootDir>/../src/$1"
   },
-  "testTimeout": 30000,
+  "testTimeout": 20000,
   "verbose": false,
   "silent": true,
   "forceExit": true,
@@ -23,7 +23,8 @@
         "tsconfig": {
           "skipLibCheck": true,
           "incremental": true
-        }
+        },
+        "transpileOnly": true
       }
     ]
   },

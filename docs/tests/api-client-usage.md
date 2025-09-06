@@ -30,7 +30,7 @@ describe('My E2E Tests', () => {
 const response = await api(app).get('/users').send();
 const response = await api(app).get('/users').expect(200);
 
-// POST requests  
+// POST requests
 const response = await api(app).post('/users').send(userData);
 const response = await api(app).post('/users').expect(201).send(userData);
 
@@ -61,10 +61,7 @@ const response = await api(app)
   .send(userData);
 
 // Combining query and headers
-const response = await api(app)
-  .get('/users')
-  .query({ page: '1' })
-  .expect(200);
+const response = await api(app).get('/users').query({ page: '1' }).expect(200);
 ```
 
 ### Functional Interface
@@ -73,7 +70,7 @@ const response = await api(app)
 // Basic request
 const response = await api(app).request('/users', {
   method: 'GET',
-  expect: 200
+  expect: 200,
 });
 
 // With body and headers
@@ -81,13 +78,13 @@ const response = await api(app).request('/users', {
   method: 'POST',
   body: userData,
   headers: { 'Content-Type': 'application/json' },
-  expect: 201
+  expect: 201,
 });
 
 // With query parameters
 const response = await api(app).request('/users', {
   method: 'GET',
-  query: { page: '1', limit: '10' }
+  query: { page: '1', limit: '10' },
 });
 ```
 
@@ -99,7 +96,7 @@ const response = await api(app).request('/users', {
 // Get a token first (from login or setup)
 const loginResponse = await api(app).post('/login').send({
   email: 'user@example.com',
-  password: 'password'
+  password: 'password',
 });
 
 const token = loginResponse.body.token;
@@ -174,7 +171,7 @@ describe('User Management E2E', () => {
     const userData = {
       name: 'John Doe',
       email: 'john@example.com',
-      password: 'securePassword123'
+      password: 'securePassword123',
     };
 
     const registerResponse = await api(app)
@@ -185,15 +182,13 @@ describe('User Management E2E', () => {
     expect(registerResponse.body.success).toBe(true);
 
     // 2. Login user
-    const loginResponse = await api(app)
-      .post('/login')
-      .send({
-        email: userData.email,
-        password: userData.password
-      });
+    const loginResponse = await api(app).post('/login').send({
+      email: userData.email,
+      password: userData.password,
+    });
 
     expect([200, 201].includes(loginResponse.status)).toBe(true);
-    
+
     const token = loginResponse.body.token;
 
     // 3. Access protected route
@@ -216,9 +211,7 @@ describe('User Management E2E', () => {
   it('should handle validation errors', async () => {
     const invalidData = { email: 'invalid-email' };
 
-    const response = await api(app)
-      .post('/register')
-      .send(invalidData);
+    const response = await api(app).post('/register').send(invalidData);
 
     // Flexible status checking for validation errors
     expect([400, 422].includes(response.status)).toBe(true);
@@ -232,7 +225,7 @@ describe('User Management E2E', () => {
       .send();
 
     expect([200, 401].includes(response.status)).toBe(true);
-    
+
     if (response.status === 200) {
       expect(Array.isArray(response.body.users)).toBe(true);
     }
@@ -243,21 +236,25 @@ describe('User Management E2E', () => {
 ## Benefits
 
 ### ✅ **Readability**
+
 - Clean, chainable interface
 - Self-documenting method names
 - Less boilerplate code
 
 ### ✅ **Flexibility**
+
 - Both fluent and functional interfaces
 - Easy authentication handling
 - Flexible status code checking
 
 ### ✅ **Type Safety**
+
 - Full TypeScript support
 - Proper response typing
 - IntelliSense support
 
 ### ✅ **Consistency**
+
 - Same patterns across all tests
 - Reusable authentication
 - Standardized error handling
@@ -272,9 +269,9 @@ class CustomApiClient extends ApiClient {
   async request(endpoint: string, options: RequestOptions = {}) {
     const headers = {
       'X-Test-Runner': 'jest',
-      ...options.headers
+      ...options.headers,
     };
-    
+
     return super.request(endpoint, { ...options, headers });
   }
 }
@@ -286,14 +283,17 @@ class CustomApiClient extends ApiClient {
 // You can wrap the client to add logging or other middleware
 function withLogging(apiClient: ApiClient) {
   const originalRequest = apiClient.request.bind(apiClient);
-  
-  apiClient.request = async (endpoint: string, options: RequestOptions = {}) => {
+
+  apiClient.request = async (
+    endpoint: string,
+    options: RequestOptions = {},
+  ) => {
     console.log(`Making ${options.method || 'GET'} request to ${endpoint}`);
     const response = await originalRequest(endpoint, options);
     console.log(`Response: ${response.status}`);
     return response;
   };
-  
+
   return apiClient;
 }
 
