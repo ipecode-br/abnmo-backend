@@ -19,11 +19,29 @@ Este documento descreve as rotas, regras de negócio e especificações técnica
 | `gender` | enum   | Gênero (`male_cis`, `female_cis`, `male_trans`, `female_trans`, `non_binary`, `prefer_not_to_say`) |
 | `total`  | number | Total de pacientes deste gênero                                                                    |
 
+### Estatísticas por cidade
+
+| Campo   | Tipo   | Descrição                       |
+| ------- | ------ | ------------------------------- |
+| `city`  | string | Nome da cidade                  |
+| `total` | number | Total de pacientes nesta cidade |
+
 ### Filtros de período
 
-| Campo    | Tipo   | Obrigatório | Descrição                             |
-| -------- | ------ | ----------- | ------------------------------------- |
-| `period` | string | Não         | Período para análise das estatísticas |
+| Campo        | Tipo   | Obrigatório | Descrição                                                             |
+| ------------ | ------ | ----------- | --------------------------------------------------------------------- |
+| `last-week`  | string | Não         | Pacientes criados a partir de 7 dias atrás até o final da data atual  |
+| `last-month` | string | Não         | Pacientes criados a partir de 30 dias atrás até o final do dia atual  |
+| `last-year`  | string | Não         | Pacientes criados a partir de 365 dias atrás até o final do dia atual |
+
+### Query Params adicionais
+
+| Campo    | Tipo   | Obrigatório | Descrição                                                                    |
+| -------- | ------ | ----------- | ---------------------------------------------------------------------------- |
+| `search` | string | Não         | Texto opcional para buscar pacientes pelo nome ou outros campos relevantes   |
+| `order`  | enum   | Não         | Ordenação dos resultados: ASC (crescente) ou DESC (decrescente). Padrão: ASC |
+| `page`   | number | Não         | Número da página de resultados. Padrão: 1                                    |
+| `limit`  | number | Não         | Quantidade máxima de resultados por página. Padrão: 10                       |
 
 ## 1. Estatísticas totais de pacientes
 
@@ -63,6 +81,7 @@ Retorna estatísticas de pacientes agrupadas por gênero em um período específ
 - Request Query: GetPatientsByPeriodDto (`src/app/http/statistics/statistics.dtos.ts`)
 - Filtros disponíveis:
   - `period`: período para análise das estatísticas
+  - `search`, `order`, `page`, `limit` (herdados do `baseQuerySchema`)
 
 ### Fluxo
 
@@ -70,6 +89,32 @@ Retorna estatísticas de pacientes agrupadas por gênero em um período específ
 2. Executa consulta agregada filtrando por período;
 3. Agrupa resultados por gênero;
 4. Retorna estatísticas organizadas por gênero.
+
+## 3. Estatísticas de pacientes por cidade
+
+Retorna estatísticas de pacientes agrupadas por cidade em um período específico.
+
+**Rota**: `GET /statistics/patients-by-city`
+
+### Regras de negócio
+
+- **Permissões**: usuários `manager` e `nurse`;
+- Permite filtrar por período específico;
+- Agrupa dados por cidade dos pacientes.
+
+### Especificações técnicas
+
+- Request Query: GetPatientsByPeriodDto (`src/app/http/statistics/statistics.dtos.ts`)
+- Filtros disponíveis:
+  - `period`: período para análise das estatísticas
+  - `search`, `order`, `page`, `limit` (herdados do `baseQuerySchema`)
+
+### Fluxo
+
+1. Valida parâmetros de período fornecidos;
+2. Executa consulta agregada filtrando por período;
+3. Agrupa resultados por cidade;
+4. Retorna estatísticas organizadas por cidade.
 
 ## Logs e auditoria
 
@@ -79,13 +124,14 @@ O sistema registra logs para as seguintes operações:
 
 - **Consulta de estatísticas totais**: registra ID do usuário e timestamp
 - **Consulta de estatísticas por gênero**: registra ID do usuário, período consultado e timestamp
+- **Consulta de estatísticas por cidade**: registra ID do usuário, período consultado e timestamp
 
 ## Métodos do repository
 
 ### Métodos públicos disponíveis
 
 - `getPatientsTotal()`: Retorna estatísticas totais de pacientes
-- `getPatientsStatisticsByPeriod(period)`: Retorna estatísticas por período e gênero
+- `getPatientsStatisticsByPeriod(period, filter)`: Retorna estatísticas por período e tipo de filtro (`gender` ou `city`)
 - `getActivePatients()`: Conta pacientes ativos
 - `getInactivePatients()`: Conta pacientes inativos
 
@@ -107,8 +153,9 @@ O sistema registra logs para as seguintes operações:
 
 ### Validações de entrada
 
-- **Período**: Deve ser um formato válido conforme schema definido
+- **Período**: Período: Deve ser um formato válido conforme schema definido (`last-week`, `last-month`, `last-year`)
 - **Parâmetros**: Todos os parâmetros de query são validados automaticamente
+- **Filtros**: Deve ser `gender` ou `city`
 
 ### Restrições de negócio
 
