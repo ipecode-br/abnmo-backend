@@ -19,13 +19,16 @@ export async function createNestApp(adapter?: ExpressAdapter) {
     ? await NestFactory.create<NestExpressApplication>(AppModule, adapter)
     : await NestFactory.create<NestExpressApplication>(AppModule);
 
-  const envService = app.get(EnvService);
-
   app.useGlobalPipes(new GlobalZodValidationPipe());
   app.useGlobalFilters(new HttpExceptionFilter());
 
+  const envService = app.get(EnvService);
+  const isDevEnvironment = envService.get('NODE_ENV') === 'development';
+
   app.enableCors({
-    origin: envService.get('APP_URL'),
+    origin: isDevEnvironment
+      ? [envService.get('APP_URL'), envService.get('APP_LOCAL_URL')]
+      : envService.get('APP_URL'),
     allowedHeaders: ['Authorization', 'Content-Type', 'Content-Length'],
     methods: ['OPTIONS', 'GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
     credentials: true,
