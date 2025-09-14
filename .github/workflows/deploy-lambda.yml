@@ -63,4 +63,7 @@ jobs:
           echo "🚀 Deploying to Lambda: ${{ steps.set-lambda-env.outputs.lambda_name }}"
           aws lambda update-function-code \
             --function-name ${{ steps.set-lambda-env.outputs.lambda_name }} \
-            --zip-file fileb://lambda.zip
+            --zip-file fileb://lambda.zip \
+            --output text \
+            --query 'FunctionName'
+          echo "✅ Lambda deployment completed successfully"
