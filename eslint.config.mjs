@@ -9,6 +9,7 @@ export default tseslint.config(
     ignores: [
       'node_modules/**',
       'dist/**',
+      'dist-lambda/**',
       'infra/database/migrations/**',
       'eslint.config.mjs',
       'prettier.config.mjs',
