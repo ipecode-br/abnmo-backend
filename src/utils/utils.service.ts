@@ -14,6 +14,7 @@ import { EnvService } from '@/env/env.service';
 type SetCookieOptions = CookieOptions & {
   name: string;
   value: string;
+  origin?: string;
 };
 
 @Injectable()
@@ -22,15 +23,22 @@ export class UtilsService {
 
   setCookie(
     response: Response,
-    { name, value, ...options }: SetCookieOptions,
+    { name, value, origin, ...options }: SetCookieOptions,
   ): void {
+    const isDevelopment = this.envService.get('NODE_ENV') === 'development';
+    let cookieDomain = this.envService.get('COOKIE_DOMAIN');
+
+    if (isDevelopment) {
+      cookieDomain = new URL(origin ?? 'http://localhost').hostname;
+    }
+
     response.cookie(name, value, {
-      domain: this.envService.get('COOKIE_DOMAIN'),
+      domain: `.${cookieDomain}`,
       httpOnly: true,
       maxAge: 1000 * 60 * 60 * 12, // 8 hours
       path: '/',
       sameSite: 'lax',
-      secure: this.envService.get('APP_ENVIRONMENT') !== 'local',
+      secure: true,
       signed: true,
       ...options,
     });
@@ -39,14 +47,22 @@ export class UtilsService {
   deleteCookie(
     response: Response,
     name: string,
+    origin?: string,
     options?: CookieOptions,
   ): void {
+    const isDevelopment = this.envService.get('NODE_ENV') === 'development';
+    let cookieDomain = this.envService.get('COOKIE_DOMAIN');
+
+    if (isDevelopment) {
+      cookieDomain = new URL(origin ?? 'http://localhost').hostname;
+    }
+
     response.clearCookie(name, {
-      domain: this.envService.get('COOKIE_DOMAIN'),
+      domain: `.${cookieDomain}`,
       httpOnly: true,
       path: '/',
       sameSite: 'lax',
-      secure: this.envService.get('APP_ENVIRONMENT') !== 'local',
+      secure: true,
       signed: true,
       ...options,
     });
