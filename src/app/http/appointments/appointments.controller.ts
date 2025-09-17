@@ -17,32 +17,32 @@ import { AppointmentsService } from './appointments.service';
 export class AppointmentsController {
   constructor(private readonly appointmentsService: AppointmentsService) {}
 
-  @Roles(['nurse', 'manager', 'specialist'])
-  @Patch(':id/cancel')
-  async cancel(
-    @Param('id') id: string,
-    @CurrentUser() user: UserSchema,
-  ): Promise<CancelAppointmentResponseSchema> {
-    await this.appointmentsService.cancelAppointment(id, user);
-
-    return {
-      success: true,
-      message: 'Atendimento cancelado com sucesso.',
-    };
-  }
-
   @Put(':id')
   @Roles(['nurse', 'manager', 'specialist'])
   public async update(
     @Param('id') id: string,
-    @Body() body: UpdateAppointmentDto,
     @CurrentUser() user: UserSchema,
+    @Body() body: UpdateAppointmentDto,
   ): Promise<UpdateAppointmentResponseSchema> {
     await this.appointmentsService.update(id, body, user);
 
     return {
       success: true,
       message: 'Atendimento atualizado com sucesso.',
+    };
+  }
+
+  @Roles(['nurse', 'manager', 'specialist'])
+  @Patch(':id/cancel')
+  async cancel(
+    @Param('id') id: string,
+    @CurrentUser() user: UserSchema,
+  ): Promise<CancelAppointmentResponseSchema> {
+    await this.appointmentsService.cancel(id, user);
+
+    return {
+      success: true,
+      message: 'Atendimento cancelado com sucesso.',
     };
   }
 }

@@ -40,7 +40,7 @@ export class UsersService {
 
     this.logger.log(
       { id: user.id, email: user.email },
-      'Usuário registrado com sucesso',
+      'User registered successfully',
     );
 
     return user;
@@ -57,7 +57,7 @@ export class UsersService {
 
     this.logger.log(
       { id: user.id, email: user.email },
-      'Usuário atualizado com sucesso',
+      'User updated successfully',
     );
 
     return await this.usersRepository.update(user);
@@ -72,7 +72,7 @@ export class UsersService {
 
     this.logger.log(
       { id: user.id, email: user.email },
-      'Usuário removido com sucesso',
+      'User removed successfully',
     );
 
     return await this.usersRepository.remove(user);

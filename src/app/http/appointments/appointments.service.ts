@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ForbiddenException,
   Injectable,
   Logger,
   NotFoundException,
@@ -19,44 +18,11 @@ export class AppointmentsService {
     private readonly appointmentsRepository: AppointmentsRepository,
   ) {}
 
-  async cancelAppointment(id: string, user: UserSchema): Promise<void> {
-    const appointment = await this.appointmentsRepository.findById(id);
-
-    if (!appointment) {
-      throw new NotFoundException('Atendimento não encontrado.');
-    }
-
-    if (!['nurse', 'manager', 'specialist'].includes(user.role)) {
-      throw new ForbiddenException(
-        'Você não tem permissão para cancelar atendimento.',
-      );
-    }
-
-    if (appointment.status === 'canceled') {
-      throw new BadRequestException('Este atendimento já está cancelado.');
-    }
-
-    appointment.status = 'canceled';
-
-    await this.appointmentsRepository.save(appointment);
-
-    this.logger.log(
-      { id: appointment.id, user: user.id },
-      'Atendimento cancelado com sucesso.',
-    );
-  }
-
   public async update(
     id: string,
     updateAppointmentDto: UpdateAppointmentDto,
     user: UserSchema,
   ): Promise<void> {
-    if (!['nurse', 'manager', 'specialist'].includes(user.role)) {
-      throw new ForbiddenException(
-        'Você não tem permissão para atualizar este atendimento.',
-      );
-    }
-
     const appointment = await this.appointmentsRepository.findById(id);
 
     if (!appointment) {
@@ -71,11 +37,30 @@ export class AppointmentsService {
 
     Object.assign(appointment, updateAppointmentDto);
 
-    await this.appointmentsRepository.save(appointment);
+    await this.appointmentsRepository.update(appointment);
 
     this.logger.log(
       { id: appointment.id, user: user.id },
-      'Atendimento atualizado com sucesso.',
+      'Appointment updated successfully.',
+    );
+  }
+
+  async cancel(id: string, user: UserSchema): Promise<void> {
+    const appointment = await this.appointmentsRepository.findById(id);
+
+    if (!appointment) {
+      throw new NotFoundException('Atendimento não encontrado.');
+    }
+
+    if (appointment.status === 'canceled') {
+      throw new BadRequestException('Este atendimento já está cancelado.');
+    }
+
+    await this.appointmentsRepository.cancel(appointment.id);
+
+    this.logger.log(
+      { id: appointment.id, userId: user.id },
+      'Appointment canceled successfully.',
     );
   }
 }
