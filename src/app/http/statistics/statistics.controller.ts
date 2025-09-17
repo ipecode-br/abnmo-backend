@@ -52,7 +52,7 @@ export class StatisticsController {
   }
 
   @Get('patients-by-city')
-  @Roles(['admin', 'manager', 'nurse'])
+  @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Estatísticas de pacientes por cidade' })
   async getPatientsByCity(
     @Query() query: GetPatientsByPeriodDto,
