@@ -35,3 +35,16 @@ export const getPatientsByGenderResponseSchema = baseResponseSchema.extend({
 export type GetPatientsByGenderResponse = z.infer<
   typeof getPatientsByGenderResponseSchema
 >;
+
+export const patientsByCitySchema = z.object({
+  city: z.string(),
+  total: z.number(),
+});
+export type PatientsByCityType = z.infer<typeof patientsByCitySchema>;
+
+export const getPatientsByCityResponseSchema = baseResponseSchema.extend({
+  data: z.array(patientsByCitySchema),
+});
+export type GetPatientsByCityResponse = z.infer<
+  typeof getPatientsByCityResponseSchema
+>;
