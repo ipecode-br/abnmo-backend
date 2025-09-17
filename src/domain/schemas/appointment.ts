@@ -29,7 +29,6 @@ export const appointmentSchema = z
   .strict();
 export type AppointmentSchema = z.infer<typeof appointmentSchema>;
 
-// Schema de validação para update
 export const updateAppointmentSchema = z.object({
   date: z.coerce
     .date()
@@ -41,13 +40,9 @@ export const updateAppointmentSchema = z.object({
   condition: z.enum(APPOINTMENT_CONDITION).optional(),
   annotation: z.string().nullable(),
 });
+export type UpdateAppointmentSchema = z.infer<typeof updateAppointmentSchema>;
 
-export type UpdateAppointmentDto = z.infer<typeof updateAppointmentSchema>;
-
-export const cancelAppointmentResponseSchema = baseResponseSchema.extend({
-  data: appointmentSchema.optional(),
-});
-
+export const cancelAppointmentResponseSchema = baseResponseSchema.extend({});
 export type CancelAppointmentResponseSchema = z.infer<
   typeof cancelAppointmentResponseSchema
 >;

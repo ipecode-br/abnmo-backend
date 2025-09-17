@@ -5,11 +5,11 @@ import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
 import {
   CancelAppointmentResponseSchema,
-  UpdateAppointmentDto,
   UpdateAppointmentResponseSchema,
 } from '@/domain/schemas/appointment';
 import { UserSchema } from '@/domain/schemas/user';
 
+import type { UpdateAppointmentDto } from './appointments.dtos';
 import { AppointmentsService } from './appointments.service';
 
 @ApiTags('Atendimentos')
