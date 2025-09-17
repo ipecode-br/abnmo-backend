@@ -5,16 +5,19 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 
-import { UsersRepository } from '@/app/http/users/users.repository';
-import type { UserSchema } from '@/domain/schemas/user';
+import { CryptographyService } from '@/app/cryptography/crypography.service';
+import { Patient } from '@/domain/entities/patient';
+import { PatientSupport } from '@/domain/entities/patient-support';
+import { User } from '@/domain/entities/user';
 import {
   FormType,
   PatientFormsStatus,
   PendingForm,
 } from '@/domain/types/form-types';
 
-import { UsersService } from '../users/users.service';
 import { CreatePatientDto, UpdatePatientDto } from './patients.dtos';
 import { PatientsRepository } from './patients.repository';
 import { validateTriagemForm } from './validators/form-validators';
@@ -24,60 +27,112 @@ export class PatientsService {
   private readonly logger = new Logger(PatientsService.name);
 
   constructor(
+    @InjectDataSource()
+    private readonly dataSource: DataSource,
     private readonly patientsRepository: PatientsRepository,
-    private readonly usersRepository: UsersRepository,
-    private readonly usersService: UsersService,
+    private readonly cryptographyService: CryptographyService,
   ) {}
 
   async create(createPatientDto: CreatePatientDto): Promise<void> {
-    let user: UserSchema | null = null;
+    return await this.dataSource.transaction(async (manager) => {
+      const usersRepository = manager.getRepository(User);
+      const patientsRepository = manager.getRepository(Patient);
+      const patientsSupportRepository = manager.getRepository(PatientSupport);
 
-    if (!createPatientDto.user_id) {
-      const { email, name } = createPatientDto;
+      let user: User | null = null;
 
-      if (!email || !name) {
-        throw new BadRequestException(
-          'E-mail e nome são obrigatórios quando o ID do usuário não for fornecido.',
-        );
+      if (!createPatientDto.user_id) {
+        const { email, name } = createPatientDto;
+
+        if (!email || !name) {
+          throw new BadRequestException(
+            'E-mail e nome são obrigatórios quando o ID do usuário não for fornecido.',
+          );
+        }
+
+        const existingUser = await usersRepository.findOne({
+          where: { email },
+        });
+
+        if (existingUser) {
+          throw new ConflictException('Este e-mail já está em uso.');
+        }
+
+        const randomPassword = Math.random().toString(36).slice(-8);
+        const hashedPassword =
+          await this.cryptographyService.createHash(randomPassword);
+
+        const newUser = usersRepository.create({
+          email,
+          name,
+          password: hashedPassword,
+        });
+
+        user = await usersRepository.save(newUser);
+      } else {
+        const registeredUser = await usersRepository.findOne({
+          where: { id: createPatientDto.user_id },
+        });
+        user = registeredUser;
       }
 
-      const randomPassword = Math.random().toString(36).slice(-8);
-      const newUser = await this.usersService.create({
-        email,
-        name,
-        password: randomPassword,
+      if (!user) {
+        throw new NotFoundException('Usuário não encontrado.');
+      }
+
+      const patientExists = await patientsRepository.findOne({
+        where: { user_id: user.id },
       });
-      user = newUser;
-    }
 
-    if (createPatientDto.user_id) {
-      const registeredUser = await this.usersRepository.findById(
-        createPatientDto.user_id,
+      if (patientExists) {
+        throw new ConflictException('Este paciente já possui um cadastro.');
+      }
+
+      const patientWithSameCpf = await patientsRepository.findOne({
+        where: { cpf: createPatientDto.cpf },
+      });
+
+      if (patientWithSameCpf) {
+        this.logger.error(
+          {
+            userId: createPatientDto.user_id,
+            email: createPatientDto.email,
+            cpf: createPatientDto.cpf,
+          },
+          'Patient registration failed: CPF already registered',
+        );
+        throw new ConflictException('Este CPF já está cadastrado.');
+      }
+
+      const patient = patientsRepository.create({
+        ...createPatientDto,
+        user_id: user.id,
+      });
+
+      const savedPatient = await patientsRepository.save(patient);
+
+      if (createPatientDto.supports.length > 0) {
+        const patientSupports = createPatientDto.supports.map((support) =>
+          patientsSupportRepository.create({
+            name: support.name,
+            phone: support.phone,
+            kinship: support.kinship,
+            patient_id: savedPatient.id,
+          }),
+        );
+
+        await patientsSupportRepository.save(patientSupports);
+      }
+
+      this.logger.log(
+        {
+          id: savedPatient.id,
+          userId: savedPatient.user_id,
+          email: user.email,
+        },
+        'Patient created successfully',
       );
-      user = registeredUser;
-    }
-
-    if (!user) {
-      throw new NotFoundException('Usuário não encontrado.');
-    }
-
-    const patientExists = await this.patientsRepository.findByUserId(user.id);
-
-    if (patientExists) {
-      throw new ConflictException('Este paciente já possui um cadastro.');
-    }
-
-    const patientData = {
-      ...createPatientDto,
-      user_id: user.id,
-    };
-
-    const patient = await this.patientsRepository.create(patientData);
-
-    this.logger.log(
-      { id: patient.id, userId: patient.user_id, email: user.email },
-      'Paciente cadastrado com sucesso',
-    );
+    });
   }
 
   async update(id: string, updatePatientDto: UpdatePatientDto): Promise<void> {
