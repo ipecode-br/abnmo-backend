@@ -3,7 +3,9 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { Roles } from '@/common/decorators/roles.decorator';
 import type {
+  GetPatientsByCityResponse,
   GetPatientsByGenderResponse,
+  PatientsByCityType,
   PatientsByGenderType,
 } from '@/domain/schemas/statistics';
 
@@ -45,6 +47,25 @@ export class StatisticsController {
     return {
       success: true,
       message: 'Estatísticas de pacientes por gênero retornada com sucesso.',
+      data,
+    };
+  }
+
+  @Get('patients-by-city')
+  @Roles(['manager', 'nurse'])
+  @ApiOperation({ summary: 'Estatísticas de pacientes por cidade' })
+  async getPatientsByCity(
+    @Query() query: GetPatientsByPeriodDto,
+  ): Promise<GetPatientsByCityResponse> {
+    const data =
+      await this.statisticsService.getPatientsByPeriod<PatientsByCityType>(
+        'city',
+        query,
+      );
+
+    return {
+      success: true,
+      message: 'Estatísticas de pacientes por cidade retornada com sucesso.',
       data,
     };
   }
