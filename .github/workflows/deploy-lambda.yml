@@ -1,0 +1,69 @@
+name: Deploy Lambda to AWS
+
+on:
+  push:
+    branches:
+      - dev
+      - homolog
+  workflow_dispatch: # Add manual trigger
+
+jobs:
+  deploy:
+    name: Build and Deploy Lambda
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Permission to obtain OIDC token
+      contents: read # Permission to checkout
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build and package Lambda
+        run: npx ts-node infra/scripts/build-lambda.ts
+
+      - name: Set Lambda function name and AWS role based on branch
+        id: set-lambda-env
+        run: |
+          echo "Detected branch: ${{ github.ref_name }}"
+          if [ "${{ github.ref_name }}" = "dev" ]; then
+            echo "lambda_name=abnmo-svm-lambda-development" >> $GITHUB_OUTPUT
+            echo "aws_role_arn=${{ secrets.AWS_ROLE_TO_ASSUME_DEV }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref_name }}" = "homolog" ]; then
+            echo "lambda_name=abnmo-svm-lambda-homolog" >> $GITHUB_OUTPUT
+            echo "aws_role_arn=${{ secrets.AWS_ROLE_TO_ASSUME_HOMOLOG }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref_name }}" = "main" ]; then
+            echo "lambda_name=abnmo-svm-lambda-production" >> $GITHUB_OUTPUT
+            echo "aws_role_arn=${{ secrets.AWS_ROLE_TO_ASSUME_PROD }}" >> $GITHUB_OUTPUT
+          else
+            echo "Branch not supported: ${{ github.ref_name }}"
+            exit 1
+          fi
+
+      - name: Configure AWS credentials with OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ steps.set-lambda-env.outputs.aws_role_arn }}
+          aws-region: us-east-1
+
+      - name: Upload to Lambda
+        run: |
+          if [ ! -f lambda.zip ]; then
+            echo "❌ lambda.zip not found!"
+            exit 1
+          fi
+          echo "🚀 Deploying to Lambda: ${{ steps.set-lambda-env.outputs.lambda_name }}"
+          aws lambda update-function-code \
+            --function-name ${{ steps.set-lambda-env.outputs.lambda_name }} \
+            --zip-file fileb://lambda.zip \
+            --output text \
+            --query 'FunctionName'
+          echo "✅ Lambda deployment completed successfully"
