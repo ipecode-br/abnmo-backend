@@ -23,7 +23,7 @@ export async function createNestApp(adapter?: ExpressAdapter) {
   app.useGlobalFilters(new HttpExceptionFilter());
 
   const envService = app.get(EnvService);
-  const allowLocalRequests = envService.get('NODE_ENV') === 'development';
+  const allowLocalRequests = false;
 
   app.enableCors({
     origin: (origin, callback) => {

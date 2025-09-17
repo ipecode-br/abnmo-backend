@@ -48,7 +48,6 @@ export class AuthController {
     this.utilsService.setCookie(response, {
       name: COOKIES_MAPPER.access_token,
       value: accessToken,
-      origin: request.headers.origin,
       maxAge: signInWithEmailDto.rememberMe
         ? TWELVE_HOURS_IN_MS * 60
         : TWELVE_HOURS_IN_MS,
@@ -86,11 +85,7 @@ export class AuthController {
 
     await this.authService.logout(accessToken);
 
-    this.utilsService.deleteCookie(
-      response,
-      COOKIES_MAPPER.access_token,
-      request.headers.origin,
-    );
+    this.utilsService.deleteCookie(response, COOKIES_MAPPER.access_token);
 
     return {
       success: true,
@@ -120,7 +115,6 @@ export class AuthController {
     this.utilsService.setCookie(response, {
       name: COOKIES_MAPPER.access_token,
       value: accessToken,
-      origin: request.headers.origin,
       maxAge: TWELVE_HOURS_IN_MS,
     });
 
@@ -146,7 +140,6 @@ export class AuthController {
     this.utilsService.setCookie(response, {
       name: COOKIES_MAPPER.password_reset,
       value: passwordResetToken,
-      origin: request.headers.origin,
       maxAge: FOUR_HOURS_IN_MS,
     });
 

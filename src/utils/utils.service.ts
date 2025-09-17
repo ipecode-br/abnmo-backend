@@ -14,7 +14,6 @@ import { EnvService } from '@/env/env.service';
 type SetCookieOptions = CookieOptions & {
   name: string;
   value: string;
-  origin?: string;
 };
 
 @Injectable()
@@ -23,14 +22,9 @@ export class UtilsService {
 
   setCookie(
     response: Response,
-    { name, value, origin, ...options }: SetCookieOptions,
+    { name, value, ...options }: SetCookieOptions,
   ): void {
-    const isDevelopment = this.envService.get('NODE_ENV') === 'development';
-    let cookieDomain = this.envService.get('COOKIE_DOMAIN');
-
-    if (isDevelopment) {
-      cookieDomain = new URL(origin ?? 'http://localhost').hostname;
-    }
+    const cookieDomain = this.envService.get('COOKIE_DOMAIN');
 
     response.cookie(name, value, {
       domain: `.${cookieDomain}`,
@@ -47,15 +41,9 @@ export class UtilsService {
   deleteCookie(
     response: Response,
     name: string,
-    origin?: string,
     options?: CookieOptions,
   ): void {
-    const isDevelopment = this.envService.get('NODE_ENV') === 'development';
-    let cookieDomain = this.envService.get('COOKIE_DOMAIN');
-
-    if (isDevelopment) {
-      cookieDomain = new URL(origin ?? 'http://localhost').hostname;
-    }
+    const cookieDomain = this.envService.get('COOKIE_DOMAIN');
 
     response.clearCookie(name, {
       domain: `.${cookieDomain}`,
