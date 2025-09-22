@@ -14,3 +14,21 @@ export const specialistSchema = z
   })
   .strict();
 export type SpecialistSchema = z.infer<typeof specialistSchema>;
+
+export const createInviteSchema = z.object({
+  email: z.string().email(),
+  type: z.enum(['specialist', 'manager', 'nurse']),
+});
+export type CreateInviteType = z.infer<typeof createInviteSchema>;
+
+export const createPatientResponseSchema = z.object({
+  success: z.boolean(),
+  message: z.string(),
+  data: z.object({
+    url: z.string().url(),
+    token: z.string(),
+  }),
+});
+export type CreateInviteResponseSchema = z.infer<
+  typeof createPatientResponseSchema
+>;
