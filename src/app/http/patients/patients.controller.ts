@@ -25,7 +25,7 @@ import { PatientSupportsRepository } from '../patient-supports/patient-supports.
 import {
   CreatePatientDto,
   FindAllPatientQueryDto,
-  type PatientScreeningDto,
+  PatientScreeningDto,
   UpdatePatientDto,
 } from './patients.dtos';
 import { PatientsRepository } from './patients.repository';
