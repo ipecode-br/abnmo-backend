@@ -121,6 +121,13 @@ export class PatientsRepository {
     };
   }
 
+  public async findByEmail(email: string): Promise<Patient | null> {
+    return await this.patientsRepository.findOne({
+      select: { user: true },
+      where: { user: { email } },
+    });
+  }
+
   public async findByCpf(cpf: string): Promise<Patient | null> {
     return await this.patientsRepository.findOne({ where: { cpf } });
   }
