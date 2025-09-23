@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   NotFoundException,
   Param,
@@ -16,9 +15,8 @@ import { Roles } from '@/common/decorators/roles.decorator';
 import { BaseResponseSchema } from '@/domain/schemas/base';
 import {
   CreatePatientResponseSchema,
-  DeletePatientResponseSchema,
   FindAllPatientsResponseSchema,
-  FindOnePatientResponseSchema,
+  GetPatientResponseSchema,
   InactivatePatientResponseSchema,
 } from '@/domain/schemas/patient';
 import { FindAllPatientsSupportResponseSchema } from '@/domain/schemas/patient-support';
@@ -42,7 +40,7 @@ export class PatientsController {
   ) {}
 
   @Post()
-  @Roles(['manager', 'nurse'])
+  @Roles(['patient', 'manager', 'nurse'])
   @ApiOperation({
     summary: 'Cadastra um novo paciente',
     description: `
@@ -82,7 +80,7 @@ export class PatientsController {
   @ApiOperation({ summary: 'Busca um paciente pelo ID' })
   public async findById(
     @Param('id') id: string,
-  ): Promise<FindOnePatientResponseSchema> {
+  ): Promise<GetPatientResponseSchema> {
     const patient = await this.patientsRepository.findById(id);
 
     if (!patient) {
@@ -102,7 +100,7 @@ export class PatientsController {
   async inactivatePatient(
     @Param('id') id: string,
   ): Promise<InactivatePatientResponseSchema> {
-    await this.patientsService.deactivatePatient(id);
+    await this.patientsService.deactivate(id);
 
     return {
       success: true,
@@ -132,19 +130,6 @@ export class PatientsController {
         patient_supports: patientSupports,
         total: patientSupports.length,
       },
-    };
-  }
-
-  @Delete(':id')
-  @ApiOperation({ summary: 'Remove um paciente pelo ID' })
-  public async remove(
-    @Param('id') id: string,
-  ): Promise<DeletePatientResponseSchema> {
-    await this.patientsService.remove(id);
-
-    return {
-      success: true,
-      message: 'Paciente removido com sucesso.',
     };
   }
 

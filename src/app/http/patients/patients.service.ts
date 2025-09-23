@@ -12,15 +12,9 @@ import { CryptographyService } from '@/app/cryptography/crypography.service';
 import { Patient } from '@/domain/entities/patient';
 import { PatientSupport } from '@/domain/entities/patient-support';
 import { User } from '@/domain/entities/user';
-import {
-  FormType,
-  PatientFormsStatus,
-  PendingForm,
-} from '@/domain/types/form-types';
 
 import { CreatePatientDto, UpdatePatientDto } from './patients.dtos';
 import { PatientsRepository } from './patients.repository';
-import { validateTriagemForm } from './validators/form-validators';
 
 @Injectable()
 export class PatientsService {
@@ -136,42 +130,75 @@ export class PatientsService {
   }
 
   async update(id: string, updatePatientDto: UpdatePatientDto): Promise<void> {
-    const patient = await this.patientsRepository.findById(id);
+    return await this.dataSource.transaction(async (manager) => {
+      const usersRepository = manager.getRepository(User);
+      const patientsRepository = manager.getRepository(Patient);
 
-    if (!patient) {
-      throw new NotFoundException('Paciente não encontrado.');
-    }
+      const patient = await patientsRepository.findOne({
+        where: { id },
+        relations: { user: true },
+      });
 
-    if (updatePatientDto.cpf && updatePatientDto.cpf !== patient.cpf) {
-      const patientWithSameCpf = await this.patientsRepository.findByCpf(
-        updatePatientDto.cpf,
-      );
-
-      if (patientWithSameCpf) {
-        this.logger.error(
-          {
-            id: patient.id,
-            userId: patient.user_id,
-            email: patient.user.email,
-          },
-          'Patient update failed: CPF already registered',
-        );
-
-        throw new ConflictException('Este CPF já está cadastrado.');
+      if (!patient) {
+        throw new NotFoundException('Paciente não encontrado.');
       }
-    }
 
-    Object.assign(patient, updatePatientDto);
+      if (updatePatientDto.cpf && updatePatientDto.cpf !== patient.cpf) {
+        const patientWithSameCpf = await patientsRepository.findOne({
+          where: { cpf: updatePatientDto.cpf },
+        });
 
-    await this.patientsRepository.update(patient);
+        if (patientWithSameCpf) {
+          this.logger.error(
+            {
+              id: patient.id,
+              userId: patient.user_id,
+              email: patient.user.email,
+            },
+            'Patient update failed: CPF already registered',
+          );
 
-    this.logger.log(
-      { id: patient.id, userId: patient.user_id, email: patient.user.email },
-      'Patient updated successfully',
-    );
+          throw new ConflictException('Este CPF já está cadastrado.');
+        }
+      }
+
+      if (
+        updatePatientDto.email &&
+        updatePatientDto.email !== patient.user.email
+      ) {
+        const existingUser = await usersRepository.findOne({
+          where: { email: updatePatientDto.email },
+        });
+
+        if (existingUser) {
+          throw new ConflictException('Este e-mail já está em uso.');
+        }
+      }
+
+      if (updatePatientDto.name || updatePatientDto.email) {
+        const userUpdated: Partial<User> = {};
+        if (updatePatientDto.name) userUpdated.name = updatePatientDto.name;
+        if (updatePatientDto.email) userUpdated.email = updatePatientDto.email;
+
+        await usersRepository.update(patient.user_id, userUpdated);
+      }
+
+      const patientUpdate = updatePatientDto;
+      delete patientUpdate.name;
+      delete patientUpdate.email;
+
+      Object.assign(patient, patientUpdate);
+
+      await patientsRepository.save(patient);
+
+      this.logger.log(
+        { id: patient.id, userId: patient.user_id, email: patient.user.email },
+        'Patient updated successfully',
+      );
+    });
   }
 
-  async deactivatePatient(id: string): Promise<void> {
+  async deactivate(id: string): Promise<void> {
     const patient = await this.patientsRepository.findById(id);
 
     if (!patient) {
@@ -185,47 +212,8 @@ export class PatientsService {
     await this.patientsRepository.deactivate(id);
 
     this.logger.log(
-      { id: patient.id, userId: patient.user_id },
-      'Paciente inativado com sucesso',
+      { id: patient.id, userId: patient.user_id, email: patient.email },
+      'Patient deactivated successfully',
     );
-  }
-
-  async remove(patientId: string): Promise<void> {
-    const patient = await this.patientsRepository.findById(patientId);
-
-    if (!patient) {
-      throw new NotFoundException('Paciente não encontrado.');
-    }
-
-    await this.patientsRepository.remove(patient);
-
-    this.logger.log(
-      { id: patient.id, userId: patient.user_id },
-      'Paciente removido com sucesso',
-    );
-  }
-
-  async getPatientFormsStatus(): Promise<PatientFormsStatus[]> {
-    const patients = await this.patientsRepository.getPatientsWithRelations();
-
-    return patients.map((patient) => {
-      const pendingForms: PendingForm[] = [];
-      const completedForms: FormType[] = [];
-
-      // Validação do formulário de triagem
-      const triagemStatus = validateTriagemForm(patient);
-      if (triagemStatus) {
-        pendingForms.push(triagemStatus);
-      } else {
-        completedForms.push('triagem');
-      }
-
-      return {
-        patientId: Number(patient.cpf),
-        patientName: patient.user?.name || 'Não informado',
-        pendingForms,
-        completedForms,
-      };
-    });
   }
 }
