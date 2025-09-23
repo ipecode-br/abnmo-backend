@@ -81,12 +81,11 @@ export const patientResponseSchema = patientSchema
   });
 export type PatientType = z.infer<typeof patientResponseSchema>;
 
-export const createPatientSchema = patientSchema
+export const patientScreeningSchema = patientSchema
   .omit({ id: true, created_at: true, updated_at: true })
+  .merge(userSchema.pick({ name: true }))
   .extend({
-    user_id: z.string().uuid().optional(),
     name: z.string().optional(),
-    email: z.string().email().optional(),
     supports: z
       .array(
         createPatientSupportSchema.pick({
@@ -97,31 +96,25 @@ export const createPatientSchema = patientSchema
       )
       .optional()
       .default([]),
-  })
-  .refine(
-    (data) => {
-      const hasNameAndEmail = !!data.name && !!data.email;
-      if (!data.user_id && !hasNameAndEmail) {
-        return false;
-      }
-      if (data.user_id) {
-        data.name = undefined;
-        data.email = undefined;
-      }
-      return true;
-    },
-    {
-      message:
-        'Fields `name` and `email` are required when `user_id` is not provided.',
-      path: ['root'],
-    },
-  );
-export type CreatePatientSchema = z.infer<typeof createPatientSchema>;
+  });
+export type PatientScreeningSchema = z.infer<typeof patientScreeningSchema>;
 
-export const createPatientResponseSchema = baseResponseSchema.extend({});
-export type CreatePatientResponseSchema = z.infer<
-  typeof createPatientResponseSchema
->;
+export const createPatientSchema = patientSchema
+  .omit({ id: true, created_at: true, updated_at: true })
+  .merge(userSchema.pick({ name: true, email: true }))
+  .extend({
+    supports: z
+      .array(
+        createPatientSupportSchema.pick({
+          name: true,
+          phone: true,
+          kinship: true,
+        }),
+      )
+      .optional()
+      .default([]),
+  });
+export type CreatePatientSchema = z.infer<typeof patientScreeningSchema>;
 
 export const updatePatientSchema = patientSchema
   .omit({
@@ -131,10 +124,8 @@ export const updatePatientSchema = patientSchema
     updated_at: true,
     status: true,
   })
-  .extend({
-    name: z.string().min(3).optional(),
-    email: z.string().email().max(255).optional(),
-  });
+  .merge(userSchema.pick({ name: true, email: true }));
+
 export type UpdatePatientSchema = z.infer<typeof updatePatientSchema>;
 
 export const findAllPatientsQuerySchema = baseQuerySchema
@@ -175,8 +166,3 @@ export const getPatientResponseSchema = baseResponseSchema.extend({
   data: patientResponseSchema,
 });
 export type GetPatientResponseSchema = z.infer<typeof getPatientResponseSchema>;
-
-export const inactivatePatientResponseSchema = baseResponseSchema.extend({});
-export type InactivatePatientResponseSchema = z.infer<
-  typeof inactivatePatientResponseSchema
->;
