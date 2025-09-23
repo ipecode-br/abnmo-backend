@@ -61,6 +61,26 @@ export const patientSchema = z
   .strict();
 export type PatientSchema = z.infer<typeof patientSchema>;
 
+export const patientResponseSchema = patientSchema
+  .merge(
+    userSchema.pick({
+      name: true,
+      email: true,
+      avatar_url: true,
+    }),
+  )
+  .extend({
+    supports: z.array(
+      patientSupportSchema.pick({
+        id: true,
+        name: true,
+        phone: true,
+        kinship: true,
+      }),
+    ),
+  });
+export type PatientType = z.infer<typeof patientResponseSchema>;
+
 export const createPatientSchema = patientSchema
   .omit({ id: true, created_at: true, updated_at: true })
   .extend({
@@ -98,19 +118,24 @@ export const createPatientSchema = patientSchema
   );
 export type CreatePatientSchema = z.infer<typeof createPatientSchema>;
 
-export const updatePatientSchema = patientSchema.omit({
-  id: true,
-  user_id: true,
-  created_at: true,
-  updated_at: true,
-  status: true,
-});
-export type UpdatePatientSchema = z.infer<typeof updatePatientSchema>;
-
 export const createPatientResponseSchema = baseResponseSchema.extend({});
 export type CreatePatientResponseSchema = z.infer<
   typeof createPatientResponseSchema
 >;
+
+export const updatePatientSchema = patientSchema
+  .omit({
+    id: true,
+    user_id: true,
+    created_at: true,
+    updated_at: true,
+    status: true,
+  })
+  .extend({
+    name: z.string().min(3).optional(),
+    email: z.string().email().max(255).optional(),
+  });
+export type UpdatePatientSchema = z.infer<typeof updatePatientSchema>;
 
 export const findAllPatientsQuerySchema = baseQuerySchema
   .pick({ search: true, order: true, page: true })
@@ -146,31 +171,10 @@ export type FindAllPatientsResponseSchema = z.infer<
   typeof findAllPatientsResponseSchema
 >;
 
-export const findOnePatientResponseSchema = baseResponseSchema.extend({
-  data: patientSchema.extend({
-    user: userSchema.pick({
-      email: true,
-      name: true,
-      avatar_url: true,
-    }),
-    supports: z.array(
-      patientSupportSchema.pick({
-        id: true,
-        name: true,
-        phone: true,
-        kinship: true,
-      }),
-    ),
-  }),
+export const getPatientResponseSchema = baseResponseSchema.extend({
+  data: patientResponseSchema,
 });
-export type FindOnePatientResponseSchema = z.infer<
-  typeof findOnePatientResponseSchema
->;
-
-export const deletePatientResponseSchema = baseResponseSchema.extend({});
-export type DeletePatientResponseSchema = z.infer<
-  typeof deletePatientResponseSchema
->;
+export type GetPatientResponseSchema = z.infer<typeof getPatientResponseSchema>;
 
 export const inactivatePatientResponseSchema = baseResponseSchema.extend({});
 export type InactivatePatientResponseSchema = z.infer<
