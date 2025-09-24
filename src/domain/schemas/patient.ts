@@ -154,7 +154,7 @@ export type FindAllPatientsQuerySchema = z.infer<
 
 export const findAllPatientsResponseSchema = baseResponseSchema.extend({
   data: z.object({
-    patients: z.array(patientSchema),
+    patients: z.array(patientResponseSchema),
     total: z.number(),
   }),
 });
