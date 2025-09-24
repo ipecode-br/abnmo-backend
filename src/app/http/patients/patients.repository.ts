@@ -21,7 +21,7 @@ export class PatientsRepository {
 
   public async findAll(
     filters: FindAllPatientQueryDto,
-  ): Promise<{ patients: Patient[]; total: number }> {
+  ): Promise<{ patients: PatientType[]; total: number }> {
     const { search, order, orderBy, status, startDate, endDate, page } =
       filters;
 
@@ -35,13 +35,7 @@ export class PatientsRepository {
     const query = this.patientsRepository
       .createQueryBuilder('patient')
       .leftJoinAndSelect('patient.user', 'user')
-      .select([
-        'patient',
-        'user.id',
-        'user.name',
-        'user.email',
-        'user.avatar_url',
-      ]);
+      .select(['patient', 'user.name', 'user.email', 'user.avatar_url']);
 
     if (search) {
       query.andWhere(`user.name LIKE :search`, { search: `%${search}%` });
@@ -68,7 +62,16 @@ export class PatientsRepository {
     query.orderBy(ORDER_BY[orderBy], order);
     query.skip((page - 1) * PAGE_SIZE).take(PAGE_SIZE);
 
-    const patients = await query.getMany();
+    const rawPatients = await query.getMany();
+
+    const patients: PatientType[] = rawPatients.map(
+      ({ user, ...patientData }) => ({
+        ...patientData,
+        name: user.name,
+        email: user.email,
+        avatar_url: user.avatar_url,
+      }),
+    );
 
     return { patients, total };
   }
