@@ -1,4 +1,9 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 
 import { CryptographyService } from '@/app/cryptography/crypography.service';
 import { AUTH_TOKENS_MAPPER } from '@/domain/schemas/token';
@@ -67,6 +72,7 @@ export class AuthService {
 
     await this.tokensRepository.saveToken({
       user_id: user.id,
+      email: null,
       token: accessToken,
       type: AUTH_TOKENS_MAPPER.access_token,
       expires_at: expiration,
@@ -105,6 +111,7 @@ export class AuthService {
 
     await this.tokensRepository.saveToken({
       user_id: user.id,
+      email: null,
       token: passwordResetToken,
       type: AUTH_TOKENS_MAPPER.password_reset,
       expires_at: expiration,
@@ -133,11 +140,15 @@ export class AuthService {
     if (
       !tokenEntity ||
       tokenEntity.type !== AUTH_TOKENS_MAPPER.password_reset ||
-      tokenEntity.expires_at < new Date()
+      (tokenEntity.expires_at && tokenEntity.expires_at < new Date())
     ) {
       throw new UnauthorizedException(
         'Token de redefinição de senha inválido ou expirado.',
       );
+    }
+
+    if (!tokenEntity.user_id) {
+      throw new NotFoundException('Token não associado a um usuário.');
     }
 
     const user = await this.usersRepository.findById(tokenEntity.user_id);
