@@ -1,7 +1,11 @@
 import { z } from 'zod';
 
+import { userSchema } from './user';
+
 export const SPECIALIST_STATUS = ['active', 'inactive'] as const;
+export const INVITE_ROLES = ['specialist', 'manager', 'nurse'] as const;
 export type SpecialistStatusType = (typeof SPECIALIST_STATUS)[number];
+export type InviteRolesType = (typeof INVITE_ROLES)[number];
 
 export const specialistSchema = z
   .object({
@@ -15,20 +19,9 @@ export const specialistSchema = z
   .strict();
 export type SpecialistSchema = z.infer<typeof specialistSchema>;
 
-export const createInviteSchema = z.object({
-  email: z.string().email(),
-  type: z.enum(['specialist', 'manager', 'nurse']),
-});
-export type CreateInviteType = z.infer<typeof createInviteSchema>;
-
-export const createPatientResponseSchema = z.object({
-  success: z.boolean(),
-  message: z.string(),
-  data: z.object({
-    url: z.string().url(),
-    token: z.string(),
+export const createInviteSchema = userSchema.pick({ email: true }).merge(
+  z.object({
+    type: z.enum(INVITE_ROLES),
   }),
-});
-export type CreateInviteResponseSchema = z.infer<
-  typeof createPatientResponseSchema
->;
+);
+export type CreateInviteDto = z.infer<typeof createInviteSchema>;
