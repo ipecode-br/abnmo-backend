@@ -1,8 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 
-import { CreateInviteResponseSchema } from '@/domain/schemas/specialist';
+import { CryptographyService } from '@/app/cryptography/crypography.service';
+import { BaseResponseSchema } from '@/domain/schemas/base';
+import {
+  AUTH_TOKENS_MAPPER,
+  InviteTokenPayloadType,
+} from '@/domain/schemas/token';
+import { EnvService } from '@/env/env.service';
 
+import { TokensRepository } from '../auth/tokens.repository';
 import { SpecialistsRepository } from './specialists.repository';
 
 @Injectable()
@@ -11,27 +17,35 @@ export class SpecialistsService {
 
   constructor(
     private readonly specialistsRepository: SpecialistsRepository,
-    private readonly jwtService: JwtService,
+    private readonly cryptographyService: CryptographyService,
+    private readonly tokensRepository: TokensRepository,
+    private readonly envService: EnvService,
   ) {}
 
-  async createInvite(
-    email: string,
-    type: string,
-  ): Promise<CreateInviteResponseSchema> {
-    const payload = { email, type };
+  async createInvite(email: string, role: string): Promise<BaseResponseSchema> {
+    const token = await this.cryptographyService.createToken(
+      AUTH_TOKENS_MAPPER.invite_token,
+      { sub: email, role } as InviteTokenPayloadType,
+      {},
+    );
 
-    const token = await this.jwtService.signAsync(payload, {
-      expiresIn: undefined,
+    await this.tokensRepository.saveToken({
+      user_id: null,
+      email,
+      token,
+      type: AUTH_TOKENS_MAPPER.invite_token,
+      expires_at: null,
     });
 
-    const url = `${process.env.APP_URL}/conta/completar-cadastro?type=${type}&token=${token}`;
+    const appUrl = this.envService.get('APP_URL') ?? 'http://localhost:3000';
+    const url = `${appUrl}/conta/completar-cadastro?type=${role}&token=${token}`;
 
+    this.logger.log(`Invite URL: ${url}`);
     console.log('Invite URL:', url);
 
     return {
       success: true,
       message: 'Convite generado com sucesso.',
-      data: { url, token },
     };
   }
 }

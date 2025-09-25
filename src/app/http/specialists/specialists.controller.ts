@@ -1,10 +1,8 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
-import {
-  CreateInviteResponseSchema,
-  CreateInviteType,
-} from '@/domain/schemas/specialist';
+import { BaseResponseSchema } from '@/domain/schemas/base';
+import { CreateInviteDto } from '@/domain/schemas/specialist';
 
 import { SpecialistsService } from './specialists.service';
 
@@ -16,8 +14,8 @@ export class SpecialistsController {
   @Post('create-invite')
   @ApiOperation({ summary: 'Criação de convite para especialista' })
   async createInvite(
-    @Body() body: CreateInviteType,
-  ): Promise<CreateInviteResponseSchema> {
+    @Body() body: CreateInviteDto,
+  ): Promise<BaseResponseSchema> {
     return this.specialistsService.createInvite(body.email, body.type);
   }
 }
