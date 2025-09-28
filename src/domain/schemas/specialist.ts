@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { baseResponseSchema } from './base';
+import { userSchema } from './user';
 
 export const SPECIALIST_STATUS = ['active', 'inactive'] as const;
 export type SpecialistStatusType = (typeof SPECIALIST_STATUS)[number];
@@ -21,29 +22,11 @@ export type SpecialistSchema = z.infer<typeof specialistSchema>;
 
 export const createSpecialistSchema = specialistSchema
   .omit({ id: true, created_at: true, updated_at: true })
+  .merge(userSchema.pick({ name: true }))
   .extend({
-    user_id: z.string().uuid().optional(),
-    name: z.string().optional(),
-    email: z.string().email().optional(),
-  })
-  .refine(
-    (data) => {
-      const hasNameAndEmail = !!data.name && !!data.email;
-      if (!data.user_id && !hasNameAndEmail) {
-        return false;
-      }
-      if (data.user_id) {
-        data.name = undefined;
-        data.email = undefined;
-      }
-      return true;
-    },
-    {
-      message:
-        'Fields `name` and `email` are required when `user_id` is not provided.',
-      path: ['root'],
-    },
-  );
+    token: z.string().min(1),
+    password: z.string(),
+  });
 
 export type CreateSpecialistSchema = z.infer<typeof createSpecialistSchema>;
 

@@ -19,6 +19,9 @@ export class Token implements AuthTokenSchema {
   @Column('uuid')
   user_id: string;
 
+  @Column({ type: 'varchar', nullable: true })
+  email: string | null;
+
   @Column({ type: 'varchar', length: 255 })
   token: string;
 

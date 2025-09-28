@@ -10,8 +10,10 @@ import { DataSource } from 'typeorm';
 
 import { CryptographyService } from '@/app/cryptography/crypography.service';
 import { Specialist } from '@/domain/entities/specialist';
+import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 
+import { TokensRepository } from '../auth/tokens.repository';
 import { CreateSpecialistDto } from './specialists.dtos';
 import { SpecialistsRepository } from './specialists.repository';
 
@@ -24,53 +26,46 @@ export class SpecialistsService {
     private readonly dataSource: DataSource,
     private readonly specialistsRepository: SpecialistsRepository,
     private readonly cryptographyService: CryptographyService,
+    private readonly tokensRepository: TokensRepository,
   ) {}
 
   async create(createSpecialistDto: CreateSpecialistDto): Promise<void> {
     return await this.dataSource.transaction(async (manager) => {
       const usersRepository = manager.getRepository(User);
       const specialistsRepository = manager.getRepository(Specialist);
+      const tokensRepository = manager.getRepository(Token);
 
-      let user: User | null = null;
+      const inviteToken = await tokensRepository.findOne({
+        where: { token: createSpecialistDto.token, type: 'invite_token' },
+      });
 
-      if (!createSpecialistDto.user_id) {
-        const { email, name } = createSpecialistDto;
-
-        if (!email || !name) {
-          throw new BadRequestException(
-            'E-mail e nome são obrigatórios quando o ID do usuário não for fornecido.',
-          );
-        }
-
-        const existingUser = await usersRepository.findOne({
-          where: { email },
-        });
-
-        if (existingUser) {
-          throw new ConflictException('Este e-mail já está em uso.');
-        }
-
-        const randomPassword = Math.random().toString(36).slice(-8);
-        const hashPassword =
-          await this.cryptographyService.createHash(randomPassword);
-
-        const newUser = usersRepository.create({
-          email,
-          name,
-          password: hashPassword,
-        });
-
-        user = await usersRepository.save(newUser);
-      } else {
-        const registeredUser = await usersRepository.findOne({
-          where: { id: createSpecialistDto.user_id },
-        });
-        user = registeredUser;
+      if (!inviteToken) {
+        throw new NotFoundException('Token de convite inválido');
       }
 
-      if (!user) {
-        throw new NotFoundException('Usuário não encontrado.');
+      if (!inviteToken.email) {
+        throw new BadRequestException('Token não possui e-mail associado.');
       }
+
+      const existingUser = await usersRepository.findOne({
+        where: { email: inviteToken.email },
+      });
+
+      if (existingUser) {
+        throw new ConflictException('Este e-mail já está em uso.');
+      }
+
+      const hashPassword = await this.cryptographyService.createHash(
+        createSpecialistDto.password,
+      );
+
+      const newUser = usersRepository.create({
+        email: inviteToken.email,
+        name: createSpecialistDto.name,
+        password: hashPassword,
+      });
+
+      const user = await usersRepository.save(newUser);
 
       const specialistExists = await specialistsRepository.findOne({
         where: { user_id: user.id },
@@ -81,7 +76,7 @@ export class SpecialistsService {
       }
 
       const specialist = specialistsRepository.create({
-        ...createSpecialistDto,
+        specialty: createSpecialistDto.specialty,
         user_id: user.id,
       });
 
