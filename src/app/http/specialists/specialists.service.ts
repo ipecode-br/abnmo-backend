@@ -40,23 +40,15 @@ export class SpecialistsService {
 
     return await this.dataSource.transaction(async (manager) => {
       const usersDataSource = manager.getRepository(User);
-      const speacialistsDataSource = manager.getRepository(Specialist);
+      const specialistDataSource = manager.getRepository(Specialist);
 
-      let user: User | null = null;
-
-      user = await usersDataSource.findOneBy({ id: specialist.user_id });
-
-      if (!user) {
-        throw new NotFoundException('Usuario não encontrado.');
-      }
-
-      if (user.name !== updateSpecialistDto.name) {
+      if (specialist.name !== updateSpecialistDto.name) {
         await usersDataSource.update(specialist.user_id, {
           name: updateSpecialistDto.name,
         });
       }
 
-      if (user.email !== updateSpecialistDto.email) {
+      if (specialist.email !== updateSpecialistDto.email) {
         const existingUser = await usersDataSource.findOne({
           where: { email: updateSpecialistDto.email },
         });
@@ -76,15 +68,13 @@ export class SpecialistsService {
 
       Object.assign(specialist, updateSpecialistDto);
 
-      await speacialistsDataSource.save(specialist);
-
-      const updatedSpecialist = await this.specialistsRepository.findById(id);
+      await specialistDataSource.save(specialist);
 
       this.logger.log(
         {
-          id: updatedSpecialist?.id,
-          userId: updatedSpecialist?.user_id,
-          email: updatedSpecialist?.user.email,
+          id: specialist.id,
+          userId: specialist.user_id,
+          email: specialist.email,
         },
         'Specialist updated successfully',
       );
