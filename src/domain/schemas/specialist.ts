@@ -1,5 +1,8 @@
 import { z } from 'zod';
 
+import { appointmentSchema } from './appointment';
+import { userSchema } from './user';
+
 export const SPECIALIST_STATUS = ['active', 'inactive'] as const;
 export type SpecialistStatusType = (typeof SPECIALIST_STATUS)[number];
 
@@ -8,7 +11,7 @@ export const specialistSchema = z
     id: z.string().uuid(),
     user_id: z.string().uuid(),
     specialty: z.string(),
-    registry: z.string(),
+    registry: z.string().nullable(),
     status: z.enum(SPECIALIST_STATUS).default('active'),
     created_at: z.coerce.date(),
     updated_at: z.coerce.date(),
@@ -21,8 +24,19 @@ export const updateSpecialistSchema = specialistSchema
     specialty: true,
     registry: true,
   })
-  .extend({
-    name: z.string().min(3),
-    email: z.string().email().max(255),
-  });
+  .merge(userSchema.pick({ name: true, email: true }));
 export type UpdateSpecialistSchema = z.infer<typeof updateSpecialistSchema>;
+
+export const specialistResponseSchema = specialistSchema
+  .merge(
+    userSchema.pick({
+      name: true,
+      email: true,
+      avatar_url: true,
+      role: true,
+    }),
+  )
+  .extend({
+    appointments: z.array(appointmentSchema),
+  });
+export type SpecialistType = z.infer<typeof specialistResponseSchema>;
