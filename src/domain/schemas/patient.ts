@@ -24,7 +24,7 @@ export type GenderType = (typeof GENDERS)[number];
 export const PATIENT_STATUS = ['active', 'inactive'] as const;
 export type PatientStatusType = (typeof PATIENT_STATUS)[number];
 
-export const PATIENT_ORDER_BY = ['name', 'status', 'date'] as const;
+export const PATIENT_ORDER_BY = ['name', 'email', 'status', 'date'] as const;
 export type PatientOrderByType = (typeof PATIENT_ORDER_BY)[number];
 
 export const PATIENT_STATISTICS = ['gender', 'total'] as const;
