@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { Specialist } from '@/domain/entities/specialist';
+import { SpecialistType } from '@/domain/schemas/specialist';
 
 @Injectable()
 export class SpecialistsRepository {
@@ -11,8 +12,8 @@ export class SpecialistsRepository {
     private readonly specialistsRepository: Repository<Specialist>,
   ) {}
 
-  public async findById(id: string): Promise<Specialist | null> {
-    return this.specialistsRepository.findOne({
+  public async findById(id: string): Promise<SpecialistType | null> {
+    const specialist = await this.specialistsRepository.findOne({
       relations: { user: true, appointments: true },
       where: { id },
       select: {
@@ -24,5 +25,17 @@ export class SpecialistsRepository {
         },
       },
     });
+
+    if (!specialist) return null;
+
+    const { user, ...specialistData } = specialist;
+
+    return {
+      ...specialistData,
+      name: user.name,
+      email: user.email,
+      avatar_url: user.avatar_url,
+      role: user.role,
+    };
   }
 }
