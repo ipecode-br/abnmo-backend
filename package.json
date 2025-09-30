@@ -27,7 +27,7 @@
     "db:generate": "ts-node ./infra/scripts/generate-migration.ts",
     "db:migrate": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js -d ./infra/database/data.source.ts migration:run",
     "db:seed-dev": "ts-node -r tsconfig-paths/register infra/database/seed-dev.ts",
-    "lint:eslint:check": "eslint .",
+    "lint:eslint:check": "eslint . && tsc --noEmit",
     "lint:prettier:check": "prettier --check .",
     "lint:prettier:fix": "prettier --write . --log-level=warn",
     "prepare": "husky"

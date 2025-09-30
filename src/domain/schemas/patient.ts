@@ -24,7 +24,7 @@ export type GenderType = (typeof GENDERS)[number];
 export const PATIENT_STATUS = ['active', 'inactive'] as const;
 export type PatientStatusType = (typeof PATIENT_STATUS)[number];
 
-export const PATIENT_ORDER_BY = ['name', 'status', 'date'] as const;
+export const PATIENT_ORDER_BY = ['name', 'email', 'status', 'date'] as const;
 export type PatientOrderByType = (typeof PATIENT_ORDER_BY)[number];
 
 export const PATIENT_STATISTICS = ['gender', 'total'] as const;
@@ -61,12 +61,53 @@ export const patientSchema = z
   .strict();
 export type PatientSchema = z.infer<typeof patientSchema>;
 
+export const patientResponseSchema = patientSchema
+  .merge(
+    userSchema.pick({
+      name: true,
+      email: true,
+      avatar_url: true,
+    }),
+  )
+  .extend({
+    supports: z.array(
+      patientSupportSchema.pick({
+        id: true,
+        name: true,
+        phone: true,
+        kinship: true,
+      }),
+    ),
+  });
+export type PatientType = z.infer<typeof patientResponseSchema>;
+
+export const patientScreeningSchema = patientSchema
+  .omit({
+    id: true,
+    user_id: true,
+    status: true,
+    created_at: true,
+    updated_at: true,
+  })
+  .merge(userSchema.pick({ name: true }))
+  .extend({
+    supports: z
+      .array(
+        createPatientSupportSchema.pick({
+          name: true,
+          phone: true,
+          kinship: true,
+        }),
+      )
+      .nullable()
+      .default([]),
+  });
+export type PatientScreeningSchema = z.infer<typeof patientScreeningSchema>;
+
 export const createPatientSchema = patientSchema
   .omit({ id: true, created_at: true, updated_at: true })
+  .merge(userSchema.pick({ name: true, email: true }))
   .extend({
-    user_id: z.string().uuid().optional(),
-    name: z.string().optional(),
-    email: z.string().email().optional(),
     supports: z
       .array(
         createPatientSupportSchema.pick({
@@ -77,40 +118,20 @@ export const createPatientSchema = patientSchema
       )
       .optional()
       .default([]),
+  });
+export type CreatePatientSchema = z.infer<typeof patientScreeningSchema>;
+
+export const updatePatientSchema = patientSchema
+  .omit({
+    id: true,
+    user_id: true,
+    created_at: true,
+    updated_at: true,
+    status: true,
   })
-  .refine(
-    (data) => {
-      const hasNameAndEmail = !!data.name && !!data.email;
-      if (!data.user_id && !hasNameAndEmail) {
-        return false;
-      }
-      if (data.user_id) {
-        data.name = undefined;
-        data.email = undefined;
-      }
-      return true;
-    },
-    {
-      message:
-        'Fields `name` and `email` are required when `user_id` is not provided.',
-      path: ['root'],
-    },
-  );
-export type CreatePatientSchema = z.infer<typeof createPatientSchema>;
+  .merge(userSchema.pick({ name: true, email: true }));
 
-export const updatePatientSchema = patientSchema.omit({
-  id: true,
-  user_id: true,
-  created_at: true,
-  updated_at: true,
-  status: true,
-});
 export type UpdatePatientSchema = z.infer<typeof updatePatientSchema>;
-
-export const createPatientResponseSchema = baseResponseSchema.extend({});
-export type CreatePatientResponseSchema = z.infer<
-  typeof createPatientResponseSchema
->;
 
 export const findAllPatientsQuerySchema = baseQuerySchema
   .pick({ search: true, order: true, page: true })
@@ -138,7 +159,7 @@ export type FindAllPatientsQuerySchema = z.infer<
 
 export const findAllPatientsResponseSchema = baseResponseSchema.extend({
   data: z.object({
-    patients: z.array(patientSchema),
+    patients: z.array(patientResponseSchema),
     total: z.number(),
   }),
 });
@@ -146,33 +167,7 @@ export type FindAllPatientsResponseSchema = z.infer<
   typeof findAllPatientsResponseSchema
 >;
 
-export const findOnePatientResponseSchema = baseResponseSchema.extend({
-  data: patientSchema.extend({
-    user: userSchema.pick({
-      email: true,
-      name: true,
-      avatar_url: true,
-    }),
-    supports: z.array(
-      patientSupportSchema.pick({
-        id: true,
-        name: true,
-        phone: true,
-        kinship: true,
-      }),
-    ),
-  }),
+export const getPatientResponseSchema = baseResponseSchema.extend({
+  data: patientResponseSchema,
 });
-export type FindOnePatientResponseSchema = z.infer<
-  typeof findOnePatientResponseSchema
->;
-
-export const deletePatientResponseSchema = baseResponseSchema.extend({});
-export type DeletePatientResponseSchema = z.infer<
-  typeof deletePatientResponseSchema
->;
-
-export const inactivatePatientResponseSchema = baseResponseSchema.extend({});
-export type InactivatePatientResponseSchema = z.infer<
-  typeof inactivatePatientResponseSchema
->;
+export type GetPatientResponseSchema = z.infer<typeof getPatientResponseSchema>;

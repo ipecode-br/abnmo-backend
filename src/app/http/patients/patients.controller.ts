@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   NotFoundException,
   Param,
@@ -12,21 +11,21 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
+import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { BaseResponseSchema } from '@/domain/schemas/base';
 import {
-  CreatePatientResponseSchema,
-  DeletePatientResponseSchema,
   FindAllPatientsResponseSchema,
-  FindOnePatientResponseSchema,
-  InactivatePatientResponseSchema,
+  GetPatientResponseSchema,
 } from '@/domain/schemas/patient';
 import { FindAllPatientsSupportResponseSchema } from '@/domain/schemas/patient-support';
+import type { UserSchema } from '@/domain/schemas/user';
 
 import { PatientSupportsRepository } from '../patient-supports/patient-supports.repository';
 import {
   CreatePatientDto,
   FindAllPatientQueryDto,
+  PatientScreeningDto,
   UpdatePatientDto,
 } from './patients.dtos';
 import { PatientsRepository } from './patients.repository';
@@ -41,19 +40,27 @@ export class PatientsController {
     private readonly patientsSupportsRepository: PatientSupportsRepository,
   ) {}
 
+  @Post('/screening')
+  @Roles(['patient'])
+  @ApiOperation({ summary: 'Registra triagem do paciente' })
+  public async screening(
+    @CurrentUser() user: UserSchema,
+    @Body() patientScreeningDto: PatientScreeningDto,
+  ): Promise<BaseResponseSchema> {
+    await this.patientsService.screening(patientScreeningDto, user);
+
+    return {
+      success: true,
+      message: 'Triagem realizada com sucesso.',
+    };
+  }
+
   @Post()
-  @Roles(['manager', 'nurse'])
-  @ApiOperation({
-    summary: 'Cadastra um novo paciente',
-    description: `
-    Dois modos de operação:
-    1. Com "user_id" existente: associa a um usuário já cadastrado (ignora os campos "email" e "name")
-    2. Sem "user_id": cria novo usuário automaticamente ("email" e "name" são obrigatórios)
-    `,
-  })
+  @Roles(['manager', 'nurse', 'patient'])
+  @ApiOperation({ summary: 'Cadastra um novo paciente' })
   public async create(
     @Body() createPatientDto: CreatePatientDto,
-  ): Promise<CreatePatientResponseSchema> {
+  ): Promise<BaseResponseSchema> {
     await this.patientsService.create(createPatientDto);
 
     return {
@@ -82,7 +89,7 @@ export class PatientsController {
   @ApiOperation({ summary: 'Busca um paciente pelo ID' })
   public async findById(
     @Param('id') id: string,
-  ): Promise<FindOnePatientResponseSchema> {
+  ): Promise<GetPatientResponseSchema> {
     const patient = await this.patientsRepository.findById(id);
 
     if (!patient) {
@@ -96,13 +103,28 @@ export class PatientsController {
     };
   }
 
+  @Put(':id')
+  @Roles(['manager', 'nurse', 'patient'])
+  @ApiOperation({ summary: 'Atualiza um paciente pelo ID' })
+  async update(
+    @Param('id') id: string,
+    @Body() updatePatientDto: UpdatePatientDto,
+  ): Promise<BaseResponseSchema> {
+    await this.patientsService.update(id, updatePatientDto);
+
+    return {
+      success: true,
+      message: 'Paciente atualizado com sucesso.',
+    };
+  }
+
   @Patch(':id/inactivate')
-  @Roles(['manager', 'nurse'])
+  @Roles(['manager'])
   @ApiOperation({ summary: 'Inativa o Paciente pelo ID' })
   async inactivatePatient(
     @Param('id') id: string,
-  ): Promise<InactivatePatientResponseSchema> {
-    await this.patientsService.deactivatePatient(id);
+  ): Promise<BaseResponseSchema> {
+    await this.patientsService.deactivate(id);
 
     return {
       success: true,
@@ -132,32 +154,6 @@ export class PatientsController {
         patient_supports: patientSupports,
         total: patientSupports.length,
       },
-    };
-  }
-
-  @Delete(':id')
-  @ApiOperation({ summary: 'Remove um paciente pelo ID' })
-  public async remove(
-    @Param('id') id: string,
-  ): Promise<DeletePatientResponseSchema> {
-    await this.patientsService.remove(id);
-
-    return {
-      success: true,
-      message: 'Paciente removido com sucesso.',
-    };
-  }
-
-  @Put(':id')
-  @ApiOperation({ summary: 'Atualiza um paciente pelo ID' })
-  async update(
-    @Param('id') id: string,
-    @Body() updatePatientDto: UpdatePatientDto,
-  ): Promise<BaseResponseSchema> {
-    await this.patientsService.update(id, updatePatientDto);
-    return {
-      success: true,
-      message: 'Paciente atualizado com sucesso.',
     };
   }
 }
