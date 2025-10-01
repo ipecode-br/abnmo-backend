@@ -24,7 +24,7 @@ export type GenderType = (typeof GENDERS)[number];
 export const PATIENT_STATUS = ['active', 'inactive'] as const;
 export type PatientStatusType = (typeof PATIENT_STATUS)[number];
 
-export const PATIENT_ORDER_BY = ['name', 'status', 'date'] as const;
+export const PATIENT_ORDER_BY = ['name', 'email', 'status', 'date'] as const;
 export type PatientOrderByType = (typeof PATIENT_ORDER_BY)[number];
 
 export const PATIENT_STATISTICS = ['gender', 'total'] as const;
@@ -82,10 +82,15 @@ export const patientResponseSchema = patientSchema
 export type PatientType = z.infer<typeof patientResponseSchema>;
 
 export const patientScreeningSchema = patientSchema
-  .omit({ id: true, created_at: true, updated_at: true })
+  .omit({
+    id: true,
+    user_id: true,
+    status: true,
+    created_at: true,
+    updated_at: true,
+  })
   .merge(userSchema.pick({ name: true }))
   .extend({
-    name: z.string().optional(),
     supports: z
       .array(
         createPatientSupportSchema.pick({
@@ -94,7 +99,7 @@ export const patientScreeningSchema = patientSchema
           kinship: true,
         }),
       )
-      .optional()
+      .nullable()
       .default([]),
   });
 export type PatientScreeningSchema = z.infer<typeof patientScreeningSchema>;

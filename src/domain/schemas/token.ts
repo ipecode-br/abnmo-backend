@@ -2,17 +2,17 @@ import { z } from 'zod';
 
 import type { UserRoleType } from './user';
 
-export const AUTH_TOKENS_MAPPER = {
+export const AUTH_TOKENS_MAPPING = {
   access_token: 'access_token',
   password_reset: 'password_reset',
   invite_token: 'invite_token',
 } as const;
-export type AuthTokenType = keyof typeof AUTH_TOKENS_MAPPER;
+export type AuthTokenType = keyof typeof AUTH_TOKENS_MAPPING;
 
 export const AUTH_TOKENS = [
-  AUTH_TOKENS_MAPPER.access_token,
-  AUTH_TOKENS_MAPPER.password_reset,
-  AUTH_TOKENS_MAPPER.invite_token,
+  AUTH_TOKENS_MAPPING.access_token,
+  AUTH_TOKENS_MAPPING.password_reset,
+  AUTH_TOKENS_MAPPING.invite_token,
 ] as const;
 
 export const authTokenSchema = z
@@ -42,7 +42,7 @@ export type PasswordResetPayloadType = { sub: string };
 export type InviteTokenPayloadType = { sub: string; role: UserRoleType };
 
 export type AuthTokenPayloadByType = {
-  [AUTH_TOKENS_MAPPER.access_token]: AccessTokenPayloadType;
-  [AUTH_TOKENS_MAPPER.password_reset]: PasswordResetPayloadType;
-  [AUTH_TOKENS_MAPPER.invite_token]: InviteTokenPayloadType;
+  [AUTH_TOKENS_MAPPING.access_token]: AccessTokenPayloadType;
+  [AUTH_TOKENS_MAPPING.password_reset]: PasswordResetPayloadType;
+  [AUTH_TOKENS_MAPPING.invite_token]: InviteTokenPayloadType;
 };

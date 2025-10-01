@@ -72,11 +72,21 @@ export class PatientsService {
       const patientsDataSource = manager.getRepository(Patient);
       const patientsSupportDataSource = manager.getRepository(PatientSupport);
 
-      const createdPatient = patientsDataSource.create(patientScreeningDto);
+      const { name, supports, ...patientDto } = patientScreeningDto;
+
+      if (name && name !== user.name) {
+        const usersDataSource = manager.getRepository(User);
+        await usersDataSource.update(user.id, { name });
+      }
+
+      const createdPatient = patientsDataSource.create({
+        ...patientDto,
+        user_id: user.id,
+      });
       const savedPatient = await patientsDataSource.save(createdPatient);
 
-      if (patientScreeningDto.supports.length > 0) {
-        const patientSupports = patientScreeningDto.supports.map((support) =>
+      if (supports && supports.length > 0) {
+        const patientSupports = supports.map((support) =>
           patientsSupportDataSource.create({
             name: support.name,
             phone: support.phone,

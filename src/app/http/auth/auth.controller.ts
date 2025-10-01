@@ -11,7 +11,7 @@ import type { Request, Response } from 'express';
 
 import { Cookies } from '@/common/decorators/cookies';
 import { Public } from '@/common/decorators/public.decorator';
-import { COOKIES_MAPPER } from '@/domain/cookies';
+import { COOKIES_MAPPING } from '@/domain/cookies';
 import type {
   RecoverPasswordResponseSchema,
   SignInWithEmailResponseSchema,
@@ -46,7 +46,7 @@ export class AuthController {
     const { accessToken } = await this.authService.signIn(signInWithEmailDto);
 
     this.utilsService.setCookie(response, {
-      name: COOKIES_MAPPER.access_token,
+      name: COOKIES_MAPPING.access_token,
       value: accessToken,
       maxAge: signInWithEmailDto.rememberMe
         ? TWELVE_HOURS_IN_MS * 60
@@ -85,7 +85,7 @@ export class AuthController {
 
     await this.authService.logout(accessToken);
 
-    this.utilsService.deleteCookie(response, COOKIES_MAPPER.access_token);
+    this.utilsService.deleteCookie(response, COOKIES_MAPPING.access_token);
 
     return {
       success: true,
@@ -96,7 +96,7 @@ export class AuthController {
   @Post('reset-password')
   async resetPassword(
     @Req() request: Request,
-    @Cookies(COOKIES_MAPPER.password_reset)
+    @Cookies(COOKIES_MAPPING.password_reset)
     passwordResetToken: string,
     @Body() resetPasswordDto: ResetPasswordDto,
     @Res({ passthrough: true }) response: Response,
@@ -113,7 +113,7 @@ export class AuthController {
     );
 
     this.utilsService.setCookie(response, {
-      name: COOKIES_MAPPER.access_token,
+      name: COOKIES_MAPPING.access_token,
       value: accessToken,
       maxAge: TWELVE_HOURS_IN_MS,
     });
@@ -138,7 +138,7 @@ export class AuthController {
     const FOUR_HOURS_IN_MS = 1000 * 60 * 60 * 4;
 
     this.utilsService.setCookie(response, {
-      name: COOKIES_MAPPER.password_reset,
+      name: COOKIES_MAPPING.password_reset,
       value: passwordResetToken,
       maxAge: FOUR_HOURS_IN_MS,
     });

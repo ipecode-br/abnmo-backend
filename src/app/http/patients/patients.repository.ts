@@ -28,6 +28,7 @@ export class PatientsRepository {
     const PAGE_SIZE = 10;
     const ORDER_BY: Record<PatientOrderByType, string> = {
       name: 'user.name',
+      email: 'user.email',
       status: 'patient.status',
       date: 'patient.created_at',
     };
