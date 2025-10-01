@@ -7,9 +7,15 @@ import {
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 
+import { CryptographyService } from '@/app/cryptography/crypography.service';
 import { Specialist } from '@/domain/entities/specialist';
 import { User } from '@/domain/entities/user';
+import type { BaseResponseSchema } from '@/domain/schemas/base';
+import { AUTH_TOKENS_MAPPING } from '@/domain/schemas/token';
+import type { UserRoleType } from '@/domain/schemas/user';
+import { EnvService } from '@/env/env.service';
 
+import { TokensRepository } from '../auth/tokens.repository';
 import { UpdateSpecialistDto } from './speacialists.dtos';
 import { SpecialistsRepository } from './specialists.repository';
 
@@ -21,7 +27,38 @@ export class SpecialistsService {
     @InjectDataSource()
     private readonly dataSource: DataSource,
     private readonly specialistsRepository: SpecialistsRepository,
+    private readonly cryptographyService: CryptographyService,
+    private readonly tokensRepository: TokensRepository,
+    private readonly envService: EnvService,
   ) {}
+
+  async createInvite(
+    email: string,
+    role: UserRoleType,
+  ): Promise<BaseResponseSchema> {
+    const token = await this.cryptographyService.createToken(
+      AUTH_TOKENS_MAPPING.invite_token,
+      { sub: email, role },
+    );
+
+    await this.tokensRepository.saveToken({
+      user_id: null,
+      email,
+      token,
+      type: AUTH_TOKENS_MAPPING.invite_token,
+      expires_at: null,
+    });
+
+    const appUrl = this.envService.get('APP_URL');
+    const url = `${appUrl}/conta/completar-cadastro?type=${role}&token=${token}`;
+
+    this.logger.log({ url, email, role }, 'Invite created successfully');
+
+    return {
+      success: true,
+      message: 'Convite criado com sucesso.',
+    };
+  }
 
   public async update(
     id: string,

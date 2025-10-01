@@ -1,7 +1,7 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 
 import { CryptographyService } from '@/app/cryptography/crypography.service';
-import { AUTH_TOKENS_MAPPER } from '@/domain/schemas/token';
+import { AUTH_TOKENS_MAPPING } from '@/domain/schemas/token';
 import { EnvService } from '@/env/env.service';
 
 import type { CreateUserDto } from '../users/users.dtos';
@@ -57,7 +57,7 @@ export class AuthService {
     const expiresIn = rememberMe ? '30d' : '12h';
 
     const accessToken = await this.cryptographyService.createToken(
-      AUTH_TOKENS_MAPPER.access_token,
+      AUTH_TOKENS_MAPPING.access_token,
       { sub: user.id, role: user.role },
       { expiresIn },
     );
@@ -67,8 +67,9 @@ export class AuthService {
 
     await this.tokensRepository.saveToken({
       user_id: user.id,
+      email: null,
       token: accessToken,
-      type: AUTH_TOKENS_MAPPER.access_token,
+      type: AUTH_TOKENS_MAPPING.access_token,
       expires_at: expiration,
     });
 
@@ -95,7 +96,7 @@ export class AuthService {
     const payload = { sub: user.id };
 
     const passwordResetToken = await this.cryptographyService.createToken(
-      AUTH_TOKENS_MAPPER.password_reset,
+      AUTH_TOKENS_MAPPING.password_reset,
       payload,
       { expiresIn: '4h' },
     );
@@ -105,8 +106,9 @@ export class AuthService {
 
     await this.tokensRepository.saveToken({
       user_id: user.id,
+      email: null,
       token: passwordResetToken,
-      type: AUTH_TOKENS_MAPPER.password_reset,
+      type: AUTH_TOKENS_MAPPING.password_reset,
       expires_at: expiration,
     });
 
@@ -128,19 +130,20 @@ export class AuthService {
     token: string,
     newPassword: string,
   ): Promise<{ accessToken: string }> {
-    const tokenEntity = await this.tokensRepository.findToken(token);
+    const resetToken = await this.tokensRepository.findToken(token);
 
     if (
-      !tokenEntity ||
-      tokenEntity.type !== AUTH_TOKENS_MAPPER.password_reset ||
-      tokenEntity.expires_at < new Date()
+      !resetToken ||
+      !resetToken.user_id ||
+      resetToken.type !== AUTH_TOKENS_MAPPING.password_reset ||
+      (resetToken.expires_at && resetToken.expires_at < new Date())
     ) {
       throw new UnauthorizedException(
         'Token de redefinição de senha inválido ou expirado.',
       );
     }
 
-    const user = await this.usersRepository.findById(tokenEntity.user_id);
+    const user = await this.usersRepository.findById(resetToken.user_id);
 
     if (!user) {
       throw new UnauthorizedException('Usuário não encontrado.');
