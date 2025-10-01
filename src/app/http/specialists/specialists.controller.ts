@@ -22,7 +22,7 @@ export class SpecialistsController {
 
     return {
       success: true,
-      message: 'Especialista atualizado com sucesso.',
+      message: 'Atualização realizada com sucesso.',
     };
   }
 }

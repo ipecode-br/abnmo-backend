@@ -12,17 +12,18 @@ export class SpecialistsRepository {
     private readonly specialistsRepository: Repository<Specialist>,
   ) {}
 
-  public async findById(id: string): Promise<SpecialistType | null> {
+  public async findById(id: string): Promise<Specialist | null> {
+    return await this.specialistsRepository.findOne({ where: { id } });
+  }
+
+  public async findByIdWithRelations(
+    id: string,
+  ): Promise<SpecialistType | null> {
     const specialist = await this.specialistsRepository.findOne({
       relations: { user: true, appointments: true },
       where: { id },
       select: {
-        user: {
-          name: true,
-          email: true,
-          avatar_url: true,
-          role: true,
-        },
+        user: { name: true, email: true, avatar_url: true },
       },
     });
 
@@ -35,7 +36,6 @@ export class SpecialistsRepository {
       name: user.name,
       email: user.email,
       avatar_url: user.avatar_url,
-      role: user.role,
     };
   }
 }

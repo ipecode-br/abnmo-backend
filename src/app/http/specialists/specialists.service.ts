@@ -27,7 +27,8 @@ export class SpecialistsService {
     id: string,
     updateSpecialistDto: UpdateSpecialistDto,
   ): Promise<void> {
-    const specialist = await this.specialistsRepository.findById(id);
+    const specialist =
+      await this.specialistsRepository.findByIdWithRelations(id);
 
     if (!specialist) {
       this.logger.error(
@@ -40,7 +41,7 @@ export class SpecialistsService {
 
     return await this.dataSource.transaction(async (manager) => {
       const usersDataSource = manager.getRepository(User);
-      const specialistDataSource = manager.getRepository(Specialist);
+      const specialistsDataSource = manager.getRepository(Specialist);
 
       if (specialist.name !== updateSpecialistDto.name) {
         await usersDataSource.update(specialist.user_id, {
@@ -68,7 +69,7 @@ export class SpecialistsService {
 
       Object.assign(specialist, updateSpecialistDto);
 
-      await specialistDataSource.save(specialist);
+      await specialistsDataSource.save(specialist);
 
       this.logger.log(
         {
