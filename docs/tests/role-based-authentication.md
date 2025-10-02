@@ -1,71 +1,71 @@
-# Role-Based Authentication in E2E Tests
+# Autenticação Baseada em Papéis em Testes E2E
 
-This document explains how to use the enhanced API client for testing protected routes with different user roles.
+Este documento explica como usar o cliente API aprimorado para testar rotas protegidas com diferentes papéis de usuário.
 
-## Overview
+## Visão Geral
 
-The ABNMO backend uses role-based access control with 5 different user roles:
+O backend ABNMO usa controle de acesso baseado em papéis com 5 diferentes papéis de usuário:
 
-- `admin` - Full system access
-- `manager` - Management-level access
-- `nurse` - Healthcare provider access
-- `specialist` - Specialist healthcare provider access
-- `patient` - Patient-level access (default for registration)
+- `admin` - Acesso completo ao sistema
+- `manager` - Acesso em nível de gerenciamento
+- `nurse` - Acesso de provedor de saúde
+- `specialist` - Acesso de provedor de saúde especialista
+- `patient` - Acesso em nível de paciente (padrão para registro)
 
-## Problem
+## Problema
 
-The standard `/register` endpoint only creates users with the `patient` role. Many routes require elevated permissions (`manager`, `nurse`, etc.), making it difficult to test these endpoints.
+O endpoint padrão `/register` cria apenas usuários com o papel `patient`. Muitas rotas requerem permissões elevadas (`manager`, `nurse`, etc.), tornando difícil testar esses endpoints.
 
-## Solution
+## Solução
 
-The enhanced API client provides methods to create users with any role directly in the database, bypassing the registration endpoint limitations.
+O cliente API aprimorado fornece métodos para criar usuários com qualquer papel diretamente no banco de dados, contornando as limitações do endpoint de registro.
 
-## Usage
+## Uso
 
-### Basic Usage
+### Uso Básico
 
 ```typescript
 import { api } from '../config/api-client';
 
-describe('Protected Route Tests', () => {
-  it('should test with specific role', async () => {
-    // Create and login as a manager
+describe('Testes de Rotas Protegidas', () => {
+  it('deve testar com papel específico', async () => {
+    // Criar e logar como manager
     const client = await api().createManagerAndLogin();
 
-    // Now you can make authenticated requests
+    // Agora pode fazer requisições autenticadas
     const response = await client.get('/protected-endpoint').send();
     expect(response.status).toBe(200);
   });
 });
 ```
 
-### Available Methods
+### Métodos Disponíveis
 
-#### Role-Specific Convenience Methods
+#### Métodos de Conveniência Específicos por Papel
 
 ```typescript
-// Create users with specific roles
-await api().createAdminAndLogin(); // Admin user
-await api().createManagerAndLogin(); // Manager user
-await api().createNurseAndLogin(); // Nurse user
-await api().createSpecialistAndLogin(); // Specialist user
-await api().createPatientAndLogin(); // Patient user (same as createUserAndLogin)
+// Criar usuários com papéis específicos
+await api().createAdminAndLogin(); // Usuário admin
+await api().createManagerAndLogin(); // Usuário manager
+await api().createNurseAndLogin(); // Usuário nurse
+await api().createSpecialistAndLogin(); // Usuário specialist
+await api().createPatientAndLogin(); // Usuário patient (mesmo que createUserAndLogin)
 ```
 
-#### Generic Role Method
+#### Método Genérico de Papel
 
 ```typescript
-// Create user with any role
+// Criar usuário com qualquer papel
 await api().createUserWithRoleAndLogin('nurse', {
-  name: 'Custom Nurse',
+  name: 'Enfermeira Customizada',
   email: 'nurse@example.com',
   password: 'custom123',
 });
 ```
 
-#### Customizing User Data
+#### Customizando Dados de Usuário
 
-All methods accept optional user data:
+Todos os métodos aceitam dados de usuário opcionais:
 
 ```typescript
 await api().createManagerAndLogin({
@@ -75,160 +75,160 @@ await api().createManagerAndLogin({
 });
 ```
 
-If no data is provided, defaults are generated:
+Se nenhum dado for fornecido, padrões são gerados:
 
 - `name`: "Test {role} {timestamp}"
 - `email`: "test-{role}-{timestamp}@example.com"
 - `password`: "password123"
 
-## Testing Different Permission Levels
+## Testando Diferentes Níveis de Permissão
 
-### Example: Testing Patients Endpoint
+### Exemplo: Testando Endpoint de Pacientes
 
 ```typescript
 describe('GET /patients', () => {
-  it('should deny access for patient role', async () => {
+  it('deve negar acesso para papel patient', async () => {
     const client = await api().createPatientAndLogin();
-    await client.get('/patients').expect(401); // Returns 401 for insufficient permissions
+    await client.get('/patients').expect(401); // Retorna 401 para permissões insuficientes
   });
 
-  it('should allow access for manager role', async () => {
+  it('deve permitir acesso para papel manager', async () => {
     const client = await api().createManagerAndLogin();
     await client.get('/patients').expect(200);
   });
 
-  it('should allow access for nurse role', async () => {
+  it('deve permitir acesso para papel nurse', async () => {
     const client = await api().createNurseAndLogin();
     await client.get('/patients').expect(200);
   });
 
-  it('should deny access for specialist role', async () => {
+  it('deve negar acesso para papel specialist', async () => {
     const client = await api().createSpecialistAndLogin();
-    await client.get('/patients').expect(401); // Returns 401 for insufficient permissions
+    await client.get('/patients').expect(401); // Retorna 401 para permissões insuficientes
   });
 });
 ```
 
-## Best Practices
+## Melhores Práticas
 
-### 1. Test All Permission Levels
+### 1. Teste Todos os Níveis de Permissão
 
-For each protected endpoint, test:
+Para cada endpoint protegido, teste:
 
-- Unauthenticated access (should return 401)
-- Each role that should have access (should return 2xx)
-- Each role that should NOT have access (should return 401 - insufficient permissions)
+- Acesso não autenticado (deve retornar 401)
+- Cada papel que deve ter acesso (deve retornar 2xx)
+- Cada papel que NÃO deve ter acesso (deve retornar 401 - permissões insuficientes)
 
 ```typescript
-describe('Protected Endpoint', () => {
-  it('should return 401 for unauthenticated requests', async () => {
+describe('Endpoint Protegido', () => {
+  it('deve retornar 401 para requisições não autenticadas', async () => {
     await api().get('/protected').expect(401);
   });
 
-  it('should return 401 for insufficient permissions', async () => {
+  it('deve retornar 401 para permissões insuficientes', async () => {
     const client = await api().createPatientAndLogin();
     await client.get('/protected').expect(401);
   });
 
-  it('should allow access for authorized roles', async () => {
+  it('deve permitir acesso para papéis autorizados', async () => {
     const client = await api().createManagerAndLogin();
     await client.get('/protected').expect(200);
   });
 });
 ```
 
-### 2. Use Unique Emails for Creation Tests
+### 2. Use Emails Únicos para Testes de Criação
 
-When testing creation endpoints, ensure unique emails to avoid conflicts:
+Ao testar endpoints de criação, garanta emails únicos para evitar conflitos:
 
 ```typescript
-it('should create resource', async () => {
+it('deve criar recurso', async () => {
   const client = await api().createManagerAndLogin();
   const uniqueData = {
-    name: 'Test Resource',
-    email: `test-${Date.now()}@example.com`, // Unique email
+    name: 'Recurso de Teste',
+    email: `test-${Date.now()}@example.com`, // Email único
   };
 
   await client.post('/resources').send(uniqueData).expect(201);
 });
 ```
 
-### 3. Group Tests by Permission Level
+### 3. Agrupe Testes por Nível de Permissão
 
-Organize tests to clearly show which roles can access which endpoints:
+Organize testes para mostrar claramente quais papéis podem acessar quais endpoints:
 
 ```typescript
-describe('Manager-only endpoints', () => {
+describe('Endpoints apenas para manager', () => {
   let managerClient: AuthenticatedApiClient;
 
   beforeAll(async () => {
     managerClient = await api().createManagerAndLogin();
   });
 
-  it('should access manager dashboard', async () => {
+  it('deve acessar dashboard do manager', async () => {
     await managerClient.get('/manager/dashboard').expect(200);
   });
 
-  it('should manage users', async () => {
+  it('deve gerenciar usuários', async () => {
     await managerClient.get('/manager/users').expect(200);
   });
 });
 ```
 
-## Behind the Scenes
+## Nos Bastidores
 
-The role-based authentication helper:
+O auxiliar de autenticação baseada em papéis:
 
-1. **Creates users directly in database** - Bypasses registration endpoint limitations
-2. **Hashes passwords properly** - Uses bcrypt with salt rounds matching the app
-3. **Logs in automatically** - Gets authentication cookie for immediate use
-4. **Returns authenticated client** - Ready to make protected requests
+1. **Cria usuários diretamente no banco** - Contorna limitações do endpoint de registro
+2. **Faz hash das senhas adequadamente** - Usa bcrypt com rounds de salt correspondendo à app
+3. **Faz login automaticamente** - Obtém cookie de autenticação para uso imediato
+4. **Retorna cliente autenticado** - Pronto para fazer requisições protegidas
 
-## Troubleshooting
+## Solução de Problemas
 
-### Common Issues
+### Problemas Comuns
 
-**401 Unauthorized**: The user doesn't have permission for this endpoint.
+**401 Unauthorized**: O usuário não tem permissão para este endpoint.
 
-- Check the endpoint's role requirements
-- Ensure you're using the correct role for testing
+- Verifique os requisitos de papel do endpoint
+- Garanta que está usando o papel correto para teste
 
-**409 Conflict**: Resource already exists (e.g., duplicate email, CPF).
+**409 Conflict**: Recurso já existe (ex.: email duplicado, CPF).
 
-- Use unique identifiers for creation tests
-- Clear test database between runs if needed
+- Use identificadores únicos para testes de criação
+- Limpe banco de teste entre execuções se necessário
 
-### Debugging Authentication
+### Depurando Autenticação
 
 ```typescript
-it('should debug authentication', async () => {
+it('deve depurar autenticação', async () => {
   const client = await api().createManagerAndLogin({
     email: 'debug@example.com',
   });
 
-  // Test authentication works
+  // Testar se autenticação funciona
   const profileResponse = await client.get('/users/profile').send();
   expect(profileResponse.status).toBe(200);
 
-  // Now test your actual endpoint
+  // Agora testar seu endpoint real
   const response = await client.get('/your-endpoint').send();
-  console.log('Response status:', response.status);
-  console.log('Response body:', response.body);
+  console.log('Status da resposta:', response.status);
+  console.log('Corpo da resposta:', response.body);
 });
 ```
 
-## Integration with Existing Tests
+## Integração com Testes Existentes
 
-The new methods are fully compatible with existing test patterns. You can gradually migrate tests or use both approaches:
+Os novos métodos são totalmente compatíveis com padrões de teste existentes. Você pode migrar testes gradualmente ou usar ambas as abordagens:
 
 ```typescript
-// Old way (still works for patient role)
+// Maneira antiga (ainda funciona para papel patient)
 const oldClient = await api().createUserAndLogin({
   name: 'Test User',
   email: 'test@example.com',
   password: 'password123',
 });
 
-// New way (works for any role)
+// Nova maneira (funciona para qualquer papel)
 const newClient = await api().createManagerAndLogin();
 ```

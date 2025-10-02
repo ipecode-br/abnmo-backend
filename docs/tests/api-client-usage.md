@@ -1,79 +1,79 @@
-# API Client for E2E Testing
+# Cliente API para Testes E2E
 
-## Overview
+## Visão geral
 
-The API client provides a clean, readable abstraction over supertest for making HTTP requests in E2E tests. It offers both fluent and functional interfaces inspired by frontend API clients.
+O cliente API fornece uma abstração limpa sobre o supertest para fazer requisições HTTP em testes E2E. Ele oferece interfaces fluente e funcional inspiradas em clientes API frontend.
 
-## Basic Usage
+## Uso Básico
 
-### Import and Setup
+### Importar e Configurar
 
 ```typescript
 import { api } from '../config/api-client';
 import { getTestApp } from '../config/setup';
 
-describe('My E2E Tests', () => {
+describe('Meus Testes E2E', () => {
   let app: INestApplication;
 
   beforeAll(() => {
     app = getTestApp();
   });
 
-  // Your tests here...
+  // Seus testes aqui...
 });
 ```
 
-### Fluent Interface (Recommended)
+### Interface Fluente (Recomendada)
 
 ```typescript
-// GET requests
+// Requisições GET
 const response = await api(app).get('/users').send();
 const response = await api(app).get('/users').expect(200);
 
-// POST requests
+// Requisições POST
 const response = await api(app).post('/users').send(userData);
 const response = await api(app).post('/users').expect(201).send(userData);
 
-// PUT requests
+// Requisições PUT
 const response = await api(app).put('/users/1').send(updateData);
 
-// PATCH requests
+// Requisições PATCH
 const response = await api(app).patch('/users/1').send(partialData);
 
-// DELETE requests
+// Requisições DELETE
 const response = await api(app).delete('/users/1').send();
 const response = await api(app).delete('/users/1').expect(204);
 ```
 
-### Query Parameters and Headers
+### Parâmetros de Query e Cabeçalhos
 
 ```typescript
-// Query parameters
+// Parâmetros de query
 const response = await api(app)
   .get('/users')
   .query({ page: '1', limit: '10' })
   .send();
 
-// Custom headers
+// Cabeçalhos customizados
 const response = await api(app)
   .post('/users')
   .headers({ 'Content-Type': 'application/json' })
   .send(userData);
 
-// Combining query and headers
+// Combinando query e cabeçalhos
 const response = await api(app).get('/users').query({ page: '1' }).expect(200);
 ```
 
-### Functional Interface
+### Interface Funcional
 
 ```typescript
-// Basic request
+// Requisição básica
 const response = await api(app).request('/users', {
   method: 'GET',
   expect: 200,
 });
 
-// With body and headers
+// Com corpo e cabeçalhos
 const response = await api(app).request('/users', {
   method: 'POST',
   body: userData,
@@ -81,19 +81,19 @@ const response = await api(app).request('/users', {
   expect: 201,
 });
 
-// With query parameters
+// Com parâmetros de query
 const response = await api(app).request('/users', {
   method: 'GET',
   query: { page: '1', limit: '10' },
 });
 ```
 
-## Authentication
+## Autenticação
 
-### Using JWT Tokens
+### Usando Tokens JWT
 
 ```typescript
-// Get a token first (from login or setup)
+// Obter token primeiro (de login ou setup)
 const loginResponse = await api(app).post('/login').send({
   email: 'user@example.com',
   password: 'password',
@@ -101,39 +101,39 @@ const loginResponse = await api(app).post('/login').send({
 
 const token = loginResponse.body.token;
 
-// Use authenticated client
+// Usar cliente autenticado
 const authenticatedApi = api(app).withAuth(token);
 
-// All requests will include Authorization header
+// Todas as requisições incluirão cabeçalho Authorization
 const profile = await authenticatedApi.get('/profile').send();
 const updated = await authenticatedApi.put('/profile').send(updateData);
 ```
 
-## Expected Status Codes
+## Códigos de Status Esperados
 
-### Single Status Code
+### Código de Status Único
 
 ```typescript
-// Expects exactly 200
+// Espera exatamente 200
 const response = await api(app).get('/users').expect(200);
 
-// Expects exactly 201
+// Espera exatamente 201
 const response = await api(app).post('/users').expect(201).send(userData);
 ```
 
-### Multiple Status Codes (for flexible testing)
+### Múltiplos Códigos de Status (para testes flexíveis)
 
 ```typescript
-// When you want to handle multiple valid responses
+// Quando quiser lidar com múltiplas respostas válidas
 const response = await api(app).get('/users').expect([200, 404]);
 
-// Check the actual status in your test
+// Verificar o status atual no teste
 expect([200, 404].includes(response.status)).toBe(true);
 ```
 
-## Migration Examples
+## Exemplos de Migração
 
-### Before (with supertest)
+### Antes (com supertest)
 
 ```typescript
 const response = await request(app.getHttpServer())
@@ -142,32 +142,32 @@ const response = await request(app.getHttpServer())
   .expect(201);
 ```
 
-### After (with API client)
+### Depois (com cliente API)
 
 ```typescript
 const response = await api(app).post('/register').expect(201).send(userData);
 
-// Or without expect for more flexible testing
+// Ou sem expect para testes mais flexíveis
 const response = await api(app).post('/register').send(userData);
 expect([200, 201, 400, 409].includes(response.status)).toBe(true);
 ```
 
-## Complete Example
+## Exemplo Completo
 
 ```typescript
 import { INestApplication } from '@nestjs/common';
 import { api } from '../config/api-client';
 import { getTestApp } from '../config/setup';
 
-describe('User Management E2E', () => {
+describe('Gerenciamento de Usuários E2E', () => {
   let app: INestApplication;
 
   beforeAll(() => {
     app = getTestApp();
   });
 
-  it('should complete user registration flow', async () => {
-    // 1. Register user
+  it('deve completar fluxo de registro de usuário', async () => {
+    // 1. Registrar usuário
     const userData = {
       name: 'John Doe',
       email: 'john@example.com',
@@ -181,7 +181,7 @@ describe('User Management E2E', () => {
 
     expect(registerResponse.body.success).toBe(true);
 
-    // 2. Login user
+    // 2. Logar usuário
     const loginResponse = await api(app).post('/login').send({
       email: userData.email,
       password: userData.password,
@@ -191,7 +191,7 @@ describe('User Management E2E', () => {
 
     const token = loginResponse.body.token;
 
-    // 3. Access protected route
+    // 3. Acessar rota protegida
     const profileResponse = await api(app)
       .withAuth(token)
       .get('/profile')
@@ -199,7 +199,7 @@ describe('User Management E2E', () => {
 
     expect(profileResponse.body.email).toBe(userData.email);
 
-    // 4. Update profile
+    // 4. Atualizar perfil
     const updateResponse = await api(app)
       .withAuth(token)
       .put('/profile')
@@ -208,17 +208,17 @@ describe('User Management E2E', () => {
     expect([200, 204].includes(updateResponse.status)).toBe(true);
   });
 
-  it('should handle validation errors', async () => {
+  it('deve lidar com erros de validação', async () => {
     const invalidData = { email: 'invalid-email' };
 
     const response = await api(app).post('/register').send(invalidData);
 
-    // Flexible status checking for validation errors
+    // Verificação flexível de status para erros de validação
     expect([400, 422].includes(response.status)).toBe(true);
     expect(response.body).toHaveProperty('message');
   });
 
-  it('should handle query parameters', async () => {
+  it('deve lidar com parâmetros de query', async () => {
     const response = await api(app)
       .get('/users')
       .query({ page: '1', limit: '5', search: 'john' })
@@ -233,38 +233,38 @@ describe('User Management E2E', () => {
 });
 ```
 
-## Benefits
+## Benefícios
 
-### ✅ **Readability**
+### Legibilidade
 
-- Clean, chainable interface
-- Self-documenting method names
-- Less boilerplate code
+- Interface limpa e encadeável
+- Nomes de métodos autoexplicativos
+- Menos código boilerplate
 
-### ✅ **Flexibility**
+### Flexibilidade
 
-- Both fluent and functional interfaces
-- Easy authentication handling
-- Flexible status code checking
+- Interfaces fluente e funcional
+- Tratamento fácil de autenticação
+- Verificação flexível de códigos de status
 
-### ✅ **Type Safety**
+### Segurança de tipos
 
-- Full TypeScript support
-- Proper response typing
-- IntelliSense support
+- Suporte completo ao TypeScript
+- Tipagem adequada de respostas
+- Suporte ao IntelliSense
 
-### ✅ **Consistency**
+### Consistência
 
-- Same patterns across all tests
-- Reusable authentication
-- Standardized error handling
+- Mesmos padrões em todos os testes
+- Autenticação reutilizável
+- Tratamento padronizado de erros
 
-## Advanced Features
+## Recursos Avançados
 
-### Custom Headers for All Requests
+### Cabeçalhos Customizados para Todas as Requisições
 
 ```typescript
-// For specific use cases, you can extend the client
+// Para casos de uso específicos, você pode estender o cliente
 class CustomApiClient extends ApiClient {
   async request(endpoint: string, options: RequestOptions = {}) {
     const headers = {
@@ -277,10 +277,10 @@ class CustomApiClient extends ApiClient {
 }
 ```
 
-### Request/Response Interceptors
+### Interceptadores de Requisição/Resposta
 
 ```typescript
-// You can wrap the client to add logging or other middleware
+// Você pode envolver o cliente para adicionar logging ou outros middlewares
 function withLogging(apiClient: ApiClient) {
   const originalRequest = apiClient.request.bind(apiClient);
 
@@ -288,17 +288,19 @@ function withLogging(apiClient: ApiClient) {
     endpoint: string,
     options: RequestOptions = {},
   ) => {
-    console.log(`Making ${options.method || 'GET'} request to ${endpoint}`);
+    console.log(
+      `Fazendo requisição ${options.method || 'GET'} para ${endpoint}`,
+    );
     const response = await originalRequest(endpoint, options);
-    console.log(`Response: ${response.status}`);
+    console.log(`Resposta: ${response.status}`);
     return response;
   };
 
   return apiClient;
 }
 
-// Usage
+// Uso
 const loggingApi = withLogging(api(app));
 ```
 
-This API client makes your E2E tests more readable and maintainable while providing the same powerful features as direct supertest usage.
+Este cliente API torna seus testes E2E mais legíveis e manuteníveis enquanto fornece os mesmos recursos poderosos do uso direto do supertest.

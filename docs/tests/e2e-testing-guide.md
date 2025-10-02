@@ -1,66 +1,78 @@
-# ✅ E2E Testing - Zero Boilerplate Setup
+# Testes E2E - configuração zero boilerplate
 
-## Overview
+## Visão geral
 
-This NestJS application now features a **completely automated E2E testing environment** that requires **zero boilerplate code** in your test files. Just write your tests, and everything else is handled automatically!
+Esta aplicação NestJS apresenta um **ambiente de testes E2E completamente automatizado** que requer **zero código boilerplate** em seus arquivos de teste. Basta escrever seus testes, e tudo o resto é tratado automaticamente!
 
-## 🎯 Key Benefits
+## Benefícios principais
 
-- ✅ **Zero Boilerplate**: No `beforeAll`, `afterAll`, `beforeEach`, `afterEach` needed in test files
-- ✅ **Silent Execution**: All NestJS logs are suppressed during tests for clean output
-- ✅ **Automatic Cleanup**: Database is cleared before/after each test automatically
-- ✅ **Global App Instance**: Single app instance shared across all tests (faster execution)
-- ✅ **Real API Testing**: Tests work exactly like Postman/Insomnia requests
+- **Zero boilerplate**: Não há necessidade de `beforeAll`, `afterAll`, `beforeEach`, `afterEach` nos arquivos de teste
+- **Execução silenciosa**: Todos os logs do NestJS são suprimidos durante os testes para saída limpa
+- **Limpeza automática**: O banco de dados é limpo antes/depois de cada teste automaticamente
+- **Instância global da app**: Uma única instância da app compartilhada entre todos os testes (execução mais rápida)
+- **Testes de API reais**: Os testes funcionam exatamente como requisições do Postman/InsomniaE - Configuração Zero Boilerplate
 
-## 📝 Writing Tests (The New Way)
+## Visão Geral
 
-### Simple Test Example
+Esta aplicação NestJS agora apresenta um **ambiente de testes E2E completamente automatizado** que requer **zero código boilerplate** em seus arquivos de teste. Basta escrever seus testes, e tudo o resto é tratado automaticamente!
+
+## 🎯 Benefícios Principais
+
+- ✅ **Zero Boilerplate**: Não há necessidade de `beforeAll`, `afterAll`, `beforeEach`, `afterEach` nos arquivos de teste
+- ✅ **Execução Silenciosa**: Todos os logs do NestJS são suprimidos durante os testes para saída limpa
+- ✅ **Limpeza Automática**: O banco de dados é limpo antes/depois de cada teste automaticamente
+- ✅ **Instância Global da App**: Uma única instância da app compartilhada entre todos os testes (execução mais rápida)
+- ✅ **Testes de API Reais**: Os testes funcionam exatamente como requisições do Postman/Insomnia
+
+## 📝 Escrevendo Testes
+
+### Exemplo de Teste Simples
 
 ```typescript
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { getTestApp } from './setup';
 
-describe('My Feature E2E Tests', () => {
+describe('Meus Testes E2E de Feature', () => {
   let app: INestApplication;
 
   beforeAll(() => {
-    app = getTestApp(); // That's it! No async, no setup, no cleanup!
+    app = getTestApp(); // Isso é tudo! Não há async, não há setup, não há cleanup!
   });
 
-  it('should work perfectly', async () => {
-    const response = await request(app.getHttpServer()).get('/my-endpoint');
+  it('deve funcionar perfeitamente', async () => {
+    const response = await request(app.getHttpServer()).get('/meu-endpoint');
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
   });
 
-  it('should handle POST requests', async () => {
+  it('deve lidar com requisições POST', async () => {
     const response = await request(app.getHttpServer())
-      .post('/my-endpoint')
-      .send({ key: 'value' });
+      .post('/meu-endpoint')
+      .send({ chave: 'valor' });
 
     expect(response.status).toBe(201);
   });
 });
 ```
 
-### Authentication Test Example
+### Exemplo de Teste de Autenticação
 
 ```typescript
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { getTestApp } from './setup';
 
-describe('Auth E2E Tests', () => {
+describe('Testes E2E de Auth', () => {
   let app: INestApplication;
 
   beforeAll(() => {
     app = getTestApp();
   });
 
-  it('should register and login user', async () => {
-    // Register
+  it('deve registrar e logar usuário', async () => {
+    // Registrar
     const registerResponse = await request(app.getHttpServer())
       .post('/register')
       .send({
@@ -71,7 +83,7 @@ describe('Auth E2E Tests', () => {
 
     expect([200, 201].includes(registerResponse.status)).toBe(true);
 
-    // Login
+    // Logar
     const loginResponse = await request(app.getHttpServer())
       .post('/login')
       .send({
@@ -84,56 +96,71 @@ describe('Auth E2E Tests', () => {
 });
 ```
 
-## 🚀 Running Tests
+## 🚀 Executando Testes
 
 ```bash
-# Run all E2E tests
+# Preparar ambiente de teste (iniciar containers e migrar banco)
+npm run test:prepare
+
+# Executar todos os testes E2E
 npm run test:e2e
 
-# Run specific test file
+# Executar arquivo de teste específico
 npm run test:e2e -- auth.e2e-spec.ts
 
-# Run in watch mode
-npm run test:e2e -- --watch
+# Executar em modo watch
+npm run test:e2e:watch
+
+# Executar com cobertura
+npm run test:e2e:cov
+
+# Depurar testes E2E
+npm run test:e2e:debug
+
+# Parar containers de teste
+npm run test:stop
+
+# Parar e remover containers de teste
+npm run test:down
 ```
 
-## 🎛️ What Happens Automatically
+## O que acontece automaticamente
 
-### Global Setup (`test/setup.ts`)
+### Configuração global (`test/setup.ts`)
 
-Automatically handles:
+Trata automaticamente de:
 
-1. **App Creation**: Creates NestJS app instance once for all tests
-2. **Log Suppression**: Hides all NestJS console output during tests
-3. **Database Cleanup**: Clears database before and after each test
-4. **Error Handling**: Manages unhandled promises and cleanup
-5. **Helper Functions**: Provides `getTestApp()` and `getTestDataSource()`
+1. **Criação da app**: Cria instância da app NestJS uma vez para todos os testes
+2. **Supressão de logs**: Oculta toda saída do console do NestJS durante os testes
+3. **Limpeza do banco**: Limpa o banco de dados antes e depois de cada teste
+4. **Tratamento de erros**: Gerencia promessas não tratadas e limpeza
+5. **Funções auxiliares**: Fornece `getTestApp()` e `getTestDataSource()`
 
-### Test Lifecycle
+### Ciclo de vida dos testes
 
 ```
-[Global Setup] → Create App Instance + Suppress Logs
+[Configuração global] → Criar instância da app + suprimir logs
 ↓
-[Before Each Test] → Clear Database
+[Antes de cada teste] → Limpar banco de dados
 ↓
-[Your Test] → Runs with clean database
+[Seu teste] → Executa com banco limpo
 ↓
-[After Each Test] → Clear Database Again
+[Depois de cada teste] → Limpar banco de dados novamente
 ↓
-[Global Teardown] → Cleanup App Instance
+[Desmontagem global] → Limpar instância da app
 ```
 
-## 📁 Current Working Examples
+## Exemplos funcionais atuais
 
-All these files demonstrate the new zero-boilerplate approach:
+Todos esses arquivos demonstram a nova abordagem zero-boilerplate:
 
-- **`test/app.e2e-spec.ts`** - Basic app connectivity
-- **`test/auth.e2e-spec.ts`** - Authentication endpoints
-- **`test/patients.e2e-spec.ts`** - Patient management
+- **`test/app.e2e-spec.ts`** - Conectividade básica da app
+- **`test/auth.e2e-spec.ts`** - Endpoints de autenticação
+- **`test/patients.e2e-spec.ts`** - Gerenciamento de pacientes
 
-Each file is clean and focused only on the actual tests!
+Cada arquivo é limpo e focado apenas nos testes reais!
 
-## ⚙️ Configuration Files
+## Arquivos de configuração
 
 ### `test/jest-e2e.json`
 
@@ -158,20 +185,20 @@ Each file is clean and focused only on the actual tests!
 ### `.env.test`
 
 ```bash
-NODE_ENV=test
-DB_HOST=localhost
-DB_PORT=3306
-DB_DATABASE=abnmo_database  # Same as development
-DB_USERNAME=abnmo_user
-DB_PASSWORD=abnmo_password
-# ... other env vars
+NODE_ENV="test"
+DB_HOST="localhost"
+DB_PORT=3307
+DB_DATABASE="abnmo_test"
+DB_USERNAME="abnmo_user"
+DB_PASSWORD="abnmo_password"
+# ... outras variáveis de ambiente
 ```
 
-## 🔧 Helper Functions Available
+## Funções auxiliares disponíveis
 
 ### `getTestApp()`
 
-Returns the global NestJS application instance.
+Retorna a instância global da aplicação NestJS.
 
 ```typescript
 import { getTestApp } from './setup';
@@ -182,7 +209,7 @@ const response = await request(app.getHttpServer()).get('/endpoint');
 
 ### `getTestDataSource()`
 
-Returns the global TypeORM DataSource (if you need direct database access).
+Retorna o DataSource global do TypeORM (se precisar de acesso direto ao banco).
 
 ```typescript
 import { getTestDataSource } from './setup';
@@ -192,55 +219,68 @@ const userRepo = dataSource.getRepository(User);
 const users = await userRepo.find();
 ```
 
-## 🐛 Troubleshooting
+## Solução de problemas
 
-### Database Connection Issues
+### Problemas de conexão com banco de dados
 
 ```bash
-# Ensure Docker is running
-docker-compose -f infra/docker/compose-dev.yaml up -d
+# Garantir que Docker está rodando
+docker-compose -f infra/docker/compose-test.yaml up -d
 
-# Check database is accessible
-mysql -h localhost -u abnmo_user -p abnmo_database
+# Verificar se o banco está acessível
+mysql -h localhost -P 3307 -u abnmo_user -p abnmo_test
 ```
 
-### Tests Running Slow
+### Testes rodando lentos
 
-- Tests run with `maxWorkers: 1` to prevent database conflicts
-- Single app instance is shared across all tests for faster execution
-- Database cleanup is optimized to only clear data, not recreate schema
+- Testes rodam com `maxWorkers: 1` para prevenir conflitos no banco
+- Instância única da app é compartilhada entre todos os testes para execução mais rápida
+- Limpeza do banco é otimizada para limpar apenas dados, não recriar schema
 
-### Module Resolution Issues
+### Problemas de resolução de módulos
 
-- Check that `@/` path mapping works in your IDE
-- Ensure `moduleNameMapper` in `jest-e2e.json` is correct
-- Verify file paths in import statements
+- Verificar se o mapeamento de caminho `@/` funciona no seu IDE
+- Garantir que `moduleNameMapper` em `jest-e2e.json` está correto
+- Verificar caminhos dos arquivos nas declarações de import
 
-## 📊 Test Results Example
+## Exemplo de resultados de teste
+
+## 📊 Exemplo de Resultados de Teste
 
 ```
+
+```
+
 > npm run test:e2e
 
- PASS  test/app.e2e-spec.ts
- PASS  test/auth.e2e-spec.ts
- PASS  test/patients.e2e-spec.ts
+PASS test/app.e2e-spec.ts
+PASS test/auth.e2e-spec.ts
+PASS test/patients.e2e-spec.ts
 
 Test Suites: 3 passed, 3 total
-Tests:       6 passed, 6 total
-Snapshots:   0 total
-Time:        7.2s
+Tests: 6 passed, 6 total
+Snapshots: 0 total
+Time: 7.2s
+
 ```
 
-Clean output with no NestJS logs cluttering the terminal!
+Saída limpa sem logs do NestJS poluindo o terminal!
 
-## ✨ Migration Guide
+## Guia de migração
 
-To convert existing E2E tests to the new zero-boilerplate approach:
+Para converter testes E2E existentes para a nova abordagem zero-boilerplate:
+```
 
-### Before
+Saída limpa sem logs do NestJS poluindo o terminal!
+
+## ✨ Guia de Migração
+
+Para converter testes E2E existentes para a nova abordagem zero-boilerplate:
+
+### Antes
 
 ```typescript
-describe('Old Test', () => {
+describe('Teste antigo', () => {
   let app: INestApplication;
   let dataSource: DataSource;
 
@@ -262,24 +302,22 @@ describe('Old Test', () => {
     await TestApp.clearDatabase(dataSource);
   });
 
-  // tests...
+  // testes...
 });
 ```
 
-### After
+### Depois
 
 ```typescript
 import { getTestApp } from './setup';
 
-describe('New Test', () => {
+describe('Novo teste', () => {
   let app: INestApplication;
 
   beforeAll(() => {
     app = getTestApp();
   });
 
-  // tests...
+  // testes...
 });
 ```
-
-That's it! Remove ~20 lines of boilerplate and focus on writing actual tests! 🎉

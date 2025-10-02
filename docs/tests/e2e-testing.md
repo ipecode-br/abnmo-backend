@@ -1,84 +1,88 @@
-# E2E Testing Setup Documentation
+# Documentação de Configuração de Testes E2E
 
-## Overview
+## Visão Geral
 
-This E2E testing setup provides a complete isolated testing environment for the NestJS application with database cleanup and automatic isolation between tests.
+Esta configuração de testes E2E fornece um ambiente de teste isolado completo para a aplicação NestJS com limpeza de banco de dados e isolamento automático entre testes.
 
-## Key Features
+## Recursos principais
 
-- **Database Cleanup**: Uses the same database as development but with complete cleanup before and after each test
-- **Automatic Isolation**: Database is cleared before and after each test to prevent conflicts
-- **Real HTTP Requests**: Tests simulate actual API requests (like Postman/Insomnia)
-- **Authentication Testing**: Supports token-based and cookie-based authentication testing
-- **Concurrent Testing**: Tests run in isolation without affecting each other
+- **Limpeza de banco de dados**: Usa um banco de dados dedicado aos testes automatizados com limpeza completa antes/depois de cada teste
+- **Isolamento automático**: Banco é limpo antes/depois de cada teste para prevenir conflitos
+- **Requisições HTTP reais**: Testes simulam requisições de API reais (como Postman/Insomnia)
+- **Testes de autenticação**: Suporta testes de autenticação baseada em token e cookie
+- **Testes concorrentes**: Testes rodam em isolamento sem afetar uns aos outros
 
-## Current Working Setup
+## Configuração Atual em Funcionamento
 
-### Configuration Files
+### Arquivos de Configuração
 
-- `src/config/database.config.ts` - Database configuration factory
-- `src/config/typeorm.config.ts` - TypeORM configurations for dev/test
-- `.env.test` - Test environment variables
+- `src/config/database.config.ts` - Factory de configuração de banco de dados
+- `src/config/typeorm.config.ts` - Configurações TypeORM para dev/test
+- `.env.test` - Variáveis de ambiente de teste
 
-### Test Utilities
+### Utilitários de Teste
 
-- `test/test-utils.ts` - Test application factory and database utilities
-- `test/setup.ts` - Global test setup and teardown
-- `test/jest-e2e.json` - Jest configuration for E2E tests
-- `scripts/test-e2e.sh` - Script to run E2E tests with proper environment
+- `test/test-utils.ts` - Factory de aplicação de teste e utilitários de banco
+- `test/setup.ts` - Configuração e desmontagem global de teste
+- `test/jest-e2e.json` - Configuração Jest para testes E2E
+- `scripts/test-e2e.sh` - Script para executar testes E2E com ambiente adequado
 
-### Working Tests
+### Testes Funcionais
 
-- `test/app.e2e-spec.ts` - Basic app connectivity and database tests
-- `test/auth.e2e-spec.ts` - Authentication endpoints tests (register/login)
-- `test/patients.e2e-spec.ts` - Patient management endpoints tests
+- `test/app.e2e-spec.ts` - Conectividade básica da app e testes de banco
+- `test/auth.e2e-spec.ts` - Testes de endpoints de autenticação (register/login)
+- `test/patients.e2e-spec.ts` - Testes de endpoints de gerenciamento de pacientes
 
-## Environment Setup
+## Configuração de Ambiente
 
-### Database Configuration
+### Configuração de banco de dados
 
-Your `.env.test` file should contain:
+Seu arquivo `.env.test` deve conter:
 
 ```bash
-NODE_ENV=test
-DB_HOST=localhost
-DB_PORT=3306
-DB_DATABASE=abnmo_database  # Same database as development
-DB_USERNAME=abnmo_user
-DB_PASSWORD=abnmo_password
-# ... other required env vars from your main .env file
+NODE_ENV="test"
+DB_HOST="localhost"
+DB_PORT=3307
+DB_DATABASE="abnmo_test"
+DB_USERNAME="abnmo_user"
+DB_PASSWORD="abnmo_password"
+# ... outras variáveis de ambiente necessárias do seu .env principal
 ```
 
-**Important**: The tests use the same database as development but with complete cleanup between tests. This ensures consistency while maintaining test isolation.
+**Importante**: Os testes usam um banco de dados exclusivo (`abnmo_test`) na porta 3307, separado do banco de desenvolvimento. Isso garante isolamento completo entre ambientes de desenvolvimento e teste.
 
-The test setup will automatically:
+## Executando Testes
 
-- Create test database if it doesn't exist
-- Use a separate database name (`{DB_DATABASE}_test_e2e`)
-- Synchronize schema on each test run
-- Clean up after tests complete
+## Executando Testes
 
-## Running Tests
-
-### Available Scripts
+### Scripts Disponíveis
 
 ```bash
-# Run E2E tests
+# Preparar ambiente de teste (iniciar containers e migrar banco)
+npm run test:prepare
+
+# Executar testes E2E
 npm run test:e2e
 
-# Run E2E tests in watch mode
+# Executar testes E2E em modo watch
 npm run test:e2e:watch
 
-# Run E2E tests with coverage
+# Executar testes E2E com cobertura
 npm run test:e2e:cov
 
-# Debug E2E tests
+# Depurar testes E2E
 npm run test:e2e:debug
+
+# Parar containers de teste
+npm run test:stop
+
+# Parar e remover containers de teste
+npm run test:down
 ```
 
-## Writing E2E Tests
+## Escrevendo Testes E2E
 
-### Basic Test Structure
+### Estrutura Básica de Teste
 
 ```typescript
 import { INestApplication } from '@nestjs/common';
@@ -108,7 +112,7 @@ describe('Feature (e2e)', () => {
     await TestApp.clearDatabase(dataSource);
   });
 
-  it('should test endpoint', async () => {
+  it('deve testar endpoint', async () => {
     const response = await request(app.getHttpServer())
       .post('/endpoint')
       .send({ data: 'test' })
@@ -118,6 +122,135 @@ describe('Feature (e2e)', () => {
   });
 });
 ```
+
+### Testando Autenticação
+
+```typescript
+// Logar e obter cookie de auth
+const signInResponse = await request(app.getHttpServer())
+  .post('/auth/sign-in')
+  .send({ email: 'user@example.com', password: 'password123' })
+  .expect(200);
+
+const cookies = signInResponse.headers['set-cookie'];
+const authCookie = cookies.find((cookie: string) =>
+  cookie.startsWith('auth_token='),
+);
+
+// Usar cookie de auth em requisições subsequentes
+const protectedResponse = await request(app.getHttpServer())
+  .get('/protected-route')
+  .set('Cookie', authCookie)
+  .expect(200);
+```
+
+### Asserções de Banco de Dados
+
+```typescript
+import { User } from '@/domain/entities/user';
+
+// Verificar se entidade foi criada
+const userRepository = dataSource.getRepository(User);
+const user = await userRepository.findOne({
+  where: { email: 'test@example.com' },
+});
+expect(user).toBeTruthy();
+
+// Verificar que banco está limpo
+const count = await userRepository.count();
+expect(count).toBe(0);
+```
+
+## Melhores Práticas
+
+### 1. Isolamento de Teste
+
+- Cada teste começa com banco limpo
+- Testes não devem depender uns dos outros
+- Use `beforeEach` e `afterEach` para limpeza
+
+### 2. Dados de Teste Realistas
+
+- Use dados realistas que correspondam às suas regras de validação
+- Teste cenários válidos e inválidos
+- Teste casos extremos e condições de fronteira
+
+### 3. Fluxos Completos de Usuário
+
+- Teste jornadas end-to-end do usuário
+- Inclua fluxos de autenticação
+- Teste cenários de erro
+
+### 4. Verificação de Banco de Dados
+
+- Sempre verifique mudanças de estado do banco
+- Verifique casos positivos e negativos
+- Garanta relacionamentos adequados de dados
+
+## Solução de Problemas
+
+### Problemas Comuns
+
+1. **Timeout de Conexão**
+
+   - Aumente timeout na configuração Jest
+   - Verifique parâmetros de conexão do banco
+
+2. **Erro de Banco Já Existe**
+
+   - A configuração trata isso automaticamente
+   - Garanta limpeza adequada em `afterAll`
+
+3. **Porta Já em Uso**
+
+   - Testes usam a mesma instância da app
+   - Apenas uma conexão de banco de teste por suite de teste
+
+4. **Problemas de Autenticação**
+   - Verifique extração de cookie
+   - Verifique configuração de middleware de autenticação
+
+### Limpeza de banco de dados
+
+Se testes falharem e deixarem o banco sujo:
+
+```sql
+-- Conectar ao MySQL e executar:
+DROP DATABASE IF EXISTS abnmo_test;
+```
+
+## Arquitetura
+
+### Estratégia de banco de teste
+
+Esta configuração usa um banco de dados MySQL dedicado exclusivamente para testes:
+
+1. **Banco dedicado**: Usa `abnmo_test` na porta 3307, completamente separado do desenvolvimento
+2. **Sem sincronização**: O schema é assumido como já existente (via migrações manuais)
+3. **Limpeza otimizada**: Limpa apenas dados entre testes, não recria tabelas
+4. **Conexão reduzida**: Pool de conexões limitado para melhor performance em testes
+
+### Substituição de módulo de banco de dados
+
+O `DatabaseModule` detecta automaticamente ambiente de teste e usa configuração otimizada:
+
+- **Desenvolvimento/Produção**: Banco regular com migrações
+- **Teste**: Banco de teste dedicado com configurações otimizadas para performance
+
+## Notas de Segurança
+
+- Variáveis de ambiente de teste usam valores dummy para segredos
+- Banco de teste deve ser separado do de produção
+- Nunca rode testes E2E contra banco de produção
+- Credenciais de teste não devem ser usadas em produção
+
+## Performance
+
+- Testes rodam com `maxWorkers: 1` para prevenir conflitos no banco
+- Pooling de conexões é reduzido em ambiente de teste
+- Limpeza do banco é otimizada para ser rápida mas completa
+
+````
 
 ### Testing Authentication
 
@@ -138,7 +271,7 @@ const protectedResponse = await request(app.getHttpServer())
   .get('/protected-route')
   .set('Cookie', authCookie)
   .expect(200);
-```
+````
 
 ### Database Assertions
 

@@ -16,4 +16,3 @@ services:
 
 volumes:
   abnmo_mysql_data:
-  

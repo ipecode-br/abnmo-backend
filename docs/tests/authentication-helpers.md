@@ -1,39 +1,39 @@
-# Authentication Helpers for E2E Tests
+# Auxiliares de autenticação para testes E2E
 
-This document explains how to use the authentication helpers to simplify e2e tests for protected routes.
+Este documento explica como usar os auxiliares de autenticação para simplificar testes e2e para rotas protegidas.
 
-## Overview
+## Visão geral
 
-The ABNMO platform uses **cookie-based authentication** with an `access_token` cookie. The authentication helpers provide convenient methods to handle login, registration, and authenticated requests without repeating the authentication flow in every test.
+A plataforma ABNMO usa **autenticação baseada em cookie** com um cookie `access_token`. Os auxiliares de autenticação fornecem métodos convenientes para lidar com login, registro e requisições autenticadas sem repetir o fluxo de autenticação em cada teste.
 
-## Available Methods
+## Métodos Disponíveis
 
-### Basic API Client
+### Cliente API Básico
 
 ```typescript
 import { api } from '../config/api-client';
 import { getTestApp } from '../config/setup';
 
-// Create basic API client
+// Criar cliente API básico
 const apiClient = api(app);
 ```
 
-### Authentication Methods
+### Métodos de Autenticação
 
-#### 1. `loginAs(credentials)` - Login with existing credentials
+#### 1. `loginAs(credentials)` - Logar com credenciais existentes
 
 ```typescript
 const authenticatedApi = await api(app).loginAs({
   email: 'user@example.com',
   password: 'password123',
-  rememberMe: false, // optional
+  rememberMe: false, // opcional
 });
 
-// Now make authenticated requests
+// Agora fazer requisições autenticadas
 const response = await authenticatedApi.get('/users/profile').send();
 ```
 
-#### 2. `createUserAndLogin(userData)` - Register and auto-login
+#### 2. `createUserAndLogin(userData)` - Registrar e auto-logar
 
 ```typescript
 const testUser = {
@@ -44,49 +44,49 @@ const testUser = {
 
 const authenticatedApi = await api(app).createUserAndLogin(testUser);
 
-// User is now registered and logged in
+// Usuário está registrado e logado
 const response = await authenticatedApi.get('/users/profile').send();
 ```
 
-#### 3. `withCookie(cookieString)` - Use existing cookie
+#### 3. `withCookie(cookieString)` - Usar cookie existente
 
 ```typescript
-// If you already have an auth cookie
+// Se já tiver um cookie de auth
 const authenticatedApi = api(app).withCookie('access_token=jwt_token_here');
 
 const response = await authenticatedApi.get('/protected-route').send();
 ```
 
-### Test User Generation
+### Geração de Usuários de Teste
 
-Use `AuthTestHelpers` to generate unique test users:
+Use `AuthTestHelpers` para gerar usuários de teste únicos:
 
 ```typescript
 import { AuthTestHelpers } from '../config/test-utils';
 
-// Generate a single test user with unique email
+// Gerar um usuário de teste único com email único
 const testUser = AuthTestHelpers.generateTestUser('my-test');
-// Result: { name: 'Test User 1234567890', email: 'my-test-1234567890-123@example.com', password: 'TestPassword123!' }
+// Resultado: { name: 'Test User 1234567890', email: 'my-test-1234567890-123@example.com', password: 'TestPassword123!' }
 
-// Generate multiple test users
+// Gerar múltiplos usuários de teste
 const testUsers = AuthTestHelpers.generateTestUsers(3, 'batch-test');
-// Results in array of 3 users with unique emails
+// Resulta em array de 3 usuários com emails únicos
 ```
 
-## Usage Examples
+## Exemplos de Uso
 
-### Testing Protected Routes
+### Testando Rotas Protegidas
 
 ```typescript
-describe('Protected Routes', () => {
+describe('Rotas Protegidas', () => {
   let app: INestApplication;
 
   beforeAll(() => {
     app = getTestApp();
   });
 
-  it('should require authentication', async () => {
-    // Test without authentication
+  it('deve exigir autenticação', async () => {
+    // Testar sem autenticação
     const response = await api(app).get('/users/profile').send();
 
     expect(response.status).toBe(401);
@@ -96,12 +96,12 @@ describe('Protected Routes', () => {
     );
   });
 
-  it('should allow authenticated access', async () => {
+  it('deve permitir acesso autenticado', async () => {
     // Create and login user
     const testUser = AuthTestHelpers.generateTestUser('profile-test');
     const authenticatedApi = await api(app).createUserAndLogin(testUser);
 
-    // Access protected route
+    // Acessar rota protegida
     const response = await authenticatedApi.get('/users/profile').send();
 
     expect(response.status).toBe(200);
@@ -114,37 +114,37 @@ describe('Protected Routes', () => {
 });
 ```
 
-### Testing Different User Roles
+### Testando Diferentes Papéis de Usuário
 
 ```typescript
-describe('Role-based Access', () => {
-  it('should test with multiple users', async () => {
-    // Create multiple test users
+describe('Acesso Baseado em Papéis', () => {
+  it('deve testar com múltiplos usuários', async () => {
+    // Criar múltiplos usuários de teste
     const users = AuthTestHelpers.generateTestUsers(2, 'role-test');
 
-    // Login each user and test
+    // Logar cada usuário e testar
     for (const user of users) {
       const authenticatedApi = await api(app).createUserAndLogin(user);
 
       const response = await authenticatedApi.get('/some-endpoint').send();
 
-      // Test based on expected behavior for this user
+      // Testar baseado no comportamento esperado para este usuário
       expect([200, 403].includes(response.status)).toBe(true);
     }
   });
 });
 ```
 
-### Testing with Existing Users
+### Testando com Usuários Existentes
 
 ```typescript
-describe('Existing User Tests', () => {
-  it('should login with known credentials', async () => {
-    // First create a user (could be in beforeAll)
+describe('Testes com Usuários Existentes', () => {
+  it('deve logar com credenciais conhecidas', async () => {
+    // Primeiro criar um usuário (pode ser em beforeAll)
     const userData = AuthTestHelpers.generateTestUser('known-user');
     await api(app).post('/register').send(userData);
 
-    // Later, login with those credentials
+    // Depois, logar com essas credenciais
     const authenticatedApi = await api(app).loginAs({
       email: userData.email,
       password: userData.password,
@@ -156,31 +156,31 @@ describe('Existing User Tests', () => {
 });
 ```
 
-### Logout Testing
+### Testando Logout
 
 ```typescript
 describe('Logout', () => {
-  it('should logout user', async () => {
+  it('deve deslogar usuário', async () => {
     const testUser = AuthTestHelpers.generateTestUser('logout-test');
     const authenticatedApi = await api(app).createUserAndLogin(testUser);
 
-    // User is authenticated
+    // Usuário está autenticado
     let response = await authenticatedApi.get('/users/profile').send();
     expect(response.status).toBe(200);
 
     // Logout
     await authenticatedApi.logout();
 
-    // Try to access protected route after logout
+    // Tentar acessar rota protegida após logout
     response = await authenticatedApi.get('/users/profile').send();
     expect(response.status).toBe(401);
   });
 });
 ```
 
-## Error Handling
+## Tratamento de Erros
 
-The authentication helpers throw descriptive errors when authentication fails:
+Os auxiliares de autenticação lançam erros descritivos quando a autenticação falha:
 
 ```typescript
 try {
@@ -189,33 +189,33 @@ try {
     password: 'wrongpassword',
   });
 } catch (error) {
-  // Error will include response status and body
-  console.error('Login failed:', error.message);
+  // Erro incluirá status da resposta e corpo
+  console.error('Login falhou:', error.message);
 }
 ```
 
-## Best Practices
+## Melhores práticas
 
-1. **Use unique test users**: Always use `AuthTestHelpers.generateTestUser()` to avoid conflicts between tests.
+1. **Use usuários de teste únicos**: Sempre use `AuthTestHelpers.generateTestUser()` para evitar conflitos entre testes.
 
-2. **Test both authenticated and unauthenticated scenarios**: Always test that routes properly reject unauthenticated requests.
+2. **Teste cenários autenticados e não autenticados**: Sempre teste que as rotas rejeitam adequadamente requisições não autenticadas.
 
-3. **Clean database between tests**: Use the database clearing utilities for isolation when needed.
+3. **Limpe o banco entre testes**: Use os utilitários de limpeza do banco para isolamento quando necessário.
 
-4. **Avoid shared authentication state**: Create fresh authenticated clients for each test to avoid side effects.
+4. **Evite estado de autenticação compartilhado**: Crie clientes autenticados frescos para cada teste para evitar efeitos colaterais.
 
-5. **Test error scenarios**: Include tests for invalid credentials, expired tokens, etc.
+5. **Teste cenários de erro**: Inclua testes para credenciais inválidas, tokens expirados, etc.
 
-## Common Patterns
+## Padrões comuns
 
 ```typescript
-// Pattern 1: Test unauthenticated first, then authenticated
-it('should handle endpoint properly', async () => {
-  // Test without auth
+// Padrão 1: Testar não autenticado primeiro, depois autenticado
+it('deve lidar com endpoint adequadamente', async () => {
+  // Testar sem auth
   let response = await api(app).get('/endpoint').send();
   expect(response.status).toBe(401);
 
-  // Test with auth
+  // Testar com auth
   const authenticatedApi = await api(app).createUserAndLogin(
     AuthTestHelpers.generateTestUser('test'),
   );
@@ -223,8 +223,8 @@ it('should handle endpoint properly', async () => {
   expect(response.status).toBe(200);
 });
 
-// Pattern 2: Reuse authenticated client in describe block
-describe('User Management', () => {
+// Padrão 2: Reutilizar cliente autenticado no bloco describe
+describe('Gerenciamento de Usuários', () => {
   let authenticatedApi: AuthenticatedApiClient;
 
   beforeAll(async () => {
@@ -232,14 +232,14 @@ describe('User Management', () => {
     authenticatedApi = await api(app).createUserAndLogin(testUser);
   });
 
-  it('should get profile', async () => {
+  it('deve obter perfil', async () => {
     const response = await authenticatedApi.get('/users/profile').send();
     expect(response.status).toBe(200);
   });
 
-  it('should update profile', async () => {
+  it('deve atualizar perfil', async () => {
     const response = await authenticatedApi.put('/users/profile').send({
-      name: 'Updated Name',
+      name: 'Nome Atualizado',
     });
     expect([200, 400].includes(response.status)).toBe(true);
   });
