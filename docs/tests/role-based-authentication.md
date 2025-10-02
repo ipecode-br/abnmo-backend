@@ -22,15 +22,38 @@ O cliente API aprimorado fornece métodos para criar usuários com qualquer pape
 
 ## Uso
 
+### Estrutura Básica de Teste
+
+Todos os testes E2E devem seguir a estrutura básica:
+
+```typescript
+import { INestApplication } from '@nestjs/common';
+import { api } from '../config/api-client';
+import { getTestApp } from '../config/setup';
+
+describe('Feature (e2e)', () => {
+  let app: INestApplication;
+
+  beforeAll(() => (app = getTestApp()));
+  // ... seus testes aqui
+});
+```
+
 ### Uso Básico
 
 ```typescript
+import { INestApplication } from '@nestjs/common';
 import { api } from '../config/api-client';
+import { getTestApp } from '../config/setup';
 
 describe('Testes de Rotas Protegidas', () => {
+  let app: INestApplication;
+
+  beforeAll(() => (app = getTestApp()));
+
   it('deve testar com papel específico', async () => {
     // Criar e logar como manager
-    const client = await api().createManagerAndLogin();
+    const client = await api(app).createManagerAndLogin();
 
     // Agora pode fazer requisições autenticadas
     const response = await client.get('/protected-endpoint').send();
@@ -45,18 +68,18 @@ describe('Testes de Rotas Protegidas', () => {
 
 ```typescript
 // Criar usuários com papéis específicos
-await api().createAdminAndLogin(); // Usuário admin
-await api().createManagerAndLogin(); // Usuário manager
-await api().createNurseAndLogin(); // Usuário nurse
-await api().createSpecialistAndLogin(); // Usuário specialist
-await api().createPatientAndLogin(); // Usuário patient (mesmo que createUserAndLogin)
+await api(app).createAdminAndLogin(); // Usuário admin
+await api(app).createManagerAndLogin(); // Usuário manager
+await api(app).createNurseAndLogin(); // Usuário nurse
+await api(app).createSpecialistAndLogin(); // Usuário specialist
+await api(app).createPatientAndLogin(); // Usuário patient (mesmo que createUserAndLogin)
 ```
 
 #### Método Genérico de Papel
 
 ```typescript
 // Criar usuário com qualquer papel
-await api().createUserWithRoleAndLogin('nurse', {
+await api(app).createUserWithRoleAndLogin('nurse', {
   name: 'Enfermeira Customizada',
   email: 'nurse@example.com',
   password: 'custom123',
@@ -68,7 +91,7 @@ await api().createUserWithRoleAndLogin('nurse', {
 Todos os métodos aceitam dados de usuário opcionais:
 
 ```typescript
-await api().createManagerAndLogin({
+await api(app).createManagerAndLogin({
   name: 'Test Manager',
   email: 'manager@example.com',
   password: 'securepassword123',
@@ -81,29 +104,35 @@ Se nenhum dado for fornecido, padrões são gerados:
 - `email`: "test-{role}-{timestamp}@example.com"
 - `password`: "password123"
 
+**Nota**: Quando nenhum `userData` é fornecido, o sistema usa cache inteligente para reutilizar usuários criados anteriormente, melhorando significativamente a performance dos testes.
+
 ## Testando Diferentes Níveis de Permissão
 
 ### Exemplo: Testando Endpoint de Pacientes
 
 ```typescript
 describe('GET /patients', () => {
+  let app: INestApplication;
+
+  beforeAll(() => (app = getTestApp()));
+
   it('deve negar acesso para papel patient', async () => {
-    const client = await api().createPatientAndLogin();
+    const client = await api(app).createPatientAndLogin();
     await client.get('/patients').expect(401); // Retorna 401 para permissões insuficientes
   });
 
   it('deve permitir acesso para papel manager', async () => {
-    const client = await api().createManagerAndLogin();
+    const client = await api(app).createManagerAndLogin();
     await client.get('/patients').expect(200);
   });
 
   it('deve permitir acesso para papel nurse', async () => {
-    const client = await api().createNurseAndLogin();
+    const client = await api(app).createNurseAndLogin();
     await client.get('/patients').expect(200);
   });
 
   it('deve negar acesso para papel specialist', async () => {
-    const client = await api().createSpecialistAndLogin();
+    const client = await api(app).createSpecialistAndLogin();
     await client.get('/patients').expect(401); // Retorna 401 para permissões insuficientes
   });
 });
@@ -121,17 +150,21 @@ Para cada endpoint protegido, teste:
 
 ```typescript
 describe('Endpoint Protegido', () => {
+  let app: INestApplication;
+
+  beforeAll(() => (app = getTestApp()));
+
   it('deve retornar 401 para requisições não autenticadas', async () => {
-    await api().get('/protected').expect(401);
+    await api(app).get('/protected').expect(401);
   });
 
   it('deve retornar 401 para permissões insuficientes', async () => {
-    const client = await api().createPatientAndLogin();
+    const client = await api(app).createPatientAndLogin();
     await client.get('/protected').expect(401);
   });
 
   it('deve permitir acesso para papéis autorizados', async () => {
-    const client = await api().createManagerAndLogin();
+    const client = await api(app).createManagerAndLogin();
     await client.get('/protected').expect(200);
   });
 });
@@ -143,7 +176,8 @@ Ao testar endpoints de criação, garanta emails únicos para evitar conflitos:
 
 ```typescript
 it('deve criar recurso', async () => {
-  const client = await api().createManagerAndLogin();
+  const app = getTestApp();
+  const client = await api(app).createManagerAndLogin();
   const uniqueData = {
     name: 'Recurso de Teste',
     email: `test-${Date.now()}@example.com`, // Email único
@@ -159,10 +193,12 @@ Organize testes para mostrar claramente quais papéis podem acessar quais endpoi
 
 ```typescript
 describe('Endpoints apenas para manager', () => {
+  let app: INestApplication;
   let managerClient: AuthenticatedApiClient;
 
   beforeAll(async () => {
-    managerClient = await api().createManagerAndLogin();
+    app = getTestApp();
+    managerClient = await api(app).createManagerAndLogin();
   });
 
   it('deve acessar dashboard do manager', async () => {
@@ -182,7 +218,9 @@ O auxiliar de autenticação baseada em papéis:
 1. **Cria usuários diretamente no banco** - Contorna limitações do endpoint de registro
 2. **Faz hash das senhas adequadamente** - Usa bcrypt com rounds de salt correspondendo à app
 3. **Faz login automaticamente** - Obtém cookie de autenticação para uso imediato
-4. **Retorna cliente autenticado** - Pronto para fazer requisições protegidas
+4. **Cache inteligente de usuários** - Reutiliza usuários criados para performance (30s de cache)
+5. **Geração automática de dados únicos** - Evita conflitos com timestamps e sufixos randômicos
+6. **Retorna cliente autenticado** - Pronto para fazer requisições protegidas
 
 ## Solução de Problemas
 
@@ -202,7 +240,8 @@ O auxiliar de autenticação baseada em papéis:
 
 ```typescript
 it('deve depurar autenticação', async () => {
-  const client = await api().createManagerAndLogin({
+  const app = getTestApp();
+  const client = await api(app).createManagerAndLogin({
     email: 'debug@example.com',
   });
 
@@ -223,12 +262,12 @@ Os novos métodos são totalmente compatíveis com padrões de teste existentes.
 
 ```typescript
 // Maneira antiga (ainda funciona para papel patient)
-const oldClient = await api().createUserAndLogin({
+const oldClient = await api(app).createUserAndLogin({
   name: 'Test User',
   email: 'test@example.com',
   password: 'password123',
 });
 
 // Nova maneira (funciona para qualquer papel)
-const newClient = await api().createManagerAndLogin();
+const newClient = await api(app).createManagerAndLogin();
 ```
