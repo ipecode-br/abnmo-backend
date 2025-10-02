@@ -2,9 +2,9 @@
 
 ## Architecture Overview
 
-This is an event-driven monorepo for a SaaS platform connecting advertisers and content creators through audience management. The system uses Turborepo with these key components:
+This is an NestJS application for a SaaS platform managing patients and appointments.
 
-- **Backend**: NestJS API with TypeORM and MySQL
+- **Stack**: NestJS API with TypeORM and MySQL
 
 ## Code Patterns & Conventions
 

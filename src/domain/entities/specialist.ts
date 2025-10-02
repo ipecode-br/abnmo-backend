@@ -29,6 +29,9 @@ export class Specialist implements SpecialistSchema {
   @Column({ type: 'varchar', length: 255 })
   specialty: string;
 
+  @Column({ type: 'varchar', length: 255 })
+  registry: string;
+
   @Column({ type: 'enum', enum: SPECIALIST_STATUS, default: 'active' })
   status: SpecialistStatusType;
 

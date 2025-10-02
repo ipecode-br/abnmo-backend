@@ -16,8 +16,11 @@ export class Token implements AuthTokenSchema {
   @PrimaryGeneratedColumn({ type: 'integer' })
   id: number;
 
-  @Column('uuid')
-  user_id: string;
+  @Column({ type: 'uuid', nullable: true })
+  user_id: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  email: string | null;
 
   @Column({ type: 'varchar', length: 255 })
   token: string;
@@ -25,8 +28,8 @@ export class Token implements AuthTokenSchema {
   @Column({ type: 'enum', enum: AUTH_TOKENS })
   type: AuthTokenType;
 
-  @CreateDateColumn({ type: 'timestamp' })
-  expires_at: Date;
+  @CreateDateColumn({ type: 'timestamp', nullable: true })
+  expires_at: Date | null;
 
   @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;

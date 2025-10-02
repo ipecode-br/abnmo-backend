@@ -19,13 +19,27 @@ export async function createNestApp(adapter?: ExpressAdapter) {
     ? await NestFactory.create<NestExpressApplication>(AppModule, adapter)
     : await NestFactory.create<NestExpressApplication>(AppModule);
 
-  const envService = app.get(EnvService);
-
   app.useGlobalPipes(new GlobalZodValidationPipe());
   app.useGlobalFilters(new HttpExceptionFilter());
 
+  const envService = app.get(EnvService);
+  const allowLocalRequests = false;
+
   app.enableCors({
-    origin: envService.get('APP_URL'),
+    origin: (origin, callback) => {
+      const allowedOrigins = allowLocalRequests
+        ? [envService.get('APP_URL'), envService.get('APP_LOCAL_URL')]
+        : [envService.get('APP_URL')];
+
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`Origin ${origin} not allowed by CORS`));
+    },
     allowedHeaders: ['Authorization', 'Content-Type', 'Content-Length'],
     methods: ['OPTIONS', 'GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
     credentials: true,

@@ -10,4 +10,16 @@ export class AppointmentsRepository {
     @InjectRepository(Appointment)
     private readonly appointmentsRepository: Repository<Appointment>,
   ) {}
+
+  public async findById(id: string): Promise<Appointment | null> {
+    return await this.appointmentsRepository.findOne({ where: { id } });
+  }
+
+  public async update(appointment: Appointment): Promise<Appointment> {
+    return await this.appointmentsRepository.save(appointment);
+  }
+
+  public async cancel(id: string): Promise<Appointment> {
+    return await this.appointmentsRepository.save({ id, status: 'canceled' });
+  }
 }

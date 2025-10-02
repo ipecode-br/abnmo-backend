@@ -18,13 +18,15 @@ export class UtilsService {
     response: Response,
     { name, value, ...options }: SetCookieOptions,
   ): void {
+    const cookieDomain = this.envService.get('COOKIE_DOMAIN');
+
     response.cookie(name, value, {
-      domain: this.envService.get('COOKIE_DOMAIN'),
+      domain: `.${cookieDomain}`,
       httpOnly: true,
       maxAge: 1000 * 60 * 60 * 12, // 8 hours
       path: '/',
       sameSite: 'lax',
-      secure: this.envService.get('APP_ENVIRONMENT') !== 'local',
+      secure: true,
       signed: true,
       ...options,
     });
@@ -35,12 +37,14 @@ export class UtilsService {
     name: string,
     options?: CookieOptions,
   ): void {
+    const cookieDomain = this.envService.get('COOKIE_DOMAIN');
+
     response.clearCookie(name, {
-      domain: this.envService.get('COOKIE_DOMAIN'),
+      domain: `.${cookieDomain}`,
       httpOnly: true,
       path: '/',
       sameSite: 'lax',
-      secure: this.envService.get('APP_ENVIRONMENT') !== 'local',
+      secure: true,
       signed: true,
       ...options,
     });
