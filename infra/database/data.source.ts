@@ -3,7 +3,8 @@ import { DataSource } from 'typeorm';
 
 import { DATABASE_ENTITIES } from '@/domain/entities/database';
 
-config();
+const envFile = process.env.NODE_ENV === 'test' ? '.env.test' : '.env';
+config({ path: envFile });
 
 const dataSource = new DataSource({
   type: 'mysql',

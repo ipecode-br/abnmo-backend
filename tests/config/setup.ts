@@ -1,6 +1,13 @@
 // Global test setup for E2E tests
 import { INestApplication } from '@nestjs/common';
+import { config } from 'dotenv';
 import { DataSource } from 'typeorm';
+
+// Load test environment variables BEFORE anything else
+config({ path: '.env.test' });
+
+// Set test environment
+process.env.NODE_ENV = 'test';
 
 import { clearUserCache } from './api-client';
 import { TestApp } from './test-utils';
@@ -10,9 +17,6 @@ declare global {
   var __E2E_DATASOURCE__: DataSource;
   var __E2E_MODULE__: any;
 }
-
-// Set test environment
-process.env.NODE_ENV = 'test';
 
 // Global test timeout
 jest.setTimeout(45000);
