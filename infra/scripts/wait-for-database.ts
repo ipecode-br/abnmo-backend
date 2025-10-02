@@ -4,7 +4,8 @@
 import { config } from 'dotenv';
 import mysql from 'mysql2/promise';
 
-config();
+const envFile = process.env.NODE_ENV === 'test' ? '.env.test' : '.env';
+config({ path: envFile });
 
 const host = process.env.DB_HOST;
 const user = process.env.DB_USERNAME;

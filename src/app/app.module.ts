@@ -21,6 +21,7 @@ import { UsersModule } from './http/users/users.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: process.env.NODE_ENV === 'test' ? '.env.test' : '.env',
       validate: (env) => envSchema.parse(env),
     }),
     EnvModule,

@@ -36,8 +36,6 @@ export class StatisticsController {
   async getPatientsByGender(
     @Query() query: GetPatientsByPeriodDto,
   ): Promise<GetPatientsByGenderResponse> {
-    console.log(query);
-
     const data =
       await this.statisticsService.getPatientsByPeriod<PatientsByGenderType>(
         'gender',

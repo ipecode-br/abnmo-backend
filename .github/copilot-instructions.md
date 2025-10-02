@@ -1,4 +1,21 @@
-# Copilot Instructions
+# Copilot Instructions for ABNMO Platform
+
+## Architecture Overview
+
+This is an NestJS application for a SaaS platform managing patients and appointments.
+
+- **Stack**: NestJS API with TypeORM and MySQL
+
+## Code Patterns & Conventions
+
+Always adhere to the conventions in `/docs` files and follow these patterns:
+
+- **File Structure**: Follow a consistent file structure for services, routes, and components.
+- **Naming Conventions**: Use camelCase for variables and functions, PascalCase for classes and components.
+
+## Common Gotchas
+
+1. **Database Relations**: Always destructure relations from the main table object, example: `relations: { user: true }`
 
 ## Writing Guidelines
 
@@ -48,12 +65,3 @@ Before committing any written text, ask:
 4. Am I saying this twice?
 
 Remember: Clear writing is clear thinking. If you can't write it simply, you don't understand it well enough.
-
-## Commit message guidelines
-
-- Always write commits in English.
-- Use Conventional Commits for your commit messages
-- Follow the conventional commit standard for all commits
-- Always specify the commit type and write the corresponding commit message
-- Detect the appropriate commit type and write the corresponding commit message
-- Try to summarize the commit message in a single line
