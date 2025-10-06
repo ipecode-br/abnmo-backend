@@ -134,12 +134,17 @@ export const updatePatientSchema = patientSchema
 export type UpdatePatientSchema = z.infer<typeof updatePatientSchema>;
 
 export const findAllPatientsQuerySchema = baseQuerySchema
-  .pick({ search: true, order: true, page: true })
+  .pick({
+    search: true,
+    order: true,
+    page: true,
+    perPage: true,
+    startDate: true,
+    endDate: true,
+  })
   .extend({
     status: z.enum(PATIENT_STATUS).optional(),
     orderBy: z.enum(PATIENT_ORDER_BY).optional().default('name'),
-    startDate: z.string().datetime().optional(),
-    endDate: z.string().datetime().optional(),
   })
   .refine(
     (data) => {

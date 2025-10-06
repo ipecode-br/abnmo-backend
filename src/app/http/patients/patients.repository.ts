@@ -22,10 +22,17 @@ export class PatientsRepository {
   public async findAll(
     filters: FindAllPatientQueryDto,
   ): Promise<{ patients: PatientType[]; total: number }> {
-    const { search, order, orderBy, status, startDate, endDate, page } =
-      filters;
+    const {
+      search,
+      order,
+      orderBy,
+      status,
+      startDate,
+      endDate,
+      page,
+      perPage,
+    } = filters;
 
-    const PAGE_SIZE = 10;
     const ORDER_BY: Record<PatientOrderByType, string> = {
       name: 'user.name',
       email: 'user.email',
@@ -61,7 +68,7 @@ export class PatientsRepository {
     const total = await query.getCount();
 
     query.orderBy(ORDER_BY[orderBy], order);
-    query.skip((page - 1) * PAGE_SIZE).take(PAGE_SIZE);
+    query.skip((page - 1) * perPage).take(perPage);
 
     const rawPatients = await query.getMany();
 
