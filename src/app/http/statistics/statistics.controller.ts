@@ -36,7 +36,7 @@ export class StatisticsController {
   async getPatientsByGender(
     @Query() query: GetPatientsByPeriodDto,
   ): Promise<GetPatientsByGenderResponse> {
-    const data =
+    const { items: genders, total } =
       await this.statisticsService.getPatientsByPeriod<PatientsByGenderType>(
         'gender',
         query,
@@ -45,7 +45,7 @@ export class StatisticsController {
     return {
       success: true,
       message: 'Estatísticas de pacientes por gênero retornada com sucesso.',
-      data,
+      data: { genders, total },
     };
   }
 
@@ -55,7 +55,7 @@ export class StatisticsController {
   async getPatientsByCity(
     @Query() query: GetPatientsByPeriodDto,
   ): Promise<GetPatientsByCityResponse> {
-    const data =
+    const { items: cities, total } =
       await this.statisticsService.getPatientsByPeriod<PatientsByCityType>(
         'city',
         query,
@@ -64,7 +64,7 @@ export class StatisticsController {
     return {
       success: true,
       message: 'Estatísticas de pacientes por cidade retornada com sucesso.',
-      data,
+      data: { cities, total },
     };
   }
 }

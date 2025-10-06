@@ -4,12 +4,12 @@ import { Repository } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
 import type { PatientOrderByType, PatientType } from '@/domain/schemas/patient';
-import type { OrderType } from '@/domain/schemas/query';
 import type {
   GetPatientsTotalResponseSchema,
-  PatientsStatisticQueryType,
+  PatientsStatisticFieldType,
 } from '@/domain/schemas/statistics';
 
+import type { GetPatientsByPeriodDto } from '../statistics/statistics.dtos';
 import { CreatePatientDto, FindAllPatientQueryDto } from './patients.dtos';
 
 @Injectable()
@@ -173,23 +173,43 @@ export class PatientsRepository {
   }
 
   public async getPatientsStatisticsByPeriod<T>(
-    query: PatientsStatisticQueryType,
+    field: PatientsStatisticFieldType,
     startDate: Date,
     endDate: Date,
-    order: OrderType = 'DESC',
-  ): Promise<T[]> {
-    const results = await this.patientsRepository
+    query: GetPatientsByPeriodDto,
+  ): Promise<{ items: T[]; total: number }> {
+    const totalQuery = this.patientsRepository
       .createQueryBuilder('patient')
-      .select(`patient.${query}`, query)
+      .select(`COUNT(DISTINCT patient.${field})`, 'total')
+      .where('patient.created_at BETWEEN :start AND :end', {
+        start: startDate,
+        end: endDate,
+      });
+
+    const totalResult = await totalQuery.getRawOne<{ total: string }>();
+    const total = Number(totalResult?.total ?? 0);
+
+    const queryBuilder = this.patientsRepository
+      .createQueryBuilder('patient')
+      .select(`patient.${field}`, field)
       .addSelect('COUNT(*)', 'total')
       .where('patient.created_at BETWEEN :start AND :end', {
         start: startDate,
         end: endDate,
       })
-      .groupBy(`patient.${query}`)
-      .orderBy(`total`, order)
-      .getRawMany<T>();
+      .groupBy(`patient.${field}`)
+      .orderBy('total', query.order)
+      .limit(query.limit);
 
-    return results;
+    if (query.withPercentage) {
+      queryBuilder.addSelect(
+        'ROUND((COUNT(*) * 100.0 / SUM(COUNT(*)) OVER()), 1)',
+        'percentage',
+      );
+    }
+
+    const items = await queryBuilder.getRawMany<T>();
+
+    return { items, total };
   }
 }
