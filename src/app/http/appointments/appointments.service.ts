@@ -7,7 +7,10 @@ import {
 
 import { UserSchema } from '@/domain/schemas/user';
 
-import { UpdateAppointmentDto } from './appointments.dtos';
+import {
+  CreateAppointmentDto,
+  UpdateAppointmentDto,
+} from './appointments.dtos';
 import { AppointmentsRepository } from './appointments.repository';
 
 @Injectable()
@@ -17,6 +20,40 @@ export class AppointmentsService {
   constructor(
     private readonly appointmentsRepository: AppointmentsRepository,
   ) {}
+
+  public async create(
+    createAppointmentDto: CreateAppointmentDto,
+  ): Promise<void> {
+    const { patient_id, specialist_id, date } = createAppointmentDto;
+    const threeMonthsFromNow = new Date();
+    threeMonthsFromNow.setMonth(threeMonthsFromNow.getMonth() + 3);
+
+    if (new Date(date) <= new Date()) {
+      throw new BadRequestException(
+        'A data do atendimento deve ser no futuro.',
+      );
+    }
+
+    if (new Date(date) > threeMonthsFromNow) {
+      throw new BadRequestException(
+        'A data de atendimento deve estar dentro dos próximos 3 meses.',
+      );
+    }
+    await this.appointmentsRepository.create({
+      patient_id,
+      specialist_id,
+      date,
+      status: 'scheduled',
+    });
+
+    this.logger.log(
+      {
+        patientId: patient_id,
+        specialistId: specialist_id,
+      },
+      'Appointment created successfully',
+    );
+  }
 
   public async update(
     id: string,

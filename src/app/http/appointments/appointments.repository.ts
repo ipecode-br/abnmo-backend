@@ -11,6 +11,11 @@ export class AppointmentsRepository {
     private readonly appointmentsRepository: Repository<Appointment>,
   ) {}
 
+  public async create(data: Partial<Appointment>): Promise<Appointment> {
+    const appointment = this.appointmentsRepository.create(data);
+    return await this.appointmentsRepository.save(appointment);
+  }
+
   public async findById(id: string): Promise<Appointment | null> {
     return await this.appointmentsRepository.findOne({ where: { id } });
   }

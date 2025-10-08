@@ -1,21 +1,39 @@
-import { Body, Controller, Param, Patch, Put } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Param, Patch, Post, Put } from '@nestjs/common';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
 import {
   CancelAppointmentResponseSchema,
+  CreateAppointmentResponseSchema,
   UpdateAppointmentResponseSchema,
 } from '@/domain/schemas/appointment';
 import { UserSchema } from '@/domain/schemas/user';
 
-import type { UpdateAppointmentDto } from './appointments.dtos';
+import type {
+  CreateAppointmentDto,
+  UpdateAppointmentDto,
+} from './appointments.dtos';
 import { AppointmentsService } from './appointments.service';
 
 @ApiTags('Atendimentos')
 @Controller('appointments')
 export class AppointmentsController {
   constructor(private readonly appointmentsService: AppointmentsService) {}
+
+  @Post()
+  @Roles(['nurse', 'manager'])
+  @ApiOperation({ summary: 'Cadastra novo atendimento' })
+  async create(
+    @Body() createAppointmentDto: CreateAppointmentDto,
+  ): Promise<CreateAppointmentResponseSchema> {
+    await this.appointmentsService.create(createAppointmentDto);
+
+    return {
+      success: true,
+      message: 'Atendimento cadastrado com sucesso.',
+    };
+  }
 
   @Put(':id')
   @Roles(['nurse', 'manager', 'specialist'])

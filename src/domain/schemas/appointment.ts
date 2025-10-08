@@ -29,6 +29,20 @@ export const appointmentSchema = z
   .strict();
 export type AppointmentSchema = z.infer<typeof appointmentSchema>;
 
+export const createAppointmentSchema = z.object({
+  patient_id: z.string().uuid(),
+  specialist_id: z.string().uuid(),
+  date: z.coerce.date().refine((date) => date > new Date(), {
+    message: 'A data do atendimento deve ser no futuro.',
+  }),
+});
+export type CreateAppointmentDto = z.infer<typeof createAppointmentSchema>;
+
+export const createAppointmentResponseSchema = baseResponseSchema.extend({});
+export type CreateAppointmentResponseSchema = z.infer<
+  typeof createAppointmentResponseSchema
+>;
+
 export const updateAppointmentSchema = z.object({
   date: z.coerce
     .date()
