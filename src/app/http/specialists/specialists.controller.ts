@@ -33,7 +33,7 @@ export class SpecialistsController {
 
     return {
       success: true,
-      message: 'Lista de pacientes retornada com sucesso.',
+      message: 'Lista de especialistas retornada com sucesso.',
       data: { specialists, total },
     };
   }
