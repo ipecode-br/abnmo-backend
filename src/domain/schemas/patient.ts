@@ -33,6 +33,21 @@ export type PatientStatisticsResult = {
   total: number;
 };
 
+export const PATIENTS_PENDING_INFO = ['screening'] as const;
+export type PatientsPendingInfoType = (typeof PATIENTS_PENDING_INFO)[number];
+
+export const patientsPendingInfoDataSchema = z.object({
+  pending: z.array(z.enum(PATIENTS_PENDING_INFO)),
+});
+
+export const patientsPendingInfoResponseSchema = baseResponseSchema.extend({
+  data: patientsPendingInfoDataSchema,
+});
+
+export type PatientsPendingInfoResponseSchema = z.infer<
+  typeof patientsPendingInfoResponseSchema
+>;
+
 export const patientSchema = z
   .object({
     id: z.string().uuid(),

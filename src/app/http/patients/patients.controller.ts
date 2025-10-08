@@ -17,6 +17,7 @@ import { BaseResponseSchema } from '@/domain/schemas/base';
 import {
   FindAllPatientsResponseSchema,
   GetPatientResponseSchema,
+  PatientsPendingInfoResponseSchema,
 } from '@/domain/schemas/patient';
 import { FindAllPatientsSupportResponseSchema } from '@/domain/schemas/patient-support';
 import type { UserSchema } from '@/domain/schemas/user';
@@ -81,6 +82,21 @@ export class PatientsController {
       success: true,
       message: 'Lista de pacientes retornada com sucesso.',
       data: { patients, total },
+    };
+  }
+
+  @Get('pending-info')
+  @Roles(['patient'])
+  @ApiOperation({ summary: 'Obtém informações pendentes do paciente' })
+  async getPendingInfo(
+    @CurrentUser() user: UserSchema,
+  ): Promise<PatientsPendingInfoResponseSchema> {
+    const data = await this.patientsService.getPendingInfo(user);
+
+    return {
+      success: true,
+      message: 'Informações pendentes retornadas com sucesso',
+      data,
     };
   }
 

@@ -12,6 +12,10 @@ import { CryptographyService } from '@/app/cryptography/crypography.service';
 import { Patient } from '@/domain/entities/patient';
 import { PatientSupport } from '@/domain/entities/patient-support';
 import { User } from '@/domain/entities/user';
+import {
+  patientScreeningSchema,
+  PatientsPendingInfoType,
+} from '@/domain/schemas/patient';
 import type { UserSchema } from '@/domain/schemas/user';
 
 import {
@@ -263,5 +267,87 @@ export class PatientsService {
       { id: patient.id, userId: patient.user_id, email: patient.email },
       'Patient deactivated successfully',
     );
+  }
+
+  async getPendingInfo(
+    user: UserSchema,
+  ): Promise<{ pending: PatientsPendingInfoType[] }> {
+    if (user.role !== 'patient') {
+      this.logger.error(
+        { userId: user.id, email: user.email },
+        'getPendingInfo failed: User is not a patient',
+      );
+      throw new ForbiddenException('Apenas pacientes podem acessar esta rota.');
+    }
+
+    const pending: PatientsPendingInfoType[] = [];
+
+    const patient = await this.patientsRepository.findByUserId(user.id);
+
+    if (!patient) {
+      pending.push('screening');
+      this.logger.log(
+        { userId: user.id, email: user.email },
+        'getPendingInfo: screening pending (no patient record)',
+      );
+    } else {
+      const {
+        gender,
+        date_of_birth,
+        phone,
+        cpf,
+        state,
+        city,
+        has_disability,
+        disability_desc,
+        need_legal_assistance,
+        take_medication,
+        medication_desc,
+        has_nmo_diagnosis,
+        name,
+        supports,
+      } = patient;
+
+      const partialPatient = {
+        gender,
+        date_of_birth,
+        phone,
+        cpf,
+        state,
+        city,
+        has_disability: !!has_disability, // transforma 0/1 em boolean
+        disability_desc,
+        need_legal_assistance: !!need_legal_assistance,
+        take_medication: !!take_medication,
+        medication_desc,
+        has_nmo_diagnosis: !!has_nmo_diagnosis,
+        name,
+        supports,
+      };
+
+      const screeningValidation =
+        patientScreeningSchema.safeParse(partialPatient);
+
+      if (!screeningValidation.success) {
+        pending.push('screening');
+        this.logger.log(
+          {
+            userId: user.id,
+            email: user.email,
+            errors: screeningValidation.error.format(),
+          },
+          'getPendingInfo: screening pending (invalid patient data)',
+        );
+      } else {
+        this.logger.log(
+          { userId: user.id, email: user.email },
+          'getPendingInfo: no pending info',
+        );
+      }
+    }
+
+    return {
+      pending,
+    };
   }
 }
