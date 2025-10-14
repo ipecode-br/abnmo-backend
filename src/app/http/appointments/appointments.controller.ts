@@ -3,11 +3,7 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
-import {
-  CancelAppointmentResponseSchema,
-  CreateAppointmentResponseSchema,
-  UpdateAppointmentResponseSchema,
-} from '@/domain/schemas/appointment';
+import { BaseResponseSchema } from '@/domain/schemas/base';
 import { UserSchema } from '@/domain/schemas/user';
 
 import type {
@@ -26,7 +22,7 @@ export class AppointmentsController {
   @ApiOperation({ summary: 'Cadastra novo atendimento' })
   async create(
     @Body() createAppointmentDto: CreateAppointmentDto,
-  ): Promise<CreateAppointmentResponseSchema> {
+  ): Promise<BaseResponseSchema> {
     await this.appointmentsService.create(createAppointmentDto);
 
     return {
@@ -41,7 +37,7 @@ export class AppointmentsController {
     @Param('id') id: string,
     @CurrentUser() user: UserSchema,
     @Body() body: UpdateAppointmentDto,
-  ): Promise<UpdateAppointmentResponseSchema> {
+  ): Promise<BaseResponseSchema> {
     await this.appointmentsService.update(id, body, user);
 
     return {
@@ -55,7 +51,7 @@ export class AppointmentsController {
   async cancel(
     @Param('id') id: string,
     @CurrentUser() user: UserSchema,
-  ): Promise<CancelAppointmentResponseSchema> {
+  ): Promise<BaseResponseSchema> {
     await this.appointmentsService.cancel(id, user);
 
     return {

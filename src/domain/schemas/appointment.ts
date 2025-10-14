@@ -1,7 +1,5 @@
 import { z } from 'zod';
 
-import { baseResponseSchema } from './base';
-
 export const APPOINTMENT_STATUS = [
   'scheduled',
   'canceled',
@@ -38,11 +36,6 @@ export const createAppointmentSchema = z.object({
 });
 export type CreateAppointmentDto = z.infer<typeof createAppointmentSchema>;
 
-export const createAppointmentResponseSchema = baseResponseSchema.extend({});
-export type CreateAppointmentResponseSchema = z.infer<
-  typeof createAppointmentResponseSchema
->;
-
 export const updateAppointmentSchema = z.object({
   date: z.coerce
     .date()
@@ -55,13 +48,3 @@ export const updateAppointmentSchema = z.object({
   annotation: z.string().nullable(),
 });
 export type UpdateAppointmentSchema = z.infer<typeof updateAppointmentSchema>;
-
-export const cancelAppointmentResponseSchema = baseResponseSchema.extend({});
-export type CancelAppointmentResponseSchema = z.infer<
-  typeof cancelAppointmentResponseSchema
->;
-
-export const updateAppointmentResponseSchema = baseResponseSchema.extend({});
-export type UpdateAppointmentResponseSchema = z.infer<
-  typeof updateAppointmentResponseSchema
->;

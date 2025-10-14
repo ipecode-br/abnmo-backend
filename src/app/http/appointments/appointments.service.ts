@@ -25,8 +25,11 @@ export class AppointmentsService {
     createAppointmentDto: CreateAppointmentDto,
   ): Promise<void> {
     const { patient_id, specialist_id, date } = createAppointmentDto;
-    const threeMonthsFromNow = new Date();
-    threeMonthsFromNow.setMonth(threeMonthsFromNow.getMonth() + 3);
+    const MAX_APPOINTMENT_MONTHS_LIMIT = 3;
+    const bookingDeadline = new Date();
+    bookingDeadline.setMonth(
+      bookingDeadline.getMonth() + MAX_APPOINTMENT_MONTHS_LIMIT,
+    );
 
     if (new Date(date) <= new Date()) {
       throw new BadRequestException(
@@ -34,7 +37,7 @@ export class AppointmentsService {
       );
     }
 
-    if (new Date(date) > threeMonthsFromNow) {
+    if (new Date(date) > bookingDeadline) {
       throw new BadRequestException(
         'A data de atendimento deve estar dentro dos próximos 3 meses.',
       );
