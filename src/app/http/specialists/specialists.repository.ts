@@ -38,4 +38,8 @@ export class SpecialistsRepository {
       avatar_url: user.avatar_url,
     };
   }
+
+  public async deactivate(id: string): Promise<Specialist> {
+    return this.specialistsRepository.save({ id, status: 'inactive' });
+  }
 }

@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Param, Patch, Post, Put } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { Roles } from '@/common/decorators/roles.decorator';
@@ -33,5 +33,19 @@ export class SpecialistsController {
     @Body() body: CreateInviteDto,
   ): Promise<BaseResponseSchema> {
     return this.specialistsService.createInvite(body.email, body.type);
+  }
+
+  @Patch(':id/inactivate')
+  @ApiOperation({ summary: 'Inativa o Especialista pelo ID' })
+  @Roles(['manager'])
+  async inactivateSpecialist(
+    @Param('id') id: string,
+  ): Promise<BaseResponseSchema> {
+    await this.specialistsService.deactivateSpecialist(id);
+
+    return {
+      success: true,
+      message: 'Especialista inativado com sucesso.',
+    };
   }
 }
