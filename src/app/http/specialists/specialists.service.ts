@@ -126,14 +126,15 @@ export class SpecialistsService {
       throw new NotFoundException('Especialista não encontrado.');
     }
 
-    if (specialist.status == 'inactive') {
+    if (specialist.status === 'inactive') {
       throw new ConflictException('Especialista já está inativo.');
     }
 
     await this.specialistsRepository.deactivate(id);
 
     this.logger.log(
-      `Especialista inativado com sucesso: ${JSON.stringify({ id: specialist.id, userId: specialist.user_id, timestamp: new Date() })}`,
+      { id: specialist.id, userId: specialist.user_id },
+      'Specialist inactivated successfully',
     );
   }
 }
