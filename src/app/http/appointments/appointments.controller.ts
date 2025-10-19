@@ -1,15 +1,15 @@
-import { Body, Controller, Param, Patch, Put } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Param, Patch, Post, Put } from '@nestjs/common';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
-import {
-  CancelAppointmentResponseSchema,
-  UpdateAppointmentResponseSchema,
-} from '@/domain/schemas/appointment';
+import { BaseResponseSchema } from '@/domain/schemas/base';
 import { UserSchema } from '@/domain/schemas/user';
 
-import type { UpdateAppointmentDto } from './appointments.dtos';
+import type {
+  CreateAppointmentDto,
+  UpdateAppointmentDto,
+} from './appointments.dtos';
 import { AppointmentsService } from './appointments.service';
 
 @ApiTags('Atendimentos')
@@ -17,13 +17,27 @@ import { AppointmentsService } from './appointments.service';
 export class AppointmentsController {
   constructor(private readonly appointmentsService: AppointmentsService) {}
 
+  @Post()
+  @Roles(['nurse', 'manager'])
+  @ApiOperation({ summary: 'Cadastra novo atendimento' })
+  async create(
+    @Body() createAppointmentDto: CreateAppointmentDto,
+  ): Promise<BaseResponseSchema> {
+    await this.appointmentsService.create(createAppointmentDto);
+
+    return {
+      success: true,
+      message: 'Atendimento cadastrado com sucesso.',
+    };
+  }
+
   @Put(':id')
   @Roles(['nurse', 'manager', 'specialist'])
   public async update(
     @Param('id') id: string,
     @CurrentUser() user: UserSchema,
     @Body() body: UpdateAppointmentDto,
-  ): Promise<UpdateAppointmentResponseSchema> {
+  ): Promise<BaseResponseSchema> {
     await this.appointmentsService.update(id, body, user);
 
     return {
@@ -37,7 +51,7 @@ export class AppointmentsController {
   async cancel(
     @Param('id') id: string,
     @CurrentUser() user: UserSchema,
-  ): Promise<CancelAppointmentResponseSchema> {
+  ): Promise<BaseResponseSchema> {
     await this.appointmentsService.cancel(id, user);
 
     return {
