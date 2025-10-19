@@ -21,6 +21,10 @@ export class SpecialistsRepository {
     return await this.specialistsRepository.findOne({ where: { id } });
   }
 
+  public async deactivate(id: string): Promise<Specialist> {
+    return this.specialistsRepository.save({ id, status: 'inactive' });
+  }
+
   public async findByIdWithRelations(
     id: string,
   ): Promise<SpecialistType | null> {
