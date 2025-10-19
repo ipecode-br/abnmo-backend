@@ -16,7 +16,7 @@ import type { UserRoleType } from '@/domain/schemas/user';
 import { EnvService } from '@/env/env.service';
 
 import { TokensRepository } from '../auth/tokens.repository';
-import { UpdateSpecialistDto } from './speacialists.dtos';
+import { UpdateSpecialistDto } from './specialists.dtos';
 import { SpecialistsRepository } from './specialists.repository';
 
 @Injectable()

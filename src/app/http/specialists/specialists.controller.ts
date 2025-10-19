@@ -1,17 +1,51 @@
-import { Body, Controller, Param, Patch, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { Roles } from '@/common/decorators/roles.decorator';
 import { BaseResponseSchema } from '@/domain/schemas/base';
-import { CreateInviteDto } from '@/domain/schemas/specialist';
+import {
+  CreateInviteDto,
+  FindAllSpecialistsResponseSchema,
+} from '@/domain/schemas/specialist';
 
-import { UpdateSpecialistDto } from './speacialists.dtos';
+import {
+  FindAllSpecialistQueryDto,
+  UpdateSpecialistDto,
+} from './specialists.dtos';
+import { SpecialistsRepository } from './specialists.repository';
 import { SpecialistsService } from './specialists.service';
 
 @ApiTags('Especialistas')
 @Controller('specialists')
 export class SpecialistsController {
-  constructor(private readonly specialistsService: SpecialistsService) {}
+  constructor(
+    private readonly specialistsService: SpecialistsService,
+    private readonly specialistsRepository: SpecialistsRepository,
+  ) {}
+
+  @Get()
+  @Roles(['manager'])
+  public async findAll(
+    @Query() filters: FindAllSpecialistQueryDto,
+  ): Promise<FindAllSpecialistsResponseSchema> {
+    const { specialists, total } =
+      await this.specialistsRepository.findAll(filters);
+
+    return {
+      success: true,
+      message: 'Lista de especialistas retornada com sucesso.',
+      data: { specialists, total },
+    };
+  }
 
   @Put(':id')
   @Roles(['specialist'])
