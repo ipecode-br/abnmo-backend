@@ -11,6 +11,7 @@ export type SpecialistStatusType = (typeof SPECIALIST_STATUS)[number];
 export const SPECIALIST_ORDER_BY = [
   'name',
   'specialty',
+  'registry',
   'status',
   'date',
 ] as const;

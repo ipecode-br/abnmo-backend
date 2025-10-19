@@ -65,6 +65,7 @@ export class SpecialistsRepository {
     const ORDER_BY: Record<SpecialistOrderByType, string> = {
       name: 'user.name',
       specialty: 'specialist.specialty',
+      registry: 'specialist.registry',
       status: 'specialist.status',
       date: 'specialist.created_at',
     };
