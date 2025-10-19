@@ -55,8 +55,13 @@ async function main() {
     }
     console.log('👤 Users created successfully...');
 
-    console.log('👤 Creating 100 patients...');
-    for (let i = 0; i < 100; i++) {
+    const twoMonthsAgo = new Date();
+    twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+
+    const totalOfPatients = 250;
+
+    console.log(`👥 Creating ${totalOfPatients} patients...`);
+    for (let i = 0; i < totalOfPatients; i++) {
       const user = userRepository.create({
         name: faker.person.fullName(),
         email: faker.internet.email().toLocaleLowerCase(),
@@ -92,6 +97,7 @@ async function main() {
         medication_desc: faker.lorem.sentence(),
         has_nmo_diagnosis: faker.datatype.boolean(),
         status: faker.helpers.arrayElement(PATIENT_STATUS),
+        created_at: faker.date.between({ from: twoMonthsAgo, to: new Date() }),
       });
       await patientRepository.save(patient);
 
