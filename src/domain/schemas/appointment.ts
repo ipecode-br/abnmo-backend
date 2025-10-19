@@ -17,7 +17,9 @@ export const appointmentSchema = z
     id: z.string().uuid(),
     patient_id: z.string().uuid(),
     specialist_id: z.string().uuid(),
-    date: z.coerce.date(),
+    date: z.coerce.date().refine((date) => date > new Date(), {
+      message: 'Appointment date should be in the future.',
+    }),
     status: z.enum(APPOINTMENT_STATUS).default('scheduled'),
     condition: z.enum(APPOINTMENT_CONDITION).nullable(),
     annotation: z.string().nullable(),
@@ -27,24 +29,17 @@ export const appointmentSchema = z
   .strict();
 export type AppointmentSchema = z.infer<typeof appointmentSchema>;
 
-export const createAppointmentSchema = z.object({
-  patient_id: z.string().uuid(),
-  specialist_id: z.string().uuid(),
-  date: z.coerce.date().refine((date) => date > new Date(), {
-    message: 'A data do atendimento deve ser no futuro.',
-  }),
+export const createAppointmentSchema = appointmentSchema.pick({
+  patient_id: true,
+  specialist_id: true,
+  date: true,
 });
 export type CreateAppointmentDto = z.infer<typeof createAppointmentSchema>;
 
-export const updateAppointmentSchema = z.object({
-  date: z.coerce
-    .date()
-    .refine((date) => date > new Date(), {
-      message: 'A data do atendimento deve ser no futuro.',
-    })
-    .optional(),
-  status: z.enum(APPOINTMENT_STATUS).optional(),
-  condition: z.enum(APPOINTMENT_CONDITION).optional(),
-  annotation: z.string().nullable(),
+export const updateAppointmentSchema = appointmentSchema.pick({
+  date: true,
+  status: true,
+  condition: true,
+  annotation: true,
 });
 export type UpdateAppointmentSchema = z.infer<typeof updateAppointmentSchema>;

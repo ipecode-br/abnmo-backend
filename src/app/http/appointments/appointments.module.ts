@@ -4,12 +4,17 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Appointment } from '@/domain/entities/appointment';
 
 import { PatientsModule } from '../patients/patients.module';
+import { SpecialistsModule } from '../specialists/specialists.module';
 import { AppointmentsController } from './appointments.controller';
 import { AppointmentsRepository } from './appointments.repository';
 import { AppointmentsService } from './appointments.service';
 
 @Module({
-  imports: [PatientsModule, TypeOrmModule.forFeature([Appointment])],
+  imports: [
+    PatientsModule,
+    SpecialistsModule,
+    TypeOrmModule.forFeature([Appointment]),
+  ],
   controllers: [AppointmentsController],
   providers: [AppointmentsService, AppointmentsRepository],
   exports: [AppointmentsRepository],

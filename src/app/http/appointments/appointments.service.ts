@@ -7,6 +7,8 @@ import {
 
 import { UserSchema } from '@/domain/schemas/user';
 
+import { PatientsRepository } from '../patients/patients.repository';
+import { SpecialistsRepository } from '../specialists/specialists.repository';
 import {
   CreateAppointmentDto,
   UpdateAppointmentDto,
@@ -19,6 +21,8 @@ export class AppointmentsService {
 
   constructor(
     private readonly appointmentsRepository: AppointmentsRepository,
+    private readonly patientsRepository: PatientsRepository,
+    private readonly specialistsRepository: SpecialistsRepository,
   ) {}
 
   public async create(
@@ -26,22 +30,37 @@ export class AppointmentsService {
   ): Promise<void> {
     const { patient_id, specialist_id, date } = createAppointmentDto;
     const MAX_APPOINTMENT_MONTHS_LIMIT = 3;
+    const appointmentDate = new Date(date);
     const bookingDeadline = new Date();
+
     bookingDeadline.setMonth(
       bookingDeadline.getMonth() + MAX_APPOINTMENT_MONTHS_LIMIT,
     );
 
-    if (new Date(date) <= new Date()) {
+    if (appointmentDate <= new Date()) {
       throw new BadRequestException(
         'A data do atendimento deve ser no futuro.',
       );
     }
 
-    if (new Date(date) > bookingDeadline) {
+    if (appointmentDate > bookingDeadline) {
       throw new BadRequestException(
         'A data de atendimento deve estar dentro dos próximos 3 meses.',
       );
     }
+
+    const patient = await this.patientsRepository.findById(patient_id);
+
+    if (!patient) {
+      throw new NotFoundException('Paciente não encontrado.');
+    }
+
+    const specialist = await this.specialistsRepository.findById(specialist_id);
+
+    if (!specialist) {
+      throw new NotFoundException('Especialista não encontrado.');
+    }
+
     await this.appointmentsRepository.create({
       patient_id,
       specialist_id,
@@ -50,10 +69,7 @@ export class AppointmentsService {
     });
 
     this.logger.log(
-      {
-        patientId: patient_id,
-        specialistId: specialist_id,
-      },
+      { patientId: patient_id, specialistId: specialist_id },
       'Appointment created successfully',
     );
   }
