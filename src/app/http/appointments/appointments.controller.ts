@@ -1,21 +1,55 @@
-import { Body, Controller, Param, Patch, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
+import { FindAllAppointmentsResponseSchema } from '@/domain/schemas/appointment';
 import { BaseResponseSchema } from '@/domain/schemas/base';
 import { UserSchema } from '@/domain/schemas/user';
 
 import type {
   CreateAppointmentDto,
+  FindAllAppointmentsQueryDto,
   UpdateAppointmentDto,
 } from './appointments.dtos';
+import { AppointmentsRepository } from './appointments.repository';
 import { AppointmentsService } from './appointments.service';
 
 @ApiTags('Atendimentos')
 @Controller('appointments')
 export class AppointmentsController {
-  constructor(private readonly appointmentsService: AppointmentsService) {}
+  constructor(
+    private readonly appointmentsService: AppointmentsService,
+    private readonly appointmentsRepository: AppointmentsRepository,
+  ) {}
+
+  @Get()
+  @Roles(['admin', 'manager', 'nurse', 'patient', 'specialist'])
+  @ApiOperation({ summary: 'Lista todos os atendimentos' })
+  async findAll(
+    @CurrentUser() user: UserSchema,
+    @Query() filters: FindAllAppointmentsQueryDto,
+  ): Promise<FindAllAppointmentsResponseSchema> {
+    const { appointments, total } = await this.appointmentsRepository.findAll(
+      user,
+      filters,
+    );
+
+    return {
+      success: true,
+      message: 'Lista de atendimentos retornada com sucesso.',
+      data: { appointments, total },
+    };
+  }
 
   @Post()
   @Roles(['nurse', 'manager'])
