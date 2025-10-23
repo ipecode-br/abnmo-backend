@@ -16,7 +16,6 @@ import {
   TypeRequirement,
 } from '../schemas/patient-requirement';
 import { Patient } from './patient';
-import { User } from './user';
 
 @Entity('patients-requirement')
 export class PatientRequirement implements PatientRequirementSchema {
@@ -65,10 +64,6 @@ export class PatientRequirement implements PatientRequirementSchema {
 
   @UpdateDateColumn({ type: 'timestamp', nullable: false })
   updated_at: Date;
-
-  @OneToOne(() => User)
-  @JoinColumn({ name: 'user_id' })
-  user: User;
 
   @OneToOne(() => Patient)
   @JoinColumn({ name: 'patient_id' })
