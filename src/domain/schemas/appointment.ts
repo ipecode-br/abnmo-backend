@@ -1,5 +1,10 @@
 import { z } from 'zod';
 
+import { baseResponseSchema } from './base';
+import { patientResponseSchema } from './patient';
+import { baseQuerySchema } from './query';
+import { specialistResponseSchema } from './specialist';
+
 export const APPOINTMENT_STATUS = [
   'scheduled',
   'canceled',
@@ -10,6 +15,15 @@ export type AppointmentStatusType = (typeof APPOINTMENT_STATUS)[number];
 
 export const APPOINTMENT_CONDITION = ['in_crisis', 'stable'] as const;
 export type AppointmentConditionType = (typeof APPOINTMENT_CONDITION)[number];
+
+export const APPOINTMENT_ORDER_BY = [
+  'date',
+  'patient',
+  'specialist',
+  'specialty',
+  'condition',
+] as const;
+export type AppointmentOrderByType = (typeof APPOINTMENT_ORDER_BY)[number];
 
 // Entity
 export const appointmentSchema = z
@@ -29,6 +43,20 @@ export const appointmentSchema = z
   .strict();
 export type AppointmentSchema = z.infer<typeof appointmentSchema>;
 
+export const appointmentResponseSchema = appointmentSchema.extend({
+  patient: patientResponseSchema.pick({
+    name: true,
+    email: true,
+    avatar_url: true,
+  }),
+  specialist: specialistResponseSchema.pick({
+    name: true,
+    email: true,
+    avatar_url: true,
+  }),
+});
+export type AppointmentType = z.infer<typeof appointmentResponseSchema>;
+
 export const createAppointmentSchema = appointmentSchema.pick({
   patient_id: true,
   specialist_id: true,
@@ -43,3 +71,40 @@ export const updateAppointmentSchema = appointmentSchema.pick({
   annotation: true,
 });
 export type UpdateAppointmentSchema = z.infer<typeof updateAppointmentSchema>;
+
+export const findAllAppointmentQuerySchema = baseQuerySchema
+  .pick({
+    search: true,
+    order: true,
+    page: true,
+    perPage: true,
+    startDate: true,
+    endDate: true,
+  })
+  .extend({
+    status: z.enum(APPOINTMENT_STATUS).optional(),
+    condition: z.enum(APPOINTMENT_CONDITION).optional(),
+    orderBy: z.enum(APPOINTMENT_ORDER_BY).optional().default('date'),
+  })
+  .refine(
+    (data) => {
+      if (data.startDate && data.endDate) {
+        return data.startDate < data.endDate;
+      }
+      return true;
+    },
+    {
+      message: 'It should be greater than `startDate`',
+      path: ['endDate'],
+    },
+  );
+
+export const findAllAppointmentsResponseSchema = baseResponseSchema.extend({
+  data: z.object({
+    appointments: z.array(appointmentResponseSchema),
+    total: z.number(),
+  }),
+});
+export type FindAllAppointmentsResponseSchema = z.infer<
+  typeof findAllAppointmentsResponseSchema
+>;
