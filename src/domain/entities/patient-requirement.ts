@@ -47,16 +47,16 @@ export class PatientRequirement implements PatientRequirementSchema {
   })
   status: StatusRequirement;
 
-  @Column('uuid')
+  @Column({ type: 'uuid', nullable: true })
   required_by: string;
 
-  @Column('uuid')
+  @Column({ type: 'uuid', nullable: true })
   approved_by: string;
 
-  @CreateDateColumn({ type: 'timestamp', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   approved_at: Date;
 
-  @CreateDateColumn({ type: 'timestamp', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   submitted_at: Date;
 
   @CreateDateColumn({ type: 'timestamp', nullable: false })
