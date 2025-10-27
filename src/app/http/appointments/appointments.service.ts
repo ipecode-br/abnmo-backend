@@ -28,7 +28,8 @@ export class AppointmentsService {
   public async create(
     createAppointmentDto: CreateAppointmentDto,
   ): Promise<void> {
-    const { patient_id, specialist_id, date } = createAppointmentDto;
+    const { patient_id, specialist_id, date, condition, annotation } =
+      createAppointmentDto;
     const MAX_APPOINTMENT_MONTHS_LIMIT = 3;
     const appointmentDate = new Date(date);
     const bookingDeadline = new Date();
@@ -65,6 +66,8 @@ export class AppointmentsService {
       patient_id,
       specialist_id,
       date,
+      condition,
+      annotation,
       status: 'scheduled',
     });
 

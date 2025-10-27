@@ -6,7 +6,7 @@ import { Roles } from '@/common/decorators/roles.decorator';
 import { BaseResponseSchema } from '@/domain/schemas/base';
 import { UserSchema } from '@/domain/schemas/user';
 
-import type {
+import {
   CreateAppointmentDto,
   UpdateAppointmentDto,
 } from './appointments.dtos';

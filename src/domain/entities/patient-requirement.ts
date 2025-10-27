@@ -3,17 +3,17 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
-  OneToOne,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 import {
+  PATIENT_REQUIREMENT_STATUS,
+  PATIENT_REQUIREMENT_TYPE,
   PatientRequirementSchema,
-  STATUS_REQUIREMENT,
-  StatusRequirement,
-  TYPE_REQUIREMENT,
-  TypeRequirement,
+  PatientRequirementStatusType,
+  PatientRequirementType,
 } from '../schemas/patient-requirement';
 import { Patient } from './patient';
 
@@ -27,45 +27,43 @@ export class PatientRequirement implements PatientRequirementSchema {
 
   @Column({
     type: 'enum',
-    enum: TYPE_REQUIREMENT,
-    nullable: false,
+    enum: PATIENT_REQUIREMENT_TYPE,
     default: 'document',
   })
-  type: TypeRequirement;
+  type: PatientRequirementType;
 
-  @Column({ type: 'varchar', length: 250, nullable: true })
+  @Column({ type: 'varchar', length: 255 })
   title: string;
 
-  @Column({ type: 'varchar', length: 500, nullable: true })
+  @Column({ type: 'varchar', length: 500 })
   description: string;
 
   @Column({
     type: 'enum',
-    enum: STATUS_REQUIREMENT,
-    nullable: false,
+    enum: PATIENT_REQUIREMENT_STATUS,
     default: 'pending',
   })
-  status: StatusRequirement;
+  status: PatientRequirementStatusType;
 
-  @Column({ type: 'uuid', nullable: true })
+  @Column({ type: 'uuid' })
   required_by: string;
 
   @Column({ type: 'uuid', nullable: true })
-  approved_by: string;
+  approved_by: string | null;
 
   @Column({ type: 'timestamp', nullable: true })
-  approved_at: Date;
+  approved_at: Date | null;
 
   @Column({ type: 'timestamp', nullable: true })
-  submitted_at: Date;
+  submitted_at: Date | null;
 
-  @CreateDateColumn({ type: 'timestamp', nullable: false })
+  @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
 
-  @UpdateDateColumn({ type: 'timestamp', nullable: false })
+  @UpdateDateColumn({ type: 'timestamp' })
   updated_at: Date;
 
-  @OneToOne(() => Patient)
+  @ManyToOne(() => Patient, (patient) => patient.requirements)
   @JoinColumn({ name: 'patient_id' })
   patient: Patient;
 }
