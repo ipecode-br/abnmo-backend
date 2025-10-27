@@ -3,21 +3,21 @@ import { Repository } from 'typeorm';
 
 import { PatientRequirement } from '@/domain/entities/patient-requirement';
 
-export class PatientsRequirementRepository {
+export class PatientRequirementsRepository {
   constructor(
     @InjectRepository(PatientRequirement)
-    private readonly patientRequirementRepository: Repository<PatientRequirement>,
+    private readonly patientRequirementsRepository: Repository<PatientRequirement>,
   ) {}
 
   public async findById(id: string): Promise<PatientRequirement | null> {
-    return await this.patientRequirementRepository.findOne({ where: { id } });
+    return await this.patientRequirementsRepository.findOne({ where: { id } });
   }
 
   public async approvedRequirement(
     id: string,
     approvedBy: string,
   ): Promise<PatientRequirement> {
-    return this.patientRequirementRepository.save({
+    return this.patientRequirementsRepository.save({
       id,
       status: 'approved',
       approved_by: approvedBy,

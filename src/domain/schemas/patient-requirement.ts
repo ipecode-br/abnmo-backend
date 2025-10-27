@@ -1,25 +1,26 @@
 import { z } from 'zod';
 
-export const TYPE_REQUIREMENT = ['document', 'form'] as const;
-export type TypeRequirement = (typeof TYPE_REQUIREMENT)[number];
+export const PATIENT_REQUIREMENT_TYPE = ['document', 'form'] as const;
+export type PatientRequirementType = (typeof PATIENT_REQUIREMENT_TYPE)[number];
 
-export const STATUS_REQUIREMENT = [
+export const PATIENT_REQUIREMENT_STATUS = [
   'pending',
   'under_review',
   'approved',
   'declined',
 ] as const;
-export type StatusRequirement = (typeof STATUS_REQUIREMENT)[number];
+export type PatientRequirementStatusType =
+  (typeof PATIENT_REQUIREMENT_STATUS)[number];
 
 export const patientRequirementSchema = z
   .object({
     id: z.string().uuid(),
     patient_id: z.string().uuid(),
-    type: z.enum(TYPE_REQUIREMENT).default('document'),
+    type: z.enum(PATIENT_REQUIREMENT_TYPE).default('document'),
     title: z.string().max(255),
-    description: z.string(),
-    status: z.enum(STATUS_REQUIREMENT).default('pending'),
-    required_by: z.string().uuid().nullable(),
+    description: z.string().max(500),
+    status: z.enum(PATIENT_REQUIREMENT_STATUS).default('pending'),
+    required_by: z.string().uuid(),
     approved_by: z.string().uuid().nullable(),
     approved_at: z.coerce.date().nullable(),
     submitted_at: z.coerce.date().nullable(),

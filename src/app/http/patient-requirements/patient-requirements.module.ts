@@ -7,7 +7,7 @@ import { PatientRequirement } from '@/domain/entities/patient-requirement';
 import { PatientsModule } from '../patients/patients.module';
 import { UsersModule } from '../users/users.module';
 import { PatientRequirementsController } from './patient-requirements.controller';
-import { PatientsRequirementRepository } from './patient-requirements.repository';
+import { PatientRequirementsRepository } from './patient-requirements.repository';
 import { PatientRequirementsService } from './patient-requirements.service';
 
 @Module({
@@ -18,7 +18,7 @@ import { PatientRequirementsService } from './patient-requirements.service';
     TypeOrmModule.forFeature([PatientRequirement]),
   ],
   controllers: [PatientRequirementsController],
-  providers: [PatientRequirementsService, PatientsRequirementRepository],
-  exports: [PatientsRequirementRepository],
+  providers: [PatientRequirementsService, PatientRequirementsRepository],
+  exports: [PatientRequirementsRepository],
 })
 export class PatientRequirementsModule {}

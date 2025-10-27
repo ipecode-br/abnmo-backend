@@ -15,8 +15,8 @@ export class PatientRequirementsController {
   ) {}
 
   @Patch('/:id/approve')
-  @ApiOperation({ summary: 'Aprova uma solicitação por Id' })
   @Roles(['nurse', 'manager'])
+  @ApiOperation({ summary: 'Aprova uma solicitação por ID' })
   async approvedPatientRequirement(
     @Param('id') id: string,
     @CurrentUser() user: UserSchema,
