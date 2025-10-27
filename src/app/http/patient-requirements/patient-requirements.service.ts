@@ -38,4 +38,31 @@ export class PatientRequirementsService {
       'Requirement approved successfully',
     );
   }
+
+  async declinedRequirement(id: string, declinedBy: string): Promise<void> {
+    const requirement = await this.patientRequirementsRepository.findById(id);
+
+    if (!requirement) {
+      throw new NotFoundException('Solicitação não encontrada.');
+    }
+
+    if (requirement.status !== 'under_review')
+      throw new ConflictException(
+        'A solicitação não pode ser recusada nesse status.',
+      );
+
+    await this.patientRequirementsRepository.declinedRequirement(
+      id,
+      declinedBy,
+    );
+
+    this.logger.log(
+      {
+        id: requirement.id,
+        userId: declinedBy,
+        approvedAt: new Date(),
+      },
+      'Requirement declined successfully',
+    );
+  }
 }

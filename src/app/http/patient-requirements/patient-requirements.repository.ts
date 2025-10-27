@@ -24,4 +24,16 @@ export class PatientRequirementsRepository {
       approved_at: new Date(),
     });
   }
+
+  public async declinedRequirement(
+    id: string,
+    declinedBy: string,
+  ): Promise<PatientRequirement> {
+    return this.patientRequirementsRepository.save({
+      id,
+      status: 'declined',
+      approved_by: declinedBy,
+      approved_at: new Date(),
+    });
+  }
 }

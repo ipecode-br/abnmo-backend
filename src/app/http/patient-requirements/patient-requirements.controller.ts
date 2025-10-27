@@ -28,4 +28,22 @@ export class PatientRequirementsController {
       message: 'Solicitação aprovada com sucesso.',
     };
   }
+
+  @Patch(':id/decline')
+  @Roles(['nurse', 'manager'])
+  @ApiOperation({ summary: 'Recusa uma solicitação por ID.' })
+  public async declineRequirement(
+    @Param('id') id: string,
+    @CurrentUser() currentUser: UserSchema,
+  ): Promise<BaseResponseSchema> {
+    await this.patientRequirementsService.declinedRequirement(
+      id,
+      currentUser.id,
+    );
+
+    return {
+      success: true,
+      message: 'Solicitação recusada com sucesso.',
+    };
+  }
 }
