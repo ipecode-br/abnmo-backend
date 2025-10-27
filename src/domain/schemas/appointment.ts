@@ -33,6 +33,8 @@ export const createAppointmentSchema = appointmentSchema.pick({
   patient_id: true,
   specialist_id: true,
   date: true,
+  condition: true,
+  annotation: true,
 });
 export type CreateAppointmentDto = z.infer<typeof createAppointmentSchema>;
 
