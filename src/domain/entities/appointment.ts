@@ -29,10 +29,10 @@ export class Appointment implements AppointmentSchema {
   @Column('uuid')
   specialist_id: string;
 
-  @Column({ type: 'date', nullable: false })
+  @Column({ type: 'date' })
   date: Date;
 
-  @Column({ type: 'enum', enum: APPOINTMENT_STATUS, nullable: false })
+  @Column({ type: 'enum', enum: APPOINTMENT_STATUS })
   status: AppointmentStatusType;
 
   @Column({ type: 'enum', enum: APPOINTMENT_CONDITION, nullable: true })
