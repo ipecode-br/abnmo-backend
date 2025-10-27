@@ -16,7 +16,7 @@ import { FindAllAppointmentsResponseSchema } from '@/domain/schemas/appointment'
 import { BaseResponseSchema } from '@/domain/schemas/base';
 import { UserSchema } from '@/domain/schemas/user';
 
-import type {
+import {
   CreateAppointmentDto,
   FindAllAppointmentsQueryDto,
   UpdateAppointmentDto,

@@ -36,7 +36,7 @@ export const appointmentSchema = z
     }),
     status: z.enum(APPOINTMENT_STATUS).default('scheduled'),
     condition: z.enum(APPOINTMENT_CONDITION).nullable(),
-    annotation: z.string().nullable(),
+    annotation: z.string().max(500).nullable(),
     created_at: z.coerce.date(),
     updated_at: z.coerce.date(),
   })
@@ -61,6 +61,8 @@ export const createAppointmentSchema = appointmentSchema.pick({
   patient_id: true,
   specialist_id: true,
   date: true,
+  condition: true,
+  annotation: true,
 });
 export type CreateAppointmentDto = z.infer<typeof createAppointmentSchema>;
 
