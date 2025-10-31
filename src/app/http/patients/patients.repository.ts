@@ -52,6 +52,8 @@ export class PatientsRepository {
 
     if (status) {
       query.andWhere('patient.status = :status', { status });
+    } else {
+      query.andWhere('patient.status != :pending', { pending: 'pending' });
     }
 
     if (startDate && endDate) {
