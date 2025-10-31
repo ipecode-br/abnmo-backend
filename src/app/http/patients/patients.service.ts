@@ -82,6 +82,7 @@ export class PatientsService {
       const createdPatient = patientsDataSource.create({
         ...patientDto,
         user_id: user.id,
+        status: 'pending',
       });
       const savedPatient = await patientsDataSource.save(createdPatient);
 
@@ -154,6 +155,7 @@ export class PatientsService {
       const patient = patientsDataSource.create({
         ...createPatientDto,
         user_id: user.id,
+        status: 'active',
       });
 
       const savedPatient = await patientsDataSource.save(patient);
