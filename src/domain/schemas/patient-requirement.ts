@@ -35,8 +35,7 @@ export const createPatientRequirementSchema = patientRequirementSchema.pick({
   type: true,
   title: true,
   description: true,
-  required_by: true,
 });
-export type CreatePatientRequirementDto = z.infer<
+export type CreatePatientRequirementSchema = z.infer<
   typeof createPatientRequirementSchema
 >;

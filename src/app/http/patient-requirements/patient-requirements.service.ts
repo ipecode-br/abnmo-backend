@@ -8,7 +8,7 @@ import {
 import { UserSchema } from '@/domain/schemas/user';
 
 import { PatientsRepository } from '../patients/patients.repository';
-import { CreatePatientRequirementDto } from './patient-requirement.dto';
+import { CreatePatientRequirementDto } from './patient-requirements.dtos';
 import { PatientRequirementsRepository } from './patient-requirements.repository';
 
 @Injectable()
@@ -25,6 +25,7 @@ export class PatientRequirementsService {
     userId: string,
   ): Promise<void> {
     const { patient_id } = createPatientRequirementDto;
+
     const patientExists = await this.patientsRepository.findById(patient_id);
 
     if (!patientExists) {
@@ -37,7 +38,8 @@ export class PatientRequirementsService {
     });
 
     this.logger.log(
-      `Nova solicitação criada para o paciente ${patient_id} por ${userId}`,
+      { patientId: patient_id, requiredBy: userId },
+      'Requirement created successfully',
     );
   }
 
@@ -46,10 +48,10 @@ export class PatientRequirementsService {
       await this.patientRequirementsRepository.findById(id);
 
     if (!patientRequirement) {
-      throw new NotFoundException(`Solicitação não encontrada`);
+      throw new NotFoundException('Solicitação não encontrada');
     }
 
-    if (patientRequirement.status != 'under_review') {
+    if (patientRequirement.status !== 'under_review') {
       throw new ConflictException(
         'Solicitação precisa estar aguardando aprovação para ser aprovada',
       );

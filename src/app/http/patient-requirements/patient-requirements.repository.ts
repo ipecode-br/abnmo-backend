@@ -3,7 +3,7 @@ import { Repository } from 'typeorm';
 
 import { PatientRequirement } from '@/domain/entities/patient-requirement';
 
-import { CreatePatientRequirementDto } from './patient-requirement.dto';
+import { CreatePatientRequirementDto } from './patient-requirements.dtos';
 
 export class PatientRequirementsRepository {
   constructor(
@@ -11,17 +11,19 @@ export class PatientRequirementsRepository {
     private readonly patientRequirementsRepository: Repository<PatientRequirement>,
   ) {}
 
+  public async findById(id: string): Promise<PatientRequirement | null> {
+    return await this.patientRequirementsRepository.findOne({ where: { id } });
+  }
+
   public async create(
-    createPatientRequirementDto: CreatePatientRequirementDto,
+    createPatientRequirementDto: CreatePatientRequirementDto & {
+      required_by: string;
+    },
   ): Promise<PatientRequirement> {
     const requirementCreated = this.patientRequirementsRepository.create(
       createPatientRequirementDto,
     );
     return await this.patientRequirementsRepository.save(requirementCreated);
-  }
-
-  public async findById(id: string): Promise<PatientRequirement | null> {
-    return await this.patientRequirementsRepository.findOne({ where: { id } });
   }
 
   public async approvedRequirement(

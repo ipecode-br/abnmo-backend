@@ -6,7 +6,7 @@ import { Roles } from '@/common/decorators/roles.decorator';
 import { BaseResponseSchema } from '@/domain/schemas/base';
 import { UserSchema } from '@/domain/schemas/user';
 
-import { CreatePatientRequirementDto } from './patient-requirement.dto';
+import { CreatePatientRequirementDto } from './patient-requirements.dtos';
 import { PatientRequirementsService } from './patient-requirements.service';
 
 @Controller('patients/requirements')
