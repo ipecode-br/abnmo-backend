@@ -35,16 +35,31 @@ export class PatientRequirementsController {
 
   @Patch('/:id/approve')
   @Roles(['nurse', 'manager'])
-  @ApiOperation({ summary: 'Aprova uma solicitação por ID' })
-  async approvedPatientRequirement(
+  @ApiOperation({ summary: 'Aprova uma solicitação por ID.' })
+  async approve(
     @Param('id') id: string,
     @CurrentUser() user: UserSchema,
   ): Promise<BaseResponseSchema> {
-    await this.patientRequirementsService.approveRequirement(id, user);
+    await this.patientRequirementsService.approve(id, user);
 
     return {
       success: true,
       message: 'Solicitação aprovada com sucesso.',
+    };
+  }
+
+  @Patch(':id/decline')
+  @Roles(['nurse', 'manager'])
+  @ApiOperation({ summary: 'Recusa uma solicitação por ID.' })
+  public async decline(
+    @Param('id') id: string,
+    @CurrentUser() currentUser: UserSchema,
+  ): Promise<BaseResponseSchema> {
+    await this.patientRequirementsService.decline(id, currentUser.id);
+
+    return {
+      success: true,
+      message: 'Solicitação recusada com sucesso.',
     };
   }
 }

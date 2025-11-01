@@ -43,7 +43,7 @@ export class PatientRequirementsService {
     );
   }
 
-  async approveRequirement(id: string, user: UserSchema): Promise<void> {
+  async approve(id: string, user: UserSchema): Promise<void> {
     const patientRequirement =
       await this.patientRequirementsRepository.findById(id);
 
@@ -53,15 +53,35 @@ export class PatientRequirementsService {
 
     if (patientRequirement.status !== 'under_review') {
       throw new ConflictException(
-        'Solicitação precisa estar aguardando aprovação para ser aprovada',
+        'Solicitação precisa estar aguardando aprovação para ser aprovada.',
       );
     }
 
-    await this.patientRequirementsRepository.approvedRequirement(id, user.id);
+    await this.patientRequirementsRepository.approve(id, user.id);
 
     this.logger.log(
       { id: patientRequirement.id, userId: user.id, approvedAt: new Date() },
       'Requirement approved successfully',
+    );
+  }
+
+  async decline(id: string, declinedBy: string): Promise<void> {
+    const requirement = await this.patientRequirementsRepository.findById(id);
+
+    if (!requirement) {
+      throw new NotFoundException('Solicitação não encontrada.');
+    }
+
+    if (requirement.status !== 'under_review')
+      throw new ConflictException(
+        'Solicitação precisa estar aguardando aprovação para ser recusada.',
+      );
+
+    await this.patientRequirementsRepository.decline(id, declinedBy);
+
+    this.logger.log(
+      { id: requirement.id, userId: declinedBy, approvedAt: new Date() },
+      'Requirement declined successfully',
     );
   }
 }

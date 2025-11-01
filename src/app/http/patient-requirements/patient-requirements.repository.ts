@@ -26,7 +26,7 @@ export class PatientRequirementsRepository {
     return await this.patientRequirementsRepository.save(requirementCreated);
   }
 
-  public async approvedRequirement(
+  public async approve(
     id: string,
     approvedBy: string,
   ): Promise<PatientRequirement> {
@@ -34,6 +34,18 @@ export class PatientRequirementsRepository {
       id,
       status: 'approved',
       approved_by: approvedBy,
+      approved_at: new Date(),
+    });
+  }
+
+  public async decline(
+    id: string,
+    declinedBy: string,
+  ): Promise<PatientRequirement> {
+    return this.patientRequirementsRepository.save({
+      id,
+      status: 'declined',
+      approved_by: declinedBy,
       approved_at: new Date(),
     });
   }
