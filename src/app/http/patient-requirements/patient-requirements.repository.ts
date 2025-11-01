@@ -2,25 +2,35 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { PatientRequirement } from '@/domain/entities/patient-requirement';
-import { PatientRequirementTypeList } from '@/domain/schemas/patient-requirement';
-import { UserSchema } from '@/domain/schemas/user';
+import { PatientRequirementByPatientIdResponseType } from '@/domain/schemas/patient-requirement';
 
-import { PatientsRepository } from '../patients/patients.repository';
-import { FindAllPatientsRequirementsByIdDto } from './patient-requirement.dto';
+import {
+  CreatePatientRequirementDto,
+  type FindAllPatientsRequirementsByPatientIdDto,
+} from './patient-requirements.dtos';
 
 export class PatientRequirementsRepository {
   constructor(
     @InjectRepository(PatientRequirement)
     private readonly patientRequirementsRepository: Repository<PatientRequirement>,
-
-    private readonly patientsRepository: PatientsRepository,
   ) {}
 
   public async findById(id: string): Promise<PatientRequirement | null> {
     return await this.patientRequirementsRepository.findOne({ where: { id } });
   }
 
-  public async approvedRequirement(
+  public async create(
+    createPatientRequirementDto: CreatePatientRequirementDto & {
+      required_by: string;
+    },
+  ): Promise<PatientRequirement> {
+    const requirementCreated = this.patientRequirementsRepository.create(
+      createPatientRequirementDto,
+    );
+    return await this.patientRequirementsRepository.save(requirementCreated);
+  }
+
+  public async approve(
     id: string,
     approvedBy: string,
   ): Promise<PatientRequirement> {
@@ -32,14 +42,26 @@ export class PatientRequirementsRepository {
     });
   }
 
-  async findAllPatientLogged(
-    user: UserSchema,
-    filters: FindAllPatientsRequirementsByIdDto,
-  ): Promise<{ requests: PatientRequirementTypeList[]; total: number }> {
-    const { status, startDate, endDate, page, perPage } = filters;
+  public async decline(
+    id: string,
+    declinedBy: string,
+  ): Promise<PatientRequirement> {
+    return this.patientRequirementsRepository.save({
+      id,
+      status: 'declined',
+      approved_by: declinedBy,
+      approved_at: new Date(),
+    });
+  }
 
-    const patient = await this.patientsRepository.findByUserId(user.id);
-    const id = patient?.id;
+  public async findAllByPatientId(
+    id: string,
+    filters: FindAllPatientsRequirementsByPatientIdDto,
+  ): Promise<{
+    requirements: PatientRequirementByPatientIdResponseType[];
+    total: number;
+  }> {
+    const { status, startDate, endDate, page, perPage } = filters;
 
     const query = this.patientRequirementsRepository
       .createQueryBuilder('patientRequirements')
@@ -68,20 +90,68 @@ export class PatientRequirementsRepository {
     query.skip((page - 1) * perPage).take(perPage);
 
     const total = await query.getCount();
-    const rawRequests = await query.getMany();
+    const rawRequirements = await query.getMany();
 
-    const requests: PatientRequirementTypeList[] = rawRequests.map(
-      ({ ...requestsData }) => ({
-        id: requestsData.id,
-        type: requestsData.type,
-        title: requestsData.title,
-        status: requestsData.status,
-        submitted_at: requestsData.submitted_at,
-        approved_at: requestsData.approved_at,
-        created_at: requestsData.created_at,
-      }),
-    );
+    const requirements: PatientRequirementByPatientIdResponseType[] =
+      rawRequirements.map((requirement) => ({
+        id: requirement.id,
+        type: requirement.type,
+        title: requirement.title,
+        status: requirement.status,
+        submitted_at: requirement.submitted_at,
+        approved_at: requirement.approved_at,
+        created_at: requirement.created_at,
+      }));
 
-    return { requests, total };
+    return { requirements, total };
+  }
+
+  async findAllByPatientLogged(
+    patientId: string,
+    filters: FindAllPatientsRequirementsByPatientIdDto,
+  ): Promise<{
+    requirements: PatientRequirementByPatientIdResponseType[];
+    total: number;
+  }> {
+    const { status, startDate, endDate, page, perPage } = filters;
+
+    const query = this.patientRequirementsRepository
+      .createQueryBuilder('patientRequirements')
+      .where('patientRequirements.patient_id = :id', { id: patientId });
+
+    if (status) {
+      query.andWhere('patientRequirements.status = :status', { status });
+    }
+
+    if (startDate && endDate) {
+      query.andWhere(
+        'patientRequirements.created_at BETWEEN :startDate AND :endDate',
+        { startDate, endDate },
+      );
+    }
+
+    if (startDate && !endDate) {
+      query.andWhere('patientRequirements.created_at >= :startDate', {
+        startDate,
+      });
+    }
+
+    query.skip((page - 1) * perPage).take(perPage);
+
+    const total = await query.getCount();
+    const rawRequirements = await query.getMany();
+
+    const requirements: PatientRequirementByPatientIdResponseType[] =
+      rawRequirements.map((requirement) => ({
+        id: requirement.id,
+        type: requirement.type,
+        title: requirement.title,
+        status: requirement.status,
+        submitted_at: requirement.submitted_at,
+        approved_at: requirement.approved_at,
+        created_at: requirement.created_at,
+      }));
+
+    return { requirements, total };
   }
 }
