@@ -23,6 +23,10 @@ export class AppointmentsRepository {
     private readonly appointmentsRepository: Repository<Appointment>,
   ) {}
 
+  public async findById(id: string): Promise<Appointment | null> {
+    return await this.appointmentsRepository.findOne({ where: { id } });
+  }
+
   async findAll(
     user: UserSchema,
     filters: FindAllAppointmentsQueryDto,
@@ -45,6 +49,7 @@ export class AppointmentsRepository {
       specialty: 'specialist.specialty',
       condition: 'appointment.condition',
     };
+
     const query = this.appointmentsRepository
       .createQueryBuilder('appointment')
       .leftJoinAndSelect('appointment.patient', 'patient')
@@ -52,19 +57,12 @@ export class AppointmentsRepository {
       .leftJoinAndSelect('patient.user', 'patientUser')
       .leftJoinAndSelect('specialist.user', 'specialistUser');
 
-    const viewAllRoles = ['manager', 'nurse', 'admin'];
-    const viewOwnOnlyRoles = ['specialist', 'patient'];
+    if (user.role === 'patient') {
+      query.andWhere(`patient.user_id = :id`, { id: user.id });
+    }
 
-    if (viewOwnOnlyRoles.includes(user.role)) {
-      if (user.role === 'patient') {
-        query.andWhere(`patient.user_id = :id`, { id: user.id });
-      } else if (user.role === 'specialist') {
-        query.andWhere(`specialist.user_id = :id`, { id: user.id });
-      }
-    } else if (!viewAllRoles.includes(user.role)) {
-      query.andWhere(`(patient.user_id = :id OR specialist.user_id = :id)`, {
-        id: user.id,
-      });
+    if (user.role === 'specialist') {
+      query.andWhere(`specialist.user_id = :id`, { id: user.id });
     }
 
     if (search) {
@@ -94,11 +92,7 @@ export class AppointmentsRepository {
     const total = await query.getCount();
 
     query.orderBy(ORDER_BY[orderBy], order);
-
-    const pageNumber = parseInt(page as any) || 1;
-    const perPageNumber = parseInt(perPage as any) || 10;
-
-    query.skip((pageNumber - 1) * perPageNumber).take(perPageNumber);
+    query.skip((page - 1) * perPage).take(perPage);
 
     const rawAppointments = await query.getMany();
 
@@ -127,10 +121,6 @@ export class AppointmentsRepository {
     }));
 
     return { appointments, total };
-  }
-
-  public async findById(id: string): Promise<Appointment | null> {
-    return await this.appointmentsRepository.findOne({ where: { id } });
   }
 
   public async create(

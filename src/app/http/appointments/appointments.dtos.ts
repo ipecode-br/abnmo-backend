@@ -2,7 +2,7 @@ import { createZodDto } from 'nestjs-zod';
 
 import {
   createAppointmentSchema,
-  findAllAppointmentQuerySchema,
+  findAllAppointmentsQuerySchema,
   updateAppointmentSchema,
 } from '@/domain/schemas/appointment';
 
@@ -14,5 +14,5 @@ export class UpdateAppointmentDto extends createZodDto(
 ) {}
 
 export class FindAllAppointmentsQueryDto extends createZodDto(
-  findAllAppointmentQuerySchema,
+  findAllAppointmentsQuerySchema,
 ) {}

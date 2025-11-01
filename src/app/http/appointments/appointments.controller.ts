@@ -33,7 +33,7 @@ export class AppointmentsController {
   ) {}
 
   @Get()
-  @Roles(['admin', 'manager', 'nurse', 'patient', 'specialist'])
+  @Roles(['manager', 'nurse', 'patient', 'specialist'])
   @ApiOperation({ summary: 'Lista todos os atendimentos' })
   async findAll(
     @CurrentUser() user: UserSchema,

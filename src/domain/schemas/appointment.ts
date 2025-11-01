@@ -74,7 +74,7 @@ export const updateAppointmentSchema = appointmentSchema.pick({
 });
 export type UpdateAppointmentSchema = z.infer<typeof updateAppointmentSchema>;
 
-export const findAllAppointmentQuerySchema = baseQuerySchema
+export const findAllAppointmentsQuerySchema = baseQuerySchema
   .pick({
     search: true,
     order: true,
