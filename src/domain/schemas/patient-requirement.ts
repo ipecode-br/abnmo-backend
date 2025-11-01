@@ -29,3 +29,13 @@ export const patientRequirementSchema = z
   })
   .strict();
 export type PatientRequirementSchema = z.infer<typeof patientRequirementSchema>;
+
+export const createPatientRequirementSchema = patientRequirementSchema.pick({
+  patient_id: true,
+  type: true,
+  title: true,
+  description: true,
+});
+export type CreatePatientRequirementSchema = z.infer<
+  typeof createPatientRequirementSchema
+>;
