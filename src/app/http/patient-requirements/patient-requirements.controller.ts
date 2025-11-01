@@ -1,13 +1,24 @@
-import { Controller, Get, Param, Patch, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
 
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { BaseResponseSchema } from '@/domain/schemas/base';
-import { FindAllPatientsRequirementsResponseSchema } from '@/domain/schemas/patient-requirement';
+import { FindAllPatientsRequirementsByPatientIdResponseSchema } from '@/domain/schemas/patient-requirement';
 import { UserSchema } from '@/domain/schemas/user';
 
-import { FindAllPatientsRequirementsByIdDto } from './patient-requirement.dto';
+import {
+  CreatePatientRequirementDto,
+  type FindAllPatientsRequirementsByPatientIdDto,
+} from './patient-requirements.dtos';
 import { PatientRequirementsRepository } from './patient-requirements.repository';
 import { PatientRequirementsService } from './patient-requirements.service';
 
@@ -18,37 +29,70 @@ export class PatientRequirementsController {
     private readonly patientRequirementsRepository: PatientRequirementsRepository,
   ) {}
 
-  @Get(':id')
+  @Post()
   @Roles(['nurse', 'manager'])
-  @ApiOperation({
-    summary: 'Lista todas as solicitações do paciente pelo seu id.',
-  })
-  async findAllById(
-    @Param('id') id: string,
-    @Query() filters: FindAllPatientsRequirementsByIdDto,
-  ): Promise<FindAllPatientsRequirementsResponseSchema> {
-    const { requests, total } =
-      await this.patientRequirementsRepository.findAllById(id, filters);
+  @ApiOperation({ summary: 'Adiciona nova solicitação.' })
+  public async create(
+    @Body() createPatientRequirementDto: CreatePatientRequirementDto,
+    @CurrentUser() currentUser: UserSchema,
+  ): Promise<BaseResponseSchema> {
+    await this.patientRequirementsService.create(
+      createPatientRequirementDto,
+      currentUser.id,
+    );
 
     return {
       success: true,
-      message: 'Lista de solicitações pelo id retornada com sucesso.',
-      data: { requests, total },
+      message: 'Solicitação adicionada com sucesso.',
     };
   }
 
-  @Patch('/:id/approve')
+  @Patch(':id/approve')
   @Roles(['nurse', 'manager'])
-  @ApiOperation({ summary: 'Aprova uma solicitação por ID' })
-  async approvedPatientRequirement(
+  @ApiOperation({ summary: 'Aprova uma solicitação por ID.' })
+  async approve(
     @Param('id') id: string,
     @CurrentUser() user: UserSchema,
   ): Promise<BaseResponseSchema> {
-    await this.patientRequirementsService.approveRequirement(id, user);
+    await this.patientRequirementsService.approve(id, user);
 
     return {
       success: true,
       message: 'Solicitação aprovada com sucesso.',
+    };
+  }
+
+  @Patch(':id/decline')
+  @Roles(['nurse', 'manager'])
+  @ApiOperation({ summary: 'Recusa uma solicitação por ID.' })
+  public async decline(
+    @Param('id') id: string,
+    @CurrentUser() currentUser: UserSchema,
+  ): Promise<BaseResponseSchema> {
+    await this.patientRequirementsService.decline(id, currentUser.id);
+
+    return {
+      success: true,
+      message: 'Solicitação recusada com sucesso.',
+    };
+  }
+
+  @Get(':id')
+  @Roles(['nurse', 'manager'])
+  @ApiOperation({
+    summary: 'Lista todas as solicitações do paciente pelo seu ID.',
+  })
+  async findAllById(
+    @Param('id') id: string,
+    @Query() filters: FindAllPatientsRequirementsByPatientIdDto,
+  ): Promise<FindAllPatientsRequirementsByPatientIdResponseSchema> {
+    const { requests, total } =
+      await this.patientRequirementsRepository.findAllByPatientId(id, filters);
+
+    return {
+      success: true,
+      message: 'Lista de solicitações do paciente retornada com sucesso.',
+      data: { requests, total },
     };
   }
 }

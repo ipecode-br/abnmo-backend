@@ -33,7 +33,17 @@ export const patientRequirementSchema = z
   .strict();
 export type PatientRequirementSchema = z.infer<typeof patientRequirementSchema>;
 
-export const findAllPatientsRequirementsByIdQuerySchema = baseQuerySchema
+export const createPatientRequirementSchema = patientRequirementSchema.pick({
+  patient_id: true,
+  type: true,
+  title: true,
+  description: true,
+});
+export type CreatePatientRequirementSchema = z.infer<
+  typeof createPatientRequirementSchema
+>;
+
+export const findAllPatientsRequirementsByPatientIdQuerySchema = baseQuerySchema
   .pick({
     startDate: true,
     endDate: true,
@@ -56,30 +66,31 @@ export const findAllPatientsRequirementsByIdQuerySchema = baseQuerySchema
       path: ['endDate'],
     },
   );
-export type FindAllPatientsRequirementsByIdQuerySchema = z.infer<
-  typeof findAllPatientsRequirementsByIdQuerySchema
+export type FindAllPatientsRequirementsByPatientIdQuerySchema = z.infer<
+  typeof findAllPatientsRequirementsByPatientIdQuerySchema
 >;
 
-export const patientRequirementResponseSchema = patientRequirementSchema.pick({
-  id: true,
-  type: true,
-  title: true,
-  status: true,
-  submitted_at: true,
-  approved_at: true,
-  created_at: true,
-});
-export type PatientRequirementTypeList = z.infer<
-  typeof patientRequirementResponseSchema
+export const patientRequirementByPatientIdResponseSchema =
+  patientRequirementSchema.pick({
+    id: true,
+    type: true,
+    title: true,
+    status: true,
+    submitted_at: true,
+    approved_at: true,
+    created_at: true,
+  });
+export type PatientRequirementByPatientIdResponseType = z.infer<
+  typeof patientRequirementByPatientIdResponseSchema
 >;
 
-export const findAllPatientsRequirementsResponseSchema =
+export const findAllPatientsRequirementsByPatientIdResponseSchema =
   baseResponseSchema.extend({
     data: z.object({
-      requests: z.array(patientRequirementResponseSchema),
+      requests: z.array(patientRequirementByPatientIdResponseSchema),
       total: z.number(),
     }),
   });
-export type FindAllPatientsRequirementsResponseSchema = z.infer<
-  typeof findAllPatientsRequirementsResponseSchema
+export type FindAllPatientsRequirementsByPatientIdResponseSchema = z.infer<
+  typeof findAllPatientsRequirementsByPatientIdResponseSchema
 >;
