@@ -58,7 +58,7 @@ export class PatientRequirementsRepository {
     id: string,
     filters: FindAllPatientsRequirementsByPatientIdDto,
   ): Promise<{
-    requests: PatientRequirementByPatientIdResponseType[];
+    requirements: PatientRequirementByPatientIdResponseType[];
     total: number;
   }> {
     const { status, startDate, endDate, page, perPage } = filters;
@@ -90,19 +90,68 @@ export class PatientRequirementsRepository {
     query.skip((page - 1) * perPage).take(perPage);
 
     const total = await query.getCount();
-    const rawRequests = await query.getMany();
+    const rawRequirements = await query.getMany();
 
-    const requests: PatientRequirementByPatientIdResponseType[] =
-      rawRequests.map(({ ...requestsData }) => ({
-        id: requestsData.id,
-        type: requestsData.type,
-        title: requestsData.title,
-        status: requestsData.status,
-        submitted_at: requestsData.submitted_at,
-        approved_at: requestsData.approved_at,
-        created_at: requestsData.created_at,
+    const requirements: PatientRequirementByPatientIdResponseType[] =
+      rawRequirements.map((requirement) => ({
+        id: requirement.id,
+        type: requirement.type,
+        title: requirement.title,
+        status: requirement.status,
+        submitted_at: requirement.submitted_at,
+        approved_at: requirement.approved_at,
+        created_at: requirement.created_at,
       }));
 
-    return { requests, total };
+    return { requirements, total };
+  }
+
+  async findAllByPatientLogged(
+    patientId: string,
+    filters: FindAllPatientsRequirementsByPatientIdDto,
+  ): Promise<{
+    requirements: PatientRequirementByPatientIdResponseType[];
+    total: number;
+  }> {
+    const { status, startDate, endDate, page, perPage } = filters;
+
+    const query = this.patientRequirementsRepository
+      .createQueryBuilder('patientRequirements')
+      .where('patientRequirements.patient_id = :id', { id: patientId });
+
+    if (status) {
+      query.andWhere('patientRequirements.status = :status', { status });
+    }
+
+    if (startDate && endDate) {
+      query.andWhere(
+        'patientRequirements.created_at BETWEEN :startDate AND :endDate',
+        { startDate, endDate },
+      );
+    }
+
+    if (startDate && !endDate) {
+      query.andWhere('patientRequirements.created_at >= :startDate', {
+        startDate,
+      });
+    }
+
+    query.skip((page - 1) * perPage).take(perPage);
+
+    const total = await query.getCount();
+    const rawRequirements = await query.getMany();
+
+    const requirements: PatientRequirementByPatientIdResponseType[] =
+      rawRequirements.map((requirement) => ({
+        id: requirement.id,
+        type: requirement.type,
+        title: requirement.title,
+        status: requirement.status,
+        submitted_at: requirement.submitted_at,
+        approved_at: requirement.approved_at,
+        created_at: requirement.created_at,
+      }));
+
+    return { requirements, total };
   }
 }

@@ -87,7 +87,7 @@ export type PatientRequirementByPatientIdResponseType = z.infer<
 export const findAllPatientsRequirementsByPatientIdResponseSchema =
   baseResponseSchema.extend({
     data: z.object({
-      requests: z.array(patientRequirementByPatientIdResponseSchema),
+      requirements: z.array(patientRequirementByPatientIdResponseSchema),
       total: z.number(),
     }),
   });

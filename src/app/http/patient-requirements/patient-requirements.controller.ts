@@ -80,19 +80,39 @@ export class PatientRequirementsController {
   @Get(':id')
   @Roles(['nurse', 'manager'])
   @ApiOperation({
-    summary: 'Lista todas as solicitações do paciente pelo seu ID.',
+    summary: 'Lista todas as solicitações do paciente pelo ID.',
   })
-  async findAllById(
+  async findAllByPatientId(
     @Param('id') id: string,
     @Query() filters: FindAllPatientsRequirementsByPatientIdDto,
   ): Promise<FindAllPatientsRequirementsByPatientIdResponseSchema> {
-    const { requests, total } =
+    const { requirements, total } =
       await this.patientRequirementsRepository.findAllByPatientId(id, filters);
 
     return {
       success: true,
       message: 'Lista de solicitações do paciente retornada com sucesso.',
-      data: { requests, total },
+      data: { requirements, total },
+    };
+  }
+
+  @Get('/me')
+  @Roles(['patient'])
+  @ApiOperation({ summary: 'Busca todas as solicitações do paciente logado.' })
+  async findAllByPatientLogged(
+    @CurrentUser() user: UserSchema,
+    @Query() filters: FindAllPatientsRequirementsByPatientIdDto,
+  ): Promise<FindAllPatientsRequirementsByPatientIdResponseSchema> {
+    const { requirements, total } =
+      await this.patientRequirementsRepository.findAllByPatientLogged(
+        user.id,
+        filters,
+      );
+
+    return {
+      success: true,
+      message: 'Lista de solicitações retornada com sucesso.',
+      data: { requirements, total },
     };
   }
 }
