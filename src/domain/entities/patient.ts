@@ -34,34 +34,34 @@ export class Patient implements PatientSchema {
   @Column('uuid')
   user_id: string;
 
-  @Column({ type: 'enum', enum: GENDERS, nullable: false })
+  @Column({ type: 'enum', enum: GENDERS })
   gender: GenderType;
 
-  @Column({ type: 'date', nullable: false })
+  @Column({ type: 'date' })
   date_of_birth: Date;
 
-  @Column({ type: 'char', length: 11, nullable: false })
+  @Column({ type: 'char', length: 11 })
   phone: string;
 
-  @Column({ type: 'char', length: 11, nullable: false, unique: true })
+  @Column({ type: 'char', length: 11, unique: true })
   cpf: string;
 
-  @Column({ type: 'enum', enum: BRAZILIAN_STATES, nullable: false })
+  @Column({ type: 'enum', enum: BRAZILIAN_STATES })
   state: BrazilianStateType;
 
-  @Column({ type: 'varchar', length: 50, nullable: false })
+  @Column({ type: 'varchar', length: 50 })
   city: string;
 
-  @Column({ type: 'tinyint', width: 1, default: 0, nullable: false })
+  @Column({ type: 'tinyint', width: 1, default: 0 })
   has_disability: boolean;
 
   @Column({ type: 'varchar', length: 500, nullable: true })
   disability_desc: string | null;
 
-  @Column({ type: 'tinyint', width: 1, default: 0, nullable: false })
+  @Column({ type: 'tinyint', width: 1, default: 0 })
   need_legal_assistance: boolean;
 
-  @Column({ type: 'tinyint', width: 1, default: 0, nullable: false })
+  @Column({ type: 'tinyint', width: 1, default: 0 })
   take_medication: boolean;
 
   @Column({ type: 'varchar', length: 500, nullable: true })
@@ -70,7 +70,7 @@ export class Patient implements PatientSchema {
   @Column({ type: 'tinyint', width: 1, default: 0 })
   has_nmo_diagnosis: boolean;
 
-  @Column({ type: 'enum', enum: PATIENT_STATUS })
+  @Column({ type: 'enum', enum: PATIENT_STATUS, default: 'pending' })
   status: PatientStatusType;
 
   @CreateDateColumn({ type: 'timestamp' })
