@@ -21,7 +21,7 @@ export const GENDERS = [
 ] as const;
 export type GenderType = (typeof GENDERS)[number];
 
-export const PATIENT_STATUS = ['active', 'inactive'] as const;
+export const PATIENT_STATUS = ['active', 'inactive', 'pending'] as const;
 export type PatientStatusType = (typeof PATIENT_STATUS)[number];
 
 export const PATIENT_ORDER_BY = ['name', 'email', 'status', 'date'] as const;
@@ -54,7 +54,7 @@ export const patientSchema = z
     take_medication: z.boolean().default(false),
     medication_desc: z.string().nullable(),
     has_nmo_diagnosis: z.boolean().default(false),
-    status: z.enum(PATIENT_STATUS).default('active'),
+    status: z.enum(PATIENT_STATUS).default('pending'),
     created_at: z.coerce.date(),
     updated_at: z.coerce.date(),
   })

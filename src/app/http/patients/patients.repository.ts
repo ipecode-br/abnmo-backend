@@ -21,6 +21,7 @@ export class PatientsRepository {
 
   public async findAll(
     filters: FindAllPatientQueryDto,
+    includePending?: boolean,
   ): Promise<{ patients: PatientType[]; total: number }> {
     const {
       search,
@@ -52,6 +53,10 @@ export class PatientsRepository {
 
     if (status) {
       query.andWhere('patient.status = :status', { status });
+    }
+
+    if (!status && !includePending) {
+      query.andWhere("patient.status != 'pending'");
     }
 
     if (startDate && endDate) {

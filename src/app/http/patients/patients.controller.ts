@@ -56,7 +56,7 @@ export class PatientsController {
   }
 
   @Post()
-  @Roles(['manager', 'nurse', 'patient'])
+  @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Cadastra um novo paciente' })
   public async create(
     @Body() createPatientDto: CreatePatientDto,
