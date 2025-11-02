@@ -7,7 +7,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
@@ -17,11 +17,12 @@ import { UserSchema } from '@/domain/schemas/user';
 
 import {
   CreatePatientRequirementDto,
-  type FindAllPatientsRequirementsByPatientIdDto,
+  FindAllPatientsRequirementsByPatientIdDto,
 } from './patient-requirements.dtos';
 import { PatientRequirementsRepository } from './patient-requirements.repository';
 import { PatientRequirementsService } from './patient-requirements.service';
 
+@ApiTags('Pendências do paciente')
 @Controller('patients/requirements')
 export class PatientRequirementsController {
   constructor(
