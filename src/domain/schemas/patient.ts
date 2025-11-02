@@ -54,7 +54,7 @@ export const patientSchema = z
     take_medication: z.boolean().default(false),
     medication_desc: z.string().nullable(),
     has_nmo_diagnosis: z.boolean().default(false),
-    status: z.enum(PATIENT_STATUS).default('active'),
+    status: z.enum(PATIENT_STATUS).default('pending'),
     created_at: z.coerce.date(),
     updated_at: z.coerce.date(),
   })
