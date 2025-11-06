@@ -43,6 +43,65 @@ export type CreatePatientRequirementSchema = z.infer<
   typeof createPatientRequirementSchema
 >;
 
+export const findAllPatientsRequirementsQuerySchema = baseQuerySchema
+  .pick({
+    startDate: true,
+    endDate: true,
+    perPage: true,
+    page: true,
+  })
+  .extend({
+    status: z.enum(PATIENT_REQUIREMENT_STATUS).optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.startDate && data.endDate) {
+        return data.startDate < data.endDate;
+      }
+      return true;
+    },
+    {
+      message: 'It should be greater than `startDate`',
+      path: ['endDate'],
+    },
+  );
+
+export type findAllPatientsRequirementsQuerySchema = z.infer<
+  typeof findAllPatientsRequirementsQuerySchema
+>;
+
+export const patientRequirementListItemSchema = patientRequirementSchema
+  .pick({
+    id: true,
+    type: true,
+    title: true,
+    status: true,
+    submitted_at: true,
+    approved_at: true,
+    created_at: true,
+  })
+  .extend({
+    patient: z.object({
+      id: z.string().uuid(),
+      name: z.string(),
+    }),
+  });
+
+export type PatientRequirementListItemSchema = z.infer<
+  typeof patientRequirementListItemSchema
+>;
+
+export const findAllPatientsRequirementsResponseSchema =
+  baseResponseSchema.extend({
+    data: z.object({
+      requirements: z.array(patientRequirementListItemSchema),
+      total: z.number(),
+    }),
+  });
+export type FindAllPatientsRequirementsResponseSchema = z.infer<
+  typeof findAllPatientsRequirementsResponseSchema
+>;
+
 export const findAllPatientsRequirementsByPatientIdQuerySchema = baseQuerySchema
   .pick({
     startDate: true,
