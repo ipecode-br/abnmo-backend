@@ -27,7 +27,7 @@ import { PatientRequirementsRepository } from './patient-requirements.repository
 import { PatientRequirementsService } from './patient-requirements.service';
 
 @ApiTags('Pendências do paciente')
-@Controller('patients/requirements')
+@Controller('patients-requirements')
 export class PatientRequirementsController {
   constructor(
     private readonly patientRequirementsService: PatientRequirementsService,
