@@ -1,7 +1,9 @@
 import { z } from 'zod';
 
 import { baseResponseSchema } from './base';
+import { patientSchema } from './patient';
 import { baseQuerySchema } from './query';
+import { userSchema } from './user';
 
 export const PATIENT_REQUIREMENT_TYPE = ['document', 'form'] as const;
 export type PatientRequirementType = (typeof PATIENT_REQUIREMENT_TYPE)[number];
@@ -44,15 +46,8 @@ export type CreatePatientRequirementSchema = z.infer<
 >;
 
 export const findAllPatientsRequirementsQuerySchema = baseQuerySchema
-  .pick({
-    startDate: true,
-    endDate: true,
-    perPage: true,
-    page: true,
-  })
-  .extend({
-    status: z.enum(PATIENT_REQUIREMENT_STATUS).optional(),
-  })
+  .pick({ startDate: true, endDate: true, perPage: true, page: true })
+  .extend({ status: z.enum(PATIENT_REQUIREMENT_STATUS).optional() })
   .refine(
     (data) => {
       if (data.startDate && data.endDate) {
@@ -81,10 +76,9 @@ export const patientRequirementListItemSchema = patientRequirementSchema
     created_at: true,
   })
   .extend({
-    patient: z.object({
-      id: z.string().uuid(),
-      name: z.string(),
-    }),
+    patient: patientSchema
+      .pick({ id: true })
+      .merge(userSchema.pick({ name: true })),
   });
 
 export type PatientRequirementListItemSchema = z.infer<
