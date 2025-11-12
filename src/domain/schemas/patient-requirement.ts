@@ -1,7 +1,9 @@
 import { z } from 'zod';
 
 import { baseResponseSchema } from './base';
+import { patientSchema } from './patient';
 import { baseQuerySchema } from './query';
+import { userSchema } from './user';
 
 export const PATIENT_REQUIREMENT_TYPE = ['document', 'form'] as const;
 export type PatientRequirementType = (typeof PATIENT_REQUIREMENT_TYPE)[number];
@@ -41,6 +43,57 @@ export const createPatientRequirementSchema = patientRequirementSchema.pick({
 });
 export type CreatePatientRequirementSchema = z.infer<
   typeof createPatientRequirementSchema
+>;
+
+export const findAllPatientsRequirementsQuerySchema = baseQuerySchema
+  .pick({ startDate: true, endDate: true, perPage: true, page: true })
+  .extend({ status: z.enum(PATIENT_REQUIREMENT_STATUS).optional() })
+  .refine(
+    (data) => {
+      if (data.startDate && data.endDate) {
+        return data.startDate < data.endDate;
+      }
+      return true;
+    },
+    {
+      message: 'It should be greater than `startDate`',
+      path: ['endDate'],
+    },
+  );
+
+export type findAllPatientsRequirementsQuerySchema = z.infer<
+  typeof findAllPatientsRequirementsQuerySchema
+>;
+
+export const patientRequirementListItemSchema = patientRequirementSchema
+  .pick({
+    id: true,
+    type: true,
+    title: true,
+    status: true,
+    submitted_at: true,
+    approved_at: true,
+    created_at: true,
+  })
+  .extend({
+    patient: patientSchema
+      .pick({ id: true })
+      .merge(userSchema.pick({ name: true })),
+  });
+
+export type PatientRequirementListItemSchema = z.infer<
+  typeof patientRequirementListItemSchema
+>;
+
+export const findAllPatientsRequirementsResponseSchema =
+  baseResponseSchema.extend({
+    data: z.object({
+      requirements: z.array(patientRequirementListItemSchema),
+      total: z.number(),
+    }),
+  });
+export type FindAllPatientsRequirementsResponseSchema = z.infer<
+  typeof findAllPatientsRequirementsResponseSchema
 >;
 
 export const findAllPatientsRequirementsByPatientIdQuerySchema = baseQuerySchema

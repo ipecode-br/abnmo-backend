@@ -2,7 +2,9 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { CryptographyModule } from '@/app/cryptography/cryptography.module';
+import { Patient } from '@/domain/entities/patient';
 import { PatientRequirement } from '@/domain/entities/patient-requirement';
+import { User } from '@/domain/entities/user';
 
 import { PatientsModule } from '../patients/patients.module';
 import { UsersModule } from '../users/users.module';
@@ -15,7 +17,7 @@ import { PatientRequirementsService } from './patient-requirements.service';
     CryptographyModule,
     UsersModule,
     PatientsModule,
-    TypeOrmModule.forFeature([PatientRequirement]),
+    TypeOrmModule.forFeature([PatientRequirement, Patient, User]),
   ],
   controllers: [PatientRequirementsController],
   providers: [PatientRequirementsService, PatientRequirementsRepository],

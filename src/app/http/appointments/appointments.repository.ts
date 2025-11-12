@@ -40,6 +40,7 @@ export class AppointmentsRepository {
       endDate,
       page,
       perPage,
+      limit,
     } = filters;
 
     const ORDER_BY: Record<AppointmentOrderByType, string> = {
@@ -92,6 +93,11 @@ export class AppointmentsRepository {
     const total = await query.getCount();
 
     query.orderBy(ORDER_BY[orderBy], order);
+
+    if (limit) {
+      query.limit(limit);
+    }
+
     query.skip((page - 1) * perPage).take(perPage);
 
     const rawAppointments = await query.getMany();

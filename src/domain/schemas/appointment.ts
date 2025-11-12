@@ -82,6 +82,7 @@ export const findAllAppointmentsQuerySchema = baseQuerySchema
     perPage: true,
     startDate: true,
     endDate: true,
+    limit: true,
   })
   .extend({
     status: z.enum(APPOINTMENT_STATUS).optional(),

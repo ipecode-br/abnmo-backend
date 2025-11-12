@@ -12,18 +12,22 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { BaseResponseSchema } from '@/domain/schemas/base';
-import { FindAllPatientsRequirementsByPatientIdResponseSchema } from '@/domain/schemas/patient-requirement';
+import {
+  FindAllPatientsRequirementsByPatientIdResponseSchema,
+  FindAllPatientsRequirementsResponseSchema,
+} from '@/domain/schemas/patient-requirement';
 import { UserSchema } from '@/domain/schemas/user';
 
 import {
   CreatePatientRequirementDto,
   FindAllPatientsRequirementsByPatientIdDto,
+  FindAllPatientsRequirementsQueryDto,
 } from './patient-requirements.dtos';
 import { PatientRequirementsRepository } from './patient-requirements.repository';
 import { PatientRequirementsService } from './patient-requirements.service';
 
 @ApiTags('Pendências do paciente')
-@Controller('patients/requirements')
+@Controller('patients-requirements')
 export class PatientRequirementsController {
   constructor(
     private readonly patientRequirementsService: PatientRequirementsService,
@@ -75,6 +79,24 @@ export class PatientRequirementsController {
     return {
       success: true,
       message: 'Solicitação recusada com sucesso.',
+    };
+  }
+
+  @Get()
+  @Roles(['nurse', 'manager'])
+  @ApiOperation({
+    summary: 'Lista todas as solicitações de pacientes com paginação e filtros',
+  })
+  async findAll(
+    @Query() filters: FindAllPatientsRequirementsQueryDto,
+  ): Promise<FindAllPatientsRequirementsResponseSchema> {
+    const { requirements, total } =
+      await this.patientRequirementsRepository.findAll(filters);
+
+    return {
+      success: true,
+      message: 'Lista de solicitações retornada com sucesso',
+      data: { requirements, total },
     };
   }
 
