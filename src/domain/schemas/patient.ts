@@ -33,6 +33,9 @@ export type PatientStatisticsResult = {
   total: number;
 };
 
+export const PATIENT_CONDITION = ['in_crisis', 'stable'] as const;
+export type PatientConditionType = (typeof PATIENT_CONDITION)[number];
+
 export const patientSchema = z
   .object({
     id: z.string().uuid(),
