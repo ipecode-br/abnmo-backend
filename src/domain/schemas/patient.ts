@@ -34,7 +34,11 @@ export type PatientStatisticsResult = {
 };
 
 export const PATIENT_CONDITION = ['in_crisis', 'stable'] as const;
+<<<<<<< HEAD
 export type PatientCondition = (typeof PATIENT_CONDITION)[number];
+=======
+export type PatientConditionType = (typeof PATIENT_CONDITION)[number];
+>>>>>>> a9e2708 (refactor(patient): add condition enum and referrals relationship)
 
 export const patientSchema = z
   .object({
