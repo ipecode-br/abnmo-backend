@@ -3,7 +3,15 @@ import { hash } from 'bcryptjs';
 import * as fs from 'fs';
 import * as path from 'path';
 
+import {
+  APPOINTMENT_CONDITION,
+  APPOINTMENT_STATUS,
+} from '@/domain/schemas/appointment';
 import { GENDERS, PATIENT_STATUS } from '@/domain/schemas/patient';
+import {
+  PATIENT_REQUIREMENT_STATUS,
+  PATIENT_REQUIREMENT_TYPE,
+} from '@/domain/schemas/patient-requirement';
 import { USER_ROLES } from '@/domain/schemas/user';
 
 import { Appointment } from '../../src/domain/entities/appointment';
@@ -18,7 +26,7 @@ const DATABASE_DEV_NAME = 'abnmo_dev';
 
 // Load cities from JSON files
 const citiesByState: Record<string, string[]> = {};
-const statesWithCities = ['AL', 'BA', 'CE', 'PA', 'PE', 'SP'] as const;
+const statesWithCities = ['AL', 'BA', 'CE', 'PA'] as const;
 for (const state of statesWithCities) {
   const filePath = path.join(__dirname, 'utils', 'cities', `${state}.json`);
   const data = fs.readFileSync(filePath, 'utf-8');
@@ -118,6 +126,10 @@ async function main() {
     }
     console.log('👨‍⚕️ Specialists created successfully...');
 
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+    const twoMonthsAgo = new Date();
+    twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
     const fourMonthsAgo = new Date();
     fourMonthsAgo.setMonth(fourMonthsAgo.getMonth() - 4);
 
@@ -182,14 +194,9 @@ async function main() {
           patient_id: patient.id,
           specialist_id: faker.helpers.arrayElement(specialists).id,
           date: faker.date.future(),
-          status: faker.helpers.arrayElement([
-            'scheduled',
-            'canceled',
-            'completed',
-            'no_show',
-          ] as const),
+          status: faker.helpers.arrayElement(APPOINTMENT_STATUS),
           condition: faker.datatype.boolean()
-            ? faker.helpers.arrayElement(['in_crisis', 'stable'] as const)
+            ? faker.helpers.arrayElement(APPOINTMENT_CONDITION)
             : null,
           annotation: faker.datatype.boolean() ? faker.lorem.sentence() : null,
         });
@@ -199,18 +206,26 @@ async function main() {
       // Create between 0 and 2 requirements for each patient
       const requirementCount = faker.number.int({ min: 0, max: 2 });
       for (let j = 0; j < requirementCount; j++) {
+        const status = faker.helpers.arrayElement(PATIENT_REQUIREMENT_STATUS);
         const requirement = patientRequirementRepository.create({
           patient_id: patient.id,
-          type: faker.helpers.arrayElement(['document', 'form'] as const),
+          type: faker.helpers.arrayElement(PATIENT_REQUIREMENT_TYPE),
           title: faker.lorem.words(3),
           description: faker.lorem.sentence(),
-          status: faker.helpers.arrayElement([
-            'pending',
-            'under_review',
-            'approved',
-            'declined',
-          ] as const),
+          status,
           required_by: faker.string.uuid(),
+          submitted_at:
+            status === 'under_review'
+              ? faker.date.between({ from: oneMonthAgo, to: new Date() })
+              : new Date(),
+          approved_at:
+            status === 'approved'
+              ? faker.date.between({ from: oneMonthAgo, to: new Date() })
+              : null,
+          created_at:
+            status === 'pending'
+              ? faker.date.between({ from: twoMonthsAgo, to: new Date() })
+              : new Date(),
         });
         await patientRequirementRepository.save(requirement);
       }
