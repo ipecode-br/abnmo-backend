@@ -5,6 +5,7 @@ import { PatientRequirement } from '@/domain/entities/patient-requirement';
 import {
   PatientRequirementByPatientIdResponseType,
   PatientRequirementListItemSchema,
+  type PatientRequirementOrderBy,
 } from '@/domain/schemas/patient-requirement';
 
 import {
@@ -163,7 +164,25 @@ export class PatientRequirementsRepository {
     requirements: PatientRequirementListItemSchema[];
     total: number;
   }> {
-    const { status, startDate, endDate, page, perPage } = filters;
+    const {
+      search,
+      status,
+      order,
+      orderBy,
+      startDate,
+      endDate,
+      page,
+      perPage,
+    } = filters;
+
+    const ORDER_BY: Record<PatientRequirementOrderBy, string> = {
+      name: 'user.name',
+      type: 'requirement.type',
+      status: 'requirement.status',
+      approved_at: 'requirement.approved_at',
+      submitted_at: 'requirement.submitted_at',
+      date: 'requirement.created_at',
+    };
 
     const query = this.patientRequirementsRepository
       .createQueryBuilder('requirement')
@@ -173,13 +192,19 @@ export class PatientRequirementsRepository {
         'requirement.id',
         'requirement.type',
         'requirement.title',
+        'requirement.description',
         'requirement.status',
         'requirement.submitted_at',
         'requirement.approved_at',
         'requirement.created_at',
         'patient.id',
         'user.name',
+        'user.avatar_url',
       ]);
+
+    if (search) {
+      query.andWhere(`user.name LIKE :search`, { search: `%${search}%` });
+    }
 
     if (status) {
       query.andWhere('requirement.status = :status', { status });
@@ -198,10 +223,9 @@ export class PatientRequirementsRepository {
       });
     }
 
-    query.orderBy('requirement.created_at', 'DESC');
-
     const total = await query.getCount();
 
+    query.orderBy(ORDER_BY[orderBy], order);
     query.skip((page - 1) * perPage).take(perPage);
 
     const rawRequirements = await query.getMany();
@@ -210,6 +234,7 @@ export class PatientRequirementsRepository {
       id: requirement.id,
       type: requirement.type,
       title: requirement.title,
+      description: requirement.description,
       status: requirement.status,
       submitted_at: requirement.submitted_at,
       approved_at: requirement.approved_at,
@@ -217,6 +242,7 @@ export class PatientRequirementsRepository {
       patient: {
         id: requirement.patient.id,
         name: requirement.patient.user.name,
+        avatar_url: requirement.patient.user.avatar_url,
       },
     }));
 

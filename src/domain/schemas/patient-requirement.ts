@@ -5,7 +5,10 @@ import { patientSchema } from './patient';
 import { baseQuerySchema } from './query';
 import { userSchema } from './user';
 
-export const PATIENT_REQUIREMENT_TYPE = ['document', 'form'] as const;
+export const PATIENT_REQUIREMENT_TYPE = [
+  'screening',
+  'medical_report',
+] as const;
 export type PatientRequirementType = (typeof PATIENT_REQUIREMENT_TYPE)[number];
 
 export const PATIENT_REQUIREMENT_STATUS = [
@@ -17,13 +20,24 @@ export const PATIENT_REQUIREMENT_STATUS = [
 export type PatientRequirementStatusType =
   (typeof PATIENT_REQUIREMENT_STATUS)[number];
 
+export const PATIENT_REQUIREMENTS_ORDER_BY = [
+  'name',
+  'status',
+  'type',
+  'date',
+  'approved_at',
+  'submitted_at',
+] as const;
+export type PatientRequirementOrderBy =
+  (typeof PATIENT_REQUIREMENTS_ORDER_BY)[number];
+
 export const patientRequirementSchema = z
   .object({
     id: z.string().uuid(),
     patient_id: z.string().uuid(),
-    type: z.enum(PATIENT_REQUIREMENT_TYPE).default('document'),
+    type: z.enum(PATIENT_REQUIREMENT_TYPE),
     title: z.string().max(255),
-    description: z.string().max(500),
+    description: z.string().max(500).nullable(),
     status: z.enum(PATIENT_REQUIREMENT_STATUS).default('pending'),
     required_by: z.string().uuid(),
     approved_by: z.string().uuid().nullable(),
@@ -46,8 +60,21 @@ export type CreatePatientRequirementSchema = z.infer<
 >;
 
 export const findAllPatientsRequirementsQuerySchema = baseQuerySchema
-  .pick({ startDate: true, endDate: true, perPage: true, page: true })
-  .extend({ status: z.enum(PATIENT_REQUIREMENT_STATUS).optional() })
+  .pick({
+    search: true,
+    order: true,
+    startDate: true,
+    endDate: true,
+    perPage: true,
+    page: true,
+  })
+  .extend({
+    status: z.enum(PATIENT_REQUIREMENT_STATUS).optional(),
+    orderBy: z
+      .enum(PATIENT_REQUIREMENTS_ORDER_BY)
+      .optional()
+      .default('approved_at'),
+  })
   .refine(
     (data) => {
       if (data.startDate && data.endDate) {
@@ -71,6 +98,7 @@ export const patientRequirementListItemSchema = patientRequirementSchema
     type: true,
     title: true,
     status: true,
+    description: true,
     submitted_at: true,
     approved_at: true,
     created_at: true,

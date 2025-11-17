@@ -25,18 +25,14 @@ export class PatientRequirement implements PatientRequirementSchema {
   @Column('uuid')
   patient_id: string;
 
-  @Column({
-    type: 'enum',
-    enum: PATIENT_REQUIREMENT_TYPE,
-    default: 'document',
-  })
+  @Column({ type: 'enum', enum: PATIENT_REQUIREMENT_TYPE })
   type: PatientRequirementType;
 
   @Column({ type: 'varchar', length: 255 })
   title: string;
 
-  @Column({ type: 'varchar', length: 500 })
-  description: string;
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  description: string | null;
 
   @Column({
     type: 'enum',
