@@ -7,12 +7,17 @@ import {
   APPOINTMENT_CONDITION,
   APPOINTMENT_STATUS,
 } from '@/domain/schemas/appointment';
-import { GENDERS, PATIENT_STATUS } from '@/domain/schemas/patient';
+import {
+  GENDERS,
+  PATIENT_CONDITION,
+  PATIENT_STATUS,
+} from '@/domain/schemas/patient';
 import {
   PATIENT_REQUIREMENT_STATUS,
   PATIENT_REQUIREMENT_TYPE,
 } from '@/domain/schemas/patient-requirement';
 import { REFERRAL_CATEGORY, REFERRAL_STATUS } from '@/domain/schemas/referral';
+import { SPECIALIST_STATUS } from '@/domain/schemas/specialist';
 import { USER_ROLES } from '@/domain/schemas/user';
 
 import { Appointment } from '../../src/domain/entities/appointment';
@@ -99,13 +104,11 @@ async function main() {
       'Geriatria',
       'Mastologia',
       'Medicina preventiva e social',
-      'Psiquiatria',
-      'Radioterapia',
     ];
 
-    console.log('👨‍⚕️ Creating 20 specialists...');
+    console.log('👨‍⚕️ Creating 5 specialists...');
     const specialists: Specialist[] = [];
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 5; i++) {
       const user = userRepository.create({
         name: faker.person.fullName(),
         email: faker.internet.email().toLocaleLowerCase(),
@@ -119,11 +122,7 @@ async function main() {
         user_id: user.id,
         specialty: faker.helpers.arrayElement(specialties),
         registry: faker.string.numeric(10),
-        status: faker.helpers.arrayElement([
-          'active',
-          'inactive',
-          'pending',
-        ] as const),
+        status: faker.helpers.arrayElement(SPECIALIST_STATUS),
       });
       const savedSpecialist = await specialistRepository.save(specialist);
       specialists.push(savedSpecialist);
@@ -137,7 +136,7 @@ async function main() {
     const fourMonthsAgo = new Date();
     fourMonthsAgo.setMonth(fourMonthsAgo.getMonth() - 4);
 
-    const totalOfPatients = 300;
+    const totalOfPatients = 100;
 
     for (let i = 0; i < totalOfPatients; i++) {
       if ((i + 1) % 20 === 0) {
@@ -155,9 +154,9 @@ async function main() {
 
       const selectedState = faker.helpers.arrayElement(statesWithCities);
 
-      // Set patient status: 25 pending, rest distributed among other statuses
+      // Set patient status: 10 pending, rest distributed among other statuses
       let patientStatus: (typeof PATIENT_STATUS)[number];
-      if (i < 25) {
+      if (i < 10) {
         patientStatus = 'pending';
       } else {
         patientStatus = faker.helpers.arrayElement(
@@ -251,10 +250,7 @@ async function main() {
           patient_id: patient.id,
           date: faker.date.between({ from: fourMonthsAgo, to: new Date() }),
           category: faker.helpers.arrayElement(REFERRAL_CATEGORY),
-          condition: faker.helpers.arrayElement([
-            'in_crisis',
-            'stable',
-          ] as const),
+          condition: faker.helpers.arrayElement(PATIENT_CONDITION),
           status: faker.helpers.arrayElement(REFERRAL_STATUS),
           annotation: faker.datatype.boolean() ? faker.lorem.sentence() : null,
           referred_to: faker.person.fullName(),
