@@ -8,18 +8,18 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { PATIENT_CONDITION, PatientConditionType } from '../schemas/patient';
+import { PATIENT_CONDITION, PatientCondition } from '../schemas/patient';
 import {
-  REFERRALS_CATEGORY,
-  REFERRALS_STATUS,
-  ReferralsCategoryType,
-  ReferralsSchema,
-  ReferralsStatusType,
-} from '../schemas/referrals';
+  REFERRAL_CATEGORY,
+  REFERRAL_STATUS,
+  ReferralCategory,
+  ReferralSchema,
+  ReferralStatus,
+} from '../schemas/referral';
 import { Patient } from './patient';
 
 @Entity('referrals')
-export class Referrals implements ReferralsSchema {
+export class Referral implements ReferralSchema {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -29,14 +29,14 @@ export class Referrals implements ReferralsSchema {
   @Column({ type: 'date' })
   date: Date;
 
-  @Column({ type: 'enum', enum: REFERRALS_CATEGORY })
-  category: ReferralsCategoryType;
+  @Column({ type: 'enum', enum: REFERRAL_CATEGORY })
+  category: ReferralCategory;
 
   @Column({ type: 'enum', enum: PATIENT_CONDITION })
-  condition: PatientConditionType;
+  condition: PatientCondition;
 
-  @Column({ type: 'enum', enum: REFERRALS_STATUS, default: 'sheduled' })
-  status: ReferralsStatusType;
+  @Column({ type: 'enum', enum: REFERRAL_STATUS, default: 'scheduled' })
+  status: ReferralStatus;
 
   @Column({ type: 'varchar', length: 500, nullable: true })
   annotation: string | null;

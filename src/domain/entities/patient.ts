@@ -25,7 +25,7 @@ import {
 import { Appointment } from './appointment';
 import { PatientRequirement } from './patient-requirement';
 import { PatientSupport } from './patient-support';
-import { Referrals } from './referrals';
+import { Referral } from './referral';
 
 @Entity('patients')
 export class Patient implements PatientSchema {
@@ -90,8 +90,8 @@ export class Patient implements PatientSchema {
   @OneToMany(() => Appointment, (appointment) => appointment.patient)
   appointments: Appointment[];
 
-  @OneToMany(() => Referrals, (referrals) => referrals.patient)
-  referrals: Referrals[];
+  @OneToMany(() => Referral, (referral) => referral.patient)
+  referrals: Referral[];
 
   @OneToMany(() => PatientRequirement, (requirement) => requirement.patient)
   requirements: PatientRequirement[];

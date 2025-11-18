@@ -2,15 +2,15 @@ import { z } from 'zod';
 
 import { PATIENT_CONDITION } from './patient';
 
-export const REFERRALS_STATUS = [
-  'sheduled',
+export const REFERRAL_STATUS = [
+  'scheduled',
   'canceled',
   'completed',
   'no_show',
 ] as const;
-export type ReferralsStatusType = (typeof REFERRALS_STATUS)[number];
+export type ReferralStatus = (typeof REFERRAL_STATUS)[number];
 
-export const REFERRALS_CATEGORY = [
+export const REFERRAL_CATEGORY = [
   'medical_care',
   'legal',
   'nursing',
@@ -22,22 +22,21 @@ export const REFERRALS_CATEGORY = [
   'neurology',
   'ophthalmology',
 ] as const;
-export type ReferralsCategoryType = (typeof REFERRALS_CATEGORY)[number];
+export type ReferralCategory = (typeof REFERRAL_CATEGORY)[number];
 
-//Entity
-export const referralsSchema = z
+export const referralSchema = z
   .object({
     id: z.string().uuid(),
     patient_id: z.string().uuid(),
     date: z.coerce.date(),
-    category: z.enum(REFERRALS_CATEGORY),
+    category: z.enum(REFERRAL_CATEGORY),
     condition: z.enum(PATIENT_CONDITION),
-    status: z.enum(REFERRALS_STATUS).default('sheduled'),
     annotation: z.string().max(500).nullable(),
+    status: z.enum(REFERRAL_STATUS).default('scheduled'),
     referred_to: z.string().nullable(),
-    referred_by: z.string().nullable(),
+    referred_by: z.string().uuid().nullable(),
     created_at: z.coerce.date(),
     updated_at: z.coerce.date(),
   })
   .strict();
-export type ReferralsSchema = z.infer<typeof referralsSchema>;
+export type ReferralSchema = z.infer<typeof referralSchema>;

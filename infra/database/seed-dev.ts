@@ -12,12 +12,14 @@ import {
   PATIENT_REQUIREMENT_STATUS,
   PATIENT_REQUIREMENT_TYPE,
 } from '@/domain/schemas/patient-requirement';
+import { REFERRAL_CATEGORY, REFERRAL_STATUS } from '@/domain/schemas/referral';
 import { USER_ROLES } from '@/domain/schemas/user';
 
 import { Appointment } from '../../src/domain/entities/appointment';
 import { Patient } from '../../src/domain/entities/patient';
 import { PatientRequirement } from '../../src/domain/entities/patient-requirement';
 import { PatientSupport } from '../../src/domain/entities/patient-support';
+import { Referral } from '../../src/domain/entities/referral';
 import { Specialist } from '../../src/domain/entities/specialist';
 import { User } from '../../src/domain/entities/user';
 import dataSource from './data.source';
@@ -60,6 +62,7 @@ async function main() {
     await dataSource.query('SET FOREIGN_KEY_CHECKS = 0');
     await dataSource.manager.clear(PatientSupport);
     await dataSource.manager.clear(Appointment);
+    await dataSource.manager.clear(Referral);
     await dataSource.manager.clear(PatientRequirement);
     await dataSource.manager.clear(Patient);
     await dataSource.manager.clear(Specialist);
@@ -74,6 +77,7 @@ async function main() {
     const appointmentRepository = dataSource.getRepository(Appointment);
     const patientRequirementRepository =
       dataSource.getRepository(PatientRequirement);
+    const referralRepository = dataSource.getRepository(Referral);
 
     console.log('👤 Creating users...');
     for (const role of USER_ROLES) {
@@ -151,6 +155,16 @@ async function main() {
 
       const selectedState = faker.helpers.arrayElement(statesWithCities);
 
+      // Set patient status: 25 pending, rest distributed among other statuses
+      let patientStatus: (typeof PATIENT_STATUS)[number];
+      if (i < 25) {
+        patientStatus = 'pending';
+      } else {
+        patientStatus = faker.helpers.arrayElement(
+          PATIENT_STATUS.filter((s) => s !== 'pending'),
+        );
+      }
+
       const patient = patientRepository.create({
         user_id: user.id,
         gender: faker.helpers.arrayElement(GENDERS),
@@ -165,7 +179,7 @@ async function main() {
         take_medication: faker.datatype.boolean(),
         medication_desc: faker.lorem.sentence(),
         has_nmo_diagnosis: faker.datatype.boolean(),
-        status: faker.helpers.arrayElement(PATIENT_STATUS),
+        status: patientStatus,
         created_at: faker.date.between({ from: fourMonthsAgo, to: new Date() }),
       });
       await patientRepository.save(patient);
@@ -228,6 +242,25 @@ async function main() {
               : new Date(),
         });
         await patientRequirementRepository.save(requirement);
+      }
+
+      // Create between 0 and 2 referrals for each patient
+      const referralCount = faker.number.int({ min: 0, max: 2 });
+      for (let j = 0; j < referralCount; j++) {
+        const referral = referralRepository.create({
+          patient_id: patient.id,
+          date: faker.date.between({ from: fourMonthsAgo, to: new Date() }),
+          category: faker.helpers.arrayElement(REFERRAL_CATEGORY),
+          condition: faker.helpers.arrayElement([
+            'in_crisis',
+            'stable',
+          ] as const),
+          status: faker.helpers.arrayElement(REFERRAL_STATUS),
+          annotation: faker.datatype.boolean() ? faker.lorem.sentence() : null,
+          referred_to: faker.person.fullName(),
+          referred_by: faker.string.uuid(),
+        });
+        await referralRepository.save(referral);
       }
     }
 
