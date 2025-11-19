@@ -40,3 +40,13 @@ export const referralSchema = z
   })
   .strict();
 export type ReferralSchema = z.infer<typeof referralSchema>;
+
+export const createReferralSchema = referralSchema.pick({
+  patient_id: true,
+  date: true,
+  category: true,
+  condition: true,
+  annotation: true,
+  referred_to: true,
+});
+export type CreateReferralsSchema = z.infer<typeof createReferralSchema>;

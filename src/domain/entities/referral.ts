@@ -8,7 +8,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { PATIENT_CONDITION, PatientCondition } from '../schemas/patient';
+import { PATIENT_CONDITION, PatientConditionType } from '../schemas/patient';
 import {
   REFERRAL_CATEGORY,
   REFERRAL_STATUS,
@@ -33,7 +33,7 @@ export class Referral implements ReferralSchema {
   category: ReferralCategory;
 
   @Column({ type: 'enum', enum: PATIENT_CONDITION })
-  condition: PatientCondition;
+  condition: PatientConditionType;
 
   @Column({ type: 'enum', enum: REFERRAL_STATUS, default: 'scheduled' })
   status: ReferralStatus;
