@@ -2,12 +2,13 @@ import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 
 import { CryptographyService } from '@/app/cryptography/crypography.service';
 import { AUTH_TOKENS_MAPPING } from '@/domain/schemas/token';
+import { UserSchema } from '@/domain/schemas/user';
 import { EnvService } from '@/env/env.service';
 
 import type { CreateUserDto } from '../users/users.dtos';
 import { UsersRepository } from '../users/users.repository';
 import { UsersService } from '../users/users.service';
-import type { SignInWithEmailDto } from './auth.dtos';
+import type { ChangePasswordDto, SignInWithEmailDto } from './auth.dtos';
 import { TokensRepository } from './tokens.repository';
 
 @Injectable()
@@ -168,5 +169,36 @@ export class AuthService {
     });
 
     return { accessToken };
+  }
+
+  async changePassword(user: UserSchema, changePassword: ChangePasswordDto) {
+    const { password, newPassword } = changePassword;
+
+    const userFound = await this.usersRepository.findById(user.id);
+
+    if (!userFound) {
+      throw new UnauthorizedException('Usuário não encontrado.');
+    }
+
+    const verifyPassword = await this.cryptographyService.compareHash(
+      password,
+      userFound.password,
+    );
+
+    if (!verifyPassword) {
+      throw new UnauthorizedException(
+        'Credenciais inválidas. Por favor, tente novamente.',
+      );
+    }
+
+    const hashedPassword =
+      await this.cryptographyService.createHash(newPassword);
+
+    await this.usersRepository.updatePassword(user.id, hashedPassword);
+
+    this.logger.log(
+      { userId: user.id, email: user.email },
+      'Password update successfully',
+    );
   }
 }
