@@ -28,3 +28,14 @@ export const resetPasswordSchema = z.object({
   password: z.string().min(8).max(255),
 });
 export type ResetPasswordSchema = z.infer<typeof resetPasswordSchema>;
+
+export const changePasswordSchema = z.object({
+  password: z.string().min(8).max(255),
+  newPassword: z.string().min(8).max(255),
+});
+export type ChangePasswordSchema = z.infer<typeof changePasswordSchema>;
+
+export const changePasswordResponseSchema = baseResponseSchema.extend({});
+export type ChangePasswordResponseSchema = z.infer<
+  typeof changePasswordResponseSchema
+>;
