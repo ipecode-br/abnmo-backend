@@ -3,13 +3,31 @@ import { hash } from 'bcryptjs';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { GENDERS, PATIENT_STATUS } from '@/domain/schemas/patient';
+import {
+  APPOINTMENT_CONDITION,
+  APPOINTMENT_STATUS,
+} from '@/domain/schemas/appointment';
+import {
+  GENDERS,
+  PATIENT_CONDITIONS,
+  PATIENT_STATUS,
+} from '@/domain/schemas/patient';
+import {
+  PATIENT_REQUIREMENT_STATUS,
+  PATIENT_REQUIREMENT_TYPE,
+} from '@/domain/schemas/patient-requirement';
+import {
+  REFERRAL_CATEGORIES,
+  REFERRAL_STATUSES,
+} from '@/domain/schemas/referral';
+import { SPECIALIST_STATUS } from '@/domain/schemas/specialist';
 import { USER_ROLES } from '@/domain/schemas/user';
 
 import { Appointment } from '../../src/domain/entities/appointment';
 import { Patient } from '../../src/domain/entities/patient';
 import { PatientRequirement } from '../../src/domain/entities/patient-requirement';
 import { PatientSupport } from '../../src/domain/entities/patient-support';
+import { Referral } from '../../src/domain/entities/referral';
 import { Specialist } from '../../src/domain/entities/specialist';
 import { User } from '../../src/domain/entities/user';
 import dataSource from './data.source';
@@ -18,7 +36,7 @@ const DATABASE_DEV_NAME = 'abnmo_dev';
 
 // Load cities from JSON files
 const citiesByState: Record<string, string[]> = {};
-const statesWithCities = ['AL', 'BA', 'CE', 'PA', 'PE', 'SP'] as const;
+const statesWithCities = ['AL', 'BA', 'CE', 'PA'] as const;
 for (const state of statesWithCities) {
   const filePath = path.join(__dirname, 'utils', 'cities', `${state}.json`);
   const data = fs.readFileSync(filePath, 'utf-8');
@@ -52,6 +70,7 @@ async function main() {
     await dataSource.query('SET FOREIGN_KEY_CHECKS = 0');
     await dataSource.manager.clear(PatientSupport);
     await dataSource.manager.clear(Appointment);
+    await dataSource.manager.clear(Referral);
     await dataSource.manager.clear(PatientRequirement);
     await dataSource.manager.clear(Patient);
     await dataSource.manager.clear(Specialist);
@@ -66,6 +85,7 @@ async function main() {
     const appointmentRepository = dataSource.getRepository(Appointment);
     const patientRequirementRepository =
       dataSource.getRepository(PatientRequirement);
+    const referralRepository = dataSource.getRepository(Referral);
 
     console.log('👤 Creating users...');
     for (const role of USER_ROLES) {
@@ -87,13 +107,11 @@ async function main() {
       'Geriatria',
       'Mastologia',
       'Medicina preventiva e social',
-      'Psiquiatria',
-      'Radioterapia',
     ];
 
-    console.log('👨‍⚕️ Creating 20 specialists...');
+    console.log('👨‍⚕️ Creating 5 specialists...');
     const specialists: Specialist[] = [];
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 5; i++) {
       const user = userRepository.create({
         name: faker.person.fullName(),
         email: faker.internet.email().toLocaleLowerCase(),
@@ -107,21 +125,21 @@ async function main() {
         user_id: user.id,
         specialty: faker.helpers.arrayElement(specialties),
         registry: faker.string.numeric(10),
-        status: faker.helpers.arrayElement([
-          'active',
-          'inactive',
-          'pending',
-        ] as const),
+        status: faker.helpers.arrayElement(SPECIALIST_STATUS),
       });
       const savedSpecialist = await specialistRepository.save(specialist);
       specialists.push(savedSpecialist);
     }
     console.log('👨‍⚕️ Specialists created successfully...');
 
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+    const twoMonthsAgo = new Date();
+    twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
     const fourMonthsAgo = new Date();
     fourMonthsAgo.setMonth(fourMonthsAgo.getMonth() - 4);
 
-    const totalOfPatients = 300;
+    const totalOfPatients = 100;
 
     for (let i = 0; i < totalOfPatients; i++) {
       if ((i + 1) % 20 === 0) {
@@ -139,6 +157,16 @@ async function main() {
 
       const selectedState = faker.helpers.arrayElement(statesWithCities);
 
+      // Set patient status: 10 pending, rest distributed among other statuses
+      let patientStatus: (typeof PATIENT_STATUS)[number];
+      if (i < 10) {
+        patientStatus = 'pending';
+      } else {
+        patientStatus = faker.helpers.arrayElement(
+          PATIENT_STATUS.filter((s) => s !== 'pending'),
+        );
+      }
+
       const patient = patientRepository.create({
         user_id: user.id,
         gender: faker.helpers.arrayElement(GENDERS),
@@ -153,7 +181,7 @@ async function main() {
         take_medication: faker.datatype.boolean(),
         medication_desc: faker.lorem.sentence(),
         has_nmo_diagnosis: faker.datatype.boolean(),
-        status: faker.helpers.arrayElement(PATIENT_STATUS),
+        status: patientStatus,
         created_at: faker.date.between({ from: fourMonthsAgo, to: new Date() }),
       });
       await patientRepository.save(patient);
@@ -182,14 +210,9 @@ async function main() {
           patient_id: patient.id,
           specialist_id: faker.helpers.arrayElement(specialists).id,
           date: faker.date.future(),
-          status: faker.helpers.arrayElement([
-            'scheduled',
-            'canceled',
-            'completed',
-            'no_show',
-          ] as const),
+          status: faker.helpers.arrayElement(APPOINTMENT_STATUS),
           condition: faker.datatype.boolean()
-            ? faker.helpers.arrayElement(['in_crisis', 'stable'] as const)
+            ? faker.helpers.arrayElement(APPOINTMENT_CONDITION)
             : null,
           annotation: faker.datatype.boolean() ? faker.lorem.sentence() : null,
         });
@@ -199,20 +222,44 @@ async function main() {
       // Create between 0 and 2 requirements for each patient
       const requirementCount = faker.number.int({ min: 0, max: 2 });
       for (let j = 0; j < requirementCount; j++) {
+        const status = faker.helpers.arrayElement(PATIENT_REQUIREMENT_STATUS);
         const requirement = patientRequirementRepository.create({
           patient_id: patient.id,
-          type: faker.helpers.arrayElement(['document', 'form'] as const),
+          type: faker.helpers.arrayElement(PATIENT_REQUIREMENT_TYPE),
           title: faker.lorem.words(3),
           description: faker.lorem.sentence(),
-          status: faker.helpers.arrayElement([
-            'pending',
-            'under_review',
-            'approved',
-            'declined',
-          ] as const),
+          status,
           required_by: faker.string.uuid(),
+          submitted_at:
+            status === 'under_review'
+              ? faker.date.between({ from: oneMonthAgo, to: new Date() })
+              : new Date(),
+          approved_at:
+            status === 'approved'
+              ? faker.date.between({ from: oneMonthAgo, to: new Date() })
+              : null,
+          created_at:
+            status === 'pending'
+              ? faker.date.between({ from: twoMonthsAgo, to: new Date() })
+              : new Date(),
         });
         await patientRequirementRepository.save(requirement);
+      }
+
+      // Create between 0 and 2 referrals for each patient
+      const referralCount = faker.number.int({ min: 0, max: 2 });
+      for (let j = 0; j < referralCount; j++) {
+        const referral = referralRepository.create({
+          patient_id: patient.id,
+          date: faker.date.between({ from: fourMonthsAgo, to: new Date() }),
+          category: faker.helpers.arrayElement(REFERRAL_CATEGORIES),
+          condition: faker.helpers.arrayElement(PATIENT_CONDITIONS),
+          status: faker.helpers.arrayElement(REFERRAL_STATUSES),
+          annotation: faker.datatype.boolean() ? faker.lorem.sentence() : null,
+          referred_to: faker.person.fullName(),
+          referred_by: faker.string.uuid(),
+        });
+        await referralRepository.save(referral);
       }
     }
 

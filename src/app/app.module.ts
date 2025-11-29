@@ -14,6 +14,7 @@ import { AuthModule } from './http/auth/auth.module';
 import { PatientRequirementsModule } from './http/patient-requirements/patient-requirements.module';
 import { PatientSupportsModule } from './http/patient-supports/patient-supports.module';
 import { PatientsModule } from './http/patients/patients.module';
+import { ReferralsModule } from './http/referrals/referrals.module';
 import { SpecialistsModule } from './http/specialists/specialists.module';
 import { StatisticsModule } from './http/statistics/statistics.module';
 import { UsersModule } from './http/users/users.module';
@@ -58,6 +59,7 @@ import { UsersModule } from './http/users/users.module';
     AppointmentsModule,
     StatisticsModule,
     PatientRequirementsModule,
+    ReferralsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

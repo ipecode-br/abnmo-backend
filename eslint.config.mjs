@@ -8,6 +8,7 @@ export default tseslint.config(
   {
     ignores: [
       'node_modules/**',
+      'coverage/**',
       'dist/**',
       'dist-lambda/**',
       'infra/database/migrations/**',

@@ -1,0 +1,52 @@
+import { z } from 'zod';
+
+import { PATIENT_CONDITIONS } from './patient';
+
+export const REFERRAL_STATUSES = [
+  'scheduled',
+  'canceled',
+  'completed',
+  'no_show',
+] as const;
+export type ReferralStatusType = (typeof REFERRAL_STATUSES)[number];
+
+export const REFERRAL_CATEGORIES = [
+  'medical_care',
+  'legal',
+  'nursing',
+  'psychology',
+  'nutrition',
+  'physical_training',
+  'social_work',
+  'psychiatry',
+  'neurology',
+  'ophthalmology',
+] as const;
+export type ReferralCategoryType = (typeof REFERRAL_CATEGORIES)[number];
+
+export const referralSchema = z
+  .object({
+    id: z.string().uuid(),
+    patient_id: z.string().uuid(),
+    date: z.coerce.date(),
+    category: z.enum(REFERRAL_CATEGORIES),
+    condition: z.enum(PATIENT_CONDITIONS),
+    annotation: z.string().max(500).nullable(),
+    status: z.enum(REFERRAL_STATUSES).default('scheduled'),
+    referred_to: z.string().nullable(),
+    referred_by: z.string().uuid().nullable(),
+    created_at: z.coerce.date(),
+    updated_at: z.coerce.date(),
+  })
+  .strict();
+export type ReferralSchema = z.infer<typeof referralSchema>;
+
+export const createReferralSchema = referralSchema.pick({
+  patient_id: true,
+  date: true,
+  category: true,
+  condition: true,
+  annotation: true,
+  referred_to: true,
+});
+export type CreateReferralSchema = z.infer<typeof createReferralSchema>;
