@@ -10,23 +10,23 @@ import { ApiOperation } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 
 import { Cookies } from '@/common/decorators/cookies';
+import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Public } from '@/common/decorators/public.decorator';
+import { Roles } from '@/common/decorators/roles.decorator';
 import { COOKIES_MAPPING } from '@/domain/cookies';
-import type {
-  RecoverPasswordResponseSchema,
-  SignInWithEmailResponseSchema,
-} from '@/domain/schemas/auth';
+import type { BaseResponseSchema } from '@/domain/schemas/base';
+import { UserSchema } from '@/domain/schemas/user';
 import { UtilsService } from '@/utils/utils.service';
 
 import { CreateUserDto } from '../users/users.dtos';
 import {
+  ChangePasswordDto,
   RecoverPasswordDto,
   ResetPasswordDto,
   SignInWithEmailDto,
 } from './auth.dtos';
 import { AuthService } from './auth.service';
 
-@Public()
 @Controller()
 export class AuthController {
   constructor(
@@ -34,13 +34,14 @@ export class AuthController {
     private utilsService: UtilsService,
   ) {}
 
+  @Public()
   @Post('login')
   @ApiOperation({ summary: 'Login do usuário' })
   async signIn(
     @Req() request: Request,
     @Body() signInWithEmailDto: SignInWithEmailDto,
     @Res({ passthrough: true }) response: Response,
-  ): Promise<SignInWithEmailResponseSchema> {
+  ): Promise<BaseResponseSchema> {
     const TWELVE_HOURS_IN_MS = 1000 * 60 * 60 * 12;
 
     const { accessToken } = await this.authService.signIn(signInWithEmailDto);
@@ -59,11 +60,12 @@ export class AuthController {
     };
   }
 
+  @Public()
   @Post('register')
   @ApiOperation({ summary: 'Registro de um novo usuário' })
   async register(
     @Body() createUserDto: CreateUserDto,
-  ): Promise<SignInWithEmailResponseSchema> {
+  ): Promise<BaseResponseSchema> {
     await this.authService.register(createUserDto);
 
     return {
@@ -72,6 +74,7 @@ export class AuthController {
     };
   }
 
+  @Public()
   @Post('logout')
   @ApiOperation({ summary: 'Logout do usuário' })
   async logout(
@@ -93,6 +96,7 @@ export class AuthController {
     };
   }
 
+  @Public()
   @Post('reset-password')
   async resetPassword(
     @Req() request: Request,
@@ -124,13 +128,14 @@ export class AuthController {
     };
   }
 
+  @Public()
   @Post('recover-password')
   @ApiOperation({ summary: 'Recuperação de senha' })
   async recoverPassword(
     @Req() request: Request,
     @Body() recoverPasswordDto: RecoverPasswordDto,
     @Res({ passthrough: true }) response: Response,
-  ): Promise<RecoverPasswordResponseSchema> {
+  ): Promise<BaseResponseSchema> {
     const { passwordResetToken } = await this.authService.forgotPassword(
       recoverPasswordDto.email,
     );
@@ -147,6 +152,20 @@ export class AuthController {
       success: true,
       message:
         'O link para redefinição de senha foi enviado ao e-mail solicitado.',
+    };
+  }
+
+  @Post('change-password')
+  @Roles(['nurse', 'manager', 'patient', 'specialist', 'admin'])
+  async changePassword(
+    @Body() changePasswordDto: ChangePasswordDto,
+    @CurrentUser() user: UserSchema,
+  ): Promise<BaseResponseSchema> {
+    await this.authService.changePassword(user, changePasswordDto);
+
+    return {
+      success: true,
+      message: 'Senha atualizada com sucesso.',
     };
   }
 }

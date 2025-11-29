@@ -9,8 +9,6 @@ import { patientSupportSchema } from './patient-support';
 import { baseQuerySchema } from './query';
 import { userSchema } from './user';
 
-// Entity
-
 export const GENDERS = [
   'male_cis',
   'female_cis',
@@ -33,8 +31,8 @@ export type PatientStatisticsResult = {
   total: number;
 };
 
-export const PATIENT_CONDITION = ['in_crisis', 'stable'] as const;
-export type PatientCondition = (typeof PATIENT_CONDITION)[number];
+export const PATIENT_CONDITIONS = ['in_crisis', 'stable'] as const;
+export type PatientConditionType = (typeof PATIENT_CONDITIONS)[number];
 
 export const patientSchema = z
   .object({
@@ -146,6 +144,7 @@ export const findAllPatientsQuerySchema = baseQuerySchema
     endDate: true,
   })
   .extend({
+    all: z.coerce.boolean().optional(),
     status: z.enum(PATIENT_STATUS).optional(),
     orderBy: z.enum(PATIENT_ORDER_BY).optional().default('name'),
   })

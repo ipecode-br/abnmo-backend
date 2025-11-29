@@ -9,14 +9,17 @@ import {
 } from '@/domain/schemas/appointment';
 import {
   GENDERS,
-  PATIENT_CONDITION,
+  PATIENT_CONDITIONS,
   PATIENT_STATUS,
 } from '@/domain/schemas/patient';
 import {
   PATIENT_REQUIREMENT_STATUS,
   PATIENT_REQUIREMENT_TYPE,
 } from '@/domain/schemas/patient-requirement';
-import { REFERRAL_CATEGORY, REFERRAL_STATUS } from '@/domain/schemas/referral';
+import {
+  REFERRAL_CATEGORIES,
+  REFERRAL_STATUSES,
+} from '@/domain/schemas/referral';
 import { SPECIALIST_STATUS } from '@/domain/schemas/specialist';
 import { USER_ROLES } from '@/domain/schemas/user';
 
@@ -249,9 +252,9 @@ async function main() {
         const referral = referralRepository.create({
           patient_id: patient.id,
           date: faker.date.between({ from: fourMonthsAgo, to: new Date() }),
-          category: faker.helpers.arrayElement(REFERRAL_CATEGORY),
-          condition: faker.helpers.arrayElement(PATIENT_CONDITION),
-          status: faker.helpers.arrayElement(REFERRAL_STATUS),
+          category: faker.helpers.arrayElement(REFERRAL_CATEGORIES),
+          condition: faker.helpers.arrayElement(PATIENT_CONDITIONS),
+          status: faker.helpers.arrayElement(REFERRAL_STATUSES),
           annotation: faker.datatype.boolean() ? faker.lorem.sentence() : null,
           referred_to: faker.person.fullName(),
           referred_by: faker.string.uuid(),
