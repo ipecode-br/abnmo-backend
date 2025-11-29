@@ -14,6 +14,10 @@ export class ReferralsRepository {
     private readonly referralsRepository: Repository<Referral>,
   ) {}
 
+  public async findById(id: string): Promise<Referral | null> {
+    return await this.referralsRepository.findOne({ where: { id } });
+  }
+
   public async create(
     createReferralDto: CreateReferralDto & {
       status: ReferralStatusType;
@@ -22,5 +26,9 @@ export class ReferralsRepository {
   ): Promise<Referral> {
     const referrals = this.referralsRepository.create(createReferralDto);
     return await this.referralsRepository.save(referrals);
+  }
+
+  public async cancel(id: string): Promise<Referral> {
+    return await this.referralsRepository.save({ id, status: 'canceled' });
   }
 }
