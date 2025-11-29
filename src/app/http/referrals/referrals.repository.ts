@@ -3,9 +3,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { Referral } from '@/domain/entities/referral';
-import { ReferralStatus } from '@/domain/schemas/referral';
+import { ReferralStatusType } from '@/domain/schemas/referral';
 
-import { CreateReferralsDto } from './referrals.dtos';
+import { CreateReferralDto } from './referrals.dtos';
 
 @Injectable()
 export class ReferralsRepository {
@@ -13,13 +13,14 @@ export class ReferralsRepository {
     @InjectRepository(Referral)
     private readonly referralsRepository: Repository<Referral>,
   ) {}
+
   public async create(
-    createReferralsDto: CreateReferralsDto & {
-      status: ReferralStatus;
+    createReferralDto: CreateReferralDto & {
+      status: ReferralStatusType;
       referred_by: string;
     },
   ): Promise<Referral> {
-    const referrals = this.referralsRepository.create(createReferralsDto);
+    const referrals = this.referralsRepository.create(createReferralDto);
     return await this.referralsRepository.save(referrals);
   }
 }

@@ -6,7 +6,7 @@ import { Roles } from '@/common/decorators/roles.decorator';
 import { BaseResponseSchema } from '@/domain/schemas/base';
 import { UserSchema } from '@/domain/schemas/user';
 
-import { CreateReferralsDto } from './referrals.dtos';
+import { CreateReferralDto } from './referrals.dtos';
 import { ReferralsService } from './referrals.service';
 
 @ApiTags('Encaminhamentos')
@@ -18,10 +18,11 @@ export class ReferralsController {
   @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Cadastra novo encaminhamento.' })
   async create(
-    @Body() createReferralsDto: CreateReferralsDto,
+    @Body() createReferralDto: CreateReferralDto,
     @CurrentUser() currentUser: UserSchema,
   ): Promise<BaseResponseSchema> {
-    await this.referralsService.create(createReferralsDto, currentUser.id);
+    await this.referralsService.create(createReferralDto, currentUser.id);
+
     return { success: true, message: 'Encaminhamento cadastrado com sucesso.' };
   }
 }
