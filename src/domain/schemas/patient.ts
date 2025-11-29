@@ -146,6 +146,7 @@ export const findAllPatientsQuerySchema = baseQuerySchema
     endDate: true,
   })
   .extend({
+    all: z.coerce.boolean().optional(),
     status: z.enum(PATIENT_STATUS).optional(),
     orderBy: z.enum(PATIENT_ORDER_BY).optional().default('name'),
   })

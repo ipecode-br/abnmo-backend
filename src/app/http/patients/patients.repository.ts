@@ -32,6 +32,7 @@ export class PatientsRepository {
       endDate,
       page,
       perPage,
+      all,
     } = filters;
 
     const ORDER_BY: Record<PatientOrderByType, string> = {
@@ -73,7 +74,10 @@ export class PatientsRepository {
     const total = await query.getCount();
 
     query.orderBy(ORDER_BY[orderBy], order);
-    query.skip((page - 1) * perPage).take(perPage);
+
+    if (!all) {
+      query.skip((page - 1) * perPage).take(perPage);
+    }
 
     const rawPatients = await query.getMany();
 
