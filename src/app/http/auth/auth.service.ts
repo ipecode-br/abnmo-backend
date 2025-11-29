@@ -171,8 +171,8 @@ export class AuthService {
     return { accessToken };
   }
 
-  async changePassword(user: UserSchema, changePassword: ChangePasswordDto) {
-    const { password, newPassword } = changePassword;
+  async changePassword(user: UserSchema, changePasswordDto: ChangePasswordDto) {
+    const { password, newPassword } = changePasswordDto;
 
     const userFound = await this.usersRepository.findById(user.id);
 
