@@ -12,5 +12,6 @@ import { ReferralsService } from './referrals.service';
   imports: [PatientsModule, TypeOrmModule.forFeature([Referral])],
   controllers: [ReferralsController],
   providers: [ReferralsService, ReferralsRepository],
+  exports: [ReferralsRepository],
 })
 export class ReferralsModule {}

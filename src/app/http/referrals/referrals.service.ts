@@ -1,39 +1,65 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
+
+import { UserSchema } from '@/domain/schemas/user';
 
 import { PatientsRepository } from '../patients/patients.repository';
-import { CreateReferralsDto } from './referrals.dtos';
+import { CreateReferralDto } from './referrals.dtos';
 import { ReferralsRepository } from './referrals.repository';
 
 @Injectable()
 export class ReferralsService {
   private readonly logger = new Logger(ReferralsService.name);
+
   constructor(
     private readonly referralsRepository: ReferralsRepository,
-    private readonly patientRepository: PatientsRepository,
+    private readonly patientsRepository: PatientsRepository,
   ) {}
+
   public async create(
-    createReferralsDto: CreateReferralsDto,
+    createReferralDto: CreateReferralDto,
     userId: string,
   ): Promise<void> {
-    const { patient_id, date, category, condition, annotation, referred_to } =
-      createReferralsDto;
-    const patient = await this.patientRepository.findById(patient_id);
+    const { patient_id } = createReferralDto;
+
+    const patient = await this.patientsRepository.findById(patient_id);
+
     if (!patient) {
       throw new NotFoundException('Paciente não encontrado.');
     }
+
     await this.referralsRepository.create({
-      patient_id,
-      date,
-      category,
-      condition,
-      annotation,
-      referred_to,
+      ...createReferralDto,
       status: 'scheduled',
       referred_by: userId,
     });
+
     this.logger.log(
       { patientId: patient_id, referredBy: userId },
       'Referral created successfully',
+    );
+  }
+
+  async cancel(id: string, user: UserSchema): Promise<void> {
+    const referral = await this.referralsRepository.findById(id);
+
+    if (!referral) {
+      throw new NotFoundException('Encaminhamento não encontrado.');
+    }
+
+    if (referral.status === 'canceled') {
+      throw new BadRequestException('Este encaminhamento já está cancelado.');
+    }
+
+    await this.referralsRepository.cancel(referral.id);
+
+    this.logger.log(
+      { id: referral.id, userId: user.id },
+      'Referral canceled successfully.',
     );
   }
 }
