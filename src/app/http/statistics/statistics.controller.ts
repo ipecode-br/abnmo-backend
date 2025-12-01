@@ -5,6 +5,7 @@ import { Roles } from '@/common/decorators/roles.decorator';
 import type {
   GetPatientsByCityResponse,
   GetPatientsByGenderResponse,
+  GetPatientsByStateResponse,
   PatientsByCityType,
   PatientsByGenderType,
 } from '@/domain/schemas/statistics';
@@ -65,6 +66,24 @@ export class StatisticsController {
       success: true,
       message: 'Estatísticas de pacientes por cidade retornada com sucesso.',
       data: { cities, total },
+    };
+  }
+  @Get('patients-by-state')
+  @Roles(['manager', 'nurse'])
+  @ApiOperation({
+    summary:
+      'Estatísticas de pacientes por estado (comencaminhamentos destinados',
+  })
+  async getPatientsByState(
+    @Query() query: GetPatientsByPeriodDto,
+  ): Promise<GetPatientsByStateResponse> {
+    const { items: states, total } =
+      await this.statisticsService.getPatientsByState(query);
+
+    return {
+      success: true,
+      message: 'Estatísticas de pacientes por estado retornada com sucesso.',
+      data: { states, total },
     };
   }
 }
