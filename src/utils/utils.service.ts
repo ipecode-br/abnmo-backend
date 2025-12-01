@@ -69,6 +69,10 @@ export class UtilsService {
         startDate: startOfYear(today),
         endDate: today,
       },
+      last_30_days: {
+        startDate: new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000),
+        endDate: today,
+      },
     };
 
     return periodMapper[period];
