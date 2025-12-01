@@ -6,6 +6,7 @@ import { Patient } from '@/domain/entities/patient';
 import type { PatientOrderByType, PatientType } from '@/domain/schemas/patient';
 import type {
   GetPatientsTotalResponseSchema,
+  PatientsByStateType,
   PatientsStatisticFieldType,
 } from '@/domain/schemas/statistics';
 
@@ -225,6 +226,54 @@ export class PatientsRepository {
     }
 
     const items = await queryBuilder.getRawMany<T>();
+
+    return { items, total };
+  }
+
+  public async getPatientsByState(
+    startDate: Date,
+    endDate: Date,
+    query: GetPatientsByPeriodDto,
+  ): Promise<{ items: PatientsByStateType[]; total: number }> {
+    const totalQuery = this.patientsRepository
+      .createQueryBuilder('patient')
+      .select(`COUNT(DISTINCT patient.id)`, 'total')
+      .innerJoin('patient.referrals', 'referral')
+      .where('patient.created_at BETWEEN :start AND :end', {
+        start: startDate,
+        end: endDate,
+      })
+      .andWhere('referral.referred_to IS NOT NULL')
+      .andWhere('referral.referred_to != :empty', { empty: '' });
+
+    const totalResult = await totalQuery.getRawOne<{ total: string }>();
+    const total = Number(totalResult?.total ?? 0);
+
+    const queryBuilder = this.patientsRepository
+      .createQueryBuilder('patient')
+      .select('patient.state', 'state')
+      .addSelect('COUNT(DISTINCT patient.id)', 'total')
+      .innerJoin('patient.referrals', 'referral')
+      .where('patient.created_at BETWEEN :start AND :end', {
+        start: startDate,
+        end: endDate,
+      })
+      .andWhere('referral.referred_to IS NOT NULL')
+      .andWhere('referral.referred_to != :empty', { empty: '' })
+      .groupBy('patient.state')
+      .orderBy('total', query.order)
+      .limit(query.limit);
+
+    if (query.withPercentage) {
+      queryBuilder
+        .addSelect(
+          'ROUND((COUNT(DISTINCT patient.id) * 100.0 / (:total)), 1)',
+          'percentage',
+        )
+        .setParameter('total', total > 0 ? total : 1);
+    }
+
+    const items = await queryBuilder.getRawMany<PatientsByStateType>();
 
     return { items, total };
   }
