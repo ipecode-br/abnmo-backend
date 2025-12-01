@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 
 import type {
   GetPatientsTotalResponseSchema,
+  PatientsByStateType,
   PatientsStatisticFieldType,
 } from '@/domain/schemas/statistics';
 import { UtilsService } from '@/utils/utils.service';
@@ -30,6 +31,19 @@ export class StatisticsService {
 
     return await this.patientsRepository.getPatientsStatisticsByPeriod(
       filter,
+      startDate,
+      endDate,
+      query,
+    );
+  }
+
+  async getPatientsByState(
+    query: GetPatientsByPeriodDto,
+  ): Promise<{ items: PatientsByStateType[]; total: number }> {
+    const { startDate, endDate } = this.utilsService.getDateRangeForPeriod(
+      query.period,
+    );
+    return await this.patientsRepository.getPatientsByState(
       startDate,
       endDate,
       query,
