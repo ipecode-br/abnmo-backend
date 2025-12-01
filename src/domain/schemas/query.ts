@@ -3,7 +3,12 @@ import { z } from 'zod';
 export const ORDER = ['ASC', 'DESC'] as const;
 export type OrderType = (typeof ORDER)[number];
 
-export const PERIOD = ['last-year', 'last-month', 'last-week'] as const;
+export const PERIOD = [
+  'last-year',
+  'last-month',
+  'last-week',
+  'last_30_days',
+] as const;
 export type PeriodType = (typeof PERIOD)[number];
 
 export const baseQuerySchema = z.object({
