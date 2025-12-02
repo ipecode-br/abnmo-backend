@@ -1,12 +1,24 @@
-import { Body, Controller, Param, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { BaseResponseSchema } from '@/domain/schemas/base';
+import {
+  GetReferralByCategoryResponse,
+  ReferralByCategoryType,
+} from '@/domain/schemas/referral';
 import { UserSchema } from '@/domain/schemas/user';
 
-import { CreateReferralDto } from './referrals.dtos';
+import { CreateReferralDto, GetReferralByPeriodDto } from './referrals.dtos';
 import { ReferralsService } from './referrals.service';
 
 @ApiTags('Encaminhamentos')
@@ -24,6 +36,25 @@ export class ReferralsController {
     await this.referralsService.create(createReferralDto, currentUser.id);
 
     return { success: true, message: 'Encaminhamento cadastrado com sucesso.' };
+  }
+
+  @Get('referrals-by-category')
+  @Roles(['manager', 'nurse'])
+  @ApiOperation({ summary: 'Encaminhamentos por categoria.' })
+  async getReferralByCategory(
+    @Query() query: GetReferralByPeriodDto,
+  ): Promise<GetReferralByCategoryResponse> {
+    const { items: categories, total } =
+      await this.referralsService.getReferralByPeriod<ReferralByCategoryType>(
+        'category',
+        query,
+      );
+
+    return {
+      success: true,
+      message: 'Encaminhamentos por categorias retornado com sucesso.',
+      data: { categories, total },
+    };
   }
 
   @Patch(':id/cancel')
