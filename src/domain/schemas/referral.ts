@@ -1,6 +1,8 @@
 import { z } from 'zod';
 
+import { baseResponseSchema } from './base';
 import { PATIENT_CONDITIONS } from './patient';
+import { baseQuerySchema } from './query';
 
 export const REFERRAL_STATUSES = [
   'scheduled',
@@ -50,3 +52,29 @@ export const createReferralSchema = referralSchema.pick({
   referred_to: true,
 });
 export type CreateReferralSchema = z.infer<typeof createReferralSchema>;
+
+export const getReferralByPeriodSchema = baseQuerySchema
+  .pick({
+    period: true,
+    limit: true,
+    order: true,
+    withPercentage: true,
+  })
+  .extend({ order: baseQuerySchema.shape.order.default('DESC') });
+
+export const referralByCategorySchema = z.object({
+  category: z.enum(REFERRAL_CATEGORIES),
+  total: z.number(),
+});
+export type ReferralByCategoryType = z.infer<typeof referralByCategorySchema>;
+
+export const getReferralByCategoryResponseSchema = baseResponseSchema.extend({
+  data: z.object({
+    categories: z.array(referralByCategorySchema),
+    total: z.number(),
+  }),
+});
+export type GetReferralByCategoryResponse = z.infer<
+  typeof getReferralByCategoryResponseSchema
+>;
+export type ReferralFieldType = 'category';
