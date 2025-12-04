@@ -230,7 +230,7 @@ export class PatientsRepository {
     return { items, total };
   }
 
-  public async getPatientsByState(
+  public async getPatientsWithReferralsByState(
     startDate: Date,
     endDate: Date,
     query: GetPatientsByPeriodDto,

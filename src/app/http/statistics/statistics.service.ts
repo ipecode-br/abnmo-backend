@@ -37,13 +37,13 @@ export class StatisticsService {
     );
   }
 
-  async getPatientsByState(
+  async getReferredPatientsByState(
     query: GetPatientsByPeriodDto,
   ): Promise<{ items: PatientsByStateType[]; total: number }> {
     const { startDate, endDate } = this.utilsService.getDateRangeForPeriod(
       query.period,
     );
-    return await this.patientsRepository.getPatientsByState(
+    return await this.patientsRepository.getPatientsWithReferralsByState(
       startDate,
       endDate,
       query,

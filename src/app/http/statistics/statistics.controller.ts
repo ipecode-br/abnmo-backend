@@ -74,11 +74,11 @@ export class StatisticsController {
     summary:
       'Estatísticas de pacientes por estado (comencaminhamentos destinados',
   })
-  async getPatientsByState(
+  async getPatientsWithReferralsByState(
     @Query() query: GetPatientsByPeriodDto,
   ): Promise<GetPatientsByStateResponse> {
     const { items: states, total } =
-      await this.statisticsService.getPatientsByState(query);
+      await this.statisticsService.getReferredPatientsByState(query);
 
     return {
       success: true,

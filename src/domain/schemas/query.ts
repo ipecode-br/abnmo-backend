@@ -7,7 +7,7 @@ export const PERIOD = [
   'last-year',
   'last-month',
   'last-week',
-  'last_30_days',
+  'today',
 ] as const;
 export type PeriodType = (typeof PERIOD)[number];
 
