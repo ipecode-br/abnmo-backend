@@ -9,7 +9,10 @@ import type {
   PatientsByGenderType,
 } from '@/domain/schemas/statistics';
 
-import { GetPatientsByPeriodDto } from './statistics.dtos';
+import {
+  GetPatientsByPeriodDto,
+  GetReferralsTotalDto,
+} from './statistics.dtos';
 import { StatisticsService } from './statistics.service';
 
 @ApiTags('Estatísticas')
@@ -65,6 +68,19 @@ export class StatisticsController {
       success: true,
       message: 'Estatísticas de pacientes por cidade retornada com sucesso.',
       data: { cities, total },
+    };
+  }
+
+  @Get('referrals/total')
+  @Roles(['manager', 'nurse', 'admin'])
+  @ApiOperation({ summary: 'Estatísticas totais de encaminhamentos' })
+  async getReferralsTotal(@Query() filters: GetReferralsTotalDto) {
+    const data = await this.statisticsService.getReferralsTotal(filters);
+    return {
+      success: true,
+      message:
+        'Estatísticas com total de encaminhamentos retornada com sucesso.',
+      data,
     };
   }
 }
