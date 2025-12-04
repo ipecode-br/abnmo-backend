@@ -2,18 +2,24 @@ import { Injectable } from '@nestjs/common';
 
 import type {
   GetPatientsTotalResponseSchema,
+  GetReferralsTotalResponseSchema,
   PatientsStatisticFieldType,
 } from '@/domain/schemas/statistics';
 import { UtilsService } from '@/utils/utils.service';
 
 import { PatientsRepository } from '../patients/patients.repository';
-import type { GetPatientsByPeriodDto } from './statistics.dtos';
+import { ReferralsRepository } from '../referrals/referrals.repository';
+import type {
+  GetPatientsByPeriodDto,
+  GetReferralsTotalDto,
+} from './statistics.dtos';
 
 @Injectable()
 export class StatisticsService {
   constructor(
     private readonly patientsRepository: PatientsRepository,
     private readonly utilsService: UtilsService,
+    private readonly referralsRepository: ReferralsRepository,
   ) {}
 
   async getPatientsTotal(): Promise<GetPatientsTotalResponseSchema['data']> {
@@ -34,5 +40,11 @@ export class StatisticsService {
       endDate,
       query,
     );
+  }
+
+  async getReferralsTotal(
+    filters: GetReferralsTotalDto,
+  ): Promise<GetReferralsTotalResponseSchema['data']> {
+    return await this.referralsRepository.getReferralsTotal(filters);
   }
 }
