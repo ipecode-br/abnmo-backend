@@ -1,12 +1,14 @@
 import { z } from 'zod';
 
+import { BRAZILIAN_STATES } from '@/constants/brazilian-states';
+
 import { baseResponseSchema } from './base';
 import { GENDERS } from './patient';
 import { baseQuerySchema } from './query';
 
 // Patients
 
-export const PATIENTS_STATISTIC_FIELDS = ['gender', 'city'] as const;
+export const PATIENTS_STATISTIC_FIELDS = ['gender', 'city', 'state'] as const;
 export type PatientsStatisticFieldType =
   (typeof PATIENTS_STATISTIC_FIELDS)[number];
 
@@ -63,4 +65,23 @@ export const getPatientsByCityResponseSchema = baseResponseSchema.extend({
 });
 export type GetPatientsByCityResponse = z.infer<
   typeof getPatientsByCityResponseSchema
+>;
+
+export const patientsByStateSchema = z
+  .object({
+    state: z.enum(BRAZILIAN_STATES),
+    total: z.number(),
+    percentage: z.number(),
+  })
+  .strict();
+export type PatientsByStateType = z.infer<typeof patientsByStateSchema>;
+
+export const getPatientsByStateResponseSchema = baseResponseSchema.extend({
+  data: z.object({
+    states: z.array(patientsByStateSchema),
+    total: z.number(),
+  }),
+});
+export type GetPatientsByStateResponse = z.infer<
+  typeof getPatientsByStateResponseSchema
 >;

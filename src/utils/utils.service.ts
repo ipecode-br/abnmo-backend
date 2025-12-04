@@ -69,6 +69,10 @@ export class UtilsService {
         startDate: startOfYear(today),
         endDate: today,
       },
+      today: {
+        startDate: today,
+        endDate: today,
+      },
     };
 
     return periodMapper[period];
