@@ -64,3 +64,17 @@ export const getPatientsByCityResponseSchema = baseResponseSchema.extend({
 export type GetPatientsByCityResponse = z.infer<
   typeof getPatientsByCityResponseSchema
 >;
+
+export const getReferralsTotalSchema = baseQuerySchema.pick({
+  period: true,
+});
+
+export const getReferralsTotalResponseSchema = baseResponseSchema.extend({
+  data: z.object({
+    total: z.number(),
+    percentage: z.number(),
+  }),
+});
+export type GetReferralsTotalResponseSchema = z.infer<
+  typeof getReferralsTotalResponseSchema
+>;
