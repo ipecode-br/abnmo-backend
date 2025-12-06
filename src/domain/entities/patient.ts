@@ -11,16 +11,16 @@ import {
 
 import {
   BRAZILIAN_STATES,
-  type BrazilianStateType,
+  type BrazilianState,
 } from '@/constants/brazilian-states';
 import { User } from '@/domain/entities/user';
 
 import {
+  Gender,
   GENDERS,
-  GenderType,
   PATIENT_STATUS,
   PatientSchema,
-  PatientStatusType,
+  PatientStatus,
 } from '../schemas/patient';
 import { Appointment } from './appointment';
 import { PatientRequirement } from './patient-requirement';
@@ -36,7 +36,7 @@ export class Patient implements PatientSchema {
   user_id: string;
 
   @Column({ type: 'enum', enum: GENDERS })
-  gender: GenderType;
+  gender: Gender;
 
   @Column({ type: 'date' })
   date_of_birth: Date;
@@ -48,7 +48,7 @@ export class Patient implements PatientSchema {
   cpf: string;
 
   @Column({ type: 'enum', enum: BRAZILIAN_STATES })
-  state: BrazilianStateType;
+  state: BrazilianState;
 
   @Column({ type: 'varchar', length: 50 })
   city: string;
@@ -72,7 +72,7 @@ export class Patient implements PatientSchema {
   has_nmo_diagnosis: boolean;
 
   @Column({ type: 'enum', enum: PATIENT_STATUS, default: 'pending' })
-  status: PatientStatusType;
+  status: PatientStatus;
 
   @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;

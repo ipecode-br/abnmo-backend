@@ -1,9 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import {
+  Between,
+  type FindOptionsWhere,
+  LessThanOrEqual,
+  MoreThanOrEqual,
+  Repository,
+} from 'typeorm';
 
 import { Referral } from '@/domain/entities/referral';
-import { ReferralStatusType } from '@/domain/schemas/referral';
+import { ReferralStatus } from '@/domain/schemas/referral';
 
 import { CreateReferralDto } from './referrals.dtos';
 
@@ -20,7 +26,7 @@ export class ReferralsRepository {
 
   public async create(
     createReferralDto: CreateReferralDto & {
-      status: ReferralStatusType;
+      status: ReferralStatus;
       referred_by: string;
     },
   ): Promise<Referral> {
@@ -30,5 +36,35 @@ export class ReferralsRepository {
 
   public async cancel(id: string): Promise<Referral> {
     return await this.referralsRepository.save({ id, status: 'canceled' });
+  }
+
+  public async getTotalReferrals(
+    input: {
+      status?: ReferralStatus;
+      startDate?: Date;
+      endDate?: Date;
+    } = {},
+  ): Promise<number> {
+    const { status, startDate, endDate } = input;
+
+    const where: FindOptionsWhere<Referral> = {};
+
+    if (status) {
+      where.status = status;
+    }
+
+    if (startDate && !endDate) {
+      where.date = MoreThanOrEqual(startDate);
+    }
+
+    if (endDate && !startDate) {
+      where.date = LessThanOrEqual(endDate);
+    }
+
+    if (startDate && endDate) {
+      where.date = Between(startDate, endDate);
+    }
+
+    return await this.referralsRepository.count({ where });
   }
 }

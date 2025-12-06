@@ -1,29 +1,35 @@
 import { Injectable } from '@nestjs/common';
 
 import type {
-  GetPatientsTotalResponseSchema,
-  PatientsByStateType,
-  PatientsStatisticFieldType,
+  GetTotalPatientsByStatusResponse,
+  PatientsStatisticField,
+  TotalReferredPatientsByState,
 } from '@/domain/schemas/statistics';
 import { UtilsService } from '@/utils/utils.service';
 
 import { PatientsRepository } from '../patients/patients.repository';
-import type { GetPatientsByPeriodDto } from './statistics.dtos';
+import { ReferralsRepository } from '../referrals/referrals.repository';
+import type {
+  GetPatientsByPeriodQuery,
+  GetTotalReferralsAndReferredPatientsPercentageQuery,
+  GetTotalReferredPatientsByStateQuery,
+} from './statistics.dtos';
 
 @Injectable()
 export class StatisticsService {
   constructor(
     private readonly patientsRepository: PatientsRepository,
     private readonly utilsService: UtilsService,
+    private readonly referralsRepository: ReferralsRepository,
   ) {}
 
-  async getPatientsTotal(): Promise<GetPatientsTotalResponseSchema['data']> {
-    return await this.patientsRepository.getPatientsTotal();
+  async getPatientsTotal(): Promise<GetTotalPatientsByStatusResponse['data']> {
+    return await this.patientsRepository.getTotalPatientsByStatus();
   }
 
   async getPatientsByPeriod<T>(
-    filter: PatientsStatisticFieldType,
-    query: GetPatientsByPeriodDto,
+    filter: PatientsStatisticField,
+    query: GetPatientsByPeriodQuery,
   ): Promise<{ items: T[]; total: number }> {
     const { startDate, endDate } = this.utilsService.getDateRangeForPeriod(
       query.period,
@@ -37,16 +43,42 @@ export class StatisticsService {
     );
   }
 
-  async getReferredPatientsByState(
-    query: GetPatientsByPeriodDto,
-  ): Promise<{ items: PatientsByStateType[]; total: number }> {
+  async getTotalReferralsAndReferredPatientsPercentage(
+    query: GetTotalReferralsAndReferredPatientsPercentageQuery,
+  ): Promise<{ totalReferrals: number; referredPatientsPercentage: number }> {
     const { startDate, endDate } = this.utilsService.getDateRangeForPeriod(
       query.period,
     );
-    return await this.patientsRepository.getPatientsWithReferralsByState(
+
+    const [totalPatients, totalReferrals, totalReferredPatients] =
+      await Promise.all([
+        this.patientsRepository.getTotalPatients({ startDate, endDate }),
+        this.referralsRepository.getTotalReferrals({ startDate, endDate }),
+        this.patientsRepository.getTotalReferredPatients({
+          startDate,
+          endDate,
+        }),
+      ]);
+
+    const percentage =
+      Number((totalReferredPatients / totalPatients) * 100) || 0;
+
+    return {
+      totalReferrals,
+      referredPatientsPercentage: Number(percentage.toFixed(2)),
+    };
+  }
+
+  async getReferredPatientsByState(
+    query: GetTotalReferredPatientsByStateQuery,
+  ): Promise<{ states: TotalReferredPatientsByState[]; total: number }> {
+    const { startDate, endDate } = this.utilsService.getDateRangeForPeriod(
+      query.period,
+    );
+
+    return await this.patientsRepository.getTotalReferredPatientsByState({
       startDate,
       endDate,
-      query,
-    );
+    });
   }
 }

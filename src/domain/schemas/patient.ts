@@ -17,22 +17,22 @@ export const GENDERS = [
   'non_binary',
   'prefer_not_to_say',
 ] as const;
-export type GenderType = (typeof GENDERS)[number];
+export type Gender = (typeof GENDERS)[number];
 
 export const PATIENT_STATUS = ['active', 'inactive', 'pending'] as const;
-export type PatientStatusType = (typeof PATIENT_STATUS)[number];
+export type PatientStatus = (typeof PATIENT_STATUS)[number];
 
 export const PATIENT_ORDER_BY = ['name', 'email', 'status', 'date'] as const;
-export type PatientOrderByType = (typeof PATIENT_ORDER_BY)[number];
+export type PatientOrderBy = (typeof PATIENT_ORDER_BY)[number];
 
 export const PATIENT_STATISTICS = ['gender', 'total'] as const;
 export type PatientStatisticsResult = {
-  gender: GenderType;
+  gender: Gender;
   total: number;
 };
 
 export const PATIENT_CONDITIONS = ['in_crisis', 'stable'] as const;
-export type PatientConditionType = (typeof PATIENT_CONDITIONS)[number];
+export type PatientCondition = (typeof PATIENT_CONDITIONS)[number];
 
 export const patientSchema = z
   .object({
