@@ -16,12 +16,9 @@ import type {
   PatientStatus,
   PatientType,
 } from '@/domain/schemas/patient';
-import type {
-  GetPatientsTotalResponseSchema,
-  PatientsStatisticFieldType,
-} from '@/domain/schemas/statistics';
+import type { PatientsStatisticField } from '@/domain/schemas/statistics';
 
-import type { GetPatientsByPeriodDto } from '../statistics/statistics.dtos';
+import type { GetPatientsByPeriodQuery } from '../statistics/statistics.dtos';
 import { CreatePatientDto, FindAllPatientQueryDto } from './patients.dtos';
 
 @Injectable()
@@ -177,12 +174,15 @@ export class PatientsRepository {
     return this.patientsRepository.save({ id, status: 'inactive' });
   }
 
-  public async getPatientsTotal(): Promise<
-    GetPatientsTotalResponseSchema['data']
-  > {
+  public async getTotalPatientsByStatus(): Promise<{
+    total: number;
+    active: number;
+    inactive: number;
+  }> {
     const raw = await this.patientsRepository
       .createQueryBuilder('patient')
-      .select('COUNT(*)', 'total')
+      .select('COUNT(patient.id)', 'total')
+      .where('patient.status != :status', { status: 'pending' })
       .addSelect(
         `SUM(CASE WHEN patient.status = 'active' THEN 1 ELSE 0 END)`,
         'active',
@@ -201,10 +201,10 @@ export class PatientsRepository {
   }
 
   public async getPatientsStatisticsByPeriod<T>(
-    field: PatientsStatisticFieldType,
+    field: PatientsStatisticField,
     startDate: Date,
     endDate: Date,
-    query: GetPatientsByPeriodDto,
+    query: GetPatientsByPeriodQuery,
   ): Promise<{ items: T[]; total: number }> {
     const totalQuery = this.patientsRepository
       .createQueryBuilder('patient')

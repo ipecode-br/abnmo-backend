@@ -6,12 +6,12 @@ import type {
   GetPatientsByCityResponse,
   GetPatientsByGenderResponse,
   GetTotalReferralsAndReferredPatientsPercentageResponse,
-  PatientsByCityType,
-  PatientsByGenderType,
+  PatientsByCity,
+  PatientsByGender,
 } from '@/domain/schemas/statistics';
 
 import {
-  GetPatientsByPeriodDto,
+  GetPatientsByPeriodQuery,
   GetTotalReferralsAndReferredPatientsPercentageQuery,
 } from './statistics.dtos';
 import { StatisticsService } from './statistics.service';
@@ -38,10 +38,10 @@ export class StatisticsController {
   @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Estatísticas de pacientes por gênero' })
   async getPatientsByGender(
-    @Query() query: GetPatientsByPeriodDto,
+    @Query() query: GetPatientsByPeriodQuery,
   ): Promise<GetPatientsByGenderResponse> {
     const { items: genders, total } =
-      await this.statisticsService.getPatientsByPeriod<PatientsByGenderType>(
+      await this.statisticsService.getPatientsByPeriod<PatientsByGender>(
         'gender',
         query,
       );
@@ -57,10 +57,10 @@ export class StatisticsController {
   @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Estatísticas de pacientes por cidade' })
   async getPatientsByCity(
-    @Query() query: GetPatientsByPeriodDto,
+    @Query() query: GetPatientsByPeriodQuery,
   ): Promise<GetPatientsByCityResponse> {
     const { items: cities, total } =
-      await this.statisticsService.getPatientsByPeriod<PatientsByCityType>(
+      await this.statisticsService.getPatientsByPeriod<PatientsByCity>(
         'city',
         query,
       );

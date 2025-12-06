@@ -5,7 +5,7 @@ import {
   getTotalReferralsAndReferredPatientsPercentageQuerySchema,
 } from '@/domain/schemas/statistics';
 
-export class GetPatientsByPeriodDto extends createZodDto(
+export class GetPatientsByPeriodQuery extends createZodDto(
   getPatientsByPeriodSchema,
 ) {}
 

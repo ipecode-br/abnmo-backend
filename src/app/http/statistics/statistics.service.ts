@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
 
 import type {
-  GetPatientsTotalResponseSchema,
-  PatientsStatisticFieldType,
+  GetTotalPatientsByStatusResponse,
+  PatientsStatisticField,
 } from '@/domain/schemas/statistics';
 import { UtilsService } from '@/utils/utils.service';
 
 import { PatientsRepository } from '../patients/patients.repository';
 import { ReferralsRepository } from '../referrals/referrals.repository';
 import type {
-  GetPatientsByPeriodDto,
+  GetPatientsByPeriodQuery,
   GetTotalReferralsAndReferredPatientsPercentageQuery,
 } from './statistics.dtos';
 
@@ -21,13 +21,13 @@ export class StatisticsService {
     private readonly referralsRepository: ReferralsRepository,
   ) {}
 
-  async getPatientsTotal(): Promise<GetPatientsTotalResponseSchema['data']> {
-    return await this.patientsRepository.getPatientsTotal();
+  async getPatientsTotal(): Promise<GetTotalPatientsByStatusResponse['data']> {
+    return await this.patientsRepository.getTotalPatientsByStatus();
   }
 
   async getPatientsByPeriod<T>(
-    filter: PatientsStatisticFieldType,
-    query: GetPatientsByPeriodDto,
+    filter: PatientsStatisticField,
+    query: GetPatientsByPeriodQuery,
   ): Promise<{ items: T[]; total: number }> {
     const { startDate, endDate } = this.utilsService.getDateRangeForPeriod(
       query.period,
@@ -58,9 +58,8 @@ export class StatisticsService {
         }),
       ]);
 
-    console.log([totalPatients, totalReferrals, totalReferredPatients]);
-
-    const percentage = Number((totalReferredPatients / totalPatients) * 100);
+    const percentage =
+      Number((totalReferredPatients / totalPatients) * 100) || 0;
 
     return {
       totalReferrals,
