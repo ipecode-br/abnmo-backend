@@ -68,8 +68,11 @@ Remember: Clear writing is clear thinking. If you can't write it simply, you don
 
 ## Commit message guidelines
 
-- Always write commits in English
+- Always write commits in English.
 - Follow the conventional commit standard for all commits: eg: `feat(scope): message`
-- Always specify the commit type and write the corresponding commit message
-- Detect the appropriate commit type and write the corresponding commit message
-- Try to summarize the commit message in a single line
+- Always check `git status` before committing to review staged files
+- Create a main resume line highlighting the **most impactful change**, not implementation details
+- Add a detailed description after a blank line with bullet points for supporting changes
+- List secondary changes as bullet points, ordered by importance
+- If multiple files are changed, only commit the files you explicitly staged (never include unrelated changes)
+- Apply the Zinsser brevity principles: remove unnecessary words, use active voice, and write clearly

@@ -2,13 +2,13 @@ import { createZodDto } from 'nestjs-zod';
 
 import {
   getPatientsByPeriodSchema,
-  getReferralsTotalSchema,
+  getTotalReferralsAndReferredPatientsPercentageQuerySchema,
 } from '@/domain/schemas/statistics';
 
 export class GetPatientsByPeriodDto extends createZodDto(
   getPatientsByPeriodSchema,
 ) {}
 
-export class GetReferralsTotalDto extends createZodDto(
-  getReferralsTotalSchema,
+export class GetTotalReferralsAndReferredPatientsPercentageQuery extends createZodDto(
+  getTotalReferralsAndReferredPatientsPercentageQuerySchema,
 ) {}

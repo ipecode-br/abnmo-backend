@@ -9,9 +9,9 @@ import { ReferralsRepository } from './referrals.repository';
 import { ReferralsService } from './referrals.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Referral]), PatientsModule],
+  imports: [PatientsModule, TypeOrmModule.forFeature([Referral])],
   controllers: [ReferralsController],
   providers: [ReferralsService, ReferralsRepository],
-  exports: [ReferralsRepository, ReferralsService],
+  exports: [ReferralsService, ReferralsRepository],
 })
 export class ReferralsModule {}

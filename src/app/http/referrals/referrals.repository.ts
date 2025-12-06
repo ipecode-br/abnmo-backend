@@ -1,89 +1,70 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, SelectQueryBuilder } from 'typeorm';
+import {
+  Between,
+  type FindOptionsWhere,
+  LessThanOrEqual,
+  MoreThanOrEqual,
+  Repository,
+} from 'typeorm';
 
 import { Referral } from '@/domain/entities/referral';
-import { GetReferralsTotalResponseSchema } from '@/domain/schemas/statistics';
+import { ReferralStatus } from '@/domain/schemas/referral';
 
-import { PatientsRepository } from '../patients/patients.repository';
-import { GetReferralsTotalDto } from '../statistics/statistics.dtos';
+import { CreateReferralDto } from './referrals.dtos';
 
 @Injectable()
 export class ReferralsRepository {
   constructor(
     @InjectRepository(Referral)
     private readonly referralsRepository: Repository<Referral>,
-    private readonly patientsRepository: PatientsRepository,
   ) {}
 
-  async getReferralsTotal(
-    filters: GetReferralsTotalDto,
-  ): Promise<GetReferralsTotalResponseSchema['data']> {
-    const { period } = filters;
-
-    const queryReferralsTotal = this.referralsRepository
-      .createQueryBuilder('referral')
-      .leftJoinAndSelect('referral.patient', 'patient')
-      .where("patient.status <> 'pending'");
-
-    const queryPatientsNonPending = this.referralsRepository
-      .createQueryBuilder('referral')
-      .leftJoin('referral.patient', 'patient')
-      .select('COUNT(DISTINCT patient.id)', 'count')
-      .where("patient.status <> 'pending'");
-
-    this.applyPeriodFilter(queryReferralsTotal, period);
-    this.applyPeriodFilter(queryPatientsNonPending, period);
-
-    const [totalReferrals, uniquePatientsResult] = await Promise.all([
-      queryReferralsTotal.getCount(),
-      queryPatientsNonPending.getRawOne<{ count: string }>(),
-    ]);
-
-    const patientsPerReferrals = uniquePatientsResult
-      ? Number(uniquePatientsResult.count)
-      : 0;
-
-    const totalPatients = (await this.patientsRepository.getPatientsTotal())
-      .total;
-
-    const percentage = Math.round((patientsPerReferrals / totalPatients) * 100);
-
-    return {
-      total: totalReferrals,
-      percentage: percentage,
-    };
+  public async findById(id: string): Promise<Referral | null> {
+    return await this.referralsRepository.findOne({ where: { id } });
   }
 
-  private applyPeriodFilter(
-    queryBuilder: SelectQueryBuilder<Referral>,
-    period: string,
-  ): void {
-    if (period === 'last-year') {
-      queryBuilder
-        .andWhere(
-          "referral.date >= DATE_FORMAT(CURRENT_DATE - INTERVAL 1 YEAR, '%Y-01-01')",
-        )
-        .andWhere("referral.date < DATE_FORMAT(CURRENT_DATE, '%Y-01-01')");
+  public async create(
+    createReferralDto: CreateReferralDto & {
+      status: ReferralStatus;
+      referred_by: string;
+    },
+  ): Promise<Referral> {
+    const referrals = this.referralsRepository.create(createReferralDto);
+    return await this.referralsRepository.save(referrals);
+  }
+
+  public async cancel(id: string): Promise<Referral> {
+    return await this.referralsRepository.save({ id, status: 'canceled' });
+  }
+
+  public async getTotalReferrals(
+    input: {
+      status?: ReferralStatus;
+      startDate?: Date;
+      endDate?: Date;
+    } = {},
+  ): Promise<number> {
+    const { status, startDate, endDate } = input;
+
+    const where: FindOptionsWhere<Referral> = {};
+
+    if (status) {
+      where.status = status;
     }
-    if (period === 'last-month') {
-      queryBuilder
-        .andWhere(
-          "referral.date >= DATE_FORMAT(CURRENT_DATE, '%Y-%m-01') - INTERVAL 1 MONTH",
-        )
-        .andWhere("referral.date < DATE_FORMAT(CURRENT_DATE, '%Y-%m-01')");
+
+    if (startDate && !endDate) {
+      where.date = MoreThanOrEqual(startDate);
     }
-    if (period === 'last-week') {
-      queryBuilder
-        .andWhere(
-          'referral.date >= DATE_SUB(DATE_SUB(CURRENT_DATE, INTERVAL WEEKDAY(CURRENT_DATE) DAY), INTERVAL 1 WEEK)',
-        )
-        .andWhere(
-          'referral.date < DATE_SUB(CURRENT_DATE, INTERVAL WEEKDAY(CURRENT_DATE) DAY)',
-        );
+
+    if (endDate && !startDate) {
+      where.date = LessThanOrEqual(endDate);
     }
-    if (period === 'today') {
-      queryBuilder.andWhere('referral.date = CURDATE()');
+
+    if (startDate && endDate) {
+      where.date = Between(startDate, endDate);
     }
+
+    return await this.referralsRepository.count({ where });
   }
 }

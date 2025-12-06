@@ -4,10 +4,10 @@ export const ORDER = ['ASC', 'DESC'] as const;
 export type OrderType = (typeof ORDER)[number];
 
 export const PERIOD = [
+  'today',
   'last-year',
   'last-month',
   'last-week',
-  'today',
 ] as const;
 export type PeriodType = (typeof PERIOD)[number];
 

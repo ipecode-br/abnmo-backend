@@ -5,13 +5,14 @@ import { Roles } from '@/common/decorators/roles.decorator';
 import type {
   GetPatientsByCityResponse,
   GetPatientsByGenderResponse,
+  GetTotalReferralsAndReferredPatientsPercentageResponse,
   PatientsByCityType,
   PatientsByGenderType,
 } from '@/domain/schemas/statistics';
 
 import {
   GetPatientsByPeriodDto,
-  GetReferralsTotalDto,
+  GetTotalReferralsAndReferredPatientsPercentageQuery,
 } from './statistics.dtos';
 import { StatisticsService } from './statistics.service';
 
@@ -72,10 +73,16 @@ export class StatisticsController {
   }
 
   @Get('referrals/total')
-  @Roles(['manager', 'nurse', 'admin'])
-  @ApiOperation({ summary: 'Estatísticas totais de encaminhamentos' })
-  async getReferralsTotal(@Query() filters: GetReferralsTotalDto) {
-    const data = await this.statisticsService.getReferralsTotal(filters);
+  @Roles(['manager', 'nurse'])
+  @ApiOperation({ summary: 'Estatísticas do total de encaminhamentos' })
+  async getTotalReferralsAndReferredPatientsPercentage(
+    @Query() query: GetTotalReferralsAndReferredPatientsPercentageQuery,
+  ): Promise<GetTotalReferralsAndReferredPatientsPercentageResponse> {
+    const data =
+      await this.statisticsService.getTotalReferralsAndReferredPatientsPercentage(
+        query,
+      );
+
     return {
       success: true,
       message:

@@ -1,9 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import {
+  Between,
+  type FindOptionsWhere,
+  IsNull,
+  LessThanOrEqual,
+  MoreThanOrEqual,
+  Not,
+  Repository,
+} from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
-import type { PatientOrderByType, PatientType } from '@/domain/schemas/patient';
+import type {
+  PatientOrderBy,
+  PatientStatus,
+  PatientType,
+} from '@/domain/schemas/patient';
 import type {
   GetPatientsTotalResponseSchema,
   PatientsStatisticFieldType,
@@ -32,9 +44,10 @@ export class PatientsRepository {
       endDate,
       page,
       perPage,
+      all,
     } = filters;
 
-    const ORDER_BY: Record<PatientOrderByType, string> = {
+    const ORDER_BY: Record<PatientOrderBy, string> = {
       name: 'user.name',
       email: 'user.email',
       status: 'patient.status',
@@ -73,7 +86,10 @@ export class PatientsRepository {
     const total = await query.getCount();
 
     query.orderBy(ORDER_BY[orderBy], order);
-    query.skip((page - 1) * perPage).take(perPage);
+
+    if (!all) {
+      query.skip((page - 1) * perPage).take(perPage);
+    }
 
     const rawPatients = await query.getMany();
 
@@ -223,5 +239,60 @@ export class PatientsRepository {
     const items = await queryBuilder.getRawMany<T>();
 
     return { items, total };
+  }
+
+  public async getTotalPatients(
+    input: {
+      status?: PatientStatus;
+      startDate?: Date;
+      endDate?: Date;
+    } = {},
+  ): Promise<number> {
+    const { status, startDate, endDate } = input;
+
+    const where: FindOptionsWhere<Patient> = {
+      status: status ?? Not('pending'),
+    };
+
+    if (startDate && !endDate) {
+      where.created_at = MoreThanOrEqual(startDate);
+    }
+
+    if (endDate && !startDate) {
+      where.created_at = LessThanOrEqual(endDate);
+    }
+
+    if (startDate && endDate) {
+      where.created_at = Between(startDate, endDate);
+    }
+
+    return await this.patientsRepository.count({ where });
+  }
+
+  public async getTotalReferredPatients(
+    input: {
+      startDate?: Date;
+      endDate?: Date;
+    } = {},
+  ): Promise<number> {
+    const { startDate, endDate } = input;
+
+    const where: FindOptionsWhere<Patient> = {
+      referrals: { id: Not(IsNull()) },
+    };
+
+    if (startDate && !endDate) {
+      where.created_at = MoreThanOrEqual(startDate);
+    }
+
+    if (endDate && !startDate) {
+      where.created_at = LessThanOrEqual(endDate);
+    }
+
+    if (startDate && endDate) {
+      where.created_at = Between(startDate, endDate);
+    }
+
+    return await this.patientsRepository.count({ where });
   }
 }
