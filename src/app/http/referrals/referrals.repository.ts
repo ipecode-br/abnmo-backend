@@ -6,12 +6,14 @@ import {
   LessThanOrEqual,
   MoreThanOrEqual,
   Repository,
+  type SelectQueryBuilder,
 } from 'typeorm';
 
 import { Referral } from '@/domain/entities/referral';
-import { ReferralFieldType, ReferralStatus } from '@/domain/schemas/referral';
+import { ReferralStatus } from '@/domain/schemas/referral';
+import type { CategoryTotalReferrals } from '@/domain/schemas/statistics';
 
-import { CreateReferralDto, GetReferralByPeriodDto } from './referrals.dtos';
+import { CreateReferralDto } from './referrals.dtos';
 
 @Injectable()
 export class ReferralsRepository {
@@ -32,47 +34,6 @@ export class ReferralsRepository {
   ): Promise<Referral> {
     const referrals = this.referralsRepository.create(createReferralDto);
     return await this.referralsRepository.save(referrals);
-  }
-
-  async getReferralsByPeriod<T>(
-    field: ReferralFieldType,
-    startDate: Date,
-    endDate: Date,
-    query: GetReferralByPeriodDto,
-  ): Promise<{ items: T[]; total: number }> {
-    const totalQuery = this.referralsRepository
-      .createQueryBuilder('referral')
-      .select(`COUNT(DISTINCT referral.${field})`, 'total')
-      .where('referral.date BETWEEN :start AND :end', {
-        start: startDate,
-        end: endDate,
-      });
-
-    const totalResult = await totalQuery.getRawOne<{ total: string }>();
-    const total = Number(totalResult?.total ?? 0);
-
-    const queryBuilder = this.referralsRepository
-      .createQueryBuilder('referral')
-      .select(`referral.${field}`, field)
-      .addSelect('COUNT(*)', 'total')
-      .where('referral.date BETWEEN :start AND :end', {
-        start: startDate,
-        end: endDate,
-      })
-      .groupBy(`referral.${field}`)
-      .orderBy('total', query.order)
-      .limit(query.limit);
-
-    if (query.withPercentage) {
-      queryBuilder.addSelect(
-        'ROUND((COUNT(*) * 100.0 / SUM(COUNT(*)) OVER()), 1)',
-        'percentage',
-      );
-    }
-
-    const items = await queryBuilder.getRawMany<T>();
-
-    return { items, total };
   }
 
   public async cancel(id: string): Promise<Referral> {
@@ -107,5 +68,51 @@ export class ReferralsRepository {
     }
 
     return await this.referralsRepository.count({ where });
+  }
+
+  public async getTotalReferralsByCategory(
+    input: { startDate?: Date; endDate?: Date; limit?: number } = {},
+  ): Promise<{ categories: CategoryTotalReferrals[]; total: number }> {
+    const { startDate, endDate, limit = 10 } = input;
+
+    function getQueryBuilderWithFilters(
+      queryBuilder: SelectQueryBuilder<Referral>,
+    ) {
+      if (startDate && endDate) {
+        queryBuilder.andWhere('referral.date BETWEEN :start AND :end', {
+          start: startDate,
+          end: endDate,
+        });
+      }
+
+      return queryBuilder;
+    }
+
+    const createQueryBuilder = (): SelectQueryBuilder<Referral> => {
+      return this.referralsRepository.createQueryBuilder('referral');
+    };
+
+    const categoryListQuery = getQueryBuilderWithFilters(
+      createQueryBuilder()
+        .select('referral.category', 'category')
+        .addSelect('COUNT(referral.id)', 'total')
+        .groupBy('referral.category')
+        .orderBy('COUNT(referral.id)', 'DESC')
+        .limit(limit),
+    );
+
+    const totalCategoriesQuery = getQueryBuilderWithFilters(
+      createQueryBuilder().select('COUNT(DISTINCT referral.category)', 'total'),
+    );
+
+    const [categories, totalResult] = await Promise.all([
+      categoryListQuery.getRawMany<CategoryTotalReferrals>(),
+      totalCategoriesQuery.getRawOne<{ total: string }>(),
+    ]);
+
+    return {
+      categories,
+      total: Number(totalResult?.total || 0),
+    };
   }
 }

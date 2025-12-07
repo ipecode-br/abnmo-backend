@@ -5,12 +5,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import { ReferralFieldType } from '@/domain/schemas/referral';
 import { UserSchema } from '@/domain/schemas/user';
-import { UtilsService } from '@/utils/utils.service';
 
 import { PatientsRepository } from '../patients/patients.repository';
-import { CreateReferralDto, GetReferralByPeriodDto } from './referrals.dtos';
+import { CreateReferralDto } from './referrals.dtos';
 import { ReferralsRepository } from './referrals.repository';
 
 @Injectable()
@@ -20,7 +18,6 @@ export class ReferralsService {
   constructor(
     private readonly referralsRepository: ReferralsRepository,
     private readonly patientsRepository: PatientsRepository,
-    private readonly utilsService: UtilsService,
   ) {}
 
   public async create(
@@ -44,22 +41,6 @@ export class ReferralsService {
     this.logger.log(
       { patientId: patient_id, referredBy: userId },
       'Referral created successfully',
-    );
-  }
-
-  async getReferralByPeriod<T>(
-    filter: ReferralFieldType,
-    query: GetReferralByPeriodDto,
-  ): Promise<{ items: T[]; total: number }> {
-    const { startDate, endDate } = this.utilsService.getDateRangeForPeriod(
-      query.period,
-    );
-
-    return await this.referralsRepository.getReferralsByPeriod(
-      filter,
-      startDate,
-      endDate,
-      query,
     );
   }
 
