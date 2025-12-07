@@ -8,6 +8,7 @@ import {
   MoreThanOrEqual,
   Not,
   Repository,
+  type SelectQueryBuilder,
 } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
@@ -297,41 +298,48 @@ export class PatientsRepository {
   ): Promise<{ states: TotalReferredPatientsByState[]; total: number }> {
     const { startDate, endDate, limit = 10 } = input;
 
-    const queryBuilder = this.patientsRepository
-      .createQueryBuilder('patient')
-      .select('patient.state', 'state')
-      .addSelect('COUNT(DISTINCT patient.id)', 'total')
-      .innerJoin('patient.referrals', 'referral')
-      .where('referral.referred_to IS NOT NULL')
-      .andWhere('referral.referred_to != :empty', { empty: '' })
-      .groupBy('patient.state')
-      .orderBy('COUNT(DISTINCT patient.id)', 'DESC')
-      .limit(limit);
+    const createQueryBuilder = (): SelectQueryBuilder<Patient> => {
+      return this.patientsRepository
+        .createQueryBuilder('patient')
+        .innerJoin('patient.referrals', 'referral')
+        .where('referral.referred_to IS NOT NULL')
+        .andWhere('referral.referred_to != :empty', { empty: '' });
+    };
 
-    const totalQueryBuilder = this.patientsRepository
-      .createQueryBuilder('patient')
-      .select('COUNT(DISTINCT patient.state)', 'total')
-      .innerJoin('patient.referrals', 'referral')
-      .where('referral.referred_to IS NOT NULL')
-      .andWhere('referral.referred_to != :empty', { empty: '' });
+    function getQueryBuilderWithFilters(
+      queryBuilder: SelectQueryBuilder<Patient>,
+    ) {
+      if (startDate && endDate) {
+        queryBuilder.andWhere('referral.date BETWEEN :start AND :end', {
+          start: startDate,
+          end: endDate,
+        });
+      }
 
-    if (startDate && endDate) {
-      queryBuilder.where('referral.date BETWEEN :start AND :end', {
-        start: startDate,
-        end: endDate,
-      });
-
-      totalQueryBuilder.andWhere('referral.date BETWEEN :start AND :end', {
-        start: startDate,
-        end: endDate,
-      });
+      return queryBuilder;
     }
 
+    const stateListQuery = getQueryBuilderWithFilters(
+      createQueryBuilder()
+        .select('patient.state', 'state')
+        .addSelect('COUNT(DISTINCT patient.id)', 'total')
+        .groupBy('patient.state')
+        .orderBy('COUNT(DISTINCT patient.id)', 'DESC')
+        .limit(limit),
+    );
+
+    const totalStatesQuery = getQueryBuilderWithFilters(
+      createQueryBuilder().select('COUNT(DISTINCT patient.state)', 'total'),
+    );
+
     const [states, totalResult] = await Promise.all([
-      queryBuilder.getRawMany<TotalReferredPatientsByState>(),
-      totalQueryBuilder.getRawOne<{ total: string }>(),
+      stateListQuery.getRawMany<TotalReferredPatientsByState>(),
+      totalStatesQuery.getRawOne<{ total: string }>(),
     ]);
 
-    return { states, total: Number(totalResult?.total || 0) };
+    return {
+      states,
+      total: Number(totalResult?.total || 0),
+    };
   }
 }
