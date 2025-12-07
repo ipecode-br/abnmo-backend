@@ -7,6 +7,7 @@ import type {
   GetPatientsByGenderResponse,
   GetReferredPatientsByStateResponse,
   GetTotalReferralsAndReferredPatientsPercentageResponse,
+  GetTotalReferralsByCategoryResponse,
   PatientsByCity,
   PatientsByGender,
 } from '@/domain/schemas/statistics';
@@ -15,6 +16,7 @@ import {
   GetPatientsByPeriodQuery,
   GetReferredPatientsByStateQuery,
   GetTotalReferralsAndReferredPatientsPercentageQuery,
+  GetTotalReferralsByCategoryQuery,
 } from './statistics.dtos';
 import { StatisticsService } from './statistics.service';
 
@@ -90,6 +92,25 @@ export class StatisticsController {
       message:
         'Estatísticas com total de encaminhamentos retornada com sucesso.',
       data,
+    };
+  }
+
+  @Get('referrals-by-category')
+  @Roles(['manager', 'nurse'])
+  @ApiOperation({
+    summary: 'Lista com o total de encaminhamentos por categoria',
+  })
+  async getTotalReferralsByCategory(
+    @Query() query: GetTotalReferralsByCategoryQuery,
+  ): Promise<GetTotalReferralsByCategoryResponse> {
+    const { categories, total } =
+      await this.statisticsService.getTotalReferralsByCategory(query);
+
+    return {
+      success: true,
+      message:
+        'Lista com o total de encaminhamentos por categoria retornada com sucesso.',
+      data: { categories, total },
     };
   }
 

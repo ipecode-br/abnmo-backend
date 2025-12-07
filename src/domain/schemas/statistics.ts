@@ -5,6 +5,7 @@ import { BRAZILIAN_STATES } from '@/constants/brazilian-states';
 import { baseResponseSchema } from './base';
 import { GENDERS } from './patient';
 import { baseQuerySchema } from './query';
+import { REFERRAL_CATEGORIES } from './referral';
 
 // Patients
 
@@ -103,4 +104,27 @@ export const getReferredPatientsByStateResponseSchema =
   });
 export type GetReferredPatientsByStateResponse = z.infer<
   typeof getReferredPatientsByStateResponseSchema
+>;
+
+export const getTotalReferralsByCategoryQuerySchema = baseQuerySchema.pick({
+  period: true,
+});
+
+export const categoryTotalReferralsSchema = z.object({
+  category: z.enum(REFERRAL_CATEGORIES),
+  total: z.number(),
+});
+export type CategoryTotalReferrals = z.infer<
+  typeof categoryTotalReferralsSchema
+>;
+
+export const getTotalReferralsByCategoryResponseSchema =
+  baseResponseSchema.extend({
+    data: z.object({
+      categories: z.array(categoryTotalReferralsSchema),
+      total: z.number(),
+    }),
+  });
+export type GetTotalReferralsByCategoryResponse = z.infer<
+  typeof getTotalReferralsByCategoryResponseSchema
 >;

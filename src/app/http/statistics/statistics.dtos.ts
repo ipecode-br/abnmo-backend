@@ -4,6 +4,7 @@ import {
   getPatientsByPeriodQuerySchema,
   getReferredPatientsByStateQuerySchema,
   getTotalReferralsAndReferredPatientsPercentageQuerySchema,
+  getTotalReferralsByCategoryQuerySchema,
 } from '@/domain/schemas/statistics';
 
 export class GetPatientsByPeriodQuery extends createZodDto(
@@ -12,6 +13,10 @@ export class GetPatientsByPeriodQuery extends createZodDto(
 
 export class GetTotalReferralsAndReferredPatientsPercentageQuery extends createZodDto(
   getTotalReferralsAndReferredPatientsPercentageQuerySchema,
+) {}
+
+export class GetTotalReferralsByCategoryQuery extends createZodDto(
+  getTotalReferralsByCategoryQuerySchema,
 ) {}
 
 export class GetReferredPatientsByStateQuery extends createZodDto(
