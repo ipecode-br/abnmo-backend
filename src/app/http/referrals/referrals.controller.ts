@@ -16,7 +16,7 @@ import type { GetReferralsResponseSchema } from '@/domain/schemas/referral';
 import { UserSchema } from '@/domain/schemas/user';
 
 import { CreateReferralDto, GetReferralsQuery } from './referrals.dtos';
-import { ReferralsService } from './referrals.service';
+import { CancelReferralUseCase } from './use-cases/cancel-referral-use-case';
 import { CreateReferralUseCase } from './use-cases/create-referrals-use-case';
 import { GetReferralsUseCase } from './use-cases/get-referrals-use-case';
 
@@ -26,7 +26,7 @@ export class ReferralsController {
   constructor(
     private readonly getReferralsUseCase: GetReferralsUseCase,
     private readonly createReferralUseCase: CreateReferralUseCase,
-    private readonly referralsService: ReferralsService,
+    private readonly cancelReferralUseCase: CancelReferralUseCase,
   ) {}
 
   @Get()
@@ -66,7 +66,7 @@ export class ReferralsController {
     @Param('id') id: string,
     @CurrentUser() user: UserSchema,
   ): Promise<BaseResponseSchema> {
-    await this.referralsService.cancel(id, user);
+    await this.cancelReferralUseCase.execute({ id, userId: user.id });
 
     return {
       success: true,
