@@ -1,15 +1,28 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import {
+  Between,
+  type FindOptionsWhere,
+  IsNull,
+  LessThanOrEqual,
+  MoreThanOrEqual,
+  Not,
+  Repository,
+  type SelectQueryBuilder,
+} from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
-import type { PatientOrderByType, PatientType } from '@/domain/schemas/patient';
 import type {
-  GetPatientsTotalResponseSchema,
-  PatientsStatisticFieldType,
+  PatientOrderBy,
+  PatientStatus,
+  PatientType,
+} from '@/domain/schemas/patient';
+import type {
+  PatientsStatisticField,
+  StateReferredPatients,
 } from '@/domain/schemas/statistics';
 
-import type { GetPatientsByPeriodDto } from '../statistics/statistics.dtos';
+import type { GetPatientsByPeriodQuery } from '../statistics/statistics.dtos';
 import { CreatePatientDto, FindAllPatientQueryDto } from './patients.dtos';
 
 @Injectable()
@@ -35,7 +48,7 @@ export class PatientsRepository {
       all,
     } = filters;
 
-    const ORDER_BY: Record<PatientOrderByType, string> = {
+    const ORDER_BY: Record<PatientOrderBy, string> = {
       name: 'user.name',
       email: 'user.email',
       status: 'patient.status',
@@ -165,12 +178,15 @@ export class PatientsRepository {
     return this.patientsRepository.save({ id, status: 'inactive' });
   }
 
-  public async getPatientsTotal(): Promise<
-    GetPatientsTotalResponseSchema['data']
-  > {
-    const raw = await this.patientsRepository
+  public async getTotalPatientsByStatus(): Promise<{
+    total: number;
+    active: number;
+    inactive: number;
+  }> {
+    const queryBuilder = await this.patientsRepository
       .createQueryBuilder('patient')
-      .select('COUNT(*)', 'total')
+      .select('COUNT(patient.id)', 'total')
+      .where('patient.status != :status', { status: 'pending' })
       .addSelect(
         `SUM(CASE WHEN patient.status = 'active' THEN 1 ELSE 0 END)`,
         'active',
@@ -182,17 +198,17 @@ export class PatientsRepository {
       .getRawOne<{ total: string; active: string; inactive: string }>();
 
     return {
-      total: Number(raw?.total ?? 0),
-      active: Number(raw?.active ?? 0),
-      inactive: Number(raw?.inactive ?? 0),
+      total: Number(queryBuilder?.total ?? 0),
+      active: Number(queryBuilder?.active ?? 0),
+      inactive: Number(queryBuilder?.inactive ?? 0),
     };
   }
 
   public async getPatientsStatisticsByPeriod<T>(
-    field: PatientsStatisticFieldType,
+    field: PatientsStatisticField,
     startDate: Date,
     endDate: Date,
-    query: GetPatientsByPeriodDto,
+    query: GetPatientsByPeriodQuery,
   ): Promise<{ items: T[]; total: number }> {
     const totalQuery = this.patientsRepository
       .createQueryBuilder('patient')
@@ -208,7 +224,7 @@ export class PatientsRepository {
     const queryBuilder = this.patientsRepository
       .createQueryBuilder('patient')
       .select(`patient.${field}`, field)
-      .addSelect('COUNT(*)', 'total')
+      .addSelect('COUNT(patient.id)', 'total')
       .where('patient.created_at BETWEEN :start AND :end', {
         start: startDate,
         end: endDate,
@@ -227,5 +243,103 @@ export class PatientsRepository {
     const items = await queryBuilder.getRawMany<T>();
 
     return { items, total };
+  }
+
+  public async getTotalPatients(
+    input: { status?: PatientStatus; startDate?: Date; endDate?: Date } = {},
+  ): Promise<number> {
+    const { status, startDate, endDate } = input;
+
+    const where: FindOptionsWhere<Patient> = {
+      status: status ?? Not('pending'),
+    };
+
+    if (startDate && !endDate) {
+      where.created_at = MoreThanOrEqual(startDate);
+    }
+
+    if (endDate && !startDate) {
+      where.created_at = LessThanOrEqual(endDate);
+    }
+
+    if (startDate && endDate) {
+      where.created_at = Between(startDate, endDate);
+    }
+
+    return await this.patientsRepository.count({ where });
+  }
+
+  public async getTotalReferredPatients(
+    input: { startDate?: Date; endDate?: Date } = {},
+  ): Promise<number> {
+    const { startDate, endDate } = input;
+
+    const where: FindOptionsWhere<Patient> = {
+      referrals: { id: Not(IsNull()) },
+    };
+
+    if (startDate && !endDate) {
+      where.created_at = MoreThanOrEqual(startDate);
+    }
+
+    if (endDate && !startDate) {
+      where.created_at = LessThanOrEqual(endDate);
+    }
+
+    if (startDate && endDate) {
+      where.created_at = Between(startDate, endDate);
+    }
+
+    return await this.patientsRepository.count({ where });
+  }
+
+  public async getReferredPatientsByState(
+    input: { startDate?: Date; endDate?: Date; limit?: number } = {},
+  ): Promise<{ states: StateReferredPatients[]; total: number }> {
+    const { startDate, endDate, limit = 10 } = input;
+
+    const createQueryBuilder = (): SelectQueryBuilder<Patient> => {
+      return this.patientsRepository
+        .createQueryBuilder('patient')
+        .innerJoin('patient.referrals', 'referral')
+        .where('referral.referred_to IS NOT NULL')
+        .andWhere('referral.referred_to != :empty', { empty: '' });
+    };
+
+    function getQueryBuilderWithFilters(
+      queryBuilder: SelectQueryBuilder<Patient>,
+    ) {
+      if (startDate && endDate) {
+        queryBuilder.andWhere('referral.date BETWEEN :start AND :end', {
+          start: startDate,
+          end: endDate,
+        });
+      }
+
+      return queryBuilder;
+    }
+
+    const stateListQuery = getQueryBuilderWithFilters(
+      createQueryBuilder()
+        .select('patient.state', 'state')
+        .addSelect('COUNT(DISTINCT patient.id)', 'total')
+        .groupBy('patient.state')
+        .orderBy('COUNT(DISTINCT patient.id)', 'DESC')
+        .limit(limit),
+    );
+
+    const totalStatesQuery = getQueryBuilderWithFilters(
+      createQueryBuilder().select('COUNT(DISTINCT patient.state)', 'total'),
+    );
+
+    const [states, totalResult] = await Promise.all([
+      stateListQuery.getRawMany<StateReferredPatients>(),
+      totalStatesQuery.getRawOne<{ total: string }>(),
+    ]);
+
+    return {
+      states,
+      total: Number(totalResult?.total || 0),
+    };
   }
 }

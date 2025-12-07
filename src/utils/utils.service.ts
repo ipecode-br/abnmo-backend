@@ -1,8 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { startOfMonth, startOfWeek, startOfYear } from 'date-fns';
+import {
+  endOfDay,
+  startOfDay,
+  startOfMonth,
+  startOfWeek,
+  startOfYear,
+} from 'date-fns';
 import { type CookieOptions, Response } from 'express';
 
-import type { PeriodType } from '@/domain/schemas/query';
+import type { QueryPeriod } from '@/domain/schemas/query';
 import { EnvService } from '@/env/env.service';
 
 type SetCookieOptions = CookieOptions & {
@@ -50,24 +56,28 @@ export class UtilsService {
     });
   }
 
-  getDateRangeForPeriod(period: PeriodType): {
+  getDateRangeForPeriod(period: QueryPeriod): {
     startDate: Date;
     endDate: Date;
   } {
     const today = new Date();
 
     const periodMapper = {
+      today: {
+        startDate: startOfDay(today),
+        endDate: endOfDay(today),
+      },
       'last-week': {
         startDate: startOfWeek(today),
-        endDate: today,
+        endDate: endOfDay(today),
       },
       'last-month': {
         startDate: startOfMonth(today),
-        endDate: today,
+        endDate: endOfDay(today),
       },
       'last-year': {
         startDate: startOfYear(today),
-        endDate: today,
+        endDate: endOfDay(today),
       },
     };
 

@@ -10,7 +10,7 @@ export const REFERRAL_STATUSES = [
   'completed',
   'no_show',
 ] as const;
-export type ReferralStatusType = (typeof REFERRAL_STATUSES)[number];
+export type ReferralStatus = (typeof REFERRAL_STATUSES)[number];
 
 export const REFERRAL_CATEGORIES = [
   'medical_care',
@@ -24,7 +24,7 @@ export const REFERRAL_CATEGORIES = [
   'neurology',
   'ophthalmology',
 ] as const;
-export type ReferralCategoryType = (typeof REFERRAL_CATEGORIES)[number];
+export type ReferralCategory = (typeof REFERRAL_CATEGORIES)[number];
 
 export const referralSchema = z
   .object({

@@ -27,4 +27,4 @@ export const BRAZILIAN_STATES = [
   'SE',
   'TO',
 ] as const;
-export type BrazilianStateType = (typeof BRAZILIAN_STATES)[number];
+export type BrazilianState = (typeof BRAZILIAN_STATES)[number];

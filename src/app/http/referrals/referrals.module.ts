@@ -13,6 +13,6 @@ import { ReferralsService } from './referrals.service';
   imports: [PatientsModule, TypeOrmModule.forFeature([Referral]), UtilsModule],
   controllers: [ReferralsController],
   providers: [ReferralsService, ReferralsRepository],
-  exports: [ReferralsRepository],
+  exports: [ReferralsService, ReferralsRepository],
 })
 export class ReferralsModule {}
