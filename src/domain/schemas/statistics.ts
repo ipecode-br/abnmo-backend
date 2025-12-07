@@ -2,10 +2,10 @@ import { z } from 'zod';
 
 import { BRAZILIAN_STATES } from '@/constants/brazilian-states';
 
+import { REFERRAL_CATEGORIES } from '../enums/referrals';
 import { baseResponseSchema } from './base';
 import { GENDERS } from './patient';
 import { baseQuerySchema } from './query';
-import { REFERRAL_CATEGORIES } from './referral';
 
 // Patients
 

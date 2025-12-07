@@ -8,14 +8,14 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { PATIENT_CONDITIONS, PatientCondition } from '../schemas/patient';
 import {
   REFERRAL_CATEGORIES,
   REFERRAL_STATUSES,
-  ReferralCategory,
-  ReferralSchema,
-  ReferralStatus,
-} from '../schemas/referral';
+  type ReferralCategory,
+  type ReferralStatus,
+} from '../enums/referrals';
+import { PATIENT_CONDITIONS, PatientCondition } from '../schemas/patient';
+import { ReferralSchema } from '../schemas/referral';
 import { Patient } from './patient';
 
 @Entity('referrals')
@@ -26,7 +26,7 @@ export class Referral implements ReferralSchema {
   @Column('uuid')
   patient_id: string;
 
-  @Column({ type: 'date' })
+  @Column({ type: 'timestamp' })
   date: Date;
 
   @Column({ type: 'enum', enum: REFERRAL_CATEGORIES })

@@ -10,7 +10,7 @@ import {
 } from 'typeorm';
 
 import { Referral } from '@/domain/entities/referral';
-import { ReferralStatus } from '@/domain/schemas/referral';
+import type { ReferralStatus } from '@/domain/enums/referrals';
 import type { CategoryTotalReferrals } from '@/domain/schemas/statistics';
 
 import { CreateReferralDto } from './referrals.dtos';

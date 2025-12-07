@@ -1,18 +1,46 @@
-import { Body, Controller, Param, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { BaseResponseSchema } from '@/domain/schemas/base';
+import type { GetReferralsResponseSchema } from '@/domain/schemas/referral';
 import { UserSchema } from '@/domain/schemas/user';
 
-import { CreateReferralDto } from './referrals.dtos';
+import { CreateReferralDto, GetReferralsQuery } from './referrals.dtos';
 import { ReferralsService } from './referrals.service';
+import { GetReferralsUseCase } from './use-cases/get-referrals-use-case';
 
 @ApiTags('Encaminhamentos')
 @Controller('referrals')
 export class ReferralsController {
-  constructor(private readonly referralsService: ReferralsService) {}
+  constructor(
+    private readonly getReferrals: GetReferralsUseCase,
+    private readonly referralsService: ReferralsService,
+  ) {}
+
+  @Get()
+  @Roles(['manager', 'nurse'])
+  @ApiOperation({ summary: 'Lista encaminhamentos cadastrados no sistema' })
+  async handleGetReferrals(
+    @Query() query: GetReferralsQuery,
+  ): Promise<GetReferralsResponseSchema> {
+    const data = await this.getReferrals.execute({ query });
+
+    return {
+      success: true,
+      message: 'Lista de encaminhamentos retornada com sucesso.',
+      data,
+    };
+  }
 
   @Post()
   @Roles(['manager', 'nurse'])

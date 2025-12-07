@@ -1,28 +1,13 @@
 import { z } from 'zod';
 
+import {
+  REFERRAL_CATEGORIES,
+  REFERRAL_ORDER_BY,
+  REFERRAL_STATUSES,
+} from '../enums/referrals';
+import { baseResponseSchema } from './base';
 import { PATIENT_CONDITIONS } from './patient';
-
-export const REFERRAL_STATUSES = [
-  'scheduled',
-  'canceled',
-  'completed',
-  'no_show',
-] as const;
-export type ReferralStatus = (typeof REFERRAL_STATUSES)[number];
-
-export const REFERRAL_CATEGORIES = [
-  'medical_care',
-  'legal',
-  'nursing',
-  'psychology',
-  'nutrition',
-  'physical_training',
-  'social_work',
-  'psychiatry',
-  'neurology',
-  'ophthalmology',
-] as const;
-export type ReferralCategory = (typeof REFERRAL_CATEGORIES)[number];
+import { baseQuerySchema, QUERY_ORDER } from './query';
 
 export const referralSchema = z
   .object({
@@ -50,3 +35,51 @@ export const createReferralSchema = referralSchema.pick({
   referred_to: true,
 });
 export type CreateReferralSchema = z.infer<typeof createReferralSchema>;
+
+export const getReferralsQuerySchema = baseQuerySchema
+  .pick({
+    search: true,
+    startDate: true,
+    endDate: true,
+    page: true,
+    perPage: true,
+  })
+  .extend({
+    category: z.enum(REFERRAL_CATEGORIES).optional(),
+    condition: z.enum(PATIENT_CONDITIONS).optional(),
+    order: z.enum(QUERY_ORDER).optional().default('DESC'),
+    orderBy: z.enum(REFERRAL_ORDER_BY).optional().default('date'),
+  })
+  .refine(
+    (data) => {
+      if (data.startDate && data.endDate) {
+        return data.startDate < data.endDate;
+      }
+      return true;
+    },
+    {
+      message: 'It should be greater than `startDate`',
+      path: ['endDate'],
+    },
+  );
+export type GetReferralsQuerySchema = z.infer<typeof getReferralsQuerySchema>;
+
+export const getReferralsResponseSchema = baseResponseSchema.extend({
+  data: z.object({
+    referrals: z.array(
+      referralSchema
+        .omit({ patient_id: true, updated_at: true, referred_by: true })
+        .extend({
+          patient: z.object({
+            id: z.string(),
+            name: z.string(),
+            avatar_url: z.string().nullable(),
+          }),
+        }),
+    ),
+    total: z.number(),
+  }),
+});
+export type GetReferralsResponseSchema = z.infer<
+  typeof getReferralsResponseSchema
+>;

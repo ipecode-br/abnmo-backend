@@ -4,7 +4,9 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 
+import { Referral } from '@/domain/entities/referral';
 import { UserSchema } from '@/domain/schemas/user';
 
 import { PatientsRepository } from '../patients/patients.repository';
@@ -16,6 +18,7 @@ export class ReferralsService {
   private readonly logger = new Logger(ReferralsService.name);
 
   constructor(
+    @InjectRepository(Referral)
     private readonly referralsRepository: ReferralsRepository,
     private readonly patientsRepository: PatientsRepository,
   ) {}
