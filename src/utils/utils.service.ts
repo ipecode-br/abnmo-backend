@@ -8,7 +8,7 @@ import {
 } from 'date-fns';
 import { type CookieOptions, Response } from 'express';
 
-import type { PeriodType } from '@/domain/schemas/query';
+import type { QueryPeriod } from '@/domain/schemas/query';
 import { EnvService } from '@/env/env.service';
 
 type SetCookieOptions = CookieOptions & {
@@ -56,7 +56,7 @@ export class UtilsService {
     });
   }
 
-  getDateRangeForPeriod(period: PeriodType): {
+  getDateRangeForPeriod(period: QueryPeriod): {
     startDate: Date;
     endDate: Date;
   } {

@@ -8,6 +8,7 @@ import {
   MoreThanOrEqual,
   Not,
   Repository,
+  type SelectQueryBuilder,
 } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
@@ -16,7 +17,10 @@ import type {
   PatientStatus,
   PatientType,
 } from '@/domain/schemas/patient';
-import type { PatientsStatisticField } from '@/domain/schemas/statistics';
+import type {
+  PatientsStatisticField,
+  StateReferredPatients,
+} from '@/domain/schemas/statistics';
 
 import type { GetPatientsByPeriodQuery } from '../statistics/statistics.dtos';
 import { CreatePatientDto, FindAllPatientQueryDto } from './patients.dtos';
@@ -179,7 +183,7 @@ export class PatientsRepository {
     active: number;
     inactive: number;
   }> {
-    const raw = await this.patientsRepository
+    const queryBuilder = await this.patientsRepository
       .createQueryBuilder('patient')
       .select('COUNT(patient.id)', 'total')
       .where('patient.status != :status', { status: 'pending' })
@@ -194,9 +198,9 @@ export class PatientsRepository {
       .getRawOne<{ total: string; active: string; inactive: string }>();
 
     return {
-      total: Number(raw?.total ?? 0),
-      active: Number(raw?.active ?? 0),
-      inactive: Number(raw?.inactive ?? 0),
+      total: Number(queryBuilder?.total ?? 0),
+      active: Number(queryBuilder?.active ?? 0),
+      inactive: Number(queryBuilder?.inactive ?? 0),
     };
   }
 
@@ -220,7 +224,7 @@ export class PatientsRepository {
     const queryBuilder = this.patientsRepository
       .createQueryBuilder('patient')
       .select(`patient.${field}`, field)
-      .addSelect('COUNT(*)', 'total')
+      .addSelect('COUNT(patient.id)', 'total')
       .where('patient.created_at BETWEEN :start AND :end', {
         start: startDate,
         end: endDate,
@@ -242,11 +246,7 @@ export class PatientsRepository {
   }
 
   public async getTotalPatients(
-    input: {
-      status?: PatientStatus;
-      startDate?: Date;
-      endDate?: Date;
-    } = {},
+    input: { status?: PatientStatus; startDate?: Date; endDate?: Date } = {},
   ): Promise<number> {
     const { status, startDate, endDate } = input;
 
@@ -270,10 +270,7 @@ export class PatientsRepository {
   }
 
   public async getTotalReferredPatients(
-    input: {
-      startDate?: Date;
-      endDate?: Date;
-    } = {},
+    input: { startDate?: Date; endDate?: Date } = {},
   ): Promise<number> {
     const { startDate, endDate } = input;
 
@@ -294,5 +291,55 @@ export class PatientsRepository {
     }
 
     return await this.patientsRepository.count({ where });
+  }
+
+  public async getReferredPatientsByState(
+    input: { startDate?: Date; endDate?: Date; limit?: number } = {},
+  ): Promise<{ states: StateReferredPatients[]; total: number }> {
+    const { startDate, endDate, limit = 10 } = input;
+
+    const createQueryBuilder = (): SelectQueryBuilder<Patient> => {
+      return this.patientsRepository
+        .createQueryBuilder('patient')
+        .innerJoin('patient.referrals', 'referral')
+        .where('referral.referred_to IS NOT NULL')
+        .andWhere('referral.referred_to != :empty', { empty: '' });
+    };
+
+    function getQueryBuilderWithFilters(
+      queryBuilder: SelectQueryBuilder<Patient>,
+    ) {
+      if (startDate && endDate) {
+        queryBuilder.andWhere('referral.date BETWEEN :start AND :end', {
+          start: startDate,
+          end: endDate,
+        });
+      }
+
+      return queryBuilder;
+    }
+
+    const stateListQuery = getQueryBuilderWithFilters(
+      createQueryBuilder()
+        .select('patient.state', 'state')
+        .addSelect('COUNT(DISTINCT patient.id)', 'total')
+        .groupBy('patient.state')
+        .orderBy('COUNT(DISTINCT patient.id)', 'DESC')
+        .limit(limit),
+    );
+
+    const totalStatesQuery = getQueryBuilderWithFilters(
+      createQueryBuilder().select('COUNT(DISTINCT patient.state)', 'total'),
+    );
+
+    const [states, totalResult] = await Promise.all([
+      stateListQuery.getRawMany<StateReferredPatients>(),
+      totalStatesQuery.getRawOne<{ total: string }>(),
+    ]);
+
+    return {
+      states,
+      total: Number(totalResult?.total || 0),
+    };
   }
 }

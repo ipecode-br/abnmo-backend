@@ -11,7 +11,7 @@ import {
 
 import {
   BRAZILIAN_STATES,
-  type BrazilianStateType,
+  type BrazilianState,
 } from '@/constants/brazilian-states';
 import { User } from '@/domain/entities/user';
 
@@ -48,7 +48,7 @@ export class Patient implements PatientSchema {
   cpf: string;
 
   @Column({ type: 'enum', enum: BRAZILIAN_STATES })
-  state: BrazilianStateType;
+  state: BrazilianState;
 
   @Column({ type: 'varchar', length: 50 })
   city: string;

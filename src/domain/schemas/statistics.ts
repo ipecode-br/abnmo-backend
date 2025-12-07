@@ -1,12 +1,14 @@
 import { z } from 'zod';
 
+import { BRAZILIAN_STATES } from '@/constants/brazilian-states';
+
 import { baseResponseSchema } from './base';
 import { GENDERS } from './patient';
 import { baseQuerySchema } from './query';
 
 // Patients
 
-export const PATIENTS_STATISTIC_FIELDS = ['gender', 'city'] as const;
+export const PATIENTS_STATISTIC_FIELDS = ['gender', 'city', 'state'] as const;
 export type PatientsStatisticField = (typeof PATIENTS_STATISTIC_FIELDS)[number];
 
 export const getTotalPatientsByStatusResponseSchema = baseResponseSchema.extend(
@@ -22,7 +24,7 @@ export type GetTotalPatientsByStatusResponse = z.infer<
   typeof getTotalPatientsByStatusResponseSchema
 >;
 
-export const getPatientsByPeriodSchema = baseQuerySchema
+export const getPatientsByPeriodQuerySchema = baseQuerySchema
   .pick({
     period: true,
     limit: true,
@@ -66,10 +68,10 @@ export type GetPatientsByCityResponse = z.infer<
   typeof getPatientsByCityResponseSchema
 >;
 
+// Referrals
+
 export const getTotalReferralsAndReferredPatientsPercentageQuerySchema =
-  baseQuerySchema.pick({
-    period: true,
-  });
+  baseQuerySchema.pick({ period: true });
 
 export const getTotalReferralsAndReferredPatientsPercentageResponseSchema =
   baseResponseSchema.extend({
@@ -80,4 +82,25 @@ export const getTotalReferralsAndReferredPatientsPercentageResponseSchema =
   });
 export type GetTotalReferralsAndReferredPatientsPercentageResponse = z.infer<
   typeof getTotalReferralsAndReferredPatientsPercentageResponseSchema
+>;
+
+export const getReferredPatientsByStateQuerySchema = baseQuerySchema.pick({
+  period: true,
+});
+
+export const stateReferredPatientsSchema = z.object({
+  state: z.enum(BRAZILIAN_STATES),
+  total: z.number(),
+});
+export type StateReferredPatients = z.infer<typeof stateReferredPatientsSchema>;
+
+export const getReferredPatientsByStateResponseSchema =
+  baseResponseSchema.extend({
+    data: z.object({
+      states: z.array(stateReferredPatientsSchema),
+      total: z.number(),
+    }),
+  });
+export type GetReferredPatientsByStateResponse = z.infer<
+  typeof getReferredPatientsByStateResponseSchema
 >;

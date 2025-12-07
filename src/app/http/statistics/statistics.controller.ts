@@ -5,6 +5,7 @@ import { Roles } from '@/common/decorators/roles.decorator';
 import type {
   GetPatientsByCityResponse,
   GetPatientsByGenderResponse,
+  GetReferredPatientsByStateResponse,
   GetTotalReferralsAndReferredPatientsPercentageResponse,
   PatientsByCity,
   PatientsByGender,
@@ -12,6 +13,7 @@ import type {
 
 import {
   GetPatientsByPeriodQuery,
+  GetReferredPatientsByStateQuery,
   GetTotalReferralsAndReferredPatientsPercentageQuery,
 } from './statistics.dtos';
 import { StatisticsService } from './statistics.service';
@@ -72,7 +74,7 @@ export class StatisticsController {
     };
   }
 
-  @Get('referrals/total')
+  @Get('referrals-total')
   @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Estatísticas do total de encaminhamentos' })
   async getTotalReferralsAndReferredPatientsPercentage(
@@ -88,6 +90,25 @@ export class StatisticsController {
       message:
         'Estatísticas com total de encaminhamentos retornada com sucesso.',
       data,
+    };
+  }
+
+  @Get('referrals-by-state')
+  @Roles(['manager', 'nurse'])
+  @ApiOperation({
+    summary: 'Lista com o total de pacientes encaminhados por estado',
+  })
+  async getReferredPatientsByState(
+    @Query() query: GetReferredPatientsByStateQuery,
+  ): Promise<GetReferredPatientsByStateResponse> {
+    const { states, total } =
+      await this.statisticsService.getReferredPatientsByState(query);
+
+    return {
+      success: true,
+      message:
+        'Lista com o total de pacientes encaminhados por estado retornada com sucesso.',
+      data: { states, total },
     };
   }
 }
