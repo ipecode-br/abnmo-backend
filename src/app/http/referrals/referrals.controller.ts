@@ -17,23 +17,25 @@ import { UserSchema } from '@/domain/schemas/user';
 
 import { CreateReferralDto, GetReferralsQuery } from './referrals.dtos';
 import { ReferralsService } from './referrals.service';
+import { CreateReferralUseCase } from './use-cases/create-referrals-use-case';
 import { GetReferralsUseCase } from './use-cases/get-referrals-use-case';
 
 @ApiTags('Encaminhamentos')
 @Controller('referrals')
 export class ReferralsController {
   constructor(
-    private readonly getReferrals: GetReferralsUseCase,
+    private readonly getReferralsUseCase: GetReferralsUseCase,
+    private readonly createReferralUseCase: CreateReferralUseCase,
     private readonly referralsService: ReferralsService,
   ) {}
 
   @Get()
   @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Lista encaminhamentos cadastrados no sistema' })
-  async handleGetReferrals(
+  async getReferrals(
     @Query() query: GetReferralsQuery,
   ): Promise<GetReferralsResponseSchema> {
-    const data = await this.getReferrals.execute({ query });
+    const data = await this.getReferralsUseCase.execute({ query });
 
     return {
       success: true,
@@ -44,19 +46,22 @@ export class ReferralsController {
 
   @Post()
   @Roles(['manager', 'nurse'])
-  @ApiOperation({ summary: 'Cadastra novo encaminhamento.' })
+  @ApiOperation({ summary: 'Cadastra um novo encaminhamento' })
   async create(
     @Body() createReferralDto: CreateReferralDto,
     @CurrentUser() currentUser: UserSchema,
   ): Promise<BaseResponseSchema> {
-    await this.referralsService.create(createReferralDto, currentUser.id);
+    await this.createReferralUseCase.execute({
+      createReferralDto,
+      userId: currentUser.id,
+    });
 
     return { success: true, message: 'Encaminhamento cadastrado com sucesso.' };
   }
 
   @Patch(':id/cancel')
   @Roles(['nurse', 'manager', 'specialist'])
-  @ApiOperation({ summary: 'Cancela um encaminhamento.' })
+  @ApiOperation({ summary: 'Cancela um encaminhamento' })
   async cancel(
     @Param('id') id: string,
     @CurrentUser() user: UserSchema,

@@ -16,7 +16,7 @@ export const referralSchema = z
     date: z.coerce.date(),
     category: z.enum(REFERRAL_CATEGORIES),
     condition: z.enum(PATIENT_CONDITIONS),
-    annotation: z.string().max(500).nullable(),
+    annotation: z.string().max(2000).nullable(),
     status: z.enum(REFERRAL_STATUSES).default('scheduled'),
     referred_to: z.string().nullable(),
     referred_by: z.string().uuid().nullable(),

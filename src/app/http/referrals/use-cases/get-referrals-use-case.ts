@@ -18,9 +18,7 @@ interface GetReferralsUseCaseRequest {
   query: GetReferralsQuery;
 }
 
-type GetReferralsUseCaseRequestResponse = Promise<
-  GetReferralsResponseSchema['data']
->;
+type GetReferralsUseCaseResponse = Promise<GetReferralsResponseSchema['data']>;
 
 @Injectable()
 export class GetReferralsUseCase {
@@ -31,7 +29,7 @@ export class GetReferralsUseCase {
 
   async execute({
     query,
-  }: GetReferralsUseCaseRequest): GetReferralsUseCaseRequestResponse {
+  }: GetReferralsUseCaseRequest): GetReferralsUseCaseResponse {
     const { orderBy, page, perPage, category, condition, order, search } =
       query;
 
