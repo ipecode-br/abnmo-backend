@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import type {
   GetTotalPatientsByStatusResponse,
   PatientsStatisticField,
-  TotalReferredPatientsByState,
+  StateReferredPatients,
 } from '@/domain/schemas/statistics';
 import { UtilsService } from '@/utils/utils.service';
 
@@ -11,8 +11,8 @@ import { PatientsRepository } from '../patients/patients.repository';
 import { ReferralsRepository } from '../referrals/referrals.repository';
 import type {
   GetPatientsByPeriodQuery,
+  GetReferredPatientsByStateQuery,
   GetTotalReferralsAndReferredPatientsPercentageQuery,
-  GetTotalReferredPatientsByStateQuery,
 } from './statistics.dtos';
 
 @Injectable()
@@ -70,13 +70,13 @@ export class StatisticsService {
   }
 
   async getReferredPatientsByState(
-    query: GetTotalReferredPatientsByStateQuery,
-  ): Promise<{ states: TotalReferredPatientsByState[]; total: number }> {
+    query: GetReferredPatientsByStateQuery,
+  ): Promise<{ states: StateReferredPatients[]; total: number }> {
     const { startDate, endDate } = this.utilsService.getDateRangeForPeriod(
       query.period,
     );
 
-    return await this.patientsRepository.getTotalReferredPatientsByState({
+    return await this.patientsRepository.getReferredPatientsByState({
       startDate,
       endDate,
     });

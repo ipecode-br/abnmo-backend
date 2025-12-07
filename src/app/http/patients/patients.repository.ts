@@ -19,7 +19,7 @@ import type {
 } from '@/domain/schemas/patient';
 import type {
   PatientsStatisticField,
-  TotalReferredPatientsByState,
+  StateReferredPatients,
 } from '@/domain/schemas/statistics';
 
 import type { GetPatientsByPeriodQuery } from '../statistics/statistics.dtos';
@@ -293,9 +293,9 @@ export class PatientsRepository {
     return await this.patientsRepository.count({ where });
   }
 
-  public async getTotalReferredPatientsByState(
+  public async getReferredPatientsByState(
     input: { startDate?: Date; endDate?: Date; limit?: number } = {},
-  ): Promise<{ states: TotalReferredPatientsByState[]; total: number }> {
+  ): Promise<{ states: StateReferredPatients[]; total: number }> {
     const { startDate, endDate, limit = 10 } = input;
 
     const createQueryBuilder = (): SelectQueryBuilder<Patient> => {
@@ -333,7 +333,7 @@ export class PatientsRepository {
     );
 
     const [states, totalResult] = await Promise.all([
-      stateListQuery.getRawMany<TotalReferredPatientsByState>(),
+      stateListQuery.getRawMany<StateReferredPatients>(),
       totalStatesQuery.getRawOne<{ total: string }>(),
     ]);
 

@@ -84,27 +84,23 @@ export type GetTotalReferralsAndReferredPatientsPercentageResponse = z.infer<
   typeof getTotalReferralsAndReferredPatientsPercentageResponseSchema
 >;
 
-export const getTotalReferredPatientsByStateQuerySchema = baseQuerySchema.pick({
+export const getReferredPatientsByStateQuerySchema = baseQuerySchema.pick({
   period: true,
 });
 
-export const totalReferredPatientsByStateSchema = z
-  .object({
-    state: z.enum(BRAZILIAN_STATES),
-    total: z.number(),
-  })
-  .strict();
-export type TotalReferredPatientsByState = z.infer<
-  typeof totalReferredPatientsByStateSchema
->;
+export const stateReferredPatientsSchema = z.object({
+  state: z.enum(BRAZILIAN_STATES),
+  total: z.number(),
+});
+export type StateReferredPatients = z.infer<typeof stateReferredPatientsSchema>;
 
-export const getTotalReferredPatientsByStateResponseSchema =
+export const getReferredPatientsByStateResponseSchema =
   baseResponseSchema.extend({
     data: z.object({
-      states: z.array(totalReferredPatientsByStateSchema),
+      states: z.array(stateReferredPatientsSchema),
       total: z.number(),
     }),
   });
-export type GetTotalReferredPatientsByStateResponse = z.infer<
-  typeof getTotalReferredPatientsByStateResponseSchema
+export type GetReferredPatientsByStateResponse = z.infer<
+  typeof getReferredPatientsByStateResponseSchema
 >;
