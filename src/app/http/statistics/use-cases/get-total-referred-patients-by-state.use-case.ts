@@ -3,22 +3,22 @@ import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository, SelectQueryBuilder } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
-import type { StateReferredPatients } from '@/domain/schemas/statistics';
+import type { TotalReferredPatientsByStateSchema } from '@/domain/schemas/statistics/responses';
 import { UtilsService } from '@/utils/utils.service';
 
 import type { GetReferredPatientsByStateQuery } from '../statistics.dtos';
 
-interface GetReferredPatientsByStateUseCaseRequest {
+interface GetTotalReferredPatientsByStateUseCaseRequest {
   query: GetReferredPatientsByStateQuery;
 }
 
-type GetReferredPatientsByStateUseCaseResponse = Promise<{
-  states: StateReferredPatients[];
+type GetTotalReferredPatientsByStateUseCaseResponse = Promise<{
+  states: TotalReferredPatientsByStateSchema[];
   total: number;
 }>;
 
 @Injectable()
-export class GetReferredPatientsByStateUseCase {
+export class GetTotalReferredPatientsByStateUseCase {
   constructor(
     @InjectRepository(Patient)
     private readonly patientsRepository: Repository<Patient>,
@@ -27,7 +27,7 @@ export class GetReferredPatientsByStateUseCase {
 
   async execute({
     query,
-  }: GetReferredPatientsByStateUseCaseRequest): GetReferredPatientsByStateUseCaseResponse {
+  }: GetTotalReferredPatientsByStateUseCaseRequest): GetTotalReferredPatientsByStateUseCaseResponse {
     const { startDate, endDate } = this.utilsService.getDateRangeForPeriod(
       query.period,
     );
@@ -67,7 +67,7 @@ export class GetReferredPatientsByStateUseCase {
     );
 
     const [states, totalResult] = await Promise.all([
-      stateListQuery.getRawMany<StateReferredPatients>(),
+      stateListQuery.getRawMany<TotalReferredPatientsByStateSchema>(),
       totalStatesQuery.getRawOne<{ total: string }>(),
     ]);
 

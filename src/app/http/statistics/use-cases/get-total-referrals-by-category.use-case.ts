@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository, SelectQueryBuilder } from 'typeorm';
 
 import { Referral } from '@/domain/entities/referral';
-import type { CategoryTotalReferrals } from '@/domain/schemas/statistics';
+import type { TotalReferralsByCategory } from '@/domain/schemas/statistics/responses';
 import { UtilsService } from '@/utils/utils.service';
 
 import type { GetTotalReferralsByCategoryQuery } from '../statistics.dtos';
@@ -13,7 +13,7 @@ interface GetTotalReferralsByCategoryUseCaseRequest {
 }
 
 type GetTotalReferralsByCategoryUseCaseResponse = Promise<{
-  categories: CategoryTotalReferrals[];
+  categories: TotalReferralsByCategory[];
   total: number;
 }>;
 
@@ -63,7 +63,7 @@ export class GetTotalReferralsByCategoryUseCase {
     );
 
     const [categories, totalResult] = await Promise.all([
-      categoryListQuery.getRawMany<CategoryTotalReferrals>(),
+      categoryListQuery.getRawMany<TotalReferralsByCategory>(),
       totalCategoriesQuery.getRawOne<{ total: string }>(),
     ]);
 

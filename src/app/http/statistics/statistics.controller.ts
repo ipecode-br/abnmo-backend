@@ -8,34 +8,38 @@ import type {
   GetReferredPatientsByStateResponse,
   GetTotalReferralsAndReferredPatientsPercentageResponse,
   GetTotalReferralsByCategoryResponse,
-  PatientsByCity,
-  PatientsByGender,
-} from '@/domain/schemas/statistics';
+  TotalPatientsByCity,
+  TotalPatientsByGender,
+} from '@/domain/schemas/statistics/responses';
 
 import {
-  GetPatientsByPeriodQuery,
   GetReferredPatientsByStateQuery,
+  GetTotalPatientsByFieldQuery,
   GetTotalReferralsAndReferredPatientsPercentageQuery,
   GetTotalReferralsByCategoryQuery,
 } from './statistics.dtos';
-import { StatisticsService } from './statistics.service';
-import { GetReferredPatientsByStateUseCase } from './use-cases/get-referred-patients-by-state.use-case';
+import { GetTotalPatientsByFieldUseCase } from './use-cases/get-total-patients-by-field.use-case';
+import { GetTotalPatientsByStatusUseCase } from './use-cases/get-total-patients-by-status.use-case';
+import { GetTotalReferralsAndReferredPatientsPercentageUseCase } from './use-cases/get-total-referrals-and-referred-patients-percentage.use-case';
 import { GetTotalReferralsByCategoryUseCase } from './use-cases/get-total-referrals-by-category.use-case';
+import { GetTotalReferredPatientsByStateUseCase } from './use-cases/get-total-referred-patients-by-state.use-case';
 
 @ApiTags('Estatísticas')
+@Roles(['manager', 'nurse'])
 @Controller('statistics')
 export class StatisticsController {
   constructor(
-    private readonly statisticsService: StatisticsService,
-    private readonly getReferredPatientsByStateUseCase: GetReferredPatientsByStateUseCase,
+    private readonly getTotalPatientsByStatusUseCase: GetTotalPatientsByStatusUseCase,
+    private readonly getTotalPatientsByPeriodUseCase: GetTotalPatientsByFieldUseCase,
+    private readonly getTotalReferredPatientsByStateUseCase: GetTotalReferredPatientsByStateUseCase,
     private readonly getTotalReferralsByCategoryUseCase: GetTotalReferralsByCategoryUseCase,
+    private readonly getTotalReferralsAndReferredPatientsPercentageUseCase: GetTotalReferralsAndReferredPatientsPercentageUseCase,
   ) {}
 
-  @Get('patients/total')
-  @Roles(['manager', 'nurse'])
+  @Get('patients-total')
   @ApiOperation({ summary: 'Estatísticas totais de pacientes' })
   async getPatientsTotal() {
-    const data = await this.statisticsService.getPatientsTotal();
+    const data = await this.getTotalPatientsByStatusUseCase.execute();
 
     return {
       success: true,
@@ -45,15 +49,16 @@ export class StatisticsController {
   }
 
   @Get('patients-by-gender')
-  @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Estatísticas de pacientes por gênero' })
   async getPatientsByGender(
-    @Query() query: GetPatientsByPeriodQuery,
+    @Query() query: GetTotalPatientsByFieldQuery,
   ): Promise<GetPatientsByGenderResponse> {
     const { items: genders, total } =
-      await this.statisticsService.getPatientsByPeriod<PatientsByGender>(
-        'gender',
-        query,
+      await this.getTotalPatientsByPeriodUseCase.execute<TotalPatientsByGender>(
+        {
+          field: 'gender',
+          query,
+        },
       );
 
     return {
@@ -64,16 +69,15 @@ export class StatisticsController {
   }
 
   @Get('patients-by-city')
-  @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Estatísticas de pacientes por cidade' })
   async getPatientsByCity(
-    @Query() query: GetPatientsByPeriodQuery,
+    @Query() query: GetTotalPatientsByFieldQuery,
   ): Promise<GetPatientsByCityResponse> {
     const { items: cities, total } =
-      await this.statisticsService.getPatientsByPeriod<PatientsByCity>(
-        'city',
+      await this.getTotalPatientsByPeriodUseCase.execute<TotalPatientsByCity>({
+        field: 'city',
         query,
-      );
+      });
 
     return {
       success: true,
@@ -83,15 +87,14 @@ export class StatisticsController {
   }
 
   @Get('referrals-total')
-  @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Estatísticas do total de encaminhamentos' })
   async getTotalReferralsAndReferredPatientsPercentage(
     @Query() query: GetTotalReferralsAndReferredPatientsPercentageQuery,
   ): Promise<GetTotalReferralsAndReferredPatientsPercentageResponse> {
     const data =
-      await this.statisticsService.getTotalReferralsAndReferredPatientsPercentage(
+      await this.getTotalReferralsAndReferredPatientsPercentageUseCase.execute({
         query,
-      );
+      });
 
     return {
       success: true,
@@ -102,7 +105,6 @@ export class StatisticsController {
   }
 
   @Get('referrals-by-category')
-  @Roles(['manager', 'nurse'])
   @ApiOperation({
     summary: 'Lista com o total de encaminhamentos por categoria',
   })
@@ -121,7 +123,6 @@ export class StatisticsController {
   }
 
   @Get('referrals-by-state')
-  @Roles(['manager', 'nurse'])
   @ApiOperation({
     summary: 'Lista com o total de pacientes encaminhados por estado',
   })
@@ -129,7 +130,7 @@ export class StatisticsController {
     @Query() query: GetReferredPatientsByStateQuery,
   ): Promise<GetReferredPatientsByStateResponse> {
     const { states, total } =
-      await this.getReferredPatientsByStateUseCase.execute({ query });
+      await this.getTotalReferredPatientsByStateUseCase.execute({ query });
 
     return {
       success: true,
