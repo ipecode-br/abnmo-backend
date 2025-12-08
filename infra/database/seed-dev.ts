@@ -4,6 +4,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import {
+  REFERRAL_CATEGORIES,
+  REFERRAL_STATUSES,
+} from '@/domain/enums/referrals';
+import {
   APPOINTMENT_CONDITION,
   APPOINTMENT_STATUS,
 } from '@/domain/schemas/appointment';
@@ -16,10 +20,6 @@ import {
   PATIENT_REQUIREMENT_STATUS,
   PATIENT_REQUIREMENT_TYPE,
 } from '@/domain/schemas/patient-requirement';
-import {
-  REFERRAL_CATEGORIES,
-  REFERRAL_STATUSES,
-} from '@/domain/schemas/referral';
 import { SPECIALIST_STATUS } from '@/domain/schemas/specialist';
 import { USER_ROLES } from '@/domain/schemas/user';
 
@@ -258,6 +258,10 @@ async function main() {
           annotation: faker.datatype.boolean() ? faker.lorem.sentence() : null,
           referred_to: faker.person.fullName(),
           referred_by: faker.string.uuid(),
+          created_at: faker.date.between({
+            from: fourMonthsAgo,
+            to: new Date(),
+          }),
         });
         await referralRepository.save(referral);
       }

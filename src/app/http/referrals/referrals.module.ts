@@ -1,17 +1,24 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { Patient } from '@/domain/entities/patient';
 import { Referral } from '@/domain/entities/referral';
 
-import { PatientsModule } from '../patients/patients.module';
 import { ReferralsController } from './referrals.controller';
-import { ReferralsRepository } from './referrals.repository';
-import { ReferralsService } from './referrals.service';
+import { CancelReferralUseCase } from './use-cases/cancel-referral.use-case';
+import { CreateReferralUseCase } from './use-cases/create-referrals.use-case';
+import { GetReferralsUseCase } from './use-cases/get-referrals.use-case';
 
 @Module({
-  imports: [PatientsModule, TypeOrmModule.forFeature([Referral])],
+  imports: [
+    TypeOrmModule.forFeature([Referral]),
+    TypeOrmModule.forFeature([Patient]),
+  ],
   controllers: [ReferralsController],
-  providers: [ReferralsService, ReferralsRepository],
-  exports: [ReferralsService, ReferralsRepository],
+  providers: [
+    GetReferralsUseCase,
+    CreateReferralUseCase,
+    CancelReferralUseCase,
+  ],
 })
 export class ReferralsModule {}

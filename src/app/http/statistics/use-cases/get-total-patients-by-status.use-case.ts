@@ -1,0 +1,40 @@
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import type { Repository } from 'typeorm';
+
+import { Patient } from '@/domain/entities/patient';
+import type { GetTotalPatientsByStatusResponse } from '@/domain/schemas/statistics/responses';
+
+type GetTotalPatientsByStatusUseCaseResponse = Promise<
+  GetTotalPatientsByStatusResponse['data']
+>;
+
+@Injectable()
+export class GetTotalPatientsByStatusUseCase {
+  constructor(
+    @InjectRepository(Patient)
+    private readonly patientsRepository: Repository<Patient>,
+  ) {}
+
+  async execute(): GetTotalPatientsByStatusUseCaseResponse {
+    const queryBuilder = await this.patientsRepository
+      .createQueryBuilder('patient')
+      .select('COUNT(patient.id)', 'total')
+      .where('patient.status != :status', { status: 'pending' })
+      .addSelect(
+        `SUM(CASE WHEN patient.status = 'active' THEN 1 ELSE 0 END)`,
+        'active',
+      )
+      .addSelect(
+        `SUM(CASE WHEN patient.status = 'inactive' THEN 1 ELSE 0 END)`,
+        'inactive',
+      )
+      .getRawOne<{ total: string; active: string; inactive: string }>();
+
+    return {
+      total: Number(queryBuilder?.total ?? 0),
+      active: Number(queryBuilder?.active ?? 0),
+      inactive: Number(queryBuilder?.inactive ?? 0),
+    };
+  }
+}

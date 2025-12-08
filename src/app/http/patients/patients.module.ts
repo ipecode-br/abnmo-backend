@@ -19,6 +19,6 @@ import { PatientsService } from './patients.service';
   ],
   controllers: [PatientsController],
   providers: [PatientsService, PatientsRepository],
-  exports: [PatientsRepository],
+  exports: [PatientsRepository, TypeOrmModule.forFeature([Patient])],
 })
 export class PatientsModule {}
