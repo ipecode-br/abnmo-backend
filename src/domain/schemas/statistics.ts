@@ -109,6 +109,7 @@ export type GetReferredPatientsByStateResponse = z.infer<
 
 export const getTotalReferralsByCategoryQuerySchema = baseQuerySchema.pick({
   period: true,
+  limit: true,
 });
 
 export const categoryTotalReferralsSchema = z.object({
