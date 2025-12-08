@@ -19,11 +19,15 @@ import {
   GetTotalReferralsByCategoryQuery,
 } from './statistics.dtos';
 import { StatisticsService } from './statistics.service';
+import { GetReferredPatientsByStateUseCase } from './use-cases/get-referred-patients-by-state.use-case';
 
 @ApiTags('Estatísticas')
 @Controller('statistics')
 export class StatisticsController {
-  constructor(private readonly statisticsService: StatisticsService) {}
+  constructor(
+    private readonly statisticsService: StatisticsService,
+    private readonly getReferredPatientsByStateUseCase: GetReferredPatientsByStateUseCase,
+  ) {}
 
   @Get('patients/total')
   @Roles(['manager', 'nurse'])
@@ -123,7 +127,7 @@ export class StatisticsController {
     @Query() query: GetReferredPatientsByStateQuery,
   ): Promise<GetReferredPatientsByStateResponse> {
     const { states, total } =
-      await this.statisticsService.getReferredPatientsByState(query);
+      await this.getReferredPatientsByStateUseCase.execute({ query });
 
     return {
       success: true,

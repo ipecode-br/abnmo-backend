@@ -87,6 +87,7 @@ export type GetTotalReferralsAndReferredPatientsPercentageResponse = z.infer<
 
 export const getReferredPatientsByStateQuerySchema = baseQuerySchema.pick({
   period: true,
+  limit: true,
 });
 
 export const stateReferredPatientsSchema = z.object({

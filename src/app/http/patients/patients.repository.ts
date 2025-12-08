@@ -8,7 +8,6 @@ import {
   MoreThanOrEqual,
   Not,
   Repository,
-  type SelectQueryBuilder,
 } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
@@ -17,10 +16,7 @@ import type {
   PatientStatus,
   PatientType,
 } from '@/domain/schemas/patient';
-import type {
-  PatientsStatisticField,
-  StateReferredPatients,
-} from '@/domain/schemas/statistics';
+import type { PatientsStatisticField } from '@/domain/schemas/statistics';
 
 import type { GetPatientsByPeriodQuery } from '../statistics/statistics.dtos';
 import { CreatePatientDto, FindAllPatientQueryDto } from './patients.dtos';
@@ -291,55 +287,5 @@ export class PatientsRepository {
     }
 
     return await this.patientsRepository.count({ where });
-  }
-
-  public async getReferredPatientsByState(
-    input: { startDate?: Date; endDate?: Date; limit?: number } = {},
-  ): Promise<{ states: StateReferredPatients[]; total: number }> {
-    const { startDate, endDate, limit = 10 } = input;
-
-    const createQueryBuilder = (): SelectQueryBuilder<Patient> => {
-      return this.patientsRepository
-        .createQueryBuilder('patient')
-        .innerJoin('patient.referrals', 'referral')
-        .where('referral.referred_to IS NOT NULL')
-        .andWhere('referral.referred_to != :empty', { empty: '' });
-    };
-
-    function getQueryBuilderWithFilters(
-      queryBuilder: SelectQueryBuilder<Patient>,
-    ) {
-      if (startDate && endDate) {
-        queryBuilder.andWhere('referral.date BETWEEN :start AND :end', {
-          start: startDate,
-          end: endDate,
-        });
-      }
-
-      return queryBuilder;
-    }
-
-    const stateListQuery = getQueryBuilderWithFilters(
-      createQueryBuilder()
-        .select('patient.state', 'state')
-        .addSelect('COUNT(DISTINCT patient.id)', 'total')
-        .groupBy('patient.state')
-        .orderBy('COUNT(DISTINCT patient.id)', 'DESC')
-        .limit(limit),
-    );
-
-    const totalStatesQuery = getQueryBuilderWithFilters(
-      createQueryBuilder().select('COUNT(DISTINCT patient.state)', 'total'),
-    );
-
-    const [states, totalResult] = await Promise.all([
-      stateListQuery.getRawMany<StateReferredPatients>(),
-      totalStatesQuery.getRawOne<{ total: string }>(),
-    ]);
-
-    return {
-      states,
-      total: Number(totalResult?.total || 0),
-    };
   }
 }

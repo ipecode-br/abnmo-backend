@@ -16,9 +16,9 @@ import type { GetReferralsResponseSchema } from '@/domain/schemas/referral';
 import { UserSchema } from '@/domain/schemas/user';
 
 import { CreateReferralDto, GetReferralsQuery } from './referrals.dtos';
-import { CancelReferralUseCase } from './use-cases/cancel-referral-use-case';
-import { CreateReferralUseCase } from './use-cases/create-referrals-use-case';
-import { GetReferralsUseCase } from './use-cases/get-referrals-use-case';
+import { CancelReferralUseCase } from './use-cases/cancel-referral.use-case';
+import { CreateReferralUseCase } from './use-cases/create-referrals.use-case';
+import { GetReferralsUseCase } from './use-cases/get-referrals.use-case';
 
 @ApiTags('Encaminhamentos')
 @Controller('referrals')
