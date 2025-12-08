@@ -1,24 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  Between,
-  type FindOptionsWhere,
-  IsNull,
-  LessThanOrEqual,
-  MoreThanOrEqual,
-  Not,
-  Repository,
-} from 'typeorm';
+import { Repository } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
-import type {
-  PatientOrderBy,
-  PatientStatus,
-  PatientType,
-} from '@/domain/schemas/patient';
-import type { PatientsStatisticField } from '@/domain/schemas/statistics';
+import type { PatientOrderBy, PatientType } from '@/domain/schemas/patient';
 
-import type { GetPatientsByPeriodQuery } from '../statistics/statistics.dtos';
 import { CreatePatientDto, FindAllPatientQueryDto } from './patients.dtos';
 
 @Injectable()
@@ -172,120 +158,5 @@ export class PatientsRepository {
 
   public async deactivate(id: string): Promise<Patient> {
     return this.patientsRepository.save({ id, status: 'inactive' });
-  }
-
-  public async getTotalPatientsByStatus(): Promise<{
-    total: number;
-    active: number;
-    inactive: number;
-  }> {
-    const queryBuilder = await this.patientsRepository
-      .createQueryBuilder('patient')
-      .select('COUNT(patient.id)', 'total')
-      .where('patient.status != :status', { status: 'pending' })
-      .addSelect(
-        `SUM(CASE WHEN patient.status = 'active' THEN 1 ELSE 0 END)`,
-        'active',
-      )
-      .addSelect(
-        `SUM(CASE WHEN patient.status = 'inactive' THEN 1 ELSE 0 END)`,
-        'inactive',
-      )
-      .getRawOne<{ total: string; active: string; inactive: string }>();
-
-    return {
-      total: Number(queryBuilder?.total ?? 0),
-      active: Number(queryBuilder?.active ?? 0),
-      inactive: Number(queryBuilder?.inactive ?? 0),
-    };
-  }
-
-  public async getPatientsStatisticsByPeriod<T>(
-    field: PatientsStatisticField,
-    startDate: Date,
-    endDate: Date,
-    query: GetPatientsByPeriodQuery,
-  ): Promise<{ items: T[]; total: number }> {
-    const totalQuery = this.patientsRepository
-      .createQueryBuilder('patient')
-      .select(`COUNT(DISTINCT patient.${field})`, 'total')
-      .where('patient.created_at BETWEEN :start AND :end', {
-        start: startDate,
-        end: endDate,
-      });
-
-    const totalResult = await totalQuery.getRawOne<{ total: string }>();
-    const total = Number(totalResult?.total ?? 0);
-
-    const queryBuilder = this.patientsRepository
-      .createQueryBuilder('patient')
-      .select(`patient.${field}`, field)
-      .addSelect('COUNT(patient.id)', 'total')
-      .where('patient.created_at BETWEEN :start AND :end', {
-        start: startDate,
-        end: endDate,
-      })
-      .groupBy(`patient.${field}`)
-      .orderBy('total', query.order)
-      .limit(query.limit);
-
-    if (query.withPercentage) {
-      queryBuilder.addSelect(
-        'ROUND((COUNT(*) * 100.0 / SUM(COUNT(*)) OVER()), 1)',
-        'percentage',
-      );
-    }
-
-    const items = await queryBuilder.getRawMany<T>();
-
-    return { items, total };
-  }
-
-  public async getTotalPatients(
-    input: { status?: PatientStatus; startDate?: Date; endDate?: Date } = {},
-  ): Promise<number> {
-    const { status, startDate, endDate } = input;
-
-    const where: FindOptionsWhere<Patient> = {
-      status: status ?? Not('pending'),
-    };
-
-    if (startDate && !endDate) {
-      where.created_at = MoreThanOrEqual(startDate);
-    }
-
-    if (endDate && !startDate) {
-      where.created_at = LessThanOrEqual(endDate);
-    }
-
-    if (startDate && endDate) {
-      where.created_at = Between(startDate, endDate);
-    }
-
-    return await this.patientsRepository.count({ where });
-  }
-
-  public async getTotalReferredPatients(
-    input: { startDate?: Date; endDate?: Date } = {},
-  ): Promise<number> {
-    const { startDate, endDate } = input;
-
-    const where: FindOptionsWhere<Patient> = {
-      referrals: { id: Not(IsNull()) },
-    };
-
-    if (startDate && !endDate) {
-      where.created_at = MoreThanOrEqual(startDate);
-    }
-
-    if (endDate && !startDate) {
-      where.created_at = LessThanOrEqual(endDate);
-    }
-
-    if (startDate && endDate) {
-      where.created_at = Between(startDate, endDate);
-    }
-
-    return await this.patientsRepository.count({ where });
   }
 }
