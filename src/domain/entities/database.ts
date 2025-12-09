@@ -3,7 +3,7 @@ import { Patient } from './patient';
 import { PatientRequirement } from './patient-requirement';
 import { PatientSupport } from './patient-support';
 import { Referral } from './referral';
-import { Specialist } from './specialist';
+// import { Specialist } from './specialist';
 import { Token } from './token';
 import { User } from './user';
 
@@ -13,7 +13,7 @@ export const DATABASE_ENTITIES = [
   Patient,
   PatientSupport,
   Appointment,
-  Specialist,
+  // Specialist,
   PatientRequirement,
   Referral,
 ];

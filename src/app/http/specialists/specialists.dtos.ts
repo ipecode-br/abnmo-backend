@@ -1,12 +1,12 @@
-import { createZodDto } from 'nestjs-zod';
+// import { createZodDto } from 'nestjs-zod';
 
-import {
-  findAllSpecialistQuerySchema,
-  updateSpecialistSchema,
-} from '@/domain/schemas/specialist';
+// import {
+//   findAllSpecialistQuerySchema,
+//   updateSpecialistSchema,
+// } from '@/domain/schemas/specialist';
 
-export class UpdateSpecialistDto extends createZodDto(updateSpecialistSchema) {}
+// export class UpdateSpecialistDto extends createZodDto(updateSpecialistSchema) {}
 
-export class FindAllSpecialistQueryDto extends createZodDto(
-  findAllSpecialistQuerySchema,
-) {}
+// export class FindAllSpecialistQueryDto extends createZodDto(
+//   findAllSpecialistQuerySchema,
+// ) {}
