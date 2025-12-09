@@ -10,10 +10,7 @@ import { CreateReferralUseCase } from './use-cases/create-referrals.use-case';
 import { GetReferralsUseCase } from './use-cases/get-referrals.use-case';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Referral]),
-    TypeOrmModule.forFeature([Patient]),
-  ],
+  imports: [TypeOrmModule.forFeature([Patient, Referral])],
   controllers: [ReferralsController],
   providers: [
     GetReferralsUseCase,

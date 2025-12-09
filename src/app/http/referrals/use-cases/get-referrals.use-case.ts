@@ -10,7 +10,8 @@ import {
 } from 'typeorm';
 
 import { Referral } from '@/domain/entities/referral';
-import type { GetReferralsResponseSchema } from '@/domain/schemas/referral';
+import type { ReferralOrderBy } from '@/domain/enums/referrals';
+import type { GetReferralsResponseSchema } from '@/domain/schemas/referral/responses';
 
 import { GetReferralsQuery } from '../referrals.dtos';
 
@@ -30,12 +31,24 @@ export class GetReferralsUseCase {
   async execute({
     query,
   }: GetReferralsUseCaseRequest): GetReferralsUseCaseResponse {
-    const { orderBy, page, perPage, category, condition, order, search } =
-      query;
+    const { search, status, category, condition, page, perPage } = query;
+
+    const ORDER_BY_MAPPING: Record<ReferralOrderBy, keyof Referral> = {
+      date: 'created_at',
+      patient: 'patient',
+      status: 'status',
+      category: 'category',
+      condition: 'condition',
+      professional: 'professional_name',
+    };
 
     const where: FindOptionsWhere<Referral> = {};
     const startDate = query.startDate ? new Date(query.startDate) : null;
     const endDate = query.endDate ? new Date(query.endDate) : null;
+
+    if (status) {
+      where.status = status;
+    }
 
     if (condition) {
       where.condition = condition;
@@ -61,7 +74,13 @@ export class GetReferralsUseCase {
       where.patient = { user: { name: ILike(`%${search}%`) } };
     }
 
-    const totalQuery = await this.referralsRepository.count({ where });
+    const total = await this.referralsRepository.count({ where });
+
+    const orderBy = ORDER_BY_MAPPING[query.orderBy];
+    const order =
+      orderBy === 'patient'
+        ? { patient: { user: { name: query.order } } }
+        : { [orderBy]: query.order };
 
     const referralsQuery = await this.referralsRepository.find({
       relations: { patient: { user: true } },
@@ -71,28 +90,31 @@ export class GetReferralsUseCase {
           user: { name: true, avatar_url: true },
         },
       },
-      order: { [orderBy]: order },
-      take: perPage,
       skip: (page - 1) * perPage,
+      take: perPage,
+      order,
       where,
     });
 
     const referrals = referralsQuery.map((referral) => ({
       id: referral.id,
+      patient_id: referral.patient_id,
       date: referral.date,
+      status: referral.status,
       category: referral.category,
       condition: referral.condition,
       annotation: referral.annotation,
-      status: referral.status,
-      referred_to: referral.referred_to,
+      professional_name: referral.professional_name,
+      created_by: referral.created_by,
       created_at: referral.created_at,
+      updated_at: referral.updated_at,
       patient: {
-        id: referral.patient.id,
         name: referral.patient.user.name,
+        email: referral.patient.user.email,
         avatar_url: referral.patient.user.avatar_url,
       },
     }));
 
-    return { referrals, total: totalQuery };
+    return { referrals, total };
   }
 }

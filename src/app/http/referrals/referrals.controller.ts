@@ -12,7 +12,7 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { BaseResponseSchema } from '@/domain/schemas/base';
-import type { GetReferralsResponseSchema } from '@/domain/schemas/referral';
+import type { GetReferralsResponseSchema } from '@/domain/schemas/referral/responses';
 import { UserSchema } from '@/domain/schemas/user';
 
 import { CreateReferralDto, GetReferralsQuery } from './referrals.dtos';
@@ -48,8 +48,8 @@ export class ReferralsController {
   @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Cadastra um novo encaminhamento' })
   async create(
-    @Body() createReferralDto: CreateReferralDto,
     @CurrentUser() currentUser: UserSchema,
+    @Body() createReferralDto: CreateReferralDto,
   ): Promise<BaseResponseSchema> {
     await this.createReferralUseCase.execute({
       createReferralDto,
@@ -60,7 +60,7 @@ export class ReferralsController {
   }
 
   @Patch(':id/cancel')
-  @Roles(['nurse', 'manager', 'specialist'])
+  @Roles(['nurse', 'manager'])
   @ApiOperation({ summary: 'Cancela um encaminhamento' })
   async cancel(
     @Param('id') id: string,

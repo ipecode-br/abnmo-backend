@@ -28,23 +28,23 @@ export class Referral implements ReferralSchema {
   @Column({ type: 'timestamp' })
   date: Date;
 
+  @Column({ type: 'enum', enum: REFERRAL_STATUSES, default: 'scheduled' })
+  status: ReferralStatus;
+
   @Column({ type: 'enum', enum: SPECIALTY_CATEGORIES })
   category: SpecialtyCategory;
 
   @Column({ type: 'enum', enum: PATIENT_CONDITIONS })
   condition: PatientCondition;
 
-  @Column({ type: 'enum', enum: REFERRAL_STATUSES, default: 'scheduled' })
-  status: ReferralStatus;
-
   @Column({ type: 'varchar', length: 2000, nullable: true })
   annotation: string | null;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
-  referred_to: string | null;
+  professional_name: string | null;
 
-  @Column({ type: 'uuid' })
-  referred_by: string;
+  @Column('uuid')
+  created_by: string;
 
   @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
@@ -52,7 +52,7 @@ export class Referral implements ReferralSchema {
   @UpdateDateColumn({ type: 'timestamp' })
   updated_at: Date;
 
-  @ManyToOne(() => Patient, (patient) => patient.referrals)
+  @ManyToOne(() => Patient, (patient) => patient.appointments)
   @JoinColumn({ name: 'patient_id' })
   patient: Patient;
 }
