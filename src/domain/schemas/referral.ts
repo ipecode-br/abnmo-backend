@@ -1,10 +1,7 @@
 import { z } from 'zod';
 
-import {
-  REFERRAL_CATEGORIES,
-  REFERRAL_ORDER_BY,
-  REFERRAL_STATUSES,
-} from '../enums/referrals';
+import { REFERRAL_ORDER_BY, REFERRAL_STATUSES } from '../enums/referrals';
+import { SPECIALTY_CATEGORIES } from '../enums/specialties';
 import { baseResponseSchema } from './base';
 import { PATIENT_CONDITIONS } from './patient';
 import { baseQuerySchema, QUERY_ORDER } from './query';
@@ -14,7 +11,7 @@ export const referralSchema = z
     id: z.string().uuid(),
     patient_id: z.string().uuid(),
     date: z.coerce.date(),
-    category: z.enum(REFERRAL_CATEGORIES),
+    category: z.enum(SPECIALTY_CATEGORIES),
     condition: z.enum(PATIENT_CONDITIONS),
     annotation: z.string().max(2000).nullable(),
     status: z.enum(REFERRAL_STATUSES).default('scheduled'),
@@ -45,7 +42,7 @@ export const getReferralsQuerySchema = baseQuerySchema
     perPage: true,
   })
   .extend({
-    category: z.enum(REFERRAL_CATEGORIES).optional(),
+    category: z.enum(SPECIALTY_CATEGORIES).optional(),
     condition: z.enum(PATIENT_CONDITIONS).optional(),
     order: z.enum(QUERY_ORDER).optional().default('DESC'),
     orderBy: z.enum(REFERRAL_ORDER_BY).optional().default('date'),

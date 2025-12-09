@@ -2,21 +2,22 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { Appointment } from '@/domain/entities/appointment';
+import { Patient } from '@/domain/entities/patient';
 
-import { PatientsModule } from '../patients/patients.module';
-import { SpecialistsModule } from '../specialists/specialists.module';
 import { AppointmentsController } from './appointments.controller';
-import { AppointmentsRepository } from './appointments.repository';
-import { AppointmentsService } from './appointments.service';
+import { CancelAppointmentUseCase } from './use-cases/cancel-appointment.use-case';
+import { CreateAppointmentUseCase } from './use-cases/create-appointment.use-case';
+import { GetAppointmentsUseCase } from './use-cases/get-appointments.use-case';
+import { UpdateAppointmentUseCase } from './use-cases/update-appointment.use-case';
 
 @Module({
-  imports: [
-    PatientsModule,
-    SpecialistsModule,
-    TypeOrmModule.forFeature([Appointment]),
-  ],
+  imports: [TypeOrmModule.forFeature([Appointment, Patient])],
   controllers: [AppointmentsController],
-  providers: [AppointmentsService, AppointmentsRepository],
-  exports: [AppointmentsRepository],
+  providers: [
+    GetAppointmentsUseCase,
+    CreateAppointmentUseCase,
+    UpdateAppointmentUseCase,
+    CancelAppointmentUseCase,
+  ],
 })
 export class AppointmentsModule {}

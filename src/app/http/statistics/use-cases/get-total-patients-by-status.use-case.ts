@@ -3,11 +3,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
-import type { GetTotalPatientsByStatusResponse } from '@/domain/schemas/statistics/responses';
 
-type GetTotalPatientsByStatusUseCaseResponse = Promise<
-  GetTotalPatientsByStatusResponse['data']
->;
+type GetTotalPatientsByStatusUseCaseResponse = Promise<{
+  total: number;
+  active: number;
+  inactive: number;
+}>;
 
 @Injectable()
 export class GetTotalPatientsByStatusUseCase {

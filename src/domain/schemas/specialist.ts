@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { appointmentSchema } from './appointment';
+import { appointmentSchema } from './appointments';
 import { baseResponseSchema } from './base';
 import { baseQuerySchema } from './query';
 import { userSchema } from './user';

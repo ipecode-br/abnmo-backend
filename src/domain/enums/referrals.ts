@@ -6,20 +6,6 @@ export const REFERRAL_STATUSES = [
 ] as const;
 export type ReferralStatus = (typeof REFERRAL_STATUSES)[number];
 
-export const REFERRAL_CATEGORIES = [
-  'medical_care',
-  'legal',
-  'nursing',
-  'psychology',
-  'nutrition',
-  'physical_training',
-  'social_work',
-  'psychiatry',
-  'neurology',
-  'ophthalmology',
-] as const;
-export type ReferralCategory = (typeof REFERRAL_CATEGORIES)[number];
-
 export const REFERRAL_ORDER_BY = [
   'name',
   'condition',

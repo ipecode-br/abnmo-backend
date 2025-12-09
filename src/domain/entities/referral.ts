@@ -8,12 +8,11 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
+import { REFERRAL_STATUSES, type ReferralStatus } from '../enums/referrals';
 import {
-  REFERRAL_CATEGORIES,
-  REFERRAL_STATUSES,
-  type ReferralCategory,
-  type ReferralStatus,
-} from '../enums/referrals';
+  SPECIALTY_CATEGORIES,
+  type SpecialtyCategory,
+} from '../enums/specialties';
 import { PATIENT_CONDITIONS, PatientCondition } from '../schemas/patient';
 import { ReferralSchema } from '../schemas/referral';
 import { Patient } from './patient';
@@ -29,8 +28,8 @@ export class Referral implements ReferralSchema {
   @Column({ type: 'timestamp' })
   date: Date;
 
-  @Column({ type: 'enum', enum: REFERRAL_CATEGORIES })
-  category: ReferralCategory;
+  @Column({ type: 'enum', enum: SPECIALTY_CATEGORIES })
+  category: SpecialtyCategory;
 
   @Column({ type: 'enum', enum: PATIENT_CONDITIONS })
   condition: PatientCondition;
@@ -38,7 +37,7 @@ export class Referral implements ReferralSchema {
   @Column({ type: 'enum', enum: REFERRAL_STATUSES, default: 'scheduled' })
   status: ReferralStatus;
 
-  @Column({ type: 'varchar', length: 500, nullable: true })
+  @Column({ type: 'varchar', length: 2000, nullable: true })
   annotation: string | null;
 
   @Column({ type: 'varchar', length: 255, nullable: true })

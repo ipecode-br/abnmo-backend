@@ -9,14 +9,16 @@ import {
 } from 'typeorm';
 
 import {
-  APPOINTMENT_CONDITION,
-  APPOINTMENT_STATUS,
-  AppointmentConditionType,
-  AppointmentSchema,
-  AppointmentStatusType,
-} from '../schemas/appointment';
+  APPOINTMENT_STATUSES,
+  type AppointmentStatus,
+} from '../enums/appointments';
+import {
+  SPECIALTY_CATEGORIES,
+  type SpecialtyCategory,
+} from '../enums/specialties';
+import type { AppointmentSchema } from '../schemas/appointments';
+import { PATIENT_CONDITIONS, type PatientCondition } from '../schemas/patient';
 import { Patient } from './patient';
-import { Specialist } from './specialist';
 
 @Entity('appointments')
 export class Appointment implements AppointmentSchema {
@@ -26,20 +28,26 @@ export class Appointment implements AppointmentSchema {
   @Column('uuid')
   patient_id: string;
 
-  @Column('uuid')
-  specialist_id: string;
-
-  @Column({ type: 'date' })
+  @Column({ type: 'timestamp' })
   date: Date;
 
-  @Column({ type: 'enum', enum: APPOINTMENT_STATUS })
-  status: AppointmentStatusType;
+  @Column({ type: 'enum', enum: APPOINTMENT_STATUSES, default: 'scheduled' })
+  status: AppointmentStatus;
 
-  @Column({ type: 'enum', enum: APPOINTMENT_CONDITION, nullable: true })
-  condition: AppointmentConditionType | null;
+  @Column({ type: 'enum', enum: SPECIALTY_CATEGORIES })
+  category: SpecialtyCategory;
+
+  @Column({ type: 'enum', enum: PATIENT_CONDITIONS })
+  condition: PatientCondition;
 
   @Column({ type: 'varchar', length: 500, nullable: true })
   annotation: string | null;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  professional_name: string | null;
+
+  @Column('uuid')
+  created_by: string;
 
   @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
@@ -50,8 +58,4 @@ export class Appointment implements AppointmentSchema {
   @ManyToOne(() => Patient, (patient) => patient.appointments)
   @JoinColumn({ name: 'patient_id' })
   patient: Patient;
-
-  @ManyToOne(() => Specialist, (specialist) => specialist.appointments)
-  @JoinColumn({ name: 'specialist_id' })
-  specialist: Specialist;
 }

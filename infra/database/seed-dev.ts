@@ -3,14 +3,16 @@ import { hash } from 'bcryptjs';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import {
-  REFERRAL_CATEGORIES,
-  REFERRAL_STATUSES,
-} from '@/domain/enums/referrals';
-import {
-  APPOINTMENT_CONDITION,
-  APPOINTMENT_STATUS,
-} from '@/domain/schemas/appointment';
+import { Appointment } from '@/domain/entities/appointment';
+import { Patient } from '@/domain/entities/patient';
+import { PatientRequirement } from '@/domain/entities/patient-requirement';
+import { PatientSupport } from '@/domain/entities/patient-support';
+import { Referral } from '@/domain/entities/referral';
+import { Specialist } from '@/domain/entities/specialist';
+import { User } from '@/domain/entities/user';
+import { APPOINTMENT_STATUSES } from '@/domain/enums/appointments';
+import { REFERRAL_STATUSES } from '@/domain/enums/referrals';
+import { SPECIALTY_CATEGORIES } from '@/domain/enums/specialties';
 import {
   GENDERS,
   PATIENT_CONDITIONS,
@@ -23,13 +25,6 @@ import {
 import { SPECIALIST_STATUS } from '@/domain/schemas/specialist';
 import { USER_ROLES } from '@/domain/schemas/user';
 
-import { Appointment } from '../../src/domain/entities/appointment';
-import { Patient } from '../../src/domain/entities/patient';
-import { PatientRequirement } from '../../src/domain/entities/patient-requirement';
-import { PatientSupport } from '../../src/domain/entities/patient-support';
-import { Referral } from '../../src/domain/entities/referral';
-import { Specialist } from '../../src/domain/entities/specialist';
-import { User } from '../../src/domain/entities/user';
 import dataSource from './data.source';
 
 const DATABASE_DEV_NAME = 'abnmo_dev';
@@ -139,6 +134,9 @@ async function main() {
     const fourMonthsAgo = new Date();
     fourMonthsAgo.setMonth(fourMonthsAgo.getMonth() - 4);
 
+    const twoMonthsAhead = new Date();
+    twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() + 2);
+
     const totalOfPatients = 100;
 
     for (let i = 0; i < totalOfPatients; i++) {
@@ -206,17 +204,19 @@ async function main() {
       // Create between 0 and 2 appointments for each patient
       const appointmentCount = faker.number.int({ min: 0, max: 2 });
       for (let j = 0; j < appointmentCount; j++) {
-        const appointment = appointmentRepository.create({
+        await appointmentRepository.save({
           patient_id: patient.id,
-          specialist_id: faker.helpers.arrayElement(specialists).id,
-          date: faker.date.future(),
-          status: faker.helpers.arrayElement(APPOINTMENT_STATUS),
-          condition: faker.datatype.boolean()
-            ? faker.helpers.arrayElement(APPOINTMENT_CONDITION)
-            : null,
+          date: faker.date.between({ from: twoMonthsAgo, to: twoMonthsAhead }),
+          status: faker.helpers.arrayElement(APPOINTMENT_STATUSES),
+          condition: faker.helpers.arrayElement(PATIENT_CONDITIONS),
           annotation: faker.datatype.boolean() ? faker.lorem.sentence() : null,
+          professional_name: faker.person.fullName(),
+          created_by: faker.string.uuid(),
+          created_at: faker.date.between({
+            from: fourMonthsAgo,
+            to: new Date(),
+          }),
         });
-        await appointmentRepository.save(appointment);
       }
 
       // Create between 0 and 2 requirements for each patient
@@ -251,8 +251,8 @@ async function main() {
       for (let j = 0; j < referralCount; j++) {
         const referral = referralRepository.create({
           patient_id: patient.id,
-          date: faker.date.between({ from: fourMonthsAgo, to: new Date() }),
-          category: faker.helpers.arrayElement(REFERRAL_CATEGORIES),
+          date: faker.date.between({ from: fourMonthsAgo, to: twoMonthsAhead }),
+          category: faker.helpers.arrayElement(SPECIALTY_CATEGORIES),
           condition: faker.helpers.arrayElement(PATIENT_CONDITIONS),
           status: faker.helpers.arrayElement(REFERRAL_STATUSES),
           annotation: faker.datatype.boolean() ? faker.lorem.sentence() : null,

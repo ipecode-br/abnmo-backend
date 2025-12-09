@@ -21,7 +21,6 @@ export class CreateReferralUseCase {
   constructor(
     @InjectRepository(Patient)
     private readonly patientsRepository: Repository<Patient>,
-
     @InjectRepository(Referral)
     private readonly referralsRepository: Repository<Referral>,
   ) {}

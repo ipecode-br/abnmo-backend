@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import { BRAZILIAN_STATES } from '@/constants/brazilian-states';
-import { REFERRAL_CATEGORIES } from '@/domain/enums/referrals';
+import { SPECIALTY_CATEGORIES } from '@/domain/enums/specialties';
 
 import { baseResponseSchema } from '../base';
 import { GENDERS } from '../patient';
@@ -89,7 +89,7 @@ export type GetReferredPatientsByStateResponse = z.infer<
 >;
 
 export const totalReferralsByCategorySchema = z.object({
-  category: z.enum(REFERRAL_CATEGORIES),
+  category: z.enum(SPECIALTY_CATEGORIES),
   total: z.number(),
 });
 export type TotalReferralsByCategory = z.infer<

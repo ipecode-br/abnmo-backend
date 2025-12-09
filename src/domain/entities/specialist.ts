@@ -3,13 +3,10 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
-  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-
-import { Appointment } from '@/domain/entities/appointment';
 
 import {
   SPECIALIST_STATUS,
@@ -44,7 +41,4 @@ export class Specialist implements SpecialistSchema {
   @OneToOne(() => User)
   @JoinColumn({ name: 'user_id' })
   user: User;
-
-  @OneToMany(() => Appointment, (appointment) => appointment.specialist)
-  appointments: Appointment[];
 }

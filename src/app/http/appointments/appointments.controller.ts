@@ -12,24 +12,28 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
-import { FindAllAppointmentsResponseSchema } from '@/domain/schemas/appointment';
+import type { GetAppointmentsResponseSchema } from '@/domain/schemas/appointments/responses';
 import { BaseResponseSchema } from '@/domain/schemas/base';
 import { UserSchema } from '@/domain/schemas/user';
 
+import { GetAppointmentsQuery } from './appointments.dtos';
 import {
   CreateAppointmentDto,
-  FindAllAppointmentsQueryDto,
   UpdateAppointmentDto,
 } from './appointments.dtos';
-import { AppointmentsRepository } from './appointments.repository';
-import { AppointmentsService } from './appointments.service';
+import { CancelAppointmentUseCase } from './use-cases/cancel-appointment.use-case';
+import { CreateAppointmentUseCase } from './use-cases/create-appointment.use-case';
+import { GetAppointmentsUseCase } from './use-cases/get-appointments.use-case';
+import { UpdateAppointmentUseCase } from './use-cases/update-appointment.use-case';
 
 @ApiTags('Atendimentos')
 @Controller('appointments')
 export class AppointmentsController {
   constructor(
-    private readonly appointmentsService: AppointmentsService,
-    private readonly appointmentsRepository: AppointmentsRepository,
+    private readonly getAppointmentsUseCase: GetAppointmentsUseCase,
+    private readonly createAppointmentUseCase: CreateAppointmentUseCase,
+    private readonly updateAppointmentUseCase: UpdateAppointmentUseCase,
+    private readonly cancelAppointmentUseCase: CancelAppointmentUseCase,
   ) {}
 
   @Get()
@@ -37,17 +41,14 @@ export class AppointmentsController {
   @ApiOperation({ summary: 'Lista todos os atendimentos' })
   async findAll(
     @CurrentUser() user: UserSchema,
-    @Query() filters: FindAllAppointmentsQueryDto,
-  ): Promise<FindAllAppointmentsResponseSchema> {
-    const { appointments, total } = await this.appointmentsRepository.findAll(
-      user,
-      filters,
-    );
+    @Query() query: GetAppointmentsQuery,
+  ): Promise<GetAppointmentsResponseSchema> {
+    const data = await this.getAppointmentsUseCase.execute({ user, query });
 
     return {
       success: true,
       message: 'Lista de atendimentos retornada com sucesso.',
-      data: { appointments, total },
+      data,
     };
   }
 
@@ -55,9 +56,13 @@ export class AppointmentsController {
   @Roles(['nurse', 'manager'])
   @ApiOperation({ summary: 'Cadastra novo atendimento' })
   async create(
+    @CurrentUser() user: UserSchema,
     @Body() createAppointmentDto: CreateAppointmentDto,
   ): Promise<BaseResponseSchema> {
-    await this.appointmentsService.create(createAppointmentDto);
+    await this.createAppointmentUseCase.execute({
+      createAppointmentDto,
+      userId: user.id,
+    });
 
     return {
       success: true,
@@ -70,9 +75,13 @@ export class AppointmentsController {
   public async update(
     @Param('id') id: string,
     @CurrentUser() user: UserSchema,
-    @Body() body: UpdateAppointmentDto,
+    @Body() updateAppointmentDto: UpdateAppointmentDto,
   ): Promise<BaseResponseSchema> {
-    await this.appointmentsService.update(id, body, user);
+    await this.updateAppointmentUseCase.execute({
+      id,
+      updateAppointmentDto,
+      user,
+    });
 
     return {
       success: true,
@@ -86,7 +95,7 @@ export class AppointmentsController {
     @Param('id') id: string,
     @CurrentUser() user: UserSchema,
   ): Promise<BaseResponseSchema> {
-    await this.appointmentsService.cancel(id, user);
+    await this.cancelAppointmentUseCase.execute({ id, user });
 
     return {
       success: true,
