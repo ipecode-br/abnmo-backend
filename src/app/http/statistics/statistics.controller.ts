@@ -18,6 +18,7 @@ import {
   GetTotalReferralsAndReferredPatientsPercentageQuery,
   GetTotalReferralsByCategoryQuery,
 } from './statistics.dtos';
+import { GetTotalAppointmentsUseCase } from './use-cases/get-total-appointments.use-case';
 import { GetTotalPatientsByFieldUseCase } from './use-cases/get-total-patients-by-field.use-case';
 import { GetTotalPatientsByStatusUseCase } from './use-cases/get-total-patients-by-status.use-case';
 import { GetTotalReferralsAndReferredPatientsPercentageUseCase } from './use-cases/get-total-referrals-and-referred-patients-percentage.use-case';
@@ -34,7 +35,20 @@ export class StatisticsController {
     private readonly getTotalReferredPatientsByStateUseCase: GetTotalReferredPatientsByStateUseCase,
     private readonly getTotalReferralsByCategoryUseCase: GetTotalReferralsByCategoryUseCase,
     private readonly getTotalReferralsAndReferredPatientsPercentageUseCase: GetTotalReferralsAndReferredPatientsPercentageUseCase,
+    private readonly getTotalAppointmentsUseCase: GetTotalAppointmentsUseCase,
   ) {}
+
+  @Get('appointments-total')
+  @ApiOperation({ summary: 'Número total de atendimentos' })
+  async getTotalAppointments() {
+    const total = await this.getTotalAppointmentsUseCase.execute();
+
+    return {
+      success: true,
+      message: 'Número total de atendimentos retornado com sucesso.',
+      data: { total },
+    };
+  }
 
   @Get('patients-total')
   @ApiOperation({ summary: 'Estatísticas totais de pacientes' })
