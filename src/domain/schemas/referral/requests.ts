@@ -1,10 +1,11 @@
 import { z } from 'zod';
 
+import { PATIENT_CONDITIONS } from '@/domain/enums/patients';
+import { QUERY_ORDERS } from '@/domain/enums/queries';
 import { REFERRAL_ORDER_BY, REFERRAL_STATUSES } from '@/domain/enums/referrals';
-import { SPECIALTY_CATEGORIES } from '@/domain/enums/specialties';
+import { SPECIALTY_CATEGORIES } from '@/domain/enums/shared';
 
-import { PATIENT_CONDITIONS } from '../patient';
-import { baseQuerySchema, QUERY_ORDER } from '../query';
+import { baseQuerySchema } from '../query';
 import { referralSchema } from '.';
 
 export const createReferralSchema = referralSchema.pick({
@@ -15,7 +16,7 @@ export const createReferralSchema = referralSchema.pick({
   annotation: true,
   professional_name: true,
 });
-export type CreateReferralSchema = z.infer<typeof createReferralSchema>;
+export type CreateReferral = z.infer<typeof createReferralSchema>;
 
 export const getReferralsQuerySchema = baseQuerySchema
   .pick({
@@ -31,7 +32,7 @@ export const getReferralsQuerySchema = baseQuerySchema
     category: z.enum(SPECIALTY_CATEGORIES).optional(),
     condition: z.enum(PATIENT_CONDITIONS).optional(),
     orderBy: z.enum(REFERRAL_ORDER_BY).optional().default('date'),
-    order: z.enum(QUERY_ORDER).optional().default('DESC'),
+    order: z.enum(QUERY_ORDERS).optional().default('DESC'),
   })
   .refine(
     (data) => {

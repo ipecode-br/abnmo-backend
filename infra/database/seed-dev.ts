@@ -11,20 +11,20 @@ import { Referral } from '@/domain/entities/referral';
 // import { Specialist } from '@/domain/entities/specialist';
 import { User } from '@/domain/entities/user';
 import { APPOINTMENT_STATUSES } from '@/domain/enums/appointments';
-import { REFERRAL_STATUSES } from '@/domain/enums/referrals';
-import { SPECIALTY_CATEGORIES } from '@/domain/enums/specialties';
 import {
-  GENDERS,
+  PATIENT_REQUIREMENT_STATUSES,
+  PATIENT_REQUIREMENT_TYPES,
+} from '@/domain/enums/patient-requirements';
+import {
   PATIENT_CONDITIONS,
-  PATIENT_STATUS,
-} from '@/domain/schemas/patient';
-import {
-  PATIENT_REQUIREMENT_STATUS,
-  PATIENT_REQUIREMENT_TYPE,
-} from '@/domain/schemas/patient-requirement';
-// import { SPECIALIST_STATUS } from '@/domain/schemas/specialist';
-import { USER_ROLES } from '@/domain/schemas/user';
+  PATIENT_GENDERS,
+  PATIENT_STATUSES,
+} from '@/domain/enums/patients';
+import { REFERRAL_STATUSES } from '@/domain/enums/referrals';
+import { SPECIALTY_CATEGORIES } from '@/domain/enums/shared';
+import { USER_ROLES } from '@/domain/enums/users';
 
+// import { SPECIALIST_STATUS } from '@/domain/schemas/specialist';
 import dataSource from './data.source';
 
 const DATABASE_DEV_NAME = 'abnmo_dev';
@@ -144,30 +144,20 @@ async function main() {
         console.log(`👥 Creating ${i + 1} patients...`);
       }
 
-      const user = userRepository.create({
-        name: faker.person.fullName(),
-        email: faker.internet.email().toLocaleLowerCase(),
-        password,
-        role: 'patient',
-        avatar_url: faker.image.avatar(),
-      });
-      await userRepository.save(user);
-
       const selectedState = faker.helpers.arrayElement(statesWithCities);
 
       // Set patient status: 10 pending, rest distributed among other statuses
-      let patientStatus: (typeof PATIENT_STATUS)[number];
+      let patientStatus: (typeof PATIENT_STATUSES)[number];
       if (i < 10) {
         patientStatus = 'pending';
       } else {
         patientStatus = faker.helpers.arrayElement(
-          PATIENT_STATUS.filter((s) => s !== 'pending'),
+          PATIENT_STATUSES.filter((s) => s !== 'pending'),
         );
       }
 
       const patient = patientRepository.create({
-        user_id: user.id,
-        gender: faker.helpers.arrayElement(GENDERS),
+        gender: faker.helpers.arrayElement(PATIENT_GENDERS),
         date_of_birth: faker.date.birthdate({ min: 18, max: 80, mode: 'age' }),
         phone: faker.string.numeric(11),
         cpf: faker.string.numeric(11),
@@ -242,10 +232,10 @@ async function main() {
       // Create between 0 and 2 requirements for each patient
       const requirementCount = faker.number.int({ min: 0, max: 2 });
       for (let j = 0; j < requirementCount; j++) {
-        const status = faker.helpers.arrayElement(PATIENT_REQUIREMENT_STATUS);
-        const requirement = patientRequirementRepository.create({
+        const status = faker.helpers.arrayElement(PATIENT_REQUIREMENT_STATUSES);
+        await patientRequirementRepository.save({
           patient_id: patient.id,
-          type: faker.helpers.arrayElement(PATIENT_REQUIREMENT_TYPE),
+          type: faker.helpers.arrayElement(PATIENT_REQUIREMENT_TYPES),
           title: faker.lorem.words(3),
           description: faker.lorem.sentence(),
           status,
@@ -263,7 +253,6 @@ async function main() {
               ? faker.date.between({ from: twoMonthsAgo, to: new Date() })
               : new Date(),
         });
-        await patientRequirementRepository.save(requirement);
       }
     }
 

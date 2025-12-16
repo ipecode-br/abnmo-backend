@@ -11,16 +11,12 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
-import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { AuthUser } from '@/common/decorators/auth-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
-import type { User } from '@/domain/entities/user';
-import {
-  CreatePatientSupportResponseSchema,
-  DeletePatientSupportResponseSchema,
-  FindOnePatientsSupportResponseSchema,
-  UpdatePatientSupportResponseSchema,
-} from '@/domain/schemas/patient-support';
+import type { BaseResponse } from '@/domain/schemas/base';
+import type { GetPatientSupportResponse } from '@/domain/schemas/patient-support/responses';
 
+import type { AuthUserDto } from '../auth/auth.dtos';
 import { CreatePatientSupportDto } from '../patient-supports/patient-supports.dtos';
 import { UpdatePatientSupportDto } from './patient-supports.dtos';
 import { PatientSupportsRepository } from './patient-supports.repository';
@@ -36,9 +32,7 @@ export class PatientSupportsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Busca um contato de apoio pelo ID' })
-  async findById(
-    @Param('id') id: string,
-  ): Promise<FindOnePatientsSupportResponseSchema> {
+  async findById(@Param('id') id: string): Promise<GetPatientSupportResponse> {
     const patientSupport = await this.patientSupportsRepository.findById(id);
 
     if (!patientSupport) {
@@ -53,16 +47,16 @@ export class PatientSupportsController {
   }
 
   @Post(':patientId')
-  @Roles(['nurse', 'manager', 'patient'])
+  @Roles(['nurse', 'manager'])
   @ApiOperation({
     summary: 'Registra um novo contato de apoio para um paciente',
   })
   async createPatientSupport(
     @Param('patientId') patientId: string,
+    @AuthUser() authUser: AuthUserDto,
     @Body() createPatientSupportDto: CreatePatientSupportDto,
-    @CurrentUser() user: User,
-  ): Promise<CreatePatientSupportResponseSchema> {
-    if (user.role === 'patient' && user.id !== patientId) {
+  ): Promise<BaseResponse> {
+    if (authUser.role === 'patient' && authUser.id !== patientId) {
       throw new ForbiddenException(
         'Você não tem permissão para registrar contatos de apoio para este paciente.',
       );
@@ -80,14 +74,18 @@ export class PatientSupportsController {
   }
 
   @Put(':id')
-  @Roles(['nurse', 'manager', 'patient'])
+  @Roles(['nurse', 'manager'])
   @ApiOperation({ summary: 'Atualiza um contato de apoio pelo ID' })
   async updatePatientSupport(
     @Param('id') id: string,
+    @AuthUser() authUser: AuthUserDto,
     @Body() updatePatientSupportDto: UpdatePatientSupportDto,
-    @CurrentUser() user: User,
-  ): Promise<UpdatePatientSupportResponseSchema> {
-    await this.patientSupportsService.update(id, updatePatientSupportDto, user);
+  ): Promise<BaseResponse> {
+    await this.patientSupportsService.update(
+      id,
+      updatePatientSupportDto,
+      authUser,
+    );
 
     return {
       success: true,
@@ -96,13 +94,13 @@ export class PatientSupportsController {
   }
 
   @Delete(':id')
-  @Roles(['nurse', 'manager', 'patient'])
+  @Roles(['nurse', 'manager'])
   @ApiOperation({ summary: 'Remove um contato de apoio pelo ID' })
   async remove(
     @Param('id') id: string,
-    @CurrentUser() user: User,
-  ): Promise<DeletePatientSupportResponseSchema> {
-    await this.patientSupportsService.remove(id, user);
+    @AuthUser() authUser: AuthUserDto,
+  ): Promise<BaseResponse> {
+    await this.patientSupportsService.remove(id, authUser);
 
     return {
       success: true,

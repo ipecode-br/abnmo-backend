@@ -9,19 +9,19 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
-import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { AuthUser } from '@/common/decorators/auth-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
-import { BaseResponseSchema } from '@/domain/schemas/base';
-import {
-  FindAllPatientsRequirementsByPatientIdResponseSchema,
-  FindAllPatientsRequirementsResponseSchema,
-} from '@/domain/schemas/patient-requirement';
-import { UserSchema } from '@/domain/schemas/user';
+import { BaseResponse } from '@/domain/schemas/base';
+import type {
+  GetPatientRequirementsByPatientIdResponse,
+  GetPatientRequirementsResponse,
+} from '@/domain/schemas/patient-requirement/responses';
 
+import type { AuthUserDto } from '../auth/auth.dtos';
 import {
   CreatePatientRequirementDto,
-  FindAllPatientsRequirementsByPatientIdDto,
-  FindAllPatientsRequirementsQueryDto,
+  GetPatientRequirementsByPatientIdQuery,
+  GetPatientRequirementsQuery,
 } from './patient-requirements.dtos';
 import { PatientRequirementsRepository } from './patient-requirements.repository';
 import { PatientRequirementsService } from './patient-requirements.service';
@@ -39,11 +39,11 @@ export class PatientRequirementsController {
   @ApiOperation({ summary: 'Adiciona nova solicitação.' })
   public async create(
     @Body() createPatientRequirementDto: CreatePatientRequirementDto,
-    @CurrentUser() currentUser: UserSchema,
-  ): Promise<BaseResponseSchema> {
+    @AuthUser() authUser: AuthUserDto,
+  ): Promise<BaseResponse> {
     await this.patientRequirementsService.create(
       createPatientRequirementDto,
-      currentUser.id,
+      authUser,
     );
 
     return {
@@ -57,8 +57,8 @@ export class PatientRequirementsController {
   @ApiOperation({ summary: 'Aprova uma solicitação por ID.' })
   async approve(
     @Param('id') id: string,
-    @CurrentUser() user: UserSchema,
-  ): Promise<BaseResponseSchema> {
+    @AuthUser() user: AuthUserDto,
+  ): Promise<BaseResponse> {
     await this.patientRequirementsService.approve(id, user);
 
     return {
@@ -72,9 +72,9 @@ export class PatientRequirementsController {
   @ApiOperation({ summary: 'Recusa uma solicitação por ID.' })
   public async decline(
     @Param('id') id: string,
-    @CurrentUser() currentUser: UserSchema,
-  ): Promise<BaseResponseSchema> {
-    await this.patientRequirementsService.decline(id, currentUser.id);
+    @AuthUser() authUser: AuthUserDto,
+  ): Promise<BaseResponse> {
+    await this.patientRequirementsService.decline(id, authUser);
 
     return {
       success: true,
@@ -88,8 +88,8 @@ export class PatientRequirementsController {
     summary: 'Lista todas as solicitações de pacientes com paginação e filtros',
   })
   async findAll(
-    @Query() filters: FindAllPatientsRequirementsQueryDto,
-  ): Promise<FindAllPatientsRequirementsResponseSchema> {
+    @Query() filters: GetPatientRequirementsQuery,
+  ): Promise<GetPatientRequirementsResponse> {
     const { requirements, total } =
       await this.patientRequirementsRepository.findAll(filters);
 
@@ -107,8 +107,8 @@ export class PatientRequirementsController {
   })
   async findAllByPatientId(
     @Param('id') id: string,
-    @Query() filters: FindAllPatientsRequirementsByPatientIdDto,
-  ): Promise<FindAllPatientsRequirementsByPatientIdResponseSchema> {
+    @Query() filters: GetPatientRequirementsByPatientIdQuery,
+  ): Promise<GetPatientRequirementsByPatientIdResponse> {
     const { requirements, total } =
       await this.patientRequirementsRepository.findAllByPatientId(id, filters);
 
@@ -120,12 +120,11 @@ export class PatientRequirementsController {
   }
 
   @Get('/me')
-  @Roles(['patient'])
   @ApiOperation({ summary: 'Busca todas as solicitações do paciente logado.' })
   async findAllByPatientLogged(
-    @CurrentUser() user: UserSchema,
-    @Query() filters: FindAllPatientsRequirementsByPatientIdDto,
-  ): Promise<FindAllPatientsRequirementsByPatientIdResponseSchema> {
+    @AuthUser() user: AuthUserDto,
+    @Query() filters: GetPatientRequirementsByPatientIdQuery,
+  ): Promise<GetPatientRequirementsByPatientIdResponse> {
     const { requirements, total } =
       await this.patientRequirementsRepository.findAllByPatientLogged(
         user.id,

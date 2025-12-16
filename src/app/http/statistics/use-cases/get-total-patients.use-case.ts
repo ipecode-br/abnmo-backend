@@ -10,8 +10,8 @@ import {
 } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
-import type { PatientStatus } from '@/domain/schemas/patient';
-import type { QueryPeriod } from '@/domain/schemas/query';
+import type { PatientStatus } from '@/domain/enums/patients';
+import type { QueryPeriod } from '@/domain/enums/queries';
 import { UtilsService } from '@/utils/utils.service';
 
 interface GetTotalPatientsUseCaseRequest {

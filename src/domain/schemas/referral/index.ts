@@ -1,9 +1,8 @@
 import { z } from 'zod';
 
+import { PATIENT_CONDITIONS } from '@/domain/enums/patients';
 import { REFERRAL_STATUSES } from '@/domain/enums/referrals';
-import { SPECIALTY_CATEGORIES } from '@/domain/enums/specialties';
-
-import { PATIENT_CONDITIONS } from '../patient';
+import { SPECIALTY_CATEGORIES } from '@/domain/enums/shared';
 
 export const referralSchema = z
   .object({
@@ -14,7 +13,7 @@ export const referralSchema = z
     category: z.enum(SPECIALTY_CATEGORIES),
     condition: z.enum(PATIENT_CONDITIONS),
     annotation: z.string().max(2000).nullable(),
-    professional_name: z.string().max(255).nullable(),
+    professional_name: z.string().max(64).nullable(),
     created_by: z.string().uuid(),
     created_at: z.coerce.date(),
     updated_at: z.coerce.date(),

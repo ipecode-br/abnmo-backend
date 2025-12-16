@@ -1,15 +1,15 @@
 import type { JwtSignOptions } from '@nestjs/jwt';
 
-import type { AuthTokenPayloadByType } from '../schemas/token';
+import type { AuthTokenPayloads } from '../schemas/token';
 
 export abstract class Cryptography {
   abstract createHash(plain: string): Promise<string>;
 
   abstract compareHash(plain: string, hash: string): Promise<boolean>;
 
-  abstract createToken<T extends keyof AuthTokenPayloadByType>(
+  abstract createToken<T extends keyof AuthTokenPayloads>(
     _type: T,
-    payload: AuthTokenPayloadByType[T],
+    payload: AuthTokenPayloads[T],
     options?: JwtSignOptions,
   ): Promise<string>;
 

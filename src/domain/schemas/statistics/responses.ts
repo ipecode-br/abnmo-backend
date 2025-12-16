@@ -1,10 +1,10 @@
 import { z } from 'zod';
 
 import { BRAZILIAN_STATES } from '@/constants/brazilian-states';
-import { SPECIALTY_CATEGORIES } from '@/domain/enums/specialties';
+import { PATIENT_GENDERS } from '@/domain/enums/patients';
+import { SPECIALTY_CATEGORIES } from '@/domain/enums/shared';
 
 import { baseResponseSchema } from '../base';
-import { GENDERS } from '../patient';
 
 // Patients
 
@@ -22,7 +22,7 @@ export type GetTotalPatientsByStatusResponse = z.infer<
 >;
 
 export const totalPatientsByGenderSchema = z.object({
-  gender: z.enum(GENDERS),
+  gender: z.enum(PATIENT_GENDERS),
   total: z.number(),
 });
 export type TotalPatientsByGender = z.infer<typeof totalPatientsByGenderSchema>;

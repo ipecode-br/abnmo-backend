@@ -9,12 +9,12 @@ import {
 import { ApiOperation } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 
-import { Cookies } from '@/common/decorators/cookies';
-import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { AuthUser } from '@/common/decorators/auth-user.decorator';
+import { Cookies } from '@/common/decorators/cookies.decorator';
 import { Public } from '@/common/decorators/public.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { COOKIES_MAPPING } from '@/domain/cookies';
-import type { BaseResponseSchema } from '@/domain/schemas/base';
+import type { BaseResponse } from '@/domain/schemas/base';
 import { UserSchema } from '@/domain/schemas/user';
 import { UtilsService } from '@/utils/utils.service';
 
@@ -41,10 +41,11 @@ export class AuthController {
     @Req() request: Request,
     @Body() signInWithEmailDto: SignInWithEmailDto,
     @Res({ passthrough: true }) response: Response,
-  ): Promise<BaseResponseSchema> {
+  ): Promise<BaseResponse> {
     const TWELVE_HOURS_IN_MS = 1000 * 60 * 60 * 12;
 
-    const { accessToken } = await this.authService.signIn(signInWithEmailDto);
+    const { accessToken } =
+      await this.authService.signInUser(signInWithEmailDto);
 
     this.utilsService.setCookie(response, {
       name: COOKIES_MAPPING.access_token,
@@ -63,10 +64,8 @@ export class AuthController {
   @Public()
   @Post('register')
   @ApiOperation({ summary: 'Registro de um novo usuário' })
-  async register(
-    @Body() createUserDto: CreateUserDto,
-  ): Promise<BaseResponseSchema> {
-    await this.authService.register(createUserDto);
+  async register(@Body() createUserDto: CreateUserDto): Promise<BaseResponse> {
+    await this.authService.registerUser(createUserDto);
 
     return {
       success: true,
@@ -135,7 +134,7 @@ export class AuthController {
     @Req() request: Request,
     @Body() recoverPasswordDto: RecoverPasswordDto,
     @Res({ passthrough: true }) response: Response,
-  ): Promise<BaseResponseSchema> {
+  ): Promise<BaseResponse> {
     const { passwordResetToken } = await this.authService.forgotPassword(
       recoverPasswordDto.email,
     );
@@ -156,11 +155,11 @@ export class AuthController {
   }
 
   @Post('change-password')
-  @Roles(['nurse', 'manager', 'patient', 'specialist', 'admin'])
+  @Roles(['nurse', 'manager', 'specialist', 'admin'])
   async changePassword(
     @Body() changePasswordDto: ChangePasswordDto,
-    @CurrentUser() user: UserSchema,
-  ): Promise<BaseResponseSchema> {
+    @AuthUser() user: UserSchema,
+  ): Promise<BaseResponse> {
     await this.authService.changePassword(user, changePasswordDto);
 
     return {

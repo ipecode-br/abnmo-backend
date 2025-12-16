@@ -1,9 +1,8 @@
 import { z } from 'zod';
 
 import { APPOINTMENT_STATUSES } from '@/domain/enums/appointments';
-import { SPECIALTY_CATEGORIES } from '@/domain/enums/specialties';
-
-import { PATIENT_CONDITIONS } from '../patient';
+import { PATIENT_CONDITIONS } from '@/domain/enums/patients';
+import { SPECIALTY_CATEGORIES } from '@/domain/enums/shared';
 
 export const appointmentSchema = z
   .object({

@@ -9,12 +9,12 @@ import {
 } from 'typeorm';
 
 import {
-  PATIENT_REQUIREMENT_STATUS,
-  PATIENT_REQUIREMENT_TYPE,
-  PatientRequirementSchema,
-  PatientRequirementStatusType,
-  PatientRequirementType,
-} from '../schemas/patient-requirement';
+  PATIENT_REQUIREMENT_STATUSES,
+  PATIENT_REQUIREMENT_TYPES,
+  type PatientRequirementStatus,
+  type PatientRequirementType,
+} from '../enums/patient-requirements';
+import type { PatientRequirementSchema } from '../schemas/patient-requirement';
 import { Patient } from './patient';
 
 @Entity('patient_requirements')
@@ -25,7 +25,7 @@ export class PatientRequirement implements PatientRequirementSchema {
   @Column('uuid')
   patient_id: string;
 
-  @Column({ type: 'enum', enum: PATIENT_REQUIREMENT_TYPE })
+  @Column({ type: 'enum', enum: PATIENT_REQUIREMENT_TYPES })
   type: PatientRequirementType;
 
   @Column({ type: 'varchar', length: 255 })
@@ -36,13 +36,13 @@ export class PatientRequirement implements PatientRequirementSchema {
 
   @Column({
     type: 'enum',
-    enum: PATIENT_REQUIREMENT_STATUS,
+    enum: PATIENT_REQUIREMENT_STATUSES,
     default: 'pending',
   })
-  status: PatientRequirementStatusType;
+  status: PatientRequirementStatus;
 
-  @Column({ type: 'uuid' })
-  required_by: string;
+  @Column({ type: 'timestamp', nullable: true })
+  submitted_at: Date | null;
 
   @Column({ type: 'uuid', nullable: true })
   approved_by: string | null;
@@ -50,8 +50,8 @@ export class PatientRequirement implements PatientRequirementSchema {
   @Column({ type: 'timestamp', nullable: true })
   approved_at: Date | null;
 
-  @Column({ type: 'timestamp', nullable: true })
-  submitted_at: Date | null;
+  @Column({ type: 'uuid' })
+  created_by: string;
 
   @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;

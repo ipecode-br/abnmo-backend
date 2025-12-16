@@ -11,20 +11,19 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
-import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { AuthUser } from '@/common/decorators/auth-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
-import { BaseResponseSchema } from '@/domain/schemas/base';
-import {
-  FindAllPatientsResponseSchema,
-  GetPatientResponseSchema,
-} from '@/domain/schemas/patient';
-import { FindAllPatientsSupportResponseSchema } from '@/domain/schemas/patient-support';
-import type { UserSchema } from '@/domain/schemas/user';
+import { BaseResponse } from '@/domain/schemas/base';
+import type {
+  GetPatientResponse,
+  GetPatientsResponse,
+} from '@/domain/schemas/patient/responses';
+import type { GetPatientSupportsResponse } from '@/domain/schemas/patient-support/responses';
 
+import type { AuthUserDto } from '../auth/auth.dtos';
 import { PatientSupportsRepository } from '../patient-supports/patient-supports.repository';
 import {
-  CreatePatientDto,
-  FindAllPatientQueryDto,
+  GetPatientsQuery,
   PatientScreeningDto,
   UpdatePatientDto,
 } from './patients.dtos';
@@ -44,10 +43,10 @@ export class PatientsController {
   @Roles(['patient'])
   @ApiOperation({ summary: 'Registra triagem do paciente' })
   public async screening(
-    @CurrentUser() user: UserSchema,
+    @AuthUser() authUser: AuthUserDto,
     @Body() patientScreeningDto: PatientScreeningDto,
-  ): Promise<BaseResponseSchema> {
-    await this.patientsService.screening(patientScreeningDto, user);
+  ): Promise<BaseResponse> {
+    await this.patientsService.screening(patientScreeningDto, authUser);
 
     return {
       success: true,
@@ -59,8 +58,8 @@ export class PatientsController {
   @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Cadastra um novo paciente' })
   public async create(
-    @Body() createPatientDto: CreatePatientDto,
-  ): Promise<BaseResponseSchema> {
+    @Body() createPatientDto: PatientScreeningDto,
+  ): Promise<BaseResponse> {
     await this.patientsService.create(createPatientDto);
 
     return {
@@ -73,8 +72,8 @@ export class PatientsController {
   @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Lista todos os pacientes' })
   public async findAll(
-    @Query() filters: FindAllPatientQueryDto,
-  ): Promise<FindAllPatientsResponseSchema> {
+    @Query() filters: GetPatientsQuery,
+  ): Promise<GetPatientsResponse> {
     const { patients, total } = await this.patientsRepository.findAll(filters);
 
     return {
@@ -87,9 +86,7 @@ export class PatientsController {
   @Get(':id')
   @Roles(['manager', 'nurse', 'specialist'])
   @ApiOperation({ summary: 'Busca um paciente pelo ID' })
-  public async findById(
-    @Param('id') id: string,
-  ): Promise<GetPatientResponseSchema> {
+  public async findById(@Param('id') id: string): Promise<GetPatientResponse> {
     const patient = await this.patientsRepository.findById(id);
 
     if (!patient) {
@@ -109,7 +106,7 @@ export class PatientsController {
   async update(
     @Param('id') id: string,
     @Body() updatePatientDto: UpdatePatientDto,
-  ): Promise<BaseResponseSchema> {
+  ): Promise<BaseResponse> {
     await this.patientsService.update(id, updatePatientDto);
 
     return {
@@ -121,9 +118,7 @@ export class PatientsController {
   @Patch(':id/inactivate')
   @Roles(['manager'])
   @ApiOperation({ summary: 'Inativa o Paciente pelo ID' })
-  async inactivatePatient(
-    @Param('id') id: string,
-  ): Promise<BaseResponseSchema> {
+  async inactivatePatient(@Param('id') id: string): Promise<BaseResponse> {
     await this.patientsService.deactivate(id);
 
     return {
@@ -137,7 +132,7 @@ export class PatientsController {
   @ApiOperation({ summary: 'Lista todos os contatos de apoio de um paciente' })
   async findAllPatientSupports(
     @Param('id') patientId: string,
-  ): Promise<FindAllPatientsSupportResponseSchema> {
+  ): Promise<GetPatientSupportsResponse> {
     const patient = await this.patientsRepository.findById(patientId);
 
     if (!patient) {

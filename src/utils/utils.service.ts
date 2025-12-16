@@ -8,7 +8,7 @@ import {
 } from 'date-fns';
 import { type CookieOptions, Response } from 'express';
 
-import type { QueryPeriod } from '@/domain/schemas/query';
+import type { QueryPeriod } from '@/domain/enums/queries';
 import { EnvService } from '@/env/env.service';
 
 type SetCookieOptions = CookieOptions & {

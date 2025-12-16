@@ -5,14 +5,11 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-import {
-  AUTH_TOKENS,
-  type AuthTokenSchema,
-  type AuthTokenType,
-} from '../schemas/token';
+import { AUTH_TOKENS, type AuthTokenKey } from '../enums/tokens';
+import type { AuthToken } from '../schemas/token';
 
 @Entity('tokens')
-export class Token implements AuthTokenSchema {
+export class Token implements AuthToken {
   @PrimaryGeneratedColumn({ type: 'integer' })
   id: number;
 
@@ -22,11 +19,11 @@ export class Token implements AuthTokenSchema {
   @Column({ type: 'varchar', nullable: true })
   email: string | null;
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar' })
   token: string;
 
   @Column({ type: 'enum', enum: AUTH_TOKENS })
-  type: AuthTokenType;
+  type: AuthTokenKey;
 
   @CreateDateColumn({ type: 'timestamp', nullable: true })
   expires_at: Date | null;

@@ -8,12 +8,9 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
+import { PATIENT_CONDITIONS, type PatientCondition } from '../enums/patients';
 import { REFERRAL_STATUSES, type ReferralStatus } from '../enums/referrals';
-import {
-  SPECIALTY_CATEGORIES,
-  type SpecialtyCategory,
-} from '../enums/specialties';
-import { PATIENT_CONDITIONS, PatientCondition } from '../schemas/patient';
+import { SPECIALTY_CATEGORIES, type SpecialtyCategory } from '../enums/shared';
 import { ReferralSchema } from '../schemas/referral';
 import { Patient } from './patient';
 
@@ -40,7 +37,7 @@ export class Referral implements ReferralSchema {
   @Column({ type: 'varchar', length: 2000, nullable: true })
   annotation: string | null;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({ type: 'varchar', length: 64, nullable: true })
   professional_name: string | null;
 
   @Column('uuid')

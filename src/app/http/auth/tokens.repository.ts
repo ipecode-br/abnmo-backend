@@ -14,8 +14,7 @@ export class TokensRepository {
   ) {}
 
   async saveToken(data: CreateAuthTokenDto) {
-    const token = this.tokensRepository.create(data);
-    await this.tokensRepository.save(token);
+    await this.tokensRepository.save(data);
   }
 
   async findToken(token: string) {

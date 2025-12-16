@@ -9,10 +9,10 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
-import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { AuthUser } from '@/common/decorators/auth-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
-import { BaseResponseSchema } from '@/domain/schemas/base';
-import type { GetReferralsResponseSchema } from '@/domain/schemas/referral/responses';
+import { BaseResponse } from '@/domain/schemas/base';
+import type { GetReferralsResponse } from '@/domain/schemas/referral/responses';
 import { UserSchema } from '@/domain/schemas/user';
 
 import { CreateReferralDto, GetReferralsQuery } from './referrals.dtos';
@@ -34,7 +34,7 @@ export class ReferralsController {
   @ApiOperation({ summary: 'Lista encaminhamentos cadastrados no sistema' })
   async getReferrals(
     @Query() query: GetReferralsQuery,
-  ): Promise<GetReferralsResponseSchema> {
+  ): Promise<GetReferralsResponse> {
     const data = await this.getReferralsUseCase.execute({ query });
 
     return {
@@ -48,9 +48,9 @@ export class ReferralsController {
   @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Cadastra um novo encaminhamento' })
   async create(
-    @CurrentUser() currentUser: UserSchema,
+    @AuthUser() currentUser: UserSchema,
     @Body() createReferralDto: CreateReferralDto,
-  ): Promise<BaseResponseSchema> {
+  ): Promise<BaseResponse> {
     await this.createReferralUseCase.execute({
       createReferralDto,
       userId: currentUser.id,
@@ -64,8 +64,8 @@ export class ReferralsController {
   @ApiOperation({ summary: 'Cancela um encaminhamento' })
   async cancel(
     @Param('id') id: string,
-    @CurrentUser() user: UserSchema,
-  ): Promise<BaseResponseSchema> {
+    @AuthUser() user: UserSchema,
+  ): Promise<BaseResponse> {
     await this.cancelReferralUseCase.execute({ id, userId: user.id });
 
     return {

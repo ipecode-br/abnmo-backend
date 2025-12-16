@@ -5,12 +5,15 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { InjectRepository } from '@nestjs/typeorm';
+import type { Repository } from 'typeorm';
 
 import { CryptographyService } from '@/app/cryptography/crypography.service';
-import { UsersRepository } from '@/app/http/users/users.repository';
+import type { AuthUserDto } from '@/app/http/auth/auth.dtos';
 import type { Cookie } from '@/domain/cookies';
-import type { AccessTokenPayloadType } from '@/domain/schemas/token';
-import type { UserSchema } from '@/domain/schemas/user';
+import { Patient } from '@/domain/entities/patient';
+import { User } from '@/domain/entities/user';
+import type { AccessTokenPayload } from '@/domain/schemas/token';
 
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 
@@ -19,7 +22,10 @@ export class AuthGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
     private readonly cryptographyService: CryptographyService,
-    private readonly usersRepository: UsersRepository,
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
+    @InjectRepository(Patient)
+    private readonly patientsRepository: Repository<Patient>,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -34,7 +40,7 @@ export class AuthGuard implements CanActivate {
 
     const request = context.switchToHttp().getRequest<{
       signedCookies?: Record<Cookie, string>;
-      user?: UserSchema;
+      user?: AuthUserDto;
     }>();
 
     const token = request.signedCookies?.access_token;
@@ -45,26 +51,43 @@ export class AuthGuard implements CanActivate {
 
     try {
       const tokenPayload =
-        await this.cryptographyService.verifyToken<AccessTokenPayloadType>(
-          token,
-        );
+        await this.cryptographyService.verifyToken<AccessTokenPayload>(token);
+
       const userId = tokenPayload.sub;
+      const role = tokenPayload.role;
 
       if (!userId) {
         throw new UnauthorizedException('Token inválido.');
       }
 
-      const user = await this.usersRepository.findById(userId);
+      if (role === 'patient') {
+        const user = await this.patientsRepository.findOne({
+          select: { id: true, email: true },
+          where: { id: userId },
+        });
+
+        if (!user) {
+          throw new UnauthorizedException('Usuário não encontrado.');
+        }
+
+        request.user = { id: user.id, email: user.email, role };
+
+        return true;
+      }
+
+      const user = await this.usersRepository.findOne({
+        select: { id: true, email: true, role: true },
+        where: { id: userId },
+      });
 
       if (!user) {
         throw new UnauthorizedException('Usuário não encontrado.');
       }
 
-      request.user = user;
+      request.user = { id: user.id, email: user.email, role };
 
       return true;
-    } catch (error) {
-      console.error('Auth error:', error);
+    } catch {
       throw new UnauthorizedException('Token inválido ou expirado.');
     }
   }

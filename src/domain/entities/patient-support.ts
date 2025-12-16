@@ -16,13 +16,13 @@ export class PatientSupport implements PatientSupportSchema {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column('uuid')
   patient_id: string;
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar', length: 64 })
   name: string;
 
-  @Column({ type: 'char', length: 11 })
+  @Column({ type: 'varchar', length: 11 })
   phone: string;
 
   @Column({ type: 'varchar', length: 50 })

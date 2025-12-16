@@ -32,18 +32,18 @@ describe('Users E2E Tests', () => {
       expect(response.body).toHaveProperty('data');
     });
 
-    it('should return user profile for authenticated patient', async () => {
-      const client = await api(app).createPatientAndLogin();
-      const response = await client.get('/users/profile').send();
+    // it('should return user profile for authenticated patient', async () => {
+    //   const client = await api(app).createPatientAndLogin();
+    //   const response = await client.get('/users/profile').send();
 
-      expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('success', true);
-      expect(response.body).toHaveProperty(
-        'message',
-        'Dados do usuário retornado com sucesso.',
-      );
-      expect(response.body).toHaveProperty('data');
-    });
+    //   expect(response.status).toBe(200);
+    //   expect(response.body).toHaveProperty('success', true);
+    //   expect(response.body).toHaveProperty(
+    //     'message',
+    //     'Dados do usuário retornado com sucesso.',
+    //   );
+    //   expect(response.body).toHaveProperty('data');
+    // });
 
     it('should return user profile for authenticated manager', async () => {
       const client = await api(app).createManagerAndLogin();

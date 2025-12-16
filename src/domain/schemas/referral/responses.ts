@@ -1,17 +1,13 @@
 import { z } from 'zod';
 
 import { baseResponseSchema } from '../base';
-import { patientResponseSchema } from '../patient';
+import { patientSchema } from '../patient';
 import { referralSchema } from '.';
 
 export const referralResponseSchema = referralSchema.extend({
-  patient: patientResponseSchema.pick({
-    name: true,
-    email: true,
-    avatar_url: true,
-  }),
+  patient: patientSchema.pick({ name: true, email: true, avatar_url: true }),
 });
-export type ReferralResponseSchema = z.infer<typeof referralResponseSchema>;
+export type ReferralResponse = z.infer<typeof referralResponseSchema>;
 
 export const getReferralsResponseSchema = baseResponseSchema.extend({
   data: z.object({
@@ -19,6 +15,4 @@ export const getReferralsResponseSchema = baseResponseSchema.extend({
     total: z.number(),
   }),
 });
-export type GetReferralsResponseSchema = z.infer<
-  typeof getReferralsResponseSchema
->;
+export type GetReferralsResponse = z.infer<typeof getReferralsResponseSchema>;

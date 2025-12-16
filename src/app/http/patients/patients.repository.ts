@@ -3,9 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
-import type { PatientOrderBy, PatientType } from '@/domain/schemas/patient';
+import type { PatientOrderBy } from '@/domain/enums/patients';
+import type { PatientResponse } from '@/domain/schemas/patient/responses';
 
-import { CreatePatientDto, FindAllPatientQueryDto } from './patients.dtos';
+import { CreatePatientDto, GetPatientsQuery } from './patients.dtos';
 
 @Injectable()
 export class PatientsRepository {
@@ -15,9 +16,9 @@ export class PatientsRepository {
   ) {}
 
   public async findAll(
-    filters: FindAllPatientQueryDto,
+    filters: GetPatientsQuery,
     includePending?: boolean,
-  ): Promise<{ patients: PatientType[]; total: number }> {
+  ): Promise<{ patients: PatientResponse[]; total: number }> {
     const {
       search,
       order,
@@ -27,7 +28,6 @@ export class PatientsRepository {
       endDate,
       page,
       perPage,
-      all,
     } = filters;
 
     const ORDER_BY: Record<PatientOrderBy, string> = {
@@ -70,77 +70,38 @@ export class PatientsRepository {
 
     query.orderBy(ORDER_BY[orderBy], order);
 
-    if (!all) {
-      query.skip((page - 1) * perPage).take(perPage);
-    }
-
+    query.skip((page - 1) * perPage).take(perPage);
     const rawPatients = await query.getMany();
 
-    const patients: PatientType[] = rawPatients.map(
-      ({ user, ...patientData }) => ({
-        ...patientData,
-        name: user.name,
-        email: user.email,
-        avatar_url: user.avatar_url,
+    const patients: PatientResponse[] = rawPatients.map(
+      ({ ...patientData }) => ({
+        id: patientData.id,
+        name: patientData.name,
+        email: patientData.email,
+        status: patientData.status,
+        avatar_url: patientData.avatar_url,
+        phone: patientData.phone,
+        created_at: patientData.created_at,
       }),
     );
 
     return { patients, total };
   }
 
-  public async findById(id: string): Promise<PatientType | null> {
+  public async findById(id: string): Promise<Patient | null> {
     const patient = await this.patientsRepository.findOne({
-      relations: { user: true, supports: true },
+      relations: { supports: true },
       where: { id },
       select: {
-        user: { name: true, email: true, avatar_url: true },
         supports: { id: true, name: true, phone: true, kinship: true },
       },
     });
 
-    if (!patient) {
-      return null;
-    }
-
-    const { user, ...patientData } = patient;
-
-    return {
-      ...patientData,
-      name: user.name,
-      email: user.email,
-      avatar_url: user.avatar_url,
-    };
-  }
-
-  public async findByUserId(userId: string): Promise<PatientType | null> {
-    const patient = await this.patientsRepository.findOne({
-      relations: { user: true, supports: true },
-      where: { user_id: userId },
-      select: {
-        user: { name: true, email: true, avatar_url: true },
-        supports: { id: true, name: true, phone: true, kinship: true },
-      },
-    });
-
-    if (!patient) {
-      return null;
-    }
-
-    const { user, ...patientData } = patient;
-
-    return {
-      ...patientData,
-      name: user.name,
-      email: user.email,
-      avatar_url: user.avatar_url,
-    };
+    return patient;
   }
 
   public async findByEmail(email: string): Promise<Patient | null> {
-    return await this.patientsRepository.findOne({
-      select: { user: true },
-      where: { user: { email } },
-    });
+    return await this.patientsRepository.findOne({ where: { email } });
   }
 
   public async findByCpf(cpf: string): Promise<Patient | null> {
@@ -148,8 +109,7 @@ export class PatientsRepository {
   }
 
   public async create(patient: CreatePatientDto): Promise<Patient> {
-    const patientCreated = this.patientsRepository.create(patient);
-    return await this.patientsRepository.save(patientCreated);
+    return await this.patientsRepository.save(patient);
   }
 
   public async update(patient: Patient): Promise<Patient> {

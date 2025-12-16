@@ -11,7 +11,7 @@ import {
 
 import { Referral } from '@/domain/entities/referral';
 import type { ReferralOrderBy } from '@/domain/enums/referrals';
-import type { GetReferralsResponseSchema } from '@/domain/schemas/referral/responses';
+import type { GetReferralsResponse } from '@/domain/schemas/referral/responses';
 
 import { GetReferralsQuery } from '../referrals.dtos';
 
@@ -19,7 +19,7 @@ interface GetReferralsUseCaseRequest {
   query: GetReferralsQuery;
 }
 
-type GetReferralsUseCaseResponse = Promise<GetReferralsResponseSchema['data']>;
+type GetReferralsUseCaseResponse = Promise<GetReferralsResponse['data']>;
 
 @Injectable()
 export class GetReferralsUseCase {
@@ -71,7 +71,7 @@ export class GetReferralsUseCase {
     }
 
     if (search) {
-      where.patient = { user: { name: ILike(`%${search}%`) } };
+      where.patient = { name: ILike(`%${search}%`) };
     }
 
     const total = await this.referralsRepository.count({ where });
@@ -79,41 +79,17 @@ export class GetReferralsUseCase {
     const orderBy = ORDER_BY_MAPPING[query.orderBy];
     const order =
       orderBy === 'patient'
-        ? { patient: { user: { name: query.order } } }
+        ? { patient: { name: query.order } }
         : { [orderBy]: query.order };
 
-    const referralsQuery = await this.referralsRepository.find({
-      relations: { patient: { user: true } },
-      select: {
-        patient: {
-          id: true,
-          user: { name: true, avatar_url: true },
-        },
-      },
+    const referrals = await this.referralsRepository.find({
+      select: { patient: { id: true, name: true, avatar_url: true } },
+      relations: { patient: true },
       skip: (page - 1) * perPage,
       take: perPage,
       order,
       where,
     });
-
-    const referrals = referralsQuery.map((referral) => ({
-      id: referral.id,
-      patient_id: referral.patient_id,
-      date: referral.date,
-      status: referral.status,
-      category: referral.category,
-      condition: referral.condition,
-      annotation: referral.annotation,
-      professional_name: referral.professional_name,
-      created_by: referral.created_by,
-      created_at: referral.created_at,
-      updated_at: referral.updated_at,
-      patient: {
-        name: referral.patient.user.name,
-        email: referral.patient.user.email,
-        avatar_url: referral.patient.user.avatar_url,
-      },
-    }));
 
     return { referrals, total };
   }

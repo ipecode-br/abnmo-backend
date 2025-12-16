@@ -1,7 +1,7 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 
 import { CryptographyService } from '@/app/cryptography/crypography.service';
-import { AUTH_TOKENS_MAPPING } from '@/domain/schemas/token';
+import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
 import { UserSchema } from '@/domain/schemas/user';
 import { EnvService } from '@/env/env.service';
 
@@ -23,7 +23,7 @@ export class AuthService {
     private readonly envService: EnvService,
   ) {}
 
-  async register(createUserDto: CreateUserDto): Promise<void> {
+  async registerUser(createUserDto: CreateUserDto): Promise<void> {
     await this.usersService.create(createUserDto);
 
     // TODO: create e-mail template builder
@@ -33,9 +33,11 @@ export class AuthService {
     // await this.mailService.sendEmail(createUserDto.email, subject, body);
   }
 
-  async signIn({ email, password, rememberMe }: SignInWithEmailDto): Promise<{
-    accessToken: string;
-  }> {
+  async signInUser({
+    email,
+    password,
+    rememberMe,
+  }: SignInWithEmailDto): Promise<{ accessToken: string }> {
     const user = await this.usersRepository.findByEmail(email);
 
     if (!user) {
@@ -94,7 +96,7 @@ export class AuthService {
       return { passwordResetToken: 'dummy_token' };
     }
 
-    const payload = { sub: user.id };
+    const payload = { sub: user.id, role: user.role };
 
     const passwordResetToken = await this.cryptographyService.createToken(
       AUTH_TOKENS_MAPPING.password_reset,
@@ -162,7 +164,7 @@ export class AuthService {
 
     await this.tokensRepository.deleteToken(token);
 
-    const { accessToken } = await this.signIn({
+    const { accessToken } = await this.signInUser({
       email: user.email,
       password: newPassword,
       rememberMe: false,

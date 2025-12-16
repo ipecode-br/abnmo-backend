@@ -18,16 +18,11 @@ export class UsersRepository {
   }
 
   public async findById(id: string): Promise<User | null> {
-    return await this.usersRepository.findOne({
-      where: { id },
-      relations: { patient: true },
-    });
+    return await this.usersRepository.findOne({ where: { id } });
   }
 
   public async findByEmail(email: string): Promise<User | null> {
-    return await this.usersRepository.findOne({
-      where: { email },
-    });
+    return await this.usersRepository.findOne({ where: { email } });
   }
 
   public async create(user: CreateUserDto): Promise<User> {

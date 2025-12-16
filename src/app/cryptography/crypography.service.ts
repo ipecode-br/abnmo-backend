@@ -3,7 +3,7 @@ import { JwtService, type JwtSignOptions } from '@nestjs/jwt';
 import { compare, hash } from 'bcryptjs';
 
 import type { Cryptography } from '@/domain/modules/cryptography';
-import type { AuthTokenPayloadByType } from '@/domain/schemas/token';
+import type { AuthTokenPayloads } from '@/domain/schemas/token';
 
 @Injectable()
 export class CryptographyService implements Cryptography {
@@ -19,9 +19,9 @@ export class CryptographyService implements Cryptography {
     return compare(plain, hash);
   }
 
-  async createToken<T extends keyof AuthTokenPayloadByType>(
+  async createToken<T extends keyof AuthTokenPayloads>(
     _type: T,
-    payload: AuthTokenPayloadByType[T],
+    payload: AuthTokenPayloads[T],
     options?: JwtSignOptions,
   ): Promise<string> {
     return this.jwtService.signAsync(payload, options);

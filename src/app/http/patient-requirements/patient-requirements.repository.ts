@@ -2,16 +2,16 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { PatientRequirement } from '@/domain/entities/patient-requirement';
-import {
-  PatientRequirementByPatientIdResponseType,
-  PatientRequirementListItemSchema,
-  type PatientRequirementOrderBy,
-} from '@/domain/schemas/patient-requirement';
+import type { PatientRequirementOrderBy } from '@/domain/enums/patient-requirements';
+import type {
+  PatientRequirementByPatientId,
+  PatientRequirementItem,
+} from '@/domain/schemas/patient-requirement/responses';
 
 import {
   CreatePatientRequirementDto,
-  type FindAllPatientsRequirementsByPatientIdDto,
-  FindAllPatientsRequirementsQueryDto,
+  type GetPatientRequirementsByPatientIdQuery,
+  GetPatientRequirementsQuery,
 } from './patient-requirements.dtos';
 
 export class PatientRequirementsRepository {
@@ -61,9 +61,9 @@ export class PatientRequirementsRepository {
 
   public async findAllByPatientId(
     id: string,
-    filters: FindAllPatientsRequirementsByPatientIdDto,
+    filters: GetPatientRequirementsByPatientIdQuery,
   ): Promise<{
-    requirements: PatientRequirementByPatientIdResponseType[];
+    requirements: PatientRequirementByPatientId[];
     total: number;
   }> {
     const { status, startDate, endDate, page, perPage } = filters;
@@ -97,8 +97,8 @@ export class PatientRequirementsRepository {
     const total = await query.getCount();
     const rawRequirements = await query.getMany();
 
-    const requirements: PatientRequirementByPatientIdResponseType[] =
-      rawRequirements.map((requirement) => ({
+    const requirements: PatientRequirementByPatientId[] = rawRequirements.map(
+      (requirement) => ({
         id: requirement.id,
         type: requirement.type,
         title: requirement.title,
@@ -106,16 +106,17 @@ export class PatientRequirementsRepository {
         submitted_at: requirement.submitted_at,
         approved_at: requirement.approved_at,
         created_at: requirement.created_at,
-      }));
+      }),
+    );
 
     return { requirements, total };
   }
 
   async findAllByPatientLogged(
     patientId: string,
-    filters: FindAllPatientsRequirementsByPatientIdDto,
+    filters: GetPatientRequirementsByPatientIdQuery,
   ): Promise<{
-    requirements: PatientRequirementByPatientIdResponseType[];
+    requirements: PatientRequirementByPatientId[];
     total: number;
   }> {
     const { status, startDate, endDate, page, perPage } = filters;
@@ -146,8 +147,8 @@ export class PatientRequirementsRepository {
     const total = await query.getCount();
     const rawRequirements = await query.getMany();
 
-    const requirements: PatientRequirementByPatientIdResponseType[] =
-      rawRequirements.map((requirement) => ({
+    const requirements: PatientRequirementByPatientId[] = rawRequirements.map(
+      (requirement) => ({
         id: requirement.id,
         type: requirement.type,
         title: requirement.title,
@@ -155,13 +156,14 @@ export class PatientRequirementsRepository {
         submitted_at: requirement.submitted_at,
         approved_at: requirement.approved_at,
         created_at: requirement.created_at,
-      }));
+      }),
+    );
 
     return { requirements, total };
   }
 
-  public async findAll(filters: FindAllPatientsRequirementsQueryDto): Promise<{
-    requirements: PatientRequirementListItemSchema[];
+  public async findAll(filters: GetPatientRequirementsQuery): Promise<{
+    requirements: PatientRequirementItem[];
     total: number;
   }> {
     const {
@@ -241,8 +243,8 @@ export class PatientRequirementsRepository {
       created_at: requirement.created_at,
       patient: {
         id: requirement.patient.id,
-        name: requirement.patient.user.name,
-        avatar_url: requirement.patient.user.avatar_url,
+        name: requirement.patient.name,
+        avatar_url: requirement.patient.avatar_url,
       },
     }));
 

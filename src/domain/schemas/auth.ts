@@ -1,5 +1,14 @@
 import { z } from 'zod';
 
+import { AUTH_TOKEN_ROLES } from '../enums/tokens';
+
+export const authUserSchema = z.object({
+  id: z.string().uuid(),
+  email: z.string().email(),
+  role: z.enum(AUTH_TOKEN_ROLES),
+});
+export type AuthUserSchema = z.infer<typeof signInWithEmailSchema>;
+
 export const signInWithEmailSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),

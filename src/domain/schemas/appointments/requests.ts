@@ -4,10 +4,11 @@ import {
   APPOINTMENT_ORDER_BY,
   APPOINTMENT_STATUSES,
 } from '@/domain/enums/appointments';
-import { SPECIALTY_CATEGORIES } from '@/domain/enums/specialties';
+import { PATIENT_CONDITIONS } from '@/domain/enums/patients';
+import { QUERY_ORDERS } from '@/domain/enums/queries';
+import { SPECIALTY_CATEGORIES } from '@/domain/enums/shared';
 
-import { PATIENT_CONDITIONS } from '../patient';
-import { baseQuerySchema, QUERY_ORDER } from '../query';
+import { baseQuerySchema } from '../query';
 import { appointmentSchema } from '.';
 
 export const createAppointmentSchema = appointmentSchema.pick({
@@ -18,7 +19,6 @@ export const createAppointmentSchema = appointmentSchema.pick({
   annotation: true,
   professional_name: true,
 });
-export type CreateAppointmentDto = z.infer<typeof createAppointmentSchema>;
 
 export const updateAppointmentSchema = appointmentSchema.pick({
   date: true,
@@ -26,7 +26,6 @@ export const updateAppointmentSchema = appointmentSchema.pick({
   condition: true,
   annotation: true,
 });
-export type UpdateAppointmentSchema = z.infer<typeof updateAppointmentSchema>;
 
 export const getAppointmentsQuerySchema = baseQuerySchema
   .pick({
@@ -42,7 +41,7 @@ export const getAppointmentsQuerySchema = baseQuerySchema
     category: z.enum(SPECIALTY_CATEGORIES).optional(),
     condition: z.enum(PATIENT_CONDITIONS).optional(),
     orderBy: z.enum(APPOINTMENT_ORDER_BY).optional().default('date'),
-    order: z.enum(QUERY_ORDER).optional().default('DESC'),
+    order: z.enum(QUERY_ORDERS).optional().default('DESC'),
   })
   .refine(
     (data) => {

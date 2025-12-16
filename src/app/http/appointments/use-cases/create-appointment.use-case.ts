@@ -5,11 +5,12 @@ import type { Repository } from 'typeorm';
 import { Appointment } from '@/domain/entities/appointment';
 import { Patient } from '@/domain/entities/patient';
 
+import type { AuthUserDto } from '../../auth/auth.dtos';
 import type { CreateAppointmentDto } from '../appointments.dtos';
 
 interface CreateAppointmentUseCaseRequest {
   createAppointmentDto: CreateAppointmentDto;
-  userId: string;
+  user: AuthUserDto;
 }
 
 type CreateAppointmentUseCaseResponse = Promise<void>;
@@ -27,7 +28,7 @@ export class CreateAppointmentUseCase {
 
   async execute({
     createAppointmentDto,
-    userId,
+    user,
   }: CreateAppointmentUseCaseRequest): CreateAppointmentUseCaseResponse {
     const { patient_id, date } = createAppointmentDto;
 
@@ -56,11 +57,16 @@ export class CreateAppointmentUseCase {
 
     const appointment = await this.appointmentsRepository.save({
       ...createAppointmentDto,
-      created_by: userId,
+      created_by: user.id,
     });
 
     this.logger.log(
-      { patientId: patient_id, appointmentId: appointment.id },
+      {
+        patientId: patient_id,
+        appointmentId: appointment.id,
+        userId: user.id,
+        userEmail: user.email,
+      },
       'Appointment created successfully',
     );
   }

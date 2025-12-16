@@ -12,13 +12,9 @@ import { CryptographyService } from '@/app/cryptography/crypography.service';
 import { Patient } from '@/domain/entities/patient';
 import { PatientSupport } from '@/domain/entities/patient-support';
 import { User } from '@/domain/entities/user';
-import type { UserSchema } from '@/domain/schemas/user';
 
-import {
-  CreatePatientDto,
-  type PatientScreeningDto,
-  UpdatePatientDto,
-} from './patients.dtos';
+import type { AuthUserDto } from '../auth/auth.dtos';
+import { type PatientScreeningDto, UpdatePatientDto } from './patients.dtos';
 import { PatientsRepository } from './patients.repository';
 
 @Injectable()
@@ -34,11 +30,11 @@ export class PatientsService {
 
   async screening(
     patientScreeningDto: PatientScreeningDto,
-    user: UserSchema,
+    authUser: AuthUserDto,
   ): Promise<void> {
-    if (user.role !== 'patient') {
+    if (authUser.role !== 'patient') {
       this.logger.error(
-        { userId: user.id, email: user.email },
+        { userId: authUser.id, email: authUser.email },
         'Screening failed: User is not a patient',
       );
       throw new ForbiddenException(
@@ -46,12 +42,12 @@ export class PatientsService {
       );
     }
 
-    const patient = await this.patientsRepository.findByUserId(user.id);
+    const patient = await this.patientsRepository.findById(authUser.id);
 
-    if (patient) {
+    if (patient?.status !== 'pending') {
       this.logger.error(
-        { userId: user.id, email: user.email },
-        'Screening failed: Patient already registered',
+        { userId: authUser.id, email: authUser.email },
+        'Screening failed: Patient already finished the proccess',
       );
       throw new ConflictException('Você já concluiu a triagem.');
     }
@@ -62,7 +58,11 @@ export class PatientsService {
 
     if (patientWithSameCpf) {
       this.logger.error(
-        { userId: user.id, email: user.email, cpf: patientScreeningDto.cpf },
+        {
+          userId: authUser.id,
+          email: authUser.email,
+          cpf: patientScreeningDto.cpf,
+        },
         'Screening failed: CPF already registered',
       );
       throw new ConflictException('Este CPF já está cadastrado.');
@@ -72,18 +72,9 @@ export class PatientsService {
       const patientsDataSource = manager.getRepository(Patient);
       const patientsSupportDataSource = manager.getRepository(PatientSupport);
 
-      const { name, supports, ...patientDto } = patientScreeningDto;
+      const { supports, ...patientDto } = patientScreeningDto;
 
-      if (name && name !== user.name) {
-        const usersDataSource = manager.getRepository(User);
-        await usersDataSource.update(user.id, { name });
-      }
-
-      const createdPatient = patientsDataSource.create({
-        ...patientDto,
-        user_id: user.id,
-      });
-      const savedPatient = await patientsDataSource.save(createdPatient);
+      await patientsDataSource.save(patientDto);
 
       if (supports && supports.length > 0) {
         const patientSupports = supports.map((support) =>
@@ -91,7 +82,7 @@ export class PatientsService {
             name: support.name,
             phone: support.phone,
             kinship: support.kinship,
-            patient_id: savedPatient.id,
+            patient_id: authUser.id,
           }),
         );
 
@@ -99,36 +90,32 @@ export class PatientsService {
       }
 
       this.logger.log(
-        {
-          id: savedPatient.id,
-          userId: savedPatient.user_id,
-          email: user.email,
-        },
-        'Screening: Patient created successfully',
+        { id: authUser.id, email: authUser.email },
+        'Screening: Patient finished successfully',
       );
     });
   }
 
-  async create(createPatientDto: CreatePatientDto): Promise<void> {
+  async create(patientScreeningDto: PatientScreeningDto): Promise<void> {
     const patient = await this.patientsRepository.findByEmail(
-      createPatientDto.email,
+      patientScreeningDto.email,
     );
 
     if (patient) {
       this.logger.error(
-        { email: createPatientDto.email },
+        { email: patientScreeningDto.email },
         'Create patient failed: E-mail already registered',
       );
       throw new ConflictException('Este e-mail já está cadastrado.');
     }
 
     const patientWithSameCpf = await this.patientsRepository.findByCpf(
-      createPatientDto.cpf,
+      patientScreeningDto.cpf,
     );
 
     if (patientWithSameCpf) {
       this.logger.error(
-        { email: createPatientDto.email, cpf: createPatientDto.cpf },
+        { email: patientScreeningDto.email, cpf: patientScreeningDto.cpf },
         'Create patient failed: CPF already registered',
       );
       throw new ConflictException('Este CPF já está cadastrado.');
@@ -144,23 +131,24 @@ export class PatientsService {
         await this.cryptographyService.createHash(randomPassword);
 
       const newUser = usersDataSource.create({
-        name: createPatientDto.name,
-        email: createPatientDto.email,
+        name: patientScreeningDto.name,
+        email: patientScreeningDto.email,
         password: hashedPassword,
       });
 
       const user = await usersDataSource.save(newUser);
 
+      const { supports, ...patientDto } = patientScreeningDto;
+
       const patient = patientsDataSource.create({
-        ...createPatientDto,
-        user_id: user.id,
+        ...patientDto,
         status: 'active',
       });
 
       const savedPatient = await patientsDataSource.save(patient);
 
-      if (createPatientDto.supports.length > 0) {
-        const patientSupports = createPatientDto.supports.map((support) =>
+      if (supports && supports.length > 0) {
+        const patientSupports = supports.map((support) =>
           patientsSupportDataSource.create({
             name: support.name,
             phone: support.phone,
@@ -173,11 +161,7 @@ export class PatientsService {
       }
 
       this.logger.log(
-        {
-          id: savedPatient.id,
-          userId: savedPatient.user_id,
-          email: user.email,
-        },
+        { id: savedPatient.id, email: user.email },
         'Patient created successfully',
       );
     });
@@ -198,7 +182,7 @@ export class PatientsService {
       updatePatientDto.cpf,
     );
 
-    if (patientWithSameCpf && patientWithSameCpf.user_id !== patient.user_id) {
+    if (patientWithSameCpf && patientWithSameCpf.id !== id) {
       this.logger.error(
         { email: updatePatientDto.email, cpf: updatePatientDto.cpf },
         'Update patient failed: CPF already registered',
@@ -207,31 +191,20 @@ export class PatientsService {
     }
 
     return await this.dataSource.transaction(async (manager) => {
-      const usersDataSource = manager.getRepository(User);
       const patientsDataSource = manager.getRepository(Patient);
 
-      if (updatePatientDto.name !== patient.name) {
-        await usersDataSource.update(patient.user_id, {
-          name: updatePatientDto.name,
-        });
-      }
-
       if (updatePatientDto.email !== patient.email) {
-        const existingUser = await usersDataSource.findOne({
+        const emailAlreadyRegistered = await patientsDataSource.findOne({
           where: { email: updatePatientDto.email },
         });
 
-        if (existingUser) {
+        if (emailAlreadyRegistered) {
           this.logger.error(
             { id: patient.id, email: updatePatientDto.email },
             'Update patient failed: E-mail already registered',
           );
           throw new ConflictException('Este e-mail já está em uso.');
         }
-
-        await usersDataSource.update(patient.user_id, {
-          email: updatePatientDto.email,
-        });
       }
 
       const updatedPatient = updatePatientDto;
@@ -240,10 +213,7 @@ export class PatientsService {
 
       await patientsDataSource.save(patient);
 
-      this.logger.log(
-        { id: patient.id, userId: patient.user_id, email: patient.email },
-        'Patient updated successfully',
-      );
+      this.logger.log({ id: patient.id }, 'Patient updated successfully');
     });
   }
 
@@ -261,7 +231,7 @@ export class PatientsService {
     await this.patientsRepository.deactivate(id);
 
     this.logger.log(
-      { id: patient.id, userId: patient.user_id, email: patient.email },
+      { id: patient.id, email: patient.email },
       'Patient deactivated successfully',
     );
   }

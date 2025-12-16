@@ -12,12 +12,9 @@ import {
   APPOINTMENT_STATUSES,
   type AppointmentStatus,
 } from '../enums/appointments';
-import {
-  SPECIALTY_CATEGORIES,
-  type SpecialtyCategory,
-} from '../enums/specialties';
+import { PATIENT_CONDITIONS, type PatientCondition } from '../enums/patients';
+import { SPECIALTY_CATEGORIES, type SpecialtyCategory } from '../enums/shared';
 import type { AppointmentSchema } from '../schemas/appointments';
-import { PATIENT_CONDITIONS, type PatientCondition } from '../schemas/patient';
 import { Patient } from './patient';
 
 @Entity('appointments')

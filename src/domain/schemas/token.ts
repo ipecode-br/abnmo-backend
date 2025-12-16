@@ -1,19 +1,10 @@
 import { z } from 'zod';
 
-import type { UserRoleType } from './user';
-
-export const AUTH_TOKENS_MAPPING = {
-  access_token: 'access_token',
-  password_reset: 'password_reset',
-  invite_token: 'invite_token',
-} as const;
-export type AuthTokenType = keyof typeof AUTH_TOKENS_MAPPING;
-
-export const AUTH_TOKENS = [
-  AUTH_TOKENS_MAPPING.access_token,
-  AUTH_TOKENS_MAPPING.password_reset,
-  AUTH_TOKENS_MAPPING.invite_token,
-] as const;
+import {
+  AUTH_TOKENS,
+  type AUTH_TOKENS_MAPPING,
+  type AuthTokenRole,
+} from '../enums/tokens';
 
 export const authTokenSchema = z
   .object({
@@ -26,7 +17,7 @@ export const authTokenSchema = z
     created_at: z.coerce.date(),
   })
   .strict();
-export type AuthTokenSchema = z.infer<typeof authTokenSchema>;
+export type AuthToken = z.infer<typeof authTokenSchema>;
 
 export const createAuthTokenSchema = authTokenSchema.pick({
   user_id: true,
@@ -35,14 +26,13 @@ export const createAuthTokenSchema = authTokenSchema.pick({
   type: true,
   expires_at: true,
 });
-export type CreateAuthTokenSchema = z.infer<typeof createAuthTokenSchema>;
 
-export type AccessTokenPayloadType = { sub: string; role: UserRoleType };
-export type PasswordResetPayloadType = { sub: string };
-export type InviteTokenPayloadType = { sub: string; role: UserRoleType };
+export type AccessTokenPayload = { sub: string; role: AuthTokenRole };
+export type PasswordResetPayload = { sub: string; role: AuthTokenRole };
+export type InviteTokenPayload = { sub: string; role: AuthTokenRole };
 
-export type AuthTokenPayloadByType = {
-  [AUTH_TOKENS_MAPPING.access_token]: AccessTokenPayloadType;
-  [AUTH_TOKENS_MAPPING.password_reset]: PasswordResetPayloadType;
-  [AUTH_TOKENS_MAPPING.invite_token]: InviteTokenPayloadType;
+export type AuthTokenPayloads = {
+  [AUTH_TOKENS_MAPPING.access_token]: AccessTokenPayload;
+  [AUTH_TOKENS_MAPPING.password_reset]: PasswordResetPayload;
+  [AUTH_TOKENS_MAPPING.invite_token]: InviteTokenPayload;
 };

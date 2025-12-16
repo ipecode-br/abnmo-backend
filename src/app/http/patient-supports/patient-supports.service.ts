@@ -6,8 +6,8 @@ import {
 } from '@nestjs/common';
 
 import { PatientSupport } from '@/domain/entities/patient-support';
-import type { User } from '@/domain/entities/user';
 
+import type { AuthUserDto } from '../auth/auth.dtos';
 import { PatientsRepository } from '../patients/patients.repository';
 import {
   CreatePatientSupportDto,
@@ -60,7 +60,7 @@ export class PatientSupportsService {
   async update(
     id: string,
     updatePatientsSupportDto: UpdatePatientSupportDto,
-    user: User,
+    authUser: AuthUserDto,
   ): Promise<void> {
     const patientSupport = await this.patientSupportsRepository.findById(id);
 
@@ -68,7 +68,10 @@ export class PatientSupportsService {
       throw new NotFoundException('Contato de apoio não encontrado.');
     }
 
-    if (user.role === 'patient' && user.id !== patientSupport.patient_id) {
+    if (
+      authUser.role === 'patient' &&
+      authUser.id !== patientSupport.patient_id
+    ) {
       throw new ForbiddenException(
         'Você não tem permissão para atualizar este contato de apoio.',
       );
@@ -84,14 +87,17 @@ export class PatientSupportsService {
     );
   }
 
-  async remove(id: string, user: User): Promise<void> {
+  async remove(id: string, authUser: AuthUserDto): Promise<void> {
     const patientSupport = await this.patientSupportsRepository.findById(id);
 
     if (!patientSupport) {
       throw new NotFoundException('Contato de apoio não encontrado.');
     }
 
-    if (user.role === 'patient' && user.id !== patientSupport.patient_id) {
+    if (
+      authUser.role === 'patient' &&
+      authUser.id !== patientSupport.patient_id
+    ) {
       throw new ForbiddenException(
         'Você não tem permissão para remover este contato de apoio.',
       );

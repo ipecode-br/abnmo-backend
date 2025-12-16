@@ -2,44 +2,44 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 import {
   USER_ROLES,
-  type UserRoleType,
-  type UserSchema,
-} from '../schemas/user';
-import { Patient } from './patient';
+  USER_STATUSES,
+  type UserRole,
+  type UserStatus,
+} from '../enums/users';
+import type { UserSchema } from '../schemas/user';
 
 @Entity('users')
 export class User implements UserSchema {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar', length: 64 })
   name: string;
 
-  @Column({ type: 'varchar', length: 255, unique: true })
+  @Column({ type: 'varchar', length: 64 })
   email: string;
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar' })
   password: string;
 
-  @Column({ type: 'enum', enum: USER_ROLES, default: 'patient' })
-  role: UserRoleType;
-
-  @Column({ type: 'varchar', length: 255, default: null })
+  @Column({ type: 'varchar', nullable: true })
   avatar_url: string | null;
+
+  @Column({ type: 'enum', enum: USER_ROLES })
+  role: UserRole;
+
+  @Column({ type: 'enum', enum: USER_STATUSES, default: 'active' })
+  status: UserStatus;
 
   @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
 
   @UpdateDateColumn({ type: 'timestamp' })
   updated_at: Date;
-
-  @OneToOne(() => Patient, (patient) => patient.user)
-  patient: Patient;
 }

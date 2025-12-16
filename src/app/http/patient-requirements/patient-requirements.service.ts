@@ -5,8 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import { UserSchema } from '@/domain/schemas/user';
-
+import type { AuthUserDto } from '../auth/auth.dtos';
 import { PatientsRepository } from '../patients/patients.repository';
 import { CreatePatientRequirementDto } from './patient-requirements.dtos';
 import { PatientRequirementsRepository } from './patient-requirements.repository';
@@ -22,28 +21,28 @@ export class PatientRequirementsService {
 
   async create(
     createPatientRequirementDto: CreatePatientRequirementDto,
-    userId: string,
+    authUser: AuthUserDto,
   ): Promise<void> {
     const { patient_id } = createPatientRequirementDto;
 
-    const patientExists = await this.patientsRepository.findById(patient_id);
+    const patient = await this.patientsRepository.findById(patient_id);
 
-    if (!patientExists) {
+    if (!patient) {
       throw new NotFoundException('Paciente não encontrado.');
     }
 
     await this.patientRequirementsRepository.create({
       ...createPatientRequirementDto,
-      required_by: userId,
+      required_by: authUser.id,
     });
 
     this.logger.log(
-      { patientId: patient_id, requiredBy: userId },
+      { patientId: patient_id, createdBy: authUser.id },
       'Requirement created successfully',
     );
   }
 
-  async approve(id: string, user: UserSchema): Promise<void> {
+  async approve(id: string, authUser: AuthUserDto): Promise<void> {
     const patientRequirement =
       await this.patientRequirementsRepository.findById(id);
 
@@ -57,15 +56,19 @@ export class PatientRequirementsService {
       );
     }
 
-    await this.patientRequirementsRepository.approve(id, user.id);
+    await this.patientRequirementsRepository.approve(id, authUser.id);
 
     this.logger.log(
-      { id: patientRequirement.id, userId: user.id, approvedAt: new Date() },
+      {
+        id: patientRequirement.id,
+        userId: authUser.id,
+        approvedAt: new Date(),
+      },
       'Requirement approved successfully',
     );
   }
 
-  async decline(id: string, declinedBy: string): Promise<void> {
+  async decline(id: string, authUser: AuthUserDto): Promise<void> {
     const requirement = await this.patientRequirementsRepository.findById(id);
 
     if (!requirement) {
@@ -77,10 +80,10 @@ export class PatientRequirementsService {
         'Solicitação precisa estar aguardando aprovação para ser recusada.',
       );
 
-    await this.patientRequirementsRepository.decline(id, declinedBy);
+    await this.patientRequirementsRepository.decline(id, authUser.id);
 
     this.logger.log(
-      { id: requirement.id, userId: declinedBy, approvedAt: new Date() },
+      { id: requirement.id, userId: authUser.id, approvedAt: new Date() },
       'Requirement declined successfully',
     );
   }
