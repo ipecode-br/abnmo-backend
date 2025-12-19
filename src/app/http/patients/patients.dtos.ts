@@ -5,7 +5,7 @@ import {
   getPatientsQuerySchema,
   patientScreeningSchema,
   updatePatientSchema,
-} from '@/domain/schemas/patient/requests';
+} from '@/domain/schemas/patients/requests';
 
 export class GetPatientsQuery extends createZodDto(getPatientsQuerySchema) {}
 

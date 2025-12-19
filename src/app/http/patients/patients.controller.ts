@@ -14,11 +14,11 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthUser } from '@/common/decorators/auth-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { BaseResponse } from '@/domain/schemas/base';
+import type { GetPatientSupportsResponse } from '@/domain/schemas/patient-support/responses';
 import type {
   GetPatientResponse,
   GetPatientsResponse,
-} from '@/domain/schemas/patient/responses';
-import type { GetPatientSupportsResponse } from '@/domain/schemas/patient-support/responses';
+} from '@/domain/schemas/patients/responses';
 
 import type { AuthUserDto } from '../auth/auth.dtos';
 import { PatientSupportsRepository } from '../patient-supports/patient-supports.repository';

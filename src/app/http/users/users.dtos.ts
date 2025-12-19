@@ -3,7 +3,7 @@ import { createZodDto } from 'nestjs-zod';
 import {
   createUserSchema,
   updateUserSchema,
-} from '@/domain/schemas/user/requests';
+} from '@/domain/schemas/users/requests';
 
 export class CreateUserDto extends createZodDto(createUserSchema) {}
 

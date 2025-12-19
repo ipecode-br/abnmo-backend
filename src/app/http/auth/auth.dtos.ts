@@ -7,7 +7,7 @@ import {
   resetPasswordSchema,
   signInWithEmailSchema,
 } from '@/domain/schemas/auth';
-import { createAuthTokenSchema } from '@/domain/schemas/token';
+import { createAuthTokenSchema } from '@/domain/schemas/tokens';
 
 export class AuthUserDto extends createZodDto(authUserSchema) {}
 

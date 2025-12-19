@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
 import type { PatientOrderBy } from '@/domain/enums/patients';
-import type { PatientResponse } from '@/domain/schemas/patient/responses';
+import type { PatientResponse } from '@/domain/schemas/patients/responses';
 
 import { CreatePatientDto, GetPatientsQuery } from './patients.dtos';
 

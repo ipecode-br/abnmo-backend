@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import { baseResponseSchema } from '../base';
-import { patientSchema } from '../patient';
+import { patientSchema } from '../patients';
 import { patientRequirementSchema } from '.';
 
 export const patientRequirementItemSchema = patientRequirementSchema

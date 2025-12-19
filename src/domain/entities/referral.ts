@@ -11,7 +11,7 @@ import {
 import { PATIENT_CONDITIONS, type PatientCondition } from '../enums/patients';
 import { REFERRAL_STATUSES, type ReferralStatus } from '../enums/referrals';
 import { SPECIALTY_CATEGORIES, type SpecialtyCategory } from '../enums/shared';
-import { ReferralSchema } from '../schemas/referral';
+import { ReferralSchema } from '../schemas/referrals';
 import { Patient } from './patient';
 
 @Entity('referrals')
@@ -22,7 +22,7 @@ export class Referral implements ReferralSchema {
   @Column('uuid')
   patient_id: string;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'datetime' })
   date: Date;
 
   @Column({ type: 'enum', enum: REFERRAL_STATUSES, default: 'scheduled' })
@@ -43,10 +43,10 @@ export class Referral implements ReferralSchema {
   @Column('uuid')
   created_by: string;
 
-  @CreateDateColumn({ type: 'timestamp' })
+  @CreateDateColumn({ type: 'datetime' })
   created_at: Date;
 
-  @UpdateDateColumn({ type: 'timestamp' })
+  @UpdateDateColumn({ type: 'datetime' })
   updated_at: Date;
 
   @ManyToOne(() => Patient, (patient) => patient.appointments)

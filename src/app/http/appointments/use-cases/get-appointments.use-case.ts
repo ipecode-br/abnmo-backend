@@ -57,15 +57,15 @@ export class GetAppointmentsUseCase {
     }
 
     if (startDate && !endDate) {
-      where.date = MoreThanOrEqual(startDate);
+      where.created_at = MoreThanOrEqual(startDate);
     }
 
     if (endDate && !startDate) {
-      where.date = LessThanOrEqual(endDate);
+      where.created_at = LessThanOrEqual(endDate);
     }
 
     if (startDate && endDate) {
-      where.date = Between(startDate, endDate);
+      where.created_at = Between(startDate, endDate);
     }
 
     if (status) {

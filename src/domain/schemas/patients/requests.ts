@@ -30,7 +30,7 @@ export const createPatientSchema = z
       need_legal_assistance: true,
       take_medication: true,
       medication_desc: true,
-      has_nmo_diagnosis: true,
+      nmo_diagnosis: true,
     }),
   );
 export type CreatePatient = z.infer<typeof createPatientSchema>;

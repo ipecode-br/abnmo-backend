@@ -25,7 +25,7 @@ export class Appointment implements AppointmentSchema {
   @Column('uuid')
   patient_id: string;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'datetime' })
   date: Date;
 
   @Column({ type: 'enum', enum: APPOINTMENT_STATUSES, default: 'scheduled' })
@@ -40,16 +40,16 @@ export class Appointment implements AppointmentSchema {
   @Column({ type: 'varchar', length: 500, nullable: true })
   annotation: string | null;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({ type: 'varchar', length: 64, nullable: true })
   professional_name: string | null;
 
   @Column('uuid')
   created_by: string;
 
-  @CreateDateColumn({ type: 'timestamp' })
+  @CreateDateColumn({ type: 'datetime' })
   created_at: Date;
 
-  @UpdateDateColumn({ type: 'timestamp' })
+  @UpdateDateColumn({ type: 'datetime' })
   updated_at: Date;
 
   @ManyToOne(() => Patient, (patient) => patient.appointments)

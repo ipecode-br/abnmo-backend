@@ -6,7 +6,9 @@ import { CryptographyModule } from '@/app/cryptography/cryptography.module';
 import { MailModule } from '@/app/mail/mail.module';
 import { AuthGuard } from '@/common/guards/auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
+import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
+import { User } from '@/domain/entities/user';
 import { EnvModule } from '@/env/env.module';
 import { UtilsModule } from '@/utils/utils.module';
 
@@ -17,7 +19,7 @@ import { TokensRepository } from './tokens.repository';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Token]),
+    TypeOrmModule.forFeature([Patient, Token, User]),
     CryptographyModule,
     UsersModule,
     UtilsModule,

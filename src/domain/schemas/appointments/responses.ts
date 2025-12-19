@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import { baseResponseSchema } from '../base';
-import { patientSchema } from '../patient';
+import { patientSchema } from '../patients';
 import { appointmentSchema } from '.';
 
 export const appointmentResponseSchema = appointmentSchema.extend({

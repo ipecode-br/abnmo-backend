@@ -2,7 +2,7 @@ import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 
 import { CryptographyService } from '@/app/cryptography/crypography.service';
 import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
-import { UserSchema } from '@/domain/schemas/user';
+import { UserSchema } from '@/domain/schemas/users';
 import { EnvService } from '@/env/env.service';
 
 import type { CreateUserDto } from '../users/users.dtos';

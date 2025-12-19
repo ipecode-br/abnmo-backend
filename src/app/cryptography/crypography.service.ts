@@ -3,7 +3,7 @@ import { JwtService, type JwtSignOptions } from '@nestjs/jwt';
 import { compare, hash } from 'bcryptjs';
 
 import type { Cryptography } from '@/domain/modules/cryptography';
-import type { AuthTokenPayloads } from '@/domain/schemas/token';
+import type { AuthTokenPayloads } from '@/domain/schemas/tokens';
 
 @Injectable()
 export class CryptographyService implements Cryptography {

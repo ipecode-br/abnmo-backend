@@ -41,22 +41,22 @@ export class PatientRequirement implements PatientRequirementSchema {
   })
   status: PatientRequirementStatus;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: 'datetime', nullable: true })
   submitted_at: Date | null;
 
   @Column({ type: 'uuid', nullable: true })
   approved_by: string | null;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: 'datetime', nullable: true })
   approved_at: Date | null;
 
   @Column({ type: 'uuid' })
   created_by: string;
 
-  @CreateDateColumn({ type: 'timestamp' })
+  @CreateDateColumn({ type: 'datetime' })
   created_at: Date;
 
-  @UpdateDateColumn({ type: 'timestamp' })
+  @UpdateDateColumn({ type: 'datetime' })
   updated_at: Date;
 
   @ManyToOne(() => Patient, (patient) => patient.requirements)

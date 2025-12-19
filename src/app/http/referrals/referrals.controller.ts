@@ -12,8 +12,8 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthUser } from '@/common/decorators/auth-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { BaseResponse } from '@/domain/schemas/base';
-import type { GetReferralsResponse } from '@/domain/schemas/referral/responses';
-import { UserSchema } from '@/domain/schemas/user';
+import type { GetReferralsResponse } from '@/domain/schemas/referrals/responses';
+import { UserSchema } from '@/domain/schemas/users';
 
 import { CreateReferralDto, GetReferralsQuery } from './referrals.dtos';
 import { CancelReferralUseCase } from './use-cases/cancel-referral.use-case';

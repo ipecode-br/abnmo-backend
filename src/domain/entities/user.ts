@@ -12,7 +12,7 @@ import {
   type UserRole,
   type UserStatus,
 } from '../enums/users';
-import type { UserSchema } from '../schemas/user';
+import type { UserSchema } from '../schemas/users';
 
 @Entity('users')
 export class User implements UserSchema {
@@ -37,9 +37,9 @@ export class User implements UserSchema {
   @Column({ type: 'enum', enum: USER_STATUSES, default: 'active' })
   status: UserStatus;
 
-  @CreateDateColumn({ type: 'timestamp' })
+  @CreateDateColumn({ type: 'datetime' })
   created_at: Date;
 
-  @UpdateDateColumn({ type: 'timestamp' })
+  @UpdateDateColumn({ type: 'datetime' })
   updated_at: Date;
 }

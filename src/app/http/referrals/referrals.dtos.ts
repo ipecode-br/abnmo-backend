@@ -3,7 +3,7 @@ import { createZodDto } from 'nestjs-zod';
 import {
   createReferralSchema,
   getReferralsQuerySchema,
-} from '@/domain/schemas/referral/requests';
+} from '@/domain/schemas/referrals/requests';
 
 export class CreateReferralDto extends createZodDto(createReferralSchema) {}
 

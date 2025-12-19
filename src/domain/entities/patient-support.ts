@@ -28,10 +28,10 @@ export class PatientSupport implements PatientSupportSchema {
   @Column({ type: 'varchar', length: 50 })
   kinship: string;
 
-  @CreateDateColumn({ type: 'timestamp' })
+  @CreateDateColumn({ type: 'datetime' })
   created_at: Date;
 
-  @UpdateDateColumn({ type: 'timestamp' })
+  @UpdateDateColumn({ type: 'datetime' })
   updated_at: Date;
 
   @ManyToOne(() => Patient, (patient) => patient.supports)

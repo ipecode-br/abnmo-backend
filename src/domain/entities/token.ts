@@ -6,7 +6,7 @@ import {
 } from 'typeorm';
 
 import { AUTH_TOKENS, type AuthTokenKey } from '../enums/tokens';
-import type { AuthToken } from '../schemas/token';
+import type { AuthToken } from '../schemas/tokens';
 
 @Entity('tokens')
 export class Token implements AuthToken {
@@ -25,9 +25,9 @@ export class Token implements AuthToken {
   @Column({ type: 'enum', enum: AUTH_TOKENS })
   type: AuthTokenKey;
 
-  @CreateDateColumn({ type: 'timestamp', nullable: true })
+  @CreateDateColumn({ type: 'datetime', nullable: true })
   expires_at: Date | null;
 
-  @CreateDateColumn({ type: 'timestamp' })
+  @CreateDateColumn({ type: 'datetime' })
   created_at: Date;
 }

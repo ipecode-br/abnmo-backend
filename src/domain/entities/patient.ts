@@ -14,11 +14,13 @@ import {
 
 import {
   PATIENT_GENDERS,
+  PATIENT_NMO_DIAGNOSTICS,
   PATIENT_STATUSES,
   type PatientGender,
+  type PatientNmoDiagnosis,
   type PatientStatus,
 } from '../enums/patients';
-import type { PatientSchema } from '../schemas/patient';
+import type { PatientSchema } from '../schemas/patients';
 import { Appointment } from './appointment';
 import { PatientRequirement } from './patient-requirement';
 import { PatientSupport } from './patient-support';
@@ -47,7 +49,7 @@ export class Patient implements PatientSchema {
   @Column({ type: 'enum', enum: PATIENT_GENDERS, default: 'prefer_not_to_say' })
   gender: PatientGender;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: 'datetime', nullable: true })
   date_of_birth: Date | null;
 
   @Column({ type: 'varchar', length: 11, nullable: true })
@@ -77,13 +79,13 @@ export class Patient implements PatientSchema {
   @Column({ type: 'varchar', length: 500, nullable: true })
   medication_desc: string | null;
 
-  @Column({ type: 'tinyint', width: 1, default: 0 })
-  has_nmo_diagnosis: boolean;
+  @Column({ type: 'enum', enum: PATIENT_NMO_DIAGNOSTICS, nullable: true })
+  nmo_diagnosis: PatientNmoDiagnosis | null;
 
-  @CreateDateColumn({ type: 'timestamp' })
+  @CreateDateColumn({ type: 'datetime' })
   created_at: Date;
 
-  @UpdateDateColumn({ type: 'timestamp' })
+  @UpdateDateColumn({ type: 'datetime' })
   updated_at: Date;
 
   @OneToMany(() => PatientSupport, (support) => support.patient)

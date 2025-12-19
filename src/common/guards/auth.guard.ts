@@ -13,7 +13,7 @@ import type { AuthUserDto } from '@/app/http/auth/auth.dtos';
 import type { Cookie } from '@/domain/cookies';
 import { Patient } from '@/domain/entities/patient';
 import { User } from '@/domain/entities/user';
-import type { AccessTokenPayload } from '@/domain/schemas/token';
+import type { AccessTokenPayload } from '@/domain/schemas/tokens';
 
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 

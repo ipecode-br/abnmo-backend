@@ -1,21 +1,215 @@
 # Copilot Instructions for ABNMO Platform
 
-## Architecture Overview
+NestJS SaaS API managing patients, referrals, appointments, and health tracking. Uses TypeORM with MySQL and Zod schemas for validation.
 
-This is an NestJS application for a SaaS platform managing patients and appointments.
+## Architecture: MVC Pattern
 
-- **Stack**: NestJS API with TypeORM and MySQL
+**Stack**: NestJS + TypeORM + MySQL + Zod
 
-## Code Patterns & Conventions
+Module structure (`/src/app/http/{featureName}`):
+```
+{feature}/
+├── {feature}.module.ts       # Module definition with imports/providers
+├── {feature}.controller.ts   # Routes and request handling
+├── {feature}.dtos.ts         # DTOs created from Zod schemas
+└── use-cases/
+    ├── get-{feature}.use-case.ts         # Read operations
+    ├── create-{feature}.use-case.ts      # Create operations
+    ├── update-{feature}.use-case.ts      # Update operations
+    └── cancel-{feature}.use-case.ts      # Soft delete/cancel operations
+```
 
-Always adhere to the conventions in `/docs` files and follow these patterns:
+## Module Organization
 
-- **File Structure**: Follow a consistent file structure for services, routes, and components.
-- **Naming Conventions**: Use camelCase for variables and functions, PascalCase for classes and components.
+### 1. Module File (`*.module.ts`)
 
-## Common Gotchas
+Register entities, inject TypeORM repositories, and declare use-case providers:
 
-1. **Database Relations**: Always destructure relations from the main table object, example: `relations: { user: true }`
+```typescript
+@Module({
+  imports: [TypeOrmModule.forFeature([Entity1, Entity2])],
+  controllers: [FeatureController],
+  providers: [
+    GetFeatureUseCase,
+    CreateFeatureUseCase,
+    UpdateFeatureUseCase,
+    CancelFeatureUseCase,
+  ],
+})
+export class FeatureModule {}
+```
+
+### 2. DTOs File (`*.dtos.ts`)
+
+Create DTOs exclusively from Zod schemas in `/domain/schemas`. Use `createZodDto()` and name DTOs explicitly:
+
+```typescript
+import { createZodDto } from 'nestjs-zod';
+import { createAppointmentSchema, updateAppointmentSchema, getAppointmentsQuerySchema } from '@/domain/schemas/appointments/requests';
+
+export class CreateAppointmentDto extends createZodDto(createAppointmentSchema) {}
+export class UpdateAppointmentDto extends createZodDto(updateAppointmentSchema) {}
+export class GetAppointmentsQuery extends createZodDto(getAppointmentsQuerySchema) {}
+```
+
+**Naming**: `{Action}{Entity}Dto` (e.g., `CreateAppointmentDto`, `GetAppointmentsQuery`)
+
+### 3. Controller File (`*.controller.ts`)
+
+Inject all use-cases and call them based on HTTP methods:
+
+```typescript
+@Controller('appointments')
+export class AppointmentsController {
+  constructor(
+    private readonly getAppointmentsUseCase: GetAppointmentsUseCase,
+    private readonly createAppointmentUseCase: CreateAppointmentUseCase,
+    private readonly updateAppointmentUseCase: UpdateAppointmentUseCase,
+    private readonly cancelAppointmentUseCase: CancelAppointmentUseCase,
+  ) {}
+
+  @Get()
+  async get(@Query() query: GetAppointmentsQuery): Promise<Response> {
+    const data = await this.getAppointmentsUseCase.execute(query);
+    return { success: true, data };
+  }
+
+  @Post()
+  async create(@Body() dto: CreateAppointmentDto): Promise<BaseResponse> {
+    await this.createAppointmentUseCase.execute(dto);
+    return { success: true };
+  }
+}
+```
+
+### 4. Use-Case Files (`use-cases/*.use-case.ts`)
+
+One use-case per file, one responsibility. Define input/output types explicitly:
+
+```typescript
+interface GetAppointmentsUseCaseRequest {
+  query: GetAppointmentsQuery;
+  user: AuthUserDto;
+}
+
+type GetAppointmentsUseCaseResponse = Promise<Appointment[]>;
+
+@Injectable()
+export class GetAppointmentsUseCase {
+  constructor(
+    @InjectRepository(Appointment)
+    private readonly appointmentsRepository: Repository<Appointment>,
+  ) {}
+
+  async execute(request: GetAppointmentsUseCaseRequest): GetAppointmentsUseCaseResponse {
+    // Implementation
+  }
+}
+```
+
+**Naming**: `{Action}{Entity}UseCase` (e.g., `CreateAppointmentUseCase`, `GetAppointmentsUseCase`)
+
+## Zod Schemas & Enums
+
+Centralize validation and types in `/domain/schemas` and `/domain/enums`:
+
+- **Schemas** (`/domain/schemas/{entity}/{type}.ts`): Define request/response validation
+- **Enums** (`/domain/enums/{entity}.ts`): Define constants and types
+
+Example enum pattern:
+```typescript
+export const APPOINTMENT_STATUSES = ['scheduled', 'canceled', 'completed'] as const;
+export type AppointmentStatus = (typeof APPOINTMENT_STATUSES)[number];
+```
+
+DTOs inherit validation directly from schemas—no manual definition needed.
+
+## Naming Conventions
+
+Clear, explicit, human-readable names. Reduce cognitive load:
+
+- **Variables/Functions**: `camelCase` (e.g., `getUserAppointments`, `createdAt`)
+- **Classes/Types**: `PascalCase` (e.g., `CreateAppointmentDto`, `AppointmentStatus`)
+- **Enums/Constants**: `SCREAMING_SNAKE_CASE` (e.g., `APPOINTMENT_STATUSES`, `MAX_RESULTS_LIMIT`)
+- **Files**: `kebab-case` (e.g., `create-appointment.use-case.ts`, `appointments.dtos.ts`)
+
+Files should match their exports: `get-total-patients.use-case.ts` exports `GetTotalPatientsUseCase`.
+
+## Database Patterns
+
+### Queries
+
+- **Always select fields**: `select: { id: true, name: true }`—avoid over-fetching
+- **Count operations**: Select only `id` for performance
+- **Relations**: Destructure explicitly: `relations: { user: true }`
+
+```typescript
+const appointments = await this.appointmentsRepository.find({
+  where: { patientId: id },
+  select: { id: true, date: true, status: true },
+  relations: { patient: true },
+});
+```
+
+### Repository Access
+
+Inject TypeORM repositories directly into use-cases. No separate repository files:
+
+```typescript
+@Injectable()
+export class CreateAppointmentUseCase {
+  constructor(
+    @InjectRepository(Appointment)
+    private readonly appointmentsRepository: Repository<Appointment>,
+  ) {}
+}
+```
+
+## Common Patterns
+
+### Error Handling
+
+Use NestJS exceptions with descriptive messages:
+
+```typescript
+if (!patient) {
+  throw new NotFoundException('Patient not found.');
+}
+
+if (date > maxDate) {
+  throw new BadRequestException('Appointment date exceeds 3-month limit.');
+}
+```
+
+### Logging
+
+Log significant events in use-cases:
+
+```typescript
+private readonly logger = new Logger(CreateAppointmentUseCase.name);
+
+this.logger.log({
+  patientId,
+  appointmentId,
+  userId,
+}, 'Appointment created successfully');
+```
+
+### Query Builders
+
+Use query builders for complex filtering:
+
+```typescript
+const where: FindOptionsWhere<Patient> = {
+  status: status ?? Not('pending'),
+};
+
+if (period) {
+  where.created_at = Between(dateRange.startDate, dateRange.endDate);
+}
+
+const result = await this.patientsRepository.find({ where });
+```
 
 ## Writing Guidelines
 

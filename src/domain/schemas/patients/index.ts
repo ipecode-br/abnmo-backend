@@ -1,7 +1,11 @@
 import { z } from 'zod';
 
 import { BRAZILIAN_STATES } from '@/constants/brazilian-states';
-import { PATIENT_GENDERS, PATIENT_STATUSES } from '@/domain/enums/patients';
+import {
+  PATIENT_GENDERS,
+  PATIENT_NMO_DIAGNOSTICS,
+  PATIENT_STATUSES,
+} from '@/domain/enums/patients';
 
 import {
   avatarSchema,
@@ -31,7 +35,7 @@ export const patientSchema = z
     need_legal_assistance: z.boolean().default(false),
     take_medication: z.boolean().default(false),
     medication_desc: z.string().max(500).nullable(),
-    has_nmo_diagnosis: z.boolean().default(false),
+    nmo_diagnosis: z.enum(PATIENT_NMO_DIAGNOSTICS).nullable(),
     created_at: z.coerce.date(),
     updated_at: z.coerce.date(),
   })

@@ -15,7 +15,7 @@ import { Public } from '@/common/decorators/public.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { COOKIES_MAPPING } from '@/domain/cookies';
 import type { BaseResponse } from '@/domain/schemas/base';
-import { UserSchema } from '@/domain/schemas/user';
+import { UserSchema } from '@/domain/schemas/users';
 import { UtilsService } from '@/utils/utils.service';
 
 import { CreateUserDto } from '../users/users.dtos';

@@ -36,15 +36,14 @@ export class GetTotalReferredPatientsByStateUseCase {
       return this.patientsRepository
         .createQueryBuilder('patient')
         .innerJoin('patient.referrals', 'referral')
-        .where('referral.referred_to IS NOT NULL')
-        .andWhere('referral.referred_to != :empty', { empty: '' });
+        .where('referral.id IS NOT NULL');
     };
 
     function getQueryBuilderWithFilters(
       queryBuilder: SelectQueryBuilder<Patient>,
     ) {
       if (startDate && endDate) {
-        queryBuilder.andWhere('referral.date BETWEEN :start AND :end', {
+        queryBuilder.andWhere('referral.created_at BETWEEN :start AND :end', {
           start: startDate,
           end: endDate,
         });

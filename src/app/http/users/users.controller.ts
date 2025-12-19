@@ -3,7 +3,7 @@ import { ApiTags } from '@nestjs/swagger';
 
 import { AuthUser } from '@/common/decorators/auth-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
-import type { GetUserResponse } from '@/domain/schemas/user/responses';
+import type { GetUserResponse } from '@/domain/schemas/users/responses';
 
 import type { AuthUserDto } from '../auth/auth.dtos';
 import { UsersService } from './users.service';
