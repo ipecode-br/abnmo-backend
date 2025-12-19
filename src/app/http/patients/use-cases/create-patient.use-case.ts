@@ -1,8 +1,10 @@
 import { ConflictException, Injectable, Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
+import { DataSource } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
+import { PatientSupport } from '@/domain/entities/patient-support';
 
 import type { CreatePatientDto } from '../patients.dtos';
 
@@ -19,16 +21,18 @@ export class CreatePatientUseCase {
   constructor(
     @InjectRepository(Patient)
     private readonly patientsRepository: Repository<Patient>,
+    @InjectDataSource()
+    private readonly dataSource: DataSource,
   ) {}
 
   async execute({
     createPatientDto,
   }: CreatePatientUseCaseRequest): CreatePatientUseCaseResponse {
-    const { email, cpf } = createPatientDto;
+    const { email, cpf, supports, ...patientData } = createPatientDto;
 
     const patientWithEmail = await this.patientsRepository.findOne({
-      where: { email },
       select: { id: true },
+      where: { email },
     });
 
     if (patientWithEmail) {
@@ -40,8 +44,8 @@ export class CreatePatientUseCase {
     }
 
     const patientWithCpf = await this.patientsRepository.findOne({
-      where: { cpf },
       select: { id: true },
+      where: { cpf },
     });
 
     if (patientWithCpf) {
@@ -52,14 +56,34 @@ export class CreatePatientUseCase {
       throw new ConflictException('O CPF informado já está registrado.');
     }
 
-    const patient = await this.patientsRepository.save({
-      ...createPatientDto,
-      status: 'active',
-    });
+    await this.dataSource.transaction(async (manager) => {
+      const patientsDataSource = manager.getRepository(Patient);
+      const patientSupportsDataSource = manager.getRepository(PatientSupport);
 
-    this.logger.log(
-      { patientId: patient.id, email },
-      'Patient created successfully',
-    );
+      const patient = await patientsDataSource.save({
+        ...patientData,
+        email,
+        cpf,
+        status: 'active',
+      });
+
+      if (supports && supports.length > 0) {
+        const patientSupports = supports.map((support) =>
+          patientSupportsDataSource.create({
+            name: support.name,
+            phone: support.phone,
+            kinship: support.kinship,
+            patient_id: patient.id,
+          }),
+        );
+
+        await patientSupportsDataSource.save(patientSupports);
+      }
+
+      this.logger.log(
+        { patientId: patient.id, email },
+        'Patient created successfully',
+      );
+    });
   }
 }
