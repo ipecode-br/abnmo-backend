@@ -1,20 +1,21 @@
-import { forwardRef, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { PatientsModule } from '@/app/http/patients/patients.module';
+import { Patient } from '@/domain/entities/patient';
 import { PatientSupport } from '@/domain/entities/patient-support';
 
 import { PatientSupportsController } from './patient-supports.controller';
-import { PatientSupportsRepository } from './patient-supports.repository';
-import { PatientSupportsService } from './patient-supports.service';
+import { CreatePatientSupportUseCase } from './use-cases/create-patient-support.use-case';
+import { DeletePatientSupportUseCase } from './use-cases/delete-patient-support.use-case';
+import { UpdatePatientSupportUseCase } from './use-cases/update-patient-support.use-case';
 
 @Module({
-  imports: [
-    forwardRef(() => PatientsModule),
-    TypeOrmModule.forFeature([PatientSupport]),
-  ],
+  imports: [TypeOrmModule.forFeature([Patient, PatientSupport])],
   controllers: [PatientSupportsController],
-  providers: [PatientSupportsService, PatientSupportsRepository],
-  exports: [PatientSupportsService, PatientSupportsRepository],
+  providers: [
+    CreatePatientSupportUseCase,
+    UpdatePatientSupportUseCase,
+    DeletePatientSupportUseCase,
+  ],
 })
 export class PatientSupportsModule {}

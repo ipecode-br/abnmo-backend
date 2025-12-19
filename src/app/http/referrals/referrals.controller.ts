@@ -13,8 +13,8 @@ import { AuthUser } from '@/common/decorators/auth-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { BaseResponse } from '@/domain/schemas/base';
 import type { GetReferralsResponse } from '@/domain/schemas/referrals/responses';
-import { UserSchema } from '@/domain/schemas/users';
 
+import type { AuthUserDto } from '../auth/auth.dtos';
 import { CreateReferralDto, GetReferralsQuery } from './referrals.dtos';
 import { CancelReferralUseCase } from './use-cases/cancel-referral.use-case';
 import { CreateReferralUseCase } from './use-cases/create-referrals.use-case';
@@ -48,12 +48,12 @@ export class ReferralsController {
   @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Cadastra um novo encaminhamento' })
   async create(
-    @AuthUser() currentUser: UserSchema,
+    @AuthUser() user: AuthUserDto,
     @Body() createReferralDto: CreateReferralDto,
   ): Promise<BaseResponse> {
     await this.createReferralUseCase.execute({
+      userId: user.id,
       createReferralDto,
-      userId: currentUser.id,
     });
 
     return { success: true, message: 'Encaminhamento cadastrado com sucesso.' };
@@ -64,7 +64,7 @@ export class ReferralsController {
   @ApiOperation({ summary: 'Cancela um encaminhamento' })
   async cancel(
     @Param('id') id: string,
-    @AuthUser() user: UserSchema,
+    @AuthUser() user: AuthUserDto,
   ): Promise<BaseResponse> {
     await this.cancelReferralUseCase.execute({ id, userId: user.id });
 

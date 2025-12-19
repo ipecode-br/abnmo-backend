@@ -20,6 +20,5 @@ import { UpdatePatientUseCase } from './use-cases/update-patient.use-case';
     UpdatePatientUseCase,
     DeactivatePatientUseCase,
   ],
-  exports: [TypeOrmModule.forFeature([Patient])],
 })
 export class PatientsModule {}

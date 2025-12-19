@@ -171,19 +171,22 @@ export class CreateAppointmentUseCase {
 
 Use NestJS exceptions with descriptive messages:
 
+- **User-facing messages**: Use Portuguese (pt-BR) for exception messages. These will be displayed in the UI.
+- **Internal messages**: Use English for logging. These are for development and debugging.
+
 ```typescript
 if (!patient) {
-  throw new NotFoundException('Patient not found.');
+  throw new NotFoundException('Paciente não encontrado.');
 }
 
 if (date > maxDate) {
-  throw new BadRequestException('Appointment date exceeds 3-month limit.');
+  throw new BadRequestException('A data de atendimento deve estar dentro dos próximos 3 meses.');
 }
 ```
 
 ### Logging
 
-Log significant events in use-cases:
+Log significant events in use-cases with English messages:
 
 ```typescript
 private readonly logger = new Logger(CreateAppointmentUseCase.name);

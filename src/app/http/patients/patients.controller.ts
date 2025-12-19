@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  ForbiddenException,
   Get,
   Param,
   Patch,
@@ -10,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
+import { AuthUser } from '@/common/decorators/auth-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { BaseResponse } from '@/domain/schemas/base';
 import type {
@@ -17,6 +19,7 @@ import type {
   GetPatientsResponse,
 } from '@/domain/schemas/patients/responses';
 
+import type { AuthUserDto } from '../auth/auth.dtos';
 import {
   CreatePatientDto,
   GetPatientsQuery,
@@ -86,8 +89,15 @@ export class PatientsController {
   @ApiOperation({ summary: 'Atualiza um paciente pelo ID' })
   async update(
     @Param('id') id: string,
+    @AuthUser() user: AuthUserDto,
     @Body() updatePatientDto: UpdatePatientDto,
   ): Promise<BaseResponse> {
+    if (user.role === 'patient' && user.id !== id) {
+      throw new ForbiddenException(
+        'Você não tem permissão para atualizar este paciente.',
+      );
+    }
+
     await this.updatePatientUseCase.execute({ id, updatePatientDto });
 
     return {
