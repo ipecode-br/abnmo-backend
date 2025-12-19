@@ -4,9 +4,12 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import type { Repository } from 'typeorm';
+
+import { Patient } from '@/domain/entities/patient';
 
 import type { AuthUserDto } from '../auth/auth.dtos';
-import { PatientsRepository } from '../patients/patients.repository';
 import { CreatePatientRequirementDto } from './patient-requirements.dtos';
 import { PatientRequirementsRepository } from './patient-requirements.repository';
 
@@ -15,8 +18,9 @@ export class PatientRequirementsService {
   private readonly logger = new Logger(PatientRequirementsService.name);
 
   constructor(
+    @InjectRepository(Patient)
+    private readonly patientsRepository: Repository<Patient>,
     private readonly patientRequirementsRepository: PatientRequirementsRepository,
-    private readonly patientsRepository: PatientsRepository,
   ) {}
 
   async create(
@@ -25,10 +29,13 @@ export class PatientRequirementsService {
   ): Promise<void> {
     const { patient_id } = createPatientRequirementDto;
 
-    const patient = await this.patientsRepository.findById(patient_id);
+    const patient = await this.patientsRepository.findOne({
+      where: { id: patient_id },
+      select: { id: true },
+    });
 
     if (!patient) {
-      throw new NotFoundException('Paciente não encontrado.');
+      throw new NotFoundException('Patient not found.');
     }
 
     await this.patientRequirementsRepository.create({
@@ -47,12 +54,12 @@ export class PatientRequirementsService {
       await this.patientRequirementsRepository.findById(id);
 
     if (!patientRequirement) {
-      throw new NotFoundException('Solicitação não encontrada');
+      throw new NotFoundException('Request not found.');
     }
 
     if (patientRequirement.status !== 'under_review') {
       throw new ConflictException(
-        'Solicitação precisa estar aguardando aprovação para ser aprovada.',
+        'Request must be awaiting approval to be approved.',
       );
     }
 
@@ -72,12 +79,12 @@ export class PatientRequirementsService {
     const requirement = await this.patientRequirementsRepository.findById(id);
 
     if (!requirement) {
-      throw new NotFoundException('Solicitação não encontrada.');
+      throw new NotFoundException('Request not found.');
     }
 
     if (requirement.status !== 'under_review')
       throw new ConflictException(
-        'Solicitação precisa estar aguardando aprovação para ser recusada.',
+        'Request must be awaiting approval to be declined.',
       );
 
     await this.patientRequirementsRepository.decline(id, authUser.id);

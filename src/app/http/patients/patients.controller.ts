@@ -2,7 +2,6 @@ import {
   Body,
   Controller,
   Get,
-  NotFoundException,
   Param,
   Patch,
   Post,
@@ -11,92 +10,74 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
-import { AuthUser } from '@/common/decorators/auth-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { BaseResponse } from '@/domain/schemas/base';
-import type { GetPatientSupportsResponse } from '@/domain/schemas/patient-support/responses';
 import type {
   GetPatientResponse,
   GetPatientsResponse,
 } from '@/domain/schemas/patients/responses';
 
-import type { AuthUserDto } from '../auth/auth.dtos';
-import { PatientSupportsRepository } from '../patient-supports/patient-supports.repository';
 import {
+  CreatePatientDto,
   GetPatientsQuery,
-  PatientScreeningDto,
   UpdatePatientDto,
 } from './patients.dtos';
-import { PatientsRepository } from './patients.repository';
-import { PatientsService } from './patients.service';
+import { CreatePatientUseCase } from './use-cases/create-patient.use-case';
+import { DeactivatePatientUseCase } from './use-cases/deactivate-patient.use-case';
+import { GetPatientUseCase } from './use-cases/get-patient.use-case';
+import { GetPatientsUseCase } from './use-cases/get-patients.use-case';
+import { UpdatePatientUseCase } from './use-cases/update-patient.use-case';
 
 @ApiTags('Pacientes')
 @Controller('patients')
 export class PatientsController {
   constructor(
-    private readonly patientsService: PatientsService,
-    private readonly patientsRepository: PatientsRepository,
-    private readonly patientsSupportsRepository: PatientSupportsRepository,
+    private readonly getPatientsUseCase: GetPatientsUseCase,
+    private readonly getPatientUseCase: GetPatientUseCase,
+    private readonly createPatientUseCase: CreatePatientUseCase,
+    private readonly updatePatientUseCase: UpdatePatientUseCase,
+    private readonly deativatePatientUseCase: DeactivatePatientUseCase,
   ) {}
-
-  @Post('/screening')
-  @Roles(['patient'])
-  @ApiOperation({ summary: 'Registra triagem do paciente' })
-  public async screening(
-    @AuthUser() authUser: AuthUserDto,
-    @Body() patientScreeningDto: PatientScreeningDto,
-  ): Promise<BaseResponse> {
-    await this.patientsService.screening(patientScreeningDto, authUser);
-
-    return {
-      success: true,
-      message: 'Triagem realizada com sucesso.',
-    };
-  }
-
-  @Post()
-  @Roles(['manager', 'nurse'])
-  @ApiOperation({ summary: 'Cadastra um novo paciente' })
-  public async create(
-    @Body() createPatientDto: PatientScreeningDto,
-  ): Promise<BaseResponse> {
-    await this.patientsService.create(createPatientDto);
-
-    return {
-      success: true,
-      message: 'Cadastro realizado com sucesso.',
-    };
-  }
 
   @Get()
   @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Lista todos os pacientes' })
-  public async findAll(
-    @Query() filters: GetPatientsQuery,
+  async getPatients(
+    @Query() query: GetPatientsQuery,
   ): Promise<GetPatientsResponse> {
-    const { patients, total } = await this.patientsRepository.findAll(filters);
+    const data = await this.getPatientsUseCase.execute({ query });
 
     return {
       success: true,
       message: 'Lista de pacientes retornada com sucesso.',
-      data: { patients, total },
+      data,
     };
   }
 
   @Get(':id')
   @Roles(['manager', 'nurse', 'specialist'])
   @ApiOperation({ summary: 'Busca um paciente pelo ID' })
-  public async findById(@Param('id') id: string): Promise<GetPatientResponse> {
-    const patient = await this.patientsRepository.findById(id);
-
-    if (!patient) {
-      throw new NotFoundException('Paciente não encontrado.');
-    }
+  async getPatientById(@Param('id') id: string): Promise<GetPatientResponse> {
+    const data = await this.getPatientUseCase.execute({ id });
 
     return {
       success: true,
       message: 'Paciente retornado com sucesso.',
-      data: patient,
+      data,
+    };
+  }
+
+  @Post()
+  @Roles(['manager', 'nurse'])
+  @ApiOperation({ summary: 'Cadastra um novo paciente' })
+  async create(
+    @Body() createPatientDto: CreatePatientDto,
+  ): Promise<BaseResponse> {
+    await this.createPatientUseCase.execute({ createPatientDto });
+
+    return {
+      success: true,
+      message: 'Paciente registrado com sucesso.',
     };
   }
 
@@ -107,7 +88,7 @@ export class PatientsController {
     @Param('id') id: string,
     @Body() updatePatientDto: UpdatePatientDto,
   ): Promise<BaseResponse> {
-    await this.patientsService.update(id, updatePatientDto);
+    await this.updatePatientUseCase.execute({ id, updatePatientDto });
 
     return {
       success: true,
@@ -115,40 +96,15 @@ export class PatientsController {
     };
   }
 
-  @Patch(':id/inactivate')
+  @Patch(':id/deactivate')
   @Roles(['manager'])
-  @ApiOperation({ summary: 'Inativa o Paciente pelo ID' })
-  async inactivatePatient(@Param('id') id: string): Promise<BaseResponse> {
-    await this.patientsService.deactivate(id);
+  @ApiOperation({ summary: 'Inativa um paciente pelo ID' })
+  async deactivatePatient(@Param('id') id: string): Promise<BaseResponse> {
+    await this.deativatePatientUseCase.execute({ id });
 
     return {
       success: true,
       message: 'Paciente inativado com sucesso.',
-    };
-  }
-
-  @Get(':id/patient-supports')
-  @Roles(['manager', 'nurse', 'specialist', 'patient'])
-  @ApiOperation({ summary: 'Lista todos os contatos de apoio de um paciente' })
-  async findAllPatientSupports(
-    @Param('id') patientId: string,
-  ): Promise<GetPatientSupportsResponse> {
-    const patient = await this.patientsRepository.findById(patientId);
-
-    if (!patient) {
-      throw new NotFoundException('Paciente não encontrado.');
-    }
-
-    const patientSupports =
-      await this.patientsSupportsRepository.findAllByPatientId(patientId);
-
-    return {
-      success: true,
-      message: 'Lista de contatos de apoio retornada com sucesso.',
-      data: {
-        patient_supports: patientSupports,
-        total: patientSupports.length,
-      },
     };
   }
 }

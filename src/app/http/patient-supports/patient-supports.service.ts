@@ -4,11 +4,13 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import type { Repository } from 'typeorm';
 
+import { Patient } from '@/domain/entities/patient';
 import { PatientSupport } from '@/domain/entities/patient-support';
 
 import type { AuthUserDto } from '../auth/auth.dtos';
-import { PatientsRepository } from '../patients/patients.repository';
 import {
   CreatePatientSupportDto,
   UpdatePatientSupportDto,
@@ -20,7 +22,8 @@ export class PatientSupportsService {
   private readonly logger = new Logger(PatientSupportsService.name);
 
   constructor(
-    private readonly patientsRepository: PatientsRepository,
+    @InjectRepository(Patient)
+    private readonly patientsRepository: Repository<Patient>,
     private readonly patientSupportsRepository: PatientSupportsRepository,
   ) {}
 
@@ -28,10 +31,13 @@ export class PatientSupportsService {
     createPatientSupportDto: CreatePatientSupportDto,
     patientId: string,
   ): Promise<PatientSupport> {
-    const patientExists = await this.patientsRepository.findById(patientId);
+    const patientExists = await this.patientsRepository.findOne({
+      where: { id: patientId },
+      select: { id: true },
+    });
 
     if (!patientExists) {
-      throw new NotFoundException('Paciente não encontrado.');
+      throw new NotFoundException('Patient not found.');
     }
 
     const patientSupport = await this.patientSupportsRepository.create({
@@ -48,10 +54,13 @@ export class PatientSupportsService {
   }
 
   async findAllByPatientId(patientId: string): Promise<PatientSupport[]> {
-    const patientExists = await this.patientsRepository.findById(patientId);
+    const patientExists = await this.patientsRepository.findOne({
+      where: { id: patientId },
+      select: { id: true },
+    });
 
     if (!patientExists) {
-      throw new NotFoundException('Paciente não encontrado.');
+      throw new NotFoundException('Patient not found.');
     }
 
     return await this.patientSupportsRepository.findAllByPatientId(patientId);
@@ -65,7 +74,7 @@ export class PatientSupportsService {
     const patientSupport = await this.patientSupportsRepository.findById(id);
 
     if (!patientSupport) {
-      throw new NotFoundException('Contato de apoio não encontrado.');
+      throw new NotFoundException('Support network not found.');
     }
 
     if (
@@ -73,7 +82,7 @@ export class PatientSupportsService {
       authUser.id !== patientSupport.patient_id
     ) {
       throw new ForbiddenException(
-        'Você não tem permissão para atualizar este contato de apoio.',
+        'You do not have permission to update this support network.',
       );
     }
 
@@ -91,7 +100,7 @@ export class PatientSupportsService {
     const patientSupport = await this.patientSupportsRepository.findById(id);
 
     if (!patientSupport) {
-      throw new NotFoundException('Contato de apoio não encontrado.');
+      throw new NotFoundException('Support network not found.');
     }
 
     if (
@@ -99,7 +108,7 @@ export class PatientSupportsService {
       authUser.id !== patientSupport.patient_id
     ) {
       throw new ForbiddenException(
-        'Você não tem permissão para remover este contato de apoio.',
+        'You do not have permission to remove this support network.',
       );
     }
 

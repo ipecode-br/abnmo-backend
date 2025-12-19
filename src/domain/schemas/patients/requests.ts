@@ -3,9 +3,11 @@ import { z } from 'zod';
 import { BRAZILIAN_STATES } from '@/constants/brazilian-states';
 import {
   PATIENT_GENDERS,
+  PATIENT_NMO_DIAGNOSTICS,
   PATIENT_ORDER_BY,
   PATIENT_STATUSES,
 } from '@/domain/enums/patients';
+import { QUERY_ORDERS } from '@/domain/enums/queries';
 
 import { createPatientSupportSchema } from '../patient-support/requests';
 import { baseQuerySchema } from '../query';
@@ -22,6 +24,16 @@ export const createPatientSchema = z
     cpf: z.string().max(11),
     state: z.enum(BRAZILIAN_STATES),
     city: z.string(),
+    nmo_diagnosis: z.enum(PATIENT_NMO_DIAGNOSTICS),
+    supports: z
+      .array(
+        createPatientSupportSchema.pick({
+          name: true,
+          phone: true,
+          kinship: true,
+        }),
+      )
+      .min(1),
   })
   .merge(
     patientSchema.pick({
@@ -30,26 +42,11 @@ export const createPatientSchema = z
       need_legal_assistance: true,
       take_medication: true,
       medication_desc: true,
-      nmo_diagnosis: true,
     }),
   );
 export type CreatePatient = z.infer<typeof createPatientSchema>;
 
-export const patientScreeningSchema = createPatientSchema.extend({
-  supports: z
-    .array(
-      createPatientSupportSchema.pick({
-        name: true,
-        phone: true,
-        kinship: true,
-      }),
-    )
-    .nullable()
-    .default([]),
-});
-export type PatientScreening = z.infer<typeof patientScreeningSchema>;
-
-export const updatePatientSchema = patientScreeningSchema
+export const updatePatientSchema = createPatientSchema
   .omit({ supports: true })
   .merge(patientSchema.pick({ status: true }));
 export type UpdatePatient = z.infer<typeof updatePatientSchema>;
@@ -57,7 +54,6 @@ export type UpdatePatient = z.infer<typeof updatePatientSchema>;
 export const getPatientsQuerySchema = baseQuerySchema
   .pick({
     search: true,
-    order: true,
     page: true,
     perPage: true,
     startDate: true,
@@ -65,6 +61,7 @@ export const getPatientsQuerySchema = baseQuerySchema
   })
   .extend({
     status: z.enum(PATIENT_STATUSES).optional(),
+    order: z.enum(QUERY_ORDERS).optional().default('ASC'),
     orderBy: z.enum(PATIENT_ORDER_BY).optional().default('name'),
   })
   .refine(
