@@ -6,24 +6,22 @@ import { Roles } from '@/common/decorators/roles.decorator';
 import type { GetUserResponse } from '@/domain/schemas/users/responses';
 
 import type { AuthUserDto } from '../auth/auth.dtos';
-import { UsersService } from './users.service';
+import { GetUserUseCase } from './use-cases/get-user.use-case';
 
 @ApiTags('Usuários')
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly getUserUseCase: GetUserUseCase) {}
 
   @Get('profile')
-  @Roles(['manager', 'nurse', 'specialist', 'patient'])
-  async getProfile(
-    @AuthUser() authUser: AuthUserDto,
-  ): Promise<GetUserResponse> {
-    const user = await this.usersService.getProfile(authUser.id);
+  @Roles(['manager', 'nurse', 'specialist'])
+  async getProfile(@AuthUser() user: AuthUserDto): Promise<GetUserResponse> {
+    const data = await this.getUserUseCase.execute({ id: user.id });
 
     return {
       success: true,
       message: 'Dados do usuário retornado com sucesso.',
-      data: user,
+      data,
     };
   }
 }

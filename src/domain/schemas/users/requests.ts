@@ -9,11 +9,6 @@ export const createUserSchema = userSchema.pick({
 });
 export type CreateUser = z.infer<typeof createUserSchema>;
 
-export const updateUserParamsSchema = z.object({
-  id: z.string().uuid(),
-});
-export type UpdateUserParams = z.infer<typeof updateUserParamsSchema>;
-
 export const updateUserSchema = userSchema.omit({
   id: true,
   password: true,

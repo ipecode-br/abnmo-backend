@@ -4,14 +4,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { CryptographyModule } from '@/app/cryptography/cryptography.module';
 import { User } from '@/domain/entities/user';
 
+import { CreateUserUseCase } from './use-cases/create-user.use-case';
+import { GetUserUseCase } from './use-cases/get-user.use-case';
+import { UpdateUserUseCase } from './use-cases/update-user.use-case';
 import { UsersController } from './users.controller';
-import { UsersRepository } from './users.repository';
-import { UsersService } from './users.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([User]), CryptographyModule],
-  providers: [UsersRepository, UsersService],
+  providers: [CreateUserUseCase, UpdateUserUseCase, GetUserUseCase],
   controllers: [UsersController],
-  exports: [UsersRepository, UsersService],
 })
 export class UsersModule {}

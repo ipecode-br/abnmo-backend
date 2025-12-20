@@ -13,10 +13,7 @@ Module structure (`/src/app/http/{featureName}`):
 ├── {feature}.controller.ts   # Routes and request handling
 ├── {feature}.dtos.ts         # DTOs created from Zod schemas
 └── use-cases/
-    ├── get-{feature}.use-case.ts         # Read operations
-    ├── create-{feature}.use-case.ts      # Create operations
-    ├── update-{feature}.use-case.ts      # Update operations
-    └── cancel-{feature}.use-case.ts      # Soft delete/cancel operations
+    └── {action}-{feature}.use-case.ts  # Action operations, such as get, create, update, remove, cancel, delete
 ```
 
 ## Module Organization
@@ -32,8 +29,7 @@ Register entities, inject TypeORM repositories, and declare use-case providers:
   providers: [
     GetFeatureUseCase,
     CreateFeatureUseCase,
-    UpdateFeatureUseCase,
-    CancelFeatureUseCase,
+    ...
   ],
 })
 export class FeatureModule {}
@@ -64,8 +60,7 @@ export class AppointmentsController {
   constructor(
     private readonly getAppointmentsUseCase: GetAppointmentsUseCase,
     private readonly createAppointmentUseCase: CreateAppointmentUseCase,
-    private readonly updateAppointmentUseCase: UpdateAppointmentUseCase,
-    private readonly cancelAppointmentUseCase: CancelAppointmentUseCase,
+    ...
   ) {}
 
   @Get()
@@ -122,7 +117,7 @@ export const APPOINTMENT_STATUSES = ['scheduled', 'canceled', 'completed'] as co
 export type AppointmentStatus = (typeof APPOINTMENT_STATUSES)[number];
 ```
 
-DTOs inherit validation directly from schemas—no manual definition needed.
+DTOs inherit validation directly from schemas, no manual definition needed.
 
 ## Naming Conventions
 
@@ -145,9 +140,9 @@ Files should match their exports: `get-total-patients.use-case.ts` exports `GetT
 
 ```typescript
 const appointments = await this.appointmentsRepository.find({
-  where: { patientId: id },
   select: { id: true, date: true, status: true },
   relations: { patient: true },
+  where: { patientId: id },
 });
 ```
 
