@@ -14,12 +14,12 @@ export type PatientRequirementStatus =
   (typeof PATIENT_REQUIREMENT_STATUSES)[number];
 
 export const PATIENT_REQUIREMENTS_ORDER_BY = [
-  'name',
+  'patient',
   'status',
   'type',
   'date',
   'approved_at',
   'submitted_at',
 ] as const;
-export type PatientRequirementOrderBy =
+export type PatientRequirementsOrderBy =
   (typeof PATIENT_REQUIREMENTS_ORDER_BY)[number];

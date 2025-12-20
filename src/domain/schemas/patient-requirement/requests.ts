@@ -29,10 +29,7 @@ export const getPatientRequirementsQuerySchema = baseQuerySchema
   })
   .extend({
     status: z.enum(PATIENT_REQUIREMENT_STATUSES).optional(),
-    orderBy: z
-      .enum(PATIENT_REQUIREMENTS_ORDER_BY)
-      .optional()
-      .default('approved_at'),
+    orderBy: z.enum(PATIENT_REQUIREMENTS_ORDER_BY).optional().default('date'),
   })
   .refine(
     (data) => {

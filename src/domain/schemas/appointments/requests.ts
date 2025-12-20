@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
 import {
-  APPOINTMENT_ORDER_BY,
   APPOINTMENT_STATUSES,
+  APPOINTMENTS_ORDER_BY,
 } from '@/domain/enums/appointments';
 import { PATIENT_CONDITIONS } from '@/domain/enums/patients';
 import { QUERY_ORDERS } from '@/domain/enums/queries';
@@ -40,7 +40,7 @@ export const getAppointmentsQuerySchema = baseQuerySchema
     status: z.enum(APPOINTMENT_STATUSES).optional(),
     category: z.enum(SPECIALTY_CATEGORIES).optional(),
     condition: z.enum(PATIENT_CONDITIONS).optional(),
-    orderBy: z.enum(APPOINTMENT_ORDER_BY).optional().default('date'),
+    orderBy: z.enum(APPOINTMENTS_ORDER_BY).optional().default('date'),
     order: z.enum(QUERY_ORDERS).optional().default('DESC'),
   })
   .refine(

@@ -23,28 +23,34 @@ import {
   GetPatientRequirementsByPatientIdQuery,
   GetPatientRequirementsQuery,
 } from './patient-requirements.dtos';
-import { PatientRequirementsRepository } from './patient-requirements.repository';
-import { PatientRequirementsService } from './patient-requirements.service';
+import { ApprovePatientRequirementUseCase } from './use-cases/approve-patient-requirement.use-case';
+import { CreatePatientRequirementUseCase } from './use-cases/create-patient-requirement.use-case';
+import { DeclinePatientRequirementUseCase } from './use-cases/decline-patient-requirement.use-case';
+import { GetPatientRequirementsUseCase } from './use-cases/get-patient-requirements.use-case';
+import { GetPatientRequirementsByPatientIdUseCase } from './use-cases/get-patient-requirements-by-patient-id.use-case';
 
 @ApiTags('Pendências do paciente')
 @Controller('patient-requirements')
 export class PatientRequirementsController {
   constructor(
-    private readonly patientRequirementsService: PatientRequirementsService,
-    private readonly patientRequirementsRepository: PatientRequirementsRepository,
+    private readonly createPatientRequirementUseCase: CreatePatientRequirementUseCase,
+    private readonly approvePatientRequirementUseCase: ApprovePatientRequirementUseCase,
+    private readonly declinePatientRequirementUseCase: DeclinePatientRequirementUseCase,
+    private readonly getPatientRequirementsUseCase: GetPatientRequirementsUseCase,
+    private readonly getPatientRequirementsByPatientIdUseCase: GetPatientRequirementsByPatientIdUseCase,
   ) {}
 
   @Post()
   @Roles(['nurse', 'manager'])
-  @ApiOperation({ summary: 'Adiciona nova solicitação.' })
-  public async create(
+  @ApiOperation({ summary: 'Adiciona uma nova solicitação.' })
+  async create(
+    @AuthUser() user: AuthUserDto,
     @Body() createPatientRequirementDto: CreatePatientRequirementDto,
-    @AuthUser() authUser: AuthUserDto,
   ): Promise<BaseResponse> {
-    await this.patientRequirementsService.create(
+    await this.createPatientRequirementUseCase.execute({
       createPatientRequirementDto,
-      authUser,
-    );
+      user,
+    });
 
     return {
       success: true,
@@ -52,14 +58,31 @@ export class PatientRequirementsController {
     };
   }
 
+  @Get()
+  @Roles(['nurse', 'manager'])
+  @ApiOperation({
+    summary: 'Lista as solicitações com paginação e filtros',
+  })
+  async getPatientRequirements(
+    @Query() query: GetPatientRequirementsQuery,
+  ): Promise<GetPatientRequirementsResponse> {
+    const data = await this.getPatientRequirementsUseCase.execute({ query });
+
+    return {
+      success: true,
+      message: 'Lista de solicitações retornada com sucesso',
+      data,
+    };
+  }
+
   @Patch(':id/approve')
   @Roles(['nurse', 'manager'])
-  @ApiOperation({ summary: 'Aprova uma solicitação por ID.' })
+  @ApiOperation({ summary: 'Aprova uma solicitação pelo ID.' })
   async approve(
     @Param('id') id: string,
     @AuthUser() user: AuthUserDto,
   ): Promise<BaseResponse> {
-    await this.patientRequirementsService.approve(id, user);
+    await this.approvePatientRequirementUseCase.execute({ id, user });
 
     return {
       success: true,
@@ -69,12 +92,12 @@ export class PatientRequirementsController {
 
   @Patch(':id/decline')
   @Roles(['nurse', 'manager'])
-  @ApiOperation({ summary: 'Recusa uma solicitação por ID.' })
-  public async decline(
+  @ApiOperation({ summary: 'Recusa uma solicitação pelo ID.' })
+  async decline(
     @Param('id') id: string,
-    @AuthUser() authUser: AuthUserDto,
+    @AuthUser() user: AuthUserDto,
   ): Promise<BaseResponse> {
-    await this.patientRequirementsService.decline(id, authUser);
+    await this.declinePatientRequirementUseCase.execute({ id, user });
 
     return {
       success: true,
@@ -82,59 +105,24 @@ export class PatientRequirementsController {
     };
   }
 
-  @Get()
-  @Roles(['nurse', 'manager'])
+  @Get('me')
   @ApiOperation({
-    summary: 'Lista todas as solicitações de pacientes com paginação e filtros',
+    summary:
+      'Lista as solicitações do paciente logado com paginação e filtros.',
   })
-  async findAll(
-    @Query() filters: GetPatientRequirementsQuery,
-  ): Promise<GetPatientRequirementsResponse> {
-    const { requirements, total } =
-      await this.patientRequirementsRepository.findAll(filters);
-
-    return {
-      success: true,
-      message: 'Lista de solicitações retornada com sucesso',
-      data: { requirements, total },
-    };
-  }
-
-  @Get(':id')
-  @Roles(['nurse', 'manager'])
-  @ApiOperation({
-    summary: 'Lista todas as solicitações do paciente pelo ID.',
-  })
-  async findAllByPatientId(
-    @Param('id') id: string,
-    @Query() filters: GetPatientRequirementsByPatientIdQuery,
-  ): Promise<GetPatientRequirementsByPatientIdResponse> {
-    const { requirements, total } =
-      await this.patientRequirementsRepository.findAllByPatientId(id, filters);
-
-    return {
-      success: true,
-      message: 'Lista de solicitações do paciente retornada com sucesso.',
-      data: { requirements, total },
-    };
-  }
-
-  @Get('/me')
-  @ApiOperation({ summary: 'Busca todas as solicitações do paciente logado.' })
-  async findAllByPatientLogged(
+  async getPatientRequirementsLogged(
     @AuthUser() user: AuthUserDto,
-    @Query() filters: GetPatientRequirementsByPatientIdQuery,
+    @Query() query: GetPatientRequirementsByPatientIdQuery,
   ): Promise<GetPatientRequirementsByPatientIdResponse> {
-    const { requirements, total } =
-      await this.patientRequirementsRepository.findAllByPatientLogged(
-        user.id,
-        filters,
-      );
+    const data = await this.getPatientRequirementsByPatientIdUseCase.execute({
+      patientId: user.id,
+      query,
+    });
 
     return {
       success: true,
       message: 'Lista de solicitações retornada com sucesso.',
-      data: { requirements, total },
+      data,
     };
   }
 }

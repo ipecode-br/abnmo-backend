@@ -10,7 +10,7 @@ import {
 } from 'typeorm';
 
 import { Appointment } from '@/domain/entities/appointment';
-import type { AppointmentOrderBy } from '@/domain/enums/appointments';
+import type { AppointmentsOrderBy } from '@/domain/enums/appointments';
 import type { AppointmentResponse } from '@/domain/schemas/appointments/responses';
 
 import type { AuthUserDto } from '../../auth/auth.dtos';
@@ -39,7 +39,7 @@ export class GetAppointmentsUseCase {
   }: GetAppointmentsUseCaseRequest): GetAppointmentsUseCaseResponse {
     const { search, status, category, condition, page, perPage } = query;
 
-    const ORDER_BY_MAPPING: Record<AppointmentOrderBy, keyof Appointment> = {
+    const ORDER_BY_MAPPING: Record<AppointmentsOrderBy, keyof Appointment> = {
       date: 'created_at',
       patient: 'patient',
       status: 'status',

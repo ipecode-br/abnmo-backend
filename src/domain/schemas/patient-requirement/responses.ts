@@ -36,6 +36,7 @@ export const patientRequirementByPatientIdSchema =
     type: true,
     title: true,
     status: true,
+    description: true,
     submitted_at: true,
     approved_at: true,
     created_at: true,

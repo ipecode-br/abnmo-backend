@@ -10,10 +10,10 @@ export class CreatePatientRequirementDto extends createZodDto(
   createPatientRequirementSchema,
 ) {}
 
-export class GetPatientRequirementsByPatientIdQuery extends createZodDto(
-  getPatientRequirementsByPatientIdQuerySchema,
-) {}
-
 export class GetPatientRequirementsQuery extends createZodDto(
   getPatientRequirementsQuerySchema,
+) {}
+
+export class GetPatientRequirementsByPatientIdQuery extends createZodDto(
+  getPatientRequirementsByPatientIdQuerySchema,
 ) {}
