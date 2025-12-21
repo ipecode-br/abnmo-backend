@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import type { AuthAccountType } from '../enums/auth';
 import {
   AUTH_TOKENS,
   type AUTH_TOKENS_MAPPING,
@@ -9,7 +10,7 @@ import {
 export const authTokenSchema = z
   .object({
     id: z.number().int().positive(),
-    user_id: z.string().uuid().nullable(),
+    entity_id: z.string().uuid().nullable(),
     email: z.string().email().nullable(),
     token: z.string(),
     type: z.enum(AUTH_TOKENS),
@@ -20,7 +21,7 @@ export const authTokenSchema = z
 export type AuthToken = z.infer<typeof authTokenSchema>;
 
 export const createAuthTokenSchema = authTokenSchema.pick({
-  user_id: true,
+  entity_id: true,
   email: true,
   token: true,
   type: true,
@@ -28,11 +29,14 @@ export const createAuthTokenSchema = authTokenSchema.pick({
 });
 
 export type AccessTokenPayload = { sub: string; role: AuthTokenRole };
-export type PasswordResetPayload = { sub: string; role: AuthTokenRole };
 export type InviteTokenPayload = { sub: string; role: AuthTokenRole };
+export type PasswordResetPayload = {
+  sub: string;
+  accountType: AuthAccountType;
+};
 
 export type AuthTokenPayloads = {
   [AUTH_TOKENS_MAPPING.access_token]: AccessTokenPayload;
-  [AUTH_TOKENS_MAPPING.password_reset]: PasswordResetPayload;
   [AUTH_TOKENS_MAPPING.invite_token]: InviteTokenPayload;
+  [AUTH_TOKENS_MAPPING.password_reset]: PasswordResetPayload;
 };

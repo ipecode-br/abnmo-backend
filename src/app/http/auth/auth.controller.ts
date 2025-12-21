@@ -2,55 +2,61 @@ import {
   Body,
   Controller,
   Post,
-  Req,
   Res,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
-import type { Request, Response } from 'express';
+import type { Response } from 'express';
 
-import { AuthUser } from '@/common/decorators/auth-user.decorator';
 import { Cookies } from '@/common/decorators/cookies.decorator';
 import { Public } from '@/common/decorators/public.decorator';
-import { Roles } from '@/common/decorators/roles.decorator';
 import { COOKIES_MAPPING } from '@/domain/cookies';
 import type { BaseResponse } from '@/domain/schemas/base';
-import { UserSchema } from '@/domain/schemas/users';
 import { UtilsService } from '@/utils/utils.service';
 
-import { CreateUserDto } from '../users/users.dtos';
 import {
-  ChangePasswordDto,
   RecoverPasswordDto,
+  RegisterPatientDto,
+  RegisterUserDto,
   ResetPasswordDto,
   SignInWithEmailDto,
 } from './auth.dtos';
-import { AuthService } from './auth.service';
+import { LogoutUseCase } from './use-cases/logout.use-case';
+import { RecoverPasswordUseCase } from './use-cases/recover-password.use-case';
+import { RegisterPatientUseCase } from './use-cases/register-patient.use-case';
+import { RegisterUserUseCase } from './use-cases/register-user.use-case';
+import { ResetPasswordUseCase } from './use-cases/reset-password.use-case';
+import { SignInWithEmailUseCase } from './use-cases/sign-in-with-email.use-case';
 
+@Public()
 @Controller()
 export class AuthController {
   constructor(
-    private authService: AuthService,
     private utilsService: UtilsService,
+    private signInUseCase: SignInWithEmailUseCase,
+    private logoutUseCase: LogoutUseCase,
+    private recoverPasswordUseCase: RecoverPasswordUseCase,
+    private resetPasswordUseCase: ResetPasswordUseCase,
+    private registerPatientUseCase: RegisterPatientUseCase,
+    private registerUserUseCase: RegisterUserUseCase,
   ) {}
 
-  @Public()
   @Post('login')
-  @ApiOperation({ summary: 'Login do usuário' })
-  async signIn(
-    @Req() request: Request,
+  @ApiOperation({ summary: 'Login de usuário ou paciente' })
+  async login(
     @Body() signInWithEmailDto: SignInWithEmailDto,
     @Res({ passthrough: true }) response: Response,
   ): Promise<BaseResponse> {
     const TWELVE_HOURS_IN_MS = 1000 * 60 * 60 * 12;
 
-    const { accessToken } =
-      await this.authService.signInUser(signInWithEmailDto);
+    const { accessToken } = await this.signInUseCase.execute({
+      signInWithEmailDto,
+    });
 
     this.utilsService.setCookie(response, {
       name: COOKIES_MAPPING.access_token,
       value: accessToken,
-      maxAge: signInWithEmailDto.rememberMe
+      maxAge: signInWithEmailDto.keep_logged_in
         ? TWELVE_HOURS_IN_MS * 60
         : TWELVE_HOURS_IN_MS,
     });
@@ -61,59 +67,17 @@ export class AuthController {
     };
   }
 
-  @Public()
-  @Post('register')
-  @ApiOperation({ summary: 'Registro de um novo usuário' })
-  async register(@Body() createUserDto: CreateUserDto): Promise<BaseResponse> {
-    await this.authService.registerUser(createUserDto);
-
-    return {
-      success: true,
-      message: 'Conta registrada com sucesso.',
-    };
-  }
-
-  @Public()
-  @Post('logout')
-  @ApiOperation({ summary: 'Logout do usuário' })
-  async logout(
-    @Req() request: Request,
-    @Cookies('access_token') accessToken: string,
+  @Post('register/patient')
+  @ApiOperation({ summary: 'Registro de novo paciente' })
+  async registerPatient(
+    @Body() registerPatientDto: RegisterPatientDto,
     @Res({ passthrough: true }) response: Response,
-  ) {
-    if (!accessToken) {
-      throw new UnauthorizedException('Token de acesso ausente.');
-    }
-
-    await this.authService.logout(accessToken);
-
-    this.utilsService.deleteCookie(response, COOKIES_MAPPING.access_token);
-
-    return {
-      success: true,
-      message: 'Logout realizado com sucesso.',
-    };
-  }
-
-  @Public()
-  @Post('reset-password')
-  async resetPassword(
-    @Req() request: Request,
-    @Cookies(COOKIES_MAPPING.password_reset)
-    passwordResetToken: string,
-    @Body() resetPasswordDto: ResetPasswordDto,
-    @Res({ passthrough: true }) response: Response,
-  ) {
+  ): Promise<BaseResponse> {
     const TWELVE_HOURS_IN_MS = 1000 * 60 * 60 * 12;
 
-    if (!passwordResetToken) {
-      throw new UnauthorizedException('Token de redefinição de senha ausente.');
-    }
-
-    const { accessToken } = await this.authService.resetPassword(
-      passwordResetToken,
-      resetPasswordDto.password,
-    );
+    const { accessToken } = await this.registerPatientUseCase.execute({
+      registerPatientDto,
+    });
 
     this.utilsService.setCookie(response, {
       name: COOKIES_MAPPING.access_token,
@@ -123,28 +87,50 @@ export class AuthController {
 
     return {
       success: true,
-      message: 'Senha atualizada com sucesso.',
+      message: 'Conta de paciente registrada com sucesso.',
     };
   }
 
-  @Public()
+  @Post('register/user')
+  @ApiOperation({ summary: 'Registro de novo usuário via convite' })
+  async registerUser(
+    @Body() registerUserDto: RegisterUserDto,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<BaseResponse> {
+    const TWELVE_HOURS_IN_MS = 1000 * 60 * 60 * 12;
+
+    const { accessToken } = await this.registerUserUseCase.execute({
+      registerUserDto,
+    });
+
+    this.utilsService.setCookie(response, {
+      name: COOKIES_MAPPING.access_token,
+      value: accessToken,
+      maxAge: TWELVE_HOURS_IN_MS,
+    });
+
+    return {
+      success: true,
+      message: 'Conta de usuário registrada com sucesso.',
+    };
+  }
+
   @Post('recover-password')
   @ApiOperation({ summary: 'Recuperação de senha' })
   async recoverPassword(
-    @Req() request: Request,
     @Body() recoverPasswordDto: RecoverPasswordDto,
     @Res({ passthrough: true }) response: Response,
   ): Promise<BaseResponse> {
-    const { passwordResetToken } = await this.authService.forgotPassword(
-      recoverPasswordDto.email,
-    );
+    const { resetToken } = await this.recoverPasswordUseCase.execute({
+      recoverPasswordDto,
+    });
 
     const FOUR_HOURS_IN_MS = 1000 * 60 * 60 * 4;
 
     this.utilsService.setCookie(response, {
       name: COOKIES_MAPPING.password_reset,
-      value: passwordResetToken,
       maxAge: FOUR_HOURS_IN_MS,
+      value: resetToken,
     });
 
     return {
@@ -154,17 +140,53 @@ export class AuthController {
     };
   }
 
-  @Post('change-password')
-  @Roles(['nurse', 'manager', 'specialist', 'admin'])
-  async changePassword(
-    @Body() changePasswordDto: ChangePasswordDto,
-    @AuthUser() user: UserSchema,
+  @Post('reset-password')
+  @ApiOperation({ summary: 'Redefinição de senha' })
+  async resetPassword(
+    @Cookies(COOKIES_MAPPING.password_reset) token: string,
+    @Body() resetPasswordDto: ResetPasswordDto,
+    @Res({ passthrough: true }) response: Response,
   ): Promise<BaseResponse> {
-    await this.authService.changePassword(user, changePasswordDto);
+    if (!token) {
+      throw new UnauthorizedException('Token de redefinição de senha ausente.');
+    }
+
+    const TWELVE_HOURS_IN_MS = 1000 * 60 * 60 * 12;
+
+    const { accessToken } = await this.resetPasswordUseCase.execute({
+      resetPasswordDto,
+      token,
+    });
+
+    this.utilsService.setCookie(response, {
+      name: COOKIES_MAPPING.access_token,
+      maxAge: TWELVE_HOURS_IN_MS,
+      value: accessToken,
+    });
 
     return {
       success: true,
       message: 'Senha atualizada com sucesso.',
+    };
+  }
+
+  @Post('logout')
+  @ApiOperation({ summary: 'Logout' })
+  async logout(
+    @Cookies('access_token') accessToken: string,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<BaseResponse> {
+    if (!accessToken) {
+      throw new UnauthorizedException('Token de acesso ausente.');
+    }
+
+    await this.logoutUseCase.execute({ token: accessToken });
+
+    this.utilsService.deleteCookie(response, COOKIES_MAPPING.access_token);
+
+    return {
+      success: true,
+      message: 'Logout realizado com sucesso.',
     };
   }
 }
