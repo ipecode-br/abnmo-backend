@@ -8,8 +8,8 @@ import { Referral } from '@/domain/entities/referral';
 import { CreateReferralDto } from '../referrals.dtos';
 
 interface CreateReferralUseCaseRequest {
-  createReferralDto: CreateReferralDto;
   userId: string;
+  createReferralDto: CreateReferralDto;
 }
 
 type CreateReferralUseCaseResponse = Promise<void>;

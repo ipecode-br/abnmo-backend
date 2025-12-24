@@ -11,7 +11,7 @@ import {
 } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
-import type { QueryPeriod } from '@/domain/schemas/query';
+import type { QueryPeriod } from '@/domain/enums/queries';
 import { UtilsService } from '@/utils/utils.service';
 
 interface GetTotalReferredPatientsUseCaseRequest {

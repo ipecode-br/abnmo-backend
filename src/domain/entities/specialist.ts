@@ -32,10 +32,10 @@
 //   @Column({ type: 'enum', enum: SPECIALIST_STATUS, default: 'active' })
 //   status: SpecialistStatusType;
 
-//   @CreateDateColumn({ type: 'timestamp' })
+//   @CreateDateColumn({ type: 'datetime' })
 //   created_at: Date;
 
-//   @UpdateDateColumn({ type: 'timestamp' })
+//   @UpdateDateColumn({ type: 'datetime' })
 //   updated_at: Date;
 
 //   @OneToOne(() => User)

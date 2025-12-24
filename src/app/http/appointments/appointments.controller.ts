@@ -10,12 +10,12 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
-import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { AuthUser } from '@/common/decorators/auth-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
-import type { GetAppointmentsResponseSchema } from '@/domain/schemas/appointments/responses';
-import { BaseResponseSchema } from '@/domain/schemas/base';
-import { UserSchema } from '@/domain/schemas/user';
+import type { GetAppointmentsResponse } from '@/domain/schemas/appointments/responses';
+import { BaseResponse } from '@/domain/schemas/base';
 
+import type { AuthUserDto } from '../auth/auth.dtos';
 import { GetAppointmentsQuery } from './appointments.dtos';
 import {
   CreateAppointmentDto,
@@ -37,13 +37,13 @@ export class AppointmentsController {
   ) {}
 
   @Get()
-  @Roles(['manager', 'nurse', 'patient', 'specialist'])
+  @Roles(['manager', 'nurse', 'specialist', 'patient'])
   @ApiOperation({ summary: 'Lista todos os atendimentos' })
-  async findAll(
-    @CurrentUser() user: UserSchema,
+  async getAppointments(
     @Query() query: GetAppointmentsQuery,
-  ): Promise<GetAppointmentsResponseSchema> {
-    const data = await this.getAppointmentsUseCase.execute({ user, query });
+    @AuthUser() user: AuthUserDto,
+  ): Promise<GetAppointmentsResponse> {
+    const data = await this.getAppointmentsUseCase.execute({ query, user });
 
     return {
       success: true,
@@ -54,15 +54,12 @@ export class AppointmentsController {
 
   @Post()
   @Roles(['nurse', 'manager'])
-  @ApiOperation({ summary: 'Cadastra novo atendimento' })
+  @ApiOperation({ summary: 'Cadastra um novo atendimento' })
   async create(
-    @CurrentUser() user: UserSchema,
+    @AuthUser() user: AuthUserDto,
     @Body() createAppointmentDto: CreateAppointmentDto,
-  ): Promise<BaseResponseSchema> {
-    await this.createAppointmentUseCase.execute({
-      createAppointmentDto,
-      userId: user.id,
-    });
+  ): Promise<BaseResponse> {
+    await this.createAppointmentUseCase.execute({ user, createAppointmentDto });
 
     return {
       success: true,
@@ -74,13 +71,13 @@ export class AppointmentsController {
   @Roles(['nurse', 'manager', 'specialist'])
   public async update(
     @Param('id') id: string,
-    @CurrentUser() user: UserSchema,
+    @AuthUser() user: AuthUserDto,
     @Body() updateAppointmentDto: UpdateAppointmentDto,
-  ): Promise<BaseResponseSchema> {
+  ): Promise<BaseResponse> {
     await this.updateAppointmentUseCase.execute({
       id,
-      updateAppointmentDto,
       user,
+      updateAppointmentDto,
     });
 
     return {
@@ -93,8 +90,8 @@ export class AppointmentsController {
   @Patch(':id/cancel')
   async cancel(
     @Param('id') id: string,
-    @CurrentUser() user: UserSchema,
-  ): Promise<BaseResponseSchema> {
+    @AuthUser() user: AuthUserDto,
+  ): Promise<BaseResponse> {
     await this.cancelAppointmentUseCase.execute({ id, user });
 
     return {

@@ -40,7 +40,7 @@ export class GetTotalReferralsByCategoryUseCase {
       queryBuilder: SelectQueryBuilder<Referral>,
     ) {
       if (startDate && endDate) {
-        queryBuilder.andWhere('referral.date BETWEEN :start AND :end', {
+        queryBuilder.andWhere('referral.created_at BETWEEN :start AND :end', {
           start: startDate,
           end: endDate,
         });

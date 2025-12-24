@@ -10,9 +10,9 @@ import {
 
 import { Appointment } from '@/domain/entities/appointment';
 import type { AppointmentStatus } from '@/domain/enums/appointments';
-import type { SpecialtyCategory } from '@/domain/enums/specialties';
-import type { PatientCondition } from '@/domain/schemas/patient';
-import type { QueryPeriod } from '@/domain/schemas/query';
+import type { PatientCondition } from '@/domain/enums/patients';
+import type { QueryPeriod } from '@/domain/enums/queries';
+import type { SpecialtyCategory } from '@/domain/enums/shared';
 import { UtilsService } from '@/utils/utils.service';
 
 interface GetTotalAppointmentsUseCaseRequest {

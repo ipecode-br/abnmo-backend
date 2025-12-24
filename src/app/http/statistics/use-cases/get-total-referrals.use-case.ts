@@ -9,10 +9,10 @@ import {
 } from 'typeorm';
 
 import { Referral } from '@/domain/entities/referral';
+import type { PatientCondition } from '@/domain/enums/patients';
+import type { QueryPeriod } from '@/domain/enums/queries';
 import type { ReferralStatus } from '@/domain/enums/referrals';
-import type { SpecialtyCategory } from '@/domain/enums/specialties';
-import type { PatientCondition } from '@/domain/schemas/patient';
-import type { QueryPeriod } from '@/domain/schemas/query';
+import type { SpecialtyCategory } from '@/domain/enums/shared';
 import { UtilsService } from '@/utils/utils.service';
 
 interface GetTotalReferralsUseCaseRequest {

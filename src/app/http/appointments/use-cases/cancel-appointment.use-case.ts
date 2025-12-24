@@ -8,11 +8,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
 import { Appointment } from '@/domain/entities/appointment';
-import { UserSchema } from '@/domain/schemas/user';
+
+import type { AuthUserDto } from '../../auth/auth.dtos';
 
 interface CancelAppointmentUseCaseRequest {
   id: string;
-  user: UserSchema;
+  user: AuthUserDto;
 }
 
 type CancelAppointmentUseCaseResponse = Promise<void>;
@@ -31,6 +32,7 @@ export class CancelAppointmentUseCase {
     user,
   }: CancelAppointmentUseCaseRequest): CancelAppointmentUseCaseResponse {
     const appointment = await this.appointmentsRepository.findOne({
+      select: { id: true, status: true },
       where: { id },
     });
 
@@ -45,7 +47,7 @@ export class CancelAppointmentUseCase {
     await this.appointmentsRepository.save({ id, status: 'canceled' });
 
     this.logger.log(
-      { appointmentId: id, userId: user.id },
+      { id, userId: user.id, userEmail: user.email, role: user.role },
       'Appointment canceled successfully.',
     );
   }

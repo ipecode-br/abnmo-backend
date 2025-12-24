@@ -2,7 +2,6 @@ import {
   Body,
   Controller,
   Get,
-  NotFoundException,
   Param,
   Patch,
   Post,
@@ -11,95 +10,77 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
-import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { AuthUser } from '@/common/decorators/auth-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
-import { BaseResponseSchema } from '@/domain/schemas/base';
-import {
-  FindAllPatientsResponseSchema,
-  GetPatientResponseSchema,
-} from '@/domain/schemas/patient';
-import { FindAllPatientsSupportResponseSchema } from '@/domain/schemas/patient-support';
-import type { UserSchema } from '@/domain/schemas/user';
+import { BaseResponse } from '@/domain/schemas/base';
+import type {
+  GetPatientResponse,
+  GetPatientsResponse,
+} from '@/domain/schemas/patients/responses';
 
-import { PatientSupportsRepository } from '../patient-supports/patient-supports.repository';
+import type { AuthUserDto } from '../auth/auth.dtos';
 import {
   CreatePatientDto,
-  FindAllPatientQueryDto,
-  PatientScreeningDto,
+  GetPatientsQuery,
   UpdatePatientDto,
 } from './patients.dtos';
-import { PatientsRepository } from './patients.repository';
-import { PatientsService } from './patients.service';
+import { CreatePatientUseCase } from './use-cases/create-patient.use-case';
+import { DeactivatePatientUseCase } from './use-cases/deactivate-patient.use-case';
+import { GetPatientUseCase } from './use-cases/get-patient.use-case';
+import { GetPatientsUseCase } from './use-cases/get-patients.use-case';
+import { UpdatePatientUseCase } from './use-cases/update-patient.use-case';
 
 @ApiTags('Pacientes')
 @Controller('patients')
 export class PatientsController {
   constructor(
-    private readonly patientsService: PatientsService,
-    private readonly patientsRepository: PatientsRepository,
-    private readonly patientsSupportsRepository: PatientSupportsRepository,
+    private readonly getPatientsUseCase: GetPatientsUseCase,
+    private readonly getPatientUseCase: GetPatientUseCase,
+    private readonly createPatientUseCase: CreatePatientUseCase,
+    private readonly updatePatientUseCase: UpdatePatientUseCase,
+    private readonly deactivatePatientUseCase: DeactivatePatientUseCase,
   ) {}
-
-  @Post('/screening')
-  @Roles(['patient'])
-  @ApiOperation({ summary: 'Registra triagem do paciente' })
-  public async screening(
-    @CurrentUser() user: UserSchema,
-    @Body() patientScreeningDto: PatientScreeningDto,
-  ): Promise<BaseResponseSchema> {
-    await this.patientsService.screening(patientScreeningDto, user);
-
-    return {
-      success: true,
-      message: 'Triagem realizada com sucesso.',
-    };
-  }
-
-  @Post()
-  @Roles(['manager', 'nurse'])
-  @ApiOperation({ summary: 'Cadastra um novo paciente' })
-  public async create(
-    @Body() createPatientDto: CreatePatientDto,
-  ): Promise<BaseResponseSchema> {
-    await this.patientsService.create(createPatientDto);
-
-    return {
-      success: true,
-      message: 'Cadastro realizado com sucesso.',
-    };
-  }
 
   @Get()
   @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Lista todos os pacientes' })
-  public async findAll(
-    @Query() filters: FindAllPatientQueryDto,
-  ): Promise<FindAllPatientsResponseSchema> {
-    const { patients, total } = await this.patientsRepository.findAll(filters);
+  async getPatients(
+    @Query() query: GetPatientsQuery,
+  ): Promise<GetPatientsResponse> {
+    const data = await this.getPatientsUseCase.execute({ query });
 
     return {
       success: true,
       message: 'Lista de pacientes retornada com sucesso.',
-      data: { patients, total },
+      data,
     };
   }
 
   @Get(':id')
   @Roles(['manager', 'nurse', 'specialist'])
   @ApiOperation({ summary: 'Busca um paciente pelo ID' })
-  public async findById(
-    @Param('id') id: string,
-  ): Promise<GetPatientResponseSchema> {
-    const patient = await this.patientsRepository.findById(id);
-
-    if (!patient) {
-      throw new NotFoundException('Paciente não encontrado.');
-    }
+  async getPatientById(@Param('id') id: string): Promise<GetPatientResponse> {
+    const data = await this.getPatientUseCase.execute({ id });
 
     return {
       success: true,
       message: 'Paciente retornado com sucesso.',
-      data: patient,
+      data,
+    };
+  }
+
+  @Post()
+  @Roles(['manager', 'nurse'])
+  @ApiOperation({ summary: 'Cadastra um novo paciente' })
+  async create(
+    @AuthUser() user: AuthUserDto,
+    @Body() createPatientDto: CreatePatientDto,
+  ): Promise<BaseResponse> {
+    await this.createPatientUseCase.execute({ user, createPatientDto });
+
+    return {
+      success: true,
+      message: 'Paciente registrado com sucesso.',
     };
   }
 
@@ -108,9 +89,10 @@ export class PatientsController {
   @ApiOperation({ summary: 'Atualiza um paciente pelo ID' })
   async update(
     @Param('id') id: string,
+    @AuthUser() user: AuthUserDto,
     @Body() updatePatientDto: UpdatePatientDto,
-  ): Promise<BaseResponseSchema> {
-    await this.patientsService.update(id, updatePatientDto);
+  ): Promise<BaseResponse> {
+    await this.updatePatientUseCase.execute({ id, user, updatePatientDto });
 
     return {
       success: true,
@@ -118,42 +100,18 @@ export class PatientsController {
     };
   }
 
-  @Patch(':id/inactivate')
+  @Patch(':id/deactivate')
   @Roles(['manager'])
-  @ApiOperation({ summary: 'Inativa o Paciente pelo ID' })
-  async inactivatePatient(
+  @ApiOperation({ summary: 'Inativa um paciente pelo ID' })
+  async deactivatePatient(
     @Param('id') id: string,
-  ): Promise<BaseResponseSchema> {
-    await this.patientsService.deactivate(id);
+    @AuthUser() user: AuthUserDto,
+  ): Promise<BaseResponse> {
+    await this.deactivatePatientUseCase.execute({ id, user });
 
     return {
       success: true,
       message: 'Paciente inativado com sucesso.',
-    };
-  }
-
-  @Get(':id/patient-supports')
-  @Roles(['manager', 'nurse', 'specialist', 'patient'])
-  @ApiOperation({ summary: 'Lista todos os contatos de apoio de um paciente' })
-  async findAllPatientSupports(
-    @Param('id') patientId: string,
-  ): Promise<FindAllPatientsSupportResponseSchema> {
-    const patient = await this.patientsRepository.findById(patientId);
-
-    if (!patient) {
-      throw new NotFoundException('Paciente não encontrado.');
-    }
-
-    const patientSupports =
-      await this.patientsSupportsRepository.findAllByPatientId(patientId);
-
-    return {
-      success: true,
-      message: 'Lista de contatos de apoio retornada com sucesso.',
-      data: {
-        patient_supports: patientSupports,
-        total: patientSupports.length,
-      },
     };
   }
 }

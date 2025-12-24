@@ -1,26 +1,25 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { CryptographyModule } from '@/app/cryptography/cryptography.module';
 import { Patient } from '@/domain/entities/patient';
 import { PatientRequirement } from '@/domain/entities/patient-requirement';
-import { User } from '@/domain/entities/user';
 
-import { PatientsModule } from '../patients/patients.module';
-import { UsersModule } from '../users/users.module';
 import { PatientRequirementsController } from './patient-requirements.controller';
-import { PatientRequirementsRepository } from './patient-requirements.repository';
-import { PatientRequirementsService } from './patient-requirements.service';
+import { ApprovePatientRequirementUseCase } from './use-cases/approve-patient-requirement.use-case';
+import { CreatePatientRequirementUseCase } from './use-cases/create-patient-requirement.use-case';
+import { DeclinePatientRequirementUseCase } from './use-cases/decline-patient-requirement.use-case';
+import { GetPatientRequirementsUseCase } from './use-cases/get-patient-requirements.use-case';
+import { GetPatientRequirementsByPatientIdUseCase } from './use-cases/get-patient-requirements-by-patient-id.use-case';
 
 @Module({
-  imports: [
-    CryptographyModule,
-    UsersModule,
-    PatientsModule,
-    TypeOrmModule.forFeature([PatientRequirement, Patient, User]),
-  ],
+  imports: [TypeOrmModule.forFeature([Patient, PatientRequirement])],
   controllers: [PatientRequirementsController],
-  providers: [PatientRequirementsService, PatientRequirementsRepository],
-  exports: [PatientRequirementsRepository],
+  providers: [
+    CreatePatientRequirementUseCase,
+    ApprovePatientRequirementUseCase,
+    DeclinePatientRequirementUseCase,
+    GetPatientRequirementsUseCase,
+    GetPatientRequirementsByPatientIdUseCase,
+  ],
 })
 export class PatientRequirementsModule {}

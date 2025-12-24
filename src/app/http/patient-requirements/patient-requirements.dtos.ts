@@ -2,21 +2,18 @@ import { createZodDto } from 'nestjs-zod';
 
 import {
   createPatientRequirementSchema,
-  findAllPatientsRequirementsByPatientIdQuerySchema,
-  findAllPatientsRequirementsQuerySchema,
-  patientRequirementSchema,
-} from '@/domain/schemas/patient-requirement';
+  getPatientRequirementsByPatientIdQuerySchema,
+  getPatientRequirementsQuerySchema,
+} from '@/domain/schemas/patient-requirement/requests';
 
-export class PatientRequirementDto extends createZodDto(
-  patientRequirementSchema,
-) {}
 export class CreatePatientRequirementDto extends createZodDto(
   createPatientRequirementSchema,
 ) {}
-export class FindAllPatientsRequirementsByPatientIdDto extends createZodDto(
-  findAllPatientsRequirementsByPatientIdQuerySchema,
+
+export class GetPatientRequirementsQuery extends createZodDto(
+  getPatientRequirementsQuerySchema,
 ) {}
 
-export class FindAllPatientsRequirementsQueryDto extends createZodDto(
-  findAllPatientsRequirementsQuerySchema,
+export class GetPatientRequirementsByPatientIdQuery extends createZodDto(
+  getPatientRequirementsByPatientIdQuerySchema,
 ) {}
