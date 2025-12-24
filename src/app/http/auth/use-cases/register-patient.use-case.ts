@@ -30,7 +30,7 @@ export class RegisterPatientUseCase {
   async execute({
     registerPatientDto,
   }: RegisterPatientUseCaseRequest): RegisterPatientUseCaseResponse {
-    const { email, name, password } = registerPatientDto;
+    const { email, name } = registerPatientDto;
 
     const patient = await this.patientsRepository.findOne({
       select: { id: true },
@@ -47,13 +47,17 @@ export class RegisterPatientUseCase {
       );
     }
 
-    const hashedPassword = await this.cryptographyService.createHash(password);
+    const password = await this.cryptographyService.createHash(
+      registerPatientDto.password,
+    );
 
-    const newPatient = await this.patientsRepository.save({
-      password: hashedPassword,
-      email,
+    const newPatient = this.patientsRepository.create({
       name,
+      email,
+      password,
     });
+
+    await this.patientsRepository.save(newPatient);
 
     this.logger.log(
       { patientId: newPatient.id, email },

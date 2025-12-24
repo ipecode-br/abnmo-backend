@@ -32,6 +32,8 @@ export class GetReferralsUseCase {
     query,
   }: GetReferralsUseCaseRequest): GetReferralsUseCaseResponse {
     const { search, status, category, condition, page, perPage } = query;
+    const startDate = query.startDate ? new Date(query.startDate) : null;
+    const endDate = query.endDate ? new Date(query.endDate) : null;
 
     const ORDER_BY_MAPPING: Record<ReferralOrderBy, keyof Referral> = {
       date: 'created_at',
@@ -43,8 +45,6 @@ export class GetReferralsUseCase {
     };
 
     const where: FindOptionsWhere<Referral> = {};
-    const startDate = query.startDate ? new Date(query.startDate) : null;
-    const endDate = query.endDate ? new Date(query.endDate) : null;
 
     if (status) {
       where.status = status;

@@ -34,7 +34,9 @@ export class GetPatientRequirementsUseCase {
   async execute({
     query,
   }: GetPatientRequirementsUseCaseRequest): GetPatientRequirementsUseCaseResponse {
-    const { search, status, startDate, endDate, page, perPage } = query;
+    const { search, status, page, perPage } = query;
+    const startDate = query.startDate ? new Date(query.startDate) : null;
+    const endDate = query.endDate ? new Date(query.endDate) : null;
 
     const ORDER_BY_MAPPING: Record<
       PatientRequirementsOrderBy,
@@ -59,15 +61,15 @@ export class GetPatientRequirementsUseCase {
     }
 
     if (startDate && endDate) {
-      where.created_at = Between(new Date(startDate), new Date(endDate));
+      where.created_at = Between(startDate, endDate);
     }
 
     if (startDate && !endDate) {
-      where.created_at = MoreThanOrEqual(new Date(startDate));
+      where.created_at = MoreThanOrEqual(startDate);
     }
 
     if (endDate && !startDate) {
-      where.created_at = LessThanOrEqual(new Date(endDate));
+      where.created_at = LessThanOrEqual(endDate);
     }
 
     const total = await this.patientRequirementsRepository.count({ where });

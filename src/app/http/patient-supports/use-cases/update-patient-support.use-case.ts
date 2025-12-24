@@ -14,8 +14,8 @@ import type { UpdatePatientSupportDto } from '../patient-supports.dtos';
 
 interface UpdatePatientSupportUseCaseRequest {
   id: string;
-  updatePatientSupportDto: UpdatePatientSupportDto;
   user: AuthUserDto;
+  updatePatientSupportDto: UpdatePatientSupportDto;
 }
 
 type UpdatePatientSupportUseCaseResponse = Promise<void>;
@@ -31,8 +31,8 @@ export class UpdatePatientSupportUseCase {
 
   async execute({
     id,
-    updatePatientSupportDto,
     user,
+    updatePatientSupportDto,
   }: UpdatePatientSupportUseCaseRequest): UpdatePatientSupportUseCaseResponse {
     const patientSupport = await this.patientSupportsRepository.findOne({
       select: { id: true, patient_id: true },
@@ -43,7 +43,19 @@ export class UpdatePatientSupportUseCase {
       throw new NotFoundException('Contato de apoio não encontrado.');
     }
 
-    if (user.role === 'patient' && user.id !== patientSupport.patient_id) {
+    const patientId = patientSupport.patient_id;
+
+    if (user.role === 'patient' && user.id !== patientId) {
+      this.logger.log(
+        {
+          id,
+          patientId,
+          userId: user.id,
+          userEmail: user.email,
+          role: user.role,
+        },
+        'Update patient support failed: User does not have permission to update this patient support',
+      );
       throw new ForbiddenException(
         'Você não tem permissão para atualizar este contato de apoio.',
       );
@@ -54,6 +66,15 @@ export class UpdatePatientSupportUseCase {
       ...updatePatientSupportDto,
     });
 
-    this.logger.log({ id }, 'Support network updated successfully');
+    this.logger.log(
+      {
+        id,
+        patientId,
+        userId: user.id,
+        userEmail: user.email,
+        role: user.role,
+      },
+      'Patient support updated successfully',
+    );
   }
 }

@@ -38,6 +38,8 @@ export class GetAppointmentsUseCase {
     query,
   }: GetAppointmentsUseCaseRequest): GetAppointmentsUseCaseResponse {
     const { search, status, category, condition, page, perPage } = query;
+    const startDate = query.startDate ? new Date(query.startDate) : null;
+    const endDate = query.endDate ? new Date(query.endDate) : null;
 
     const ORDER_BY_MAPPING: Record<AppointmentsOrderBy, keyof Appointment> = {
       date: 'created_at',
@@ -49,8 +51,6 @@ export class GetAppointmentsUseCase {
     };
 
     const where: FindOptionsWhere<Appointment> = {};
-    const startDate = query.startDate ? new Date(query.startDate) : null;
-    const endDate = query.endDate ? new Date(query.endDate) : null;
 
     if (user.role === 'patient') {
       where.patient = { id: user.id };

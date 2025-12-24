@@ -53,7 +53,7 @@ export class UpdateAppointmentUseCase {
     await this.appointmentsRepository.save(appointment);
 
     this.logger.log(
-      { appointmentId: id, userId: user.id, userEmail: user.email },
+      { id, userId: user.id, userEmail: user.email, role: user.role },
       'Appointment updated successfully.',
     );
   }

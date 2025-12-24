@@ -13,6 +13,7 @@ export const patientRequirementItemSchema = patientRequirementSchema
     description: true,
     submitted_at: true,
     approved_at: true,
+    declined_at: true,
     created_at: true,
   })
   .extend({ patient: patientSchema.pick({ id: true, name: true }) });
@@ -39,6 +40,7 @@ export const patientRequirementByPatientIdSchema =
     description: true,
     submitted_at: true,
     approved_at: true,
+    declined_at: true,
     created_at: true,
   });
 export type PatientRequirementByPatientId = z.infer<

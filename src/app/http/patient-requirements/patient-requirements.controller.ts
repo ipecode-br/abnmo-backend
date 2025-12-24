@@ -40,24 +40,6 @@ export class PatientRequirementsController {
     private readonly getPatientRequirementsByPatientIdUseCase: GetPatientRequirementsByPatientIdUseCase,
   ) {}
 
-  @Post()
-  @Roles(['nurse', 'manager'])
-  @ApiOperation({ summary: 'Adiciona uma nova solicitação.' })
-  async create(
-    @AuthUser() user: AuthUserDto,
-    @Body() createPatientRequirementDto: CreatePatientRequirementDto,
-  ): Promise<BaseResponse> {
-    await this.createPatientRequirementUseCase.execute({
-      createPatientRequirementDto,
-      user,
-    });
-
-    return {
-      success: true,
-      message: 'Solicitação adicionada com sucesso.',
-    };
-  }
-
   @Get()
   @Roles(['nurse', 'manager'])
   @ApiOperation({
@@ -72,6 +54,24 @@ export class PatientRequirementsController {
       success: true,
       message: 'Lista de solicitações retornada com sucesso',
       data,
+    };
+  }
+
+  @Post()
+  @Roles(['nurse', 'manager'])
+  @ApiOperation({ summary: 'Adiciona uma nova solicitação.' })
+  async create(
+    @AuthUser() user: AuthUserDto,
+    @Body() createPatientRequirementDto: CreatePatientRequirementDto,
+  ): Promise<BaseResponse> {
+    await this.createPatientRequirementUseCase.execute({
+      user,
+      createPatientRequirementDto,
+    });
+
+    return {
+      success: true,
+      message: 'Solicitação adicionada com sucesso.',
     };
   }
 

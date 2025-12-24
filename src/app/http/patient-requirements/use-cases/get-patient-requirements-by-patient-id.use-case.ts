@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   Between,
@@ -25,10 +25,6 @@ type GetPatientRequirementsByPatientIdUseCaseResponse = Promise<{
 
 @Injectable()
 export class GetPatientRequirementsByPatientIdUseCase {
-  private readonly logger = new Logger(
-    GetPatientRequirementsByPatientIdUseCase.name,
-  );
-
   constructor(
     @InjectRepository(PatientRequirement)
     private readonly patientRequirementsRepository: Repository<PatientRequirement>,
@@ -38,7 +34,9 @@ export class GetPatientRequirementsByPatientIdUseCase {
     patientId,
     query,
   }: GetPatientRequirementsByPatientIdUseCaseRequest): GetPatientRequirementsByPatientIdUseCaseResponse {
-    const { status, startDate, endDate, page, perPage } = query;
+    const { status, page, perPage } = query;
+    const startDate = query.startDate ? new Date(query.startDate) : null;
+    const endDate = query.endDate ? new Date(query.endDate) : null;
 
     const where: FindOptionsWhere<PatientRequirement> = {
       patient_id: patientId,
@@ -49,15 +47,15 @@ export class GetPatientRequirementsByPatientIdUseCase {
     }
 
     if (startDate && endDate) {
-      where.created_at = Between(new Date(startDate), new Date(endDate));
+      where.created_at = Between(startDate, endDate);
     }
 
     if (startDate && !endDate) {
-      where.created_at = MoreThanOrEqual(new Date(startDate));
+      where.created_at = MoreThanOrEqual(startDate);
     }
 
     if (endDate && !startDate) {
-      where.created_at = LessThanOrEqual(new Date(endDate));
+      where.created_at = LessThanOrEqual(endDate);
     }
 
     const total = await this.patientRequirementsRepository.count({ where });
@@ -71,6 +69,7 @@ export class GetPatientRequirementsByPatientIdUseCase {
         status: true,
         submitted_at: true,
         approved_at: true,
+        declined_at: true,
         created_at: true,
       },
       skip: (page - 1) * perPage,

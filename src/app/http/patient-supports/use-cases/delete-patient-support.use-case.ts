@@ -40,7 +40,19 @@ export class DeletePatientSupportUseCase {
       throw new NotFoundException('Contato de apoio não encontrado.');
     }
 
-    if (user.role === 'patient' && user.id !== patientSupport.patient_id) {
+    const patientId = patientSupport.patient_id;
+
+    if (user.role === 'patient' && user.id !== patientId) {
+      this.logger.log(
+        {
+          id,
+          patientId,
+          userId: user.id,
+          userEmail: user.email,
+          role: user.role,
+        },
+        'Remove patient support failed: User does not have permission to remove this patient support',
+      );
       throw new ForbiddenException(
         'Você não tem permissão para remover este contato de apoio.',
       );
@@ -49,8 +61,14 @@ export class DeletePatientSupportUseCase {
     await this.patientSupportsRepository.remove(patientSupport);
 
     this.logger.log(
-      { id, patientId: patientSupport.patient_id },
-      'Support network removed successfully',
+      {
+        id,
+        patientId,
+        userId: user.id,
+        userEmail: user.email,
+        role: user.role,
+      },
+      'Patient support removed successfully',
     );
   }
 }

@@ -35,7 +35,7 @@ export class RegisterUserUseCase {
   async execute({
     registerUserDto,
   }: RegisterUserUseCaseRequest): RegisterUserUseCaseResponse {
-    const { invite_token: token, name, password } = registerUserDto;
+    const { invite_token: token, name } = registerUserDto;
 
     const inviteToken = await this.tokensRepository.findOne({
       where: { token },
@@ -64,13 +64,13 @@ export class RegisterUserUseCase {
       throw new ConflictException('Este e-mail já está cadastrado.');
     }
 
-    const hashedPassword = await this.cryptographyService.createHash(password);
+    const password = await this.cryptographyService.createHash(
+      registerUserDto.password,
+    );
 
-    const newUser = await this.usersRepository.save({
-      password: hashedPassword,
-      email,
-      name,
-    });
+    const newUser = this.usersRepository.create({ name, email, password });
+
+    await this.usersRepository.save(newUser);
 
     this.logger.log(
       { userId: newUser.id, email, role: newUser.role },

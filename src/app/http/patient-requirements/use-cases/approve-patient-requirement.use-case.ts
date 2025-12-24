@@ -37,18 +37,10 @@ export class ApprovePatientRequirementUseCase {
     });
 
     if (!requirement) {
-      this.logger.error(
-        { id },
-        'Approve patient requirement failed: Requirement not found',
-      );
       throw new NotFoundException('Solicitação não encontrada.');
     }
 
     if (requirement.status !== 'under_review') {
-      this.logger.error(
-        { id, status: requirement.status },
-        'Approve patient requirement failed: Invalid status',
-      );
       throw new ConflictException(
         'A solicitação deve estar aguardando aprovação.',
       );
@@ -61,6 +53,9 @@ export class ApprovePatientRequirementUseCase {
       approved_at: new Date(),
     });
 
-    this.logger.log({ id }, 'Patient requirement approved successfully');
+    this.logger.log(
+      { id, userId: user.id, userEmail: user.email, role: user.role },
+      'Patient requirement approved successfully',
+    );
   }
 }

@@ -50,6 +50,12 @@ export class PatientRequirement implements PatientRequirementSchema {
   @Column({ type: 'datetime', nullable: true })
   approved_at: Date | null;
 
+  @Column({ type: 'uuid', nullable: true })
+  declined_by: string | null;
+
+  @Column({ type: 'datetime', nullable: true })
+  declined_at: Date | null;
+
   @Column({ type: 'uuid' })
   created_by: string;
 

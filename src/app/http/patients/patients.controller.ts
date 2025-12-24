@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  ForbiddenException,
   Get,
   Param,
   Patch,
@@ -39,7 +38,7 @@ export class PatientsController {
     private readonly getPatientUseCase: GetPatientUseCase,
     private readonly createPatientUseCase: CreatePatientUseCase,
     private readonly updatePatientUseCase: UpdatePatientUseCase,
-    private readonly deativatePatientUseCase: DeactivatePatientUseCase,
+    private readonly deactivatePatientUseCase: DeactivatePatientUseCase,
   ) {}
 
   @Get()
@@ -74,9 +73,10 @@ export class PatientsController {
   @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Cadastra um novo paciente' })
   async create(
+    @AuthUser() user: AuthUserDto,
     @Body() createPatientDto: CreatePatientDto,
   ): Promise<BaseResponse> {
-    await this.createPatientUseCase.execute({ createPatientDto });
+    await this.createPatientUseCase.execute({ user, createPatientDto });
 
     return {
       success: true,
@@ -92,13 +92,7 @@ export class PatientsController {
     @AuthUser() user: AuthUserDto,
     @Body() updatePatientDto: UpdatePatientDto,
   ): Promise<BaseResponse> {
-    if (user.role === 'patient' && user.id !== id) {
-      throw new ForbiddenException(
-        'Você não tem permissão para atualizar este paciente.',
-      );
-    }
-
-    await this.updatePatientUseCase.execute({ id, updatePatientDto });
+    await this.updatePatientUseCase.execute({ id, user, updatePatientDto });
 
     return {
       success: true,
@@ -109,8 +103,11 @@ export class PatientsController {
   @Patch(':id/deactivate')
   @Roles(['manager'])
   @ApiOperation({ summary: 'Inativa um paciente pelo ID' })
-  async deactivatePatient(@Param('id') id: string): Promise<BaseResponse> {
-    await this.deativatePatientUseCase.execute({ id });
+  async deactivatePatient(
+    @Param('id') id: string,
+    @AuthUser() user: AuthUserDto,
+  ): Promise<BaseResponse> {
+    await this.deactivatePatientUseCase.execute({ id, user });
 
     return {
       success: true,

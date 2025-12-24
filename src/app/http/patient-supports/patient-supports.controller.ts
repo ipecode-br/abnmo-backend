@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  ForbiddenException,
-  Param,
-  Post,
-  Put,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Param, Post, Put } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { AuthUser } from '@/common/decorators/auth-user.decorator';
@@ -28,7 +20,7 @@ export class PatientSupportsController {
   constructor(
     private readonly createPatientSupportUseCase: CreatePatientSupportUseCase,
     private readonly updatePatientSupportUseCase: UpdatePatientSupportUseCase,
-    private readonly cancelPatientSupportUseCase: DeletePatientSupportUseCase,
+    private readonly deletePatientSupportUseCase: DeletePatientSupportUseCase,
   ) {}
 
   @Post(':patientId')
@@ -41,13 +33,8 @@ export class PatientSupportsController {
     @AuthUser() user: AuthUserDto,
     @Body() createPatientSupportDto: CreatePatientSupportDto,
   ): Promise<BaseResponse> {
-    if (user.role === 'patient' && user.id !== patientId) {
-      throw new ForbiddenException(
-        'Você não tem permissão para registrar contatos de apoio para este paciente.',
-      );
-    }
-
     await this.createPatientSupportUseCase.execute({
+      user,
       patientId,
       createPatientSupportDto,
     });
@@ -85,7 +72,7 @@ export class PatientSupportsController {
     @Param('id') id: string,
     @AuthUser() user: AuthUserDto,
   ): Promise<BaseResponse> {
-    await this.cancelPatientSupportUseCase.execute({ id, user });
+    await this.deletePatientSupportUseCase.execute({ id, user });
 
     return {
       success: true,

@@ -16,6 +16,8 @@ export const patientRequirementSchema = z
     submitted_at: z.coerce.date().nullable(),
     approved_by: z.string().uuid().nullable(),
     approved_at: z.coerce.date().nullable(),
+    declined_by: z.string().uuid().nullable(),
+    declined_at: z.coerce.date().nullable(),
     created_by: z.string().uuid(),
     created_at: z.coerce.date(),
     updated_at: z.coerce.date(),

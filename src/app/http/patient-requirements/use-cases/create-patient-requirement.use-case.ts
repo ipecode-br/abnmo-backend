@@ -38,21 +38,24 @@ export class CreatePatientRequirementUseCase {
     });
 
     if (!patient) {
-      this.logger.error(
-        { patientId: patient_id },
-        'Create requirement failed: Patient not found',
-      );
       throw new NotFoundException('Paciente não encontrado.');
     }
 
-    await this.patientRequirementsRepository.save({
+    const patientRequirement = this.patientRequirementsRepository.create({
       ...createPatientRequirementDto,
-      required_by: user.id,
-      status: 'under_review',
+      created_by: user.id,
     });
 
+    await this.patientRequirementsRepository.save(patientRequirement);
+
     this.logger.log(
-      { patientId: patient_id, userId: user.id },
+      {
+        id: patientRequirement.id,
+        patientId: patient_id,
+        userId: user.id,
+        userEmail: user.email,
+        role: user.role,
+      },
       'Requirement created successfully',
     );
   }

@@ -54,12 +54,12 @@ export class AppointmentsController {
 
   @Post()
   @Roles(['nurse', 'manager'])
-  @ApiOperation({ summary: 'Cadastra novo atendimento' })
+  @ApiOperation({ summary: 'Cadastra um novo atendimento' })
   async create(
     @AuthUser() user: AuthUserDto,
     @Body() createAppointmentDto: CreateAppointmentDto,
   ): Promise<BaseResponse> {
-    await this.createAppointmentUseCase.execute({ createAppointmentDto, user });
+    await this.createAppointmentUseCase.execute({ user, createAppointmentDto });
 
     return {
       success: true,
@@ -76,8 +76,8 @@ export class AppointmentsController {
   ): Promise<BaseResponse> {
     await this.updateAppointmentUseCase.execute({
       id,
-      updateAppointmentDto,
       user,
+      updateAppointmentDto,
     });
 
     return {

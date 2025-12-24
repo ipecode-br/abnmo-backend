@@ -7,6 +7,7 @@ NestJS SaaS API managing patients, referrals, appointments, and health tracking.
 **Stack**: NestJS + TypeORM + MySQL + Zod
 
 Module structure (`/src/app/http/{featureName}`):
+
 ```
 {feature}/
 ├── {feature}.module.ts       # Module definition with imports/providers
@@ -41,11 +42,21 @@ Create DTOs exclusively from Zod schemas in `/domain/schemas`. Use `createZodDto
 
 ```typescript
 import { createZodDto } from 'nestjs-zod';
-import { createAppointmentSchema, updateAppointmentSchema, getAppointmentsQuerySchema } from '@/domain/schemas/appointments/requests';
+import {
+  createAppointmentSchema,
+  updateAppointmentSchema,
+  getAppointmentsQuerySchema,
+} from '@/domain/schemas/appointments/requests';
 
-export class CreateAppointmentDto extends createZodDto(createAppointmentSchema) {}
-export class UpdateAppointmentDto extends createZodDto(updateAppointmentSchema) {}
-export class GetAppointmentsQuery extends createZodDto(getAppointmentsQuerySchema) {}
+export class CreateAppointmentDto extends createZodDto(
+  createAppointmentSchema,
+) {}
+export class UpdateAppointmentDto extends createZodDto(
+  updateAppointmentSchema,
+) {}
+export class GetAppointmentsQuery extends createZodDto(
+  getAppointmentsQuerySchema,
+) {}
 ```
 
 **Naming**: `{Action}{Entity}Dto` (e.g., `CreateAppointmentDto`, `GetAppointmentsQuery`)
@@ -70,8 +81,8 @@ export class AppointmentsController {
   }
 
   @Post()
-  async create(@Body() dto: CreateAppointmentDto): Promise<BaseResponse> {
-    await this.createAppointmentUseCase.execute(dto);
+  async create(@Body() createAppointmentDto: CreateAppointmentDto): Promise<BaseResponse> {
+    await this.createAppointmentUseCase.execute(createAppointmentDto);
     return { success: true };
   }
 }
@@ -96,7 +107,9 @@ export class GetAppointmentsUseCase {
     private readonly appointmentsRepository: Repository<Appointment>,
   ) {}
 
-  async execute(request: GetAppointmentsUseCaseRequest): GetAppointmentsUseCaseResponse {
+  async execute(
+    request: GetAppointmentsUseCaseRequest,
+  ): GetAppointmentsUseCaseResponse {
     // Implementation
   }
 }
@@ -112,8 +125,13 @@ Centralize validation and types in `/domain/schemas` and `/domain/enums`:
 - **Enums** (`/domain/enums/{entity}.ts`): Define constants and types
 
 Example enum pattern:
+
 ```typescript
-export const APPOINTMENT_STATUSES = ['scheduled', 'canceled', 'completed'] as const;
+export const APPOINTMENT_STATUSES = [
+  'scheduled',
+  'canceled',
+  'completed',
+] as const;
 export type AppointmentStatus = (typeof APPOINTMENT_STATUSES)[number];
 ```
 
@@ -134,7 +152,7 @@ Files should match their exports: `get-total-patients.use-case.ts` exports `GetT
 
 ### Queries
 
-- **Always select fields**: `select: { id: true, name: true }`—avoid over-fetching
+- **Always select fields**: `select: { id: true, name: true }` — avoid over-fetching
 - **Count operations**: Select only `id` for performance
 - **Relations**: Destructure explicitly: `relations: { user: true }`
 
@@ -175,7 +193,9 @@ if (!patient) {
 }
 
 if (date > maxDate) {
-  throw new BadRequestException('A data de atendimento deve estar dentro dos próximos 3 meses.');
+  throw new BadRequestException(
+    'A data de atendimento deve estar dentro dos próximos 3 meses.',
+  );
 }
 ```
 
@@ -186,11 +206,7 @@ Log significant events in use-cases with English messages:
 ```typescript
 private readonly logger = new Logger(CreateAppointmentUseCase.name);
 
-this.logger.log({
-  patientId,
-  appointmentId,
-  userId,
-}, 'Appointment created successfully');
+this.logger.log({ patientId, appointmentId, createdBy }, 'Appointment created successfully');
 ```
 
 ### Query Builders

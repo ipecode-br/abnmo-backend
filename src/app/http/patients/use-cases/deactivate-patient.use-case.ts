@@ -9,8 +9,11 @@ import type { Repository } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
 
+import type { AuthUserDto } from '../../auth/auth.dtos';
+
 interface DeactivatePatientUseCaseRequest {
   id: string;
+  user: AuthUserDto;
 }
 
 type DeactivatePatientUseCaseResponse = Promise<void>;
@@ -26,6 +29,7 @@ export class DeactivatePatientUseCase {
 
   async execute({
     id,
+    user,
   }: DeactivatePatientUseCaseRequest): DeactivatePatientUseCaseResponse {
     const patient = await this.patientsRepository.findOne({
       select: { id: true, status: true },
@@ -33,23 +37,23 @@ export class DeactivatePatientUseCase {
     });
 
     if (!patient) {
-      this.logger.error(
-        { patientId: id },
-        'Cancel patient failed: Patient not found',
-      );
       throw new NotFoundException('Paciente não encontrado.');
     }
 
     if (patient.status === 'inactive') {
-      this.logger.error(
-        { patientId: id },
-        'Cancel patient failed: Patient already inactive',
-      );
       throw new ConflictException('Este paciente já está inativo.');
     }
 
     await this.patientsRepository.save({ id, status: 'inactive' });
 
-    this.logger.log({ patientId: id }, 'Patient deactivated successfully');
+    this.logger.log(
+      {
+        patientId: id,
+        userId: user.id,
+        userEmail: user.email,
+        role: user.role,
+      },
+      'Patient deactivated successfully',
+    );
   }
 }

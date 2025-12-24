@@ -30,7 +30,7 @@ export class CreateAppointmentUseCase {
     createAppointmentDto,
     user,
   }: CreateAppointmentUseCaseRequest): CreateAppointmentUseCaseResponse {
-    const { patient_id, date } = createAppointmentDto;
+    const { patient_id: patientId, date } = createAppointmentDto;
 
     const MAX_APPOINTMENT_MONTHS_LIMIT = 3;
     const appointmentDate = new Date(date);
@@ -47,25 +47,28 @@ export class CreateAppointmentUseCase {
     }
 
     const patient = await this.patientsRepository.findOne({
+      where: { id: patientId },
       select: { id: true },
-      where: { id: patient_id },
     });
 
     if (!patient) {
       throw new BadRequestException('Paciente não encontrado.');
     }
 
-    const appointment = await this.appointmentsRepository.save({
+    const appointment = this.appointmentsRepository.create({
       ...createAppointmentDto,
       created_by: user.id,
     });
 
+    await this.appointmentsRepository.save(appointment);
+
     this.logger.log(
       {
-        patientId: patient_id,
-        appointmentId: appointment.id,
+        id: appointment.id,
+        patientId: patientId,
         userId: user.id,
         userEmail: user.email,
+        role: user.role,
       },
       'Appointment created successfully',
     );

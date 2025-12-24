@@ -38,10 +38,15 @@ export class SignInWithEmailUseCase {
       email,
       password,
       keep_logged_in: keepLoggedIn,
+      account_type: accountType,
     } = signInWithEmailDto;
 
     const findOptions = {
-      select: { id: true, password: true, role: true },
+      select: {
+        id: true,
+        password: true,
+        role: accountType === 'patient' ? undefined : true,
+      },
       where: { email },
     };
 
@@ -50,7 +55,7 @@ export class SignInWithEmailUseCase {
       password: string | null;
       role?: UserRole;
     } | null =
-      signInWithEmailDto.account_type === 'patient'
+      accountType === 'patient'
         ? await this.patientsRepository.findOne(findOptions)
         : await this.usersRepository.findOne(findOptions);
 

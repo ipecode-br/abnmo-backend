@@ -6,9 +6,11 @@ import { DataSource } from 'typeorm';
 import { Patient } from '@/domain/entities/patient';
 import { PatientSupport } from '@/domain/entities/patient-support';
 
+import type { AuthUserDto } from '../../auth/auth.dtos';
 import type { CreatePatientDto } from '../patients.dtos';
 
 interface CreatePatientUseCaseRequest {
+  user: AuthUserDto;
   createPatientDto: CreatePatientDto;
 }
 
@@ -26,31 +28,32 @@ export class CreatePatientUseCase {
   ) {}
 
   async execute({
+    user,
     createPatientDto,
   }: CreatePatientUseCaseRequest): CreatePatientUseCaseResponse {
     const { email, cpf, supports, ...patientData } = createPatientDto;
 
-    const patientWithEmail = await this.patientsRepository.findOne({
+    const patientWithSameEmail = await this.patientsRepository.findOne({
       select: { id: true },
       where: { email },
     });
 
-    if (patientWithEmail) {
+    if (patientWithSameEmail) {
       this.logger.error(
-        { email },
+        { email, userId: user.id, userEmail: user.email, role: user.role },
         'Create patient failed: Email already registered',
       );
       throw new ConflictException('O e-mail informado já está registrado.');
     }
 
-    const patientWithCpf = await this.patientsRepository.findOne({
+    const patientWithSameCpf = await this.patientsRepository.findOne({
       select: { id: true },
       where: { cpf },
     });
 
-    if (patientWithCpf) {
+    if (patientWithSameCpf) {
       this.logger.error(
-        { cpf },
+        { cpf, userId: user.id, userEmail: user.email, role: user.role },
         'Create patient failed: CPF already registered',
       );
       throw new ConflictException('O CPF informado já está registrado.');
@@ -60,20 +63,22 @@ export class CreatePatientUseCase {
       const patientsDataSource = manager.getRepository(Patient);
       const patientSupportsDataSource = manager.getRepository(PatientSupport);
 
-      const patient = await patientsDataSource.save({
+      const patient = patientsDataSource.create({
         ...patientData,
         email,
         cpf,
         status: 'active',
       });
 
+      await patientsDataSource.save(patient);
+
       if (supports && supports.length > 0) {
-        const patientSupports = supports.map((support) =>
+        const patientSupports = supports.map(({ name, phone, kinship }) =>
           patientSupportsDataSource.create({
-            name: support.name,
-            phone: support.phone,
-            kinship: support.kinship,
             patient_id: patient.id,
+            name,
+            phone,
+            kinship,
           }),
         );
 
@@ -81,7 +86,13 @@ export class CreatePatientUseCase {
       }
 
       this.logger.log(
-        { patientId: patient.id, email },
+        {
+          patientId: patient.id,
+          email,
+          userId: user.id,
+          userEmail: user.email,
+          role: user.role,
+        },
         'Patient created successfully',
       );
     });

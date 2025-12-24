@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   Logger,
   NotFoundException,
@@ -9,11 +10,13 @@ import type { Repository } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
 
+import type { AuthUserDto } from '../../auth/auth.dtos';
 import type { UpdatePatientDto } from '../patients.dtos';
 
 interface UpdatePatientUseCaseRequest {
-  updatePatientDto: UpdatePatientDto;
   id: string;
+  user: AuthUserDto;
+  updatePatientDto: UpdatePatientDto;
 }
 
 type UpdatePatientUseCaseResponse = Promise<void>;
@@ -29,45 +32,64 @@ export class UpdatePatientUseCase {
 
   async execute({
     id,
+    user,
     updatePatientDto,
   }: UpdatePatientUseCaseRequest): UpdatePatientUseCaseResponse {
+    if (user.role === 'patient' && user.id !== id) {
+      this.logger.log(
+        { id, userId: user.id, userEmail: user.email, role: user.role },
+        'Update patient failed: User does not have permission to update this patient',
+      );
+      throw new ForbiddenException(
+        'Você não tem permissão para atualizar este paciente.',
+      );
+    }
+
     const patient = await this.patientsRepository.findOne({
       select: { id: true, email: true, cpf: true },
       where: { id },
     });
 
     if (!patient) {
-      this.logger.error(
-        { patientId: id },
-        'Update patient failed: Patient not found',
-      );
       throw new NotFoundException('Paciente não encontrado.');
     }
 
-    if (updatePatientDto.cpf && updatePatientDto.cpf !== patient.cpf) {
-      const patientWithCpf = await this.patientsRepository.findOne({
+    if (updatePatientDto.cpf !== patient.cpf) {
+      const patientWithSameCpf = await this.patientsRepository.findOne({
         where: { cpf: updatePatientDto.cpf },
         select: { id: true },
       });
 
-      if (patientWithCpf && patientWithCpf.id !== id) {
+      if (patientWithSameCpf && patientWithSameCpf.id !== id) {
         this.logger.error(
-          { patientId: id, cpf: updatePatientDto.cpf },
+          {
+            patientId: id,
+            cpf: updatePatientDto.cpf,
+            userId: user.id,
+            userEmail: user.email,
+            role: user.role,
+          },
           'Update patient failed: CPF already registered',
         );
         throw new ConflictException('O CPF informado já está registrado.');
       }
     }
 
-    if (updatePatientDto.email && updatePatientDto.email !== patient.email) {
-      const patientWithEmail = await this.patientsRepository.findOne({
+    if (updatePatientDto.email !== patient.email) {
+      const patientWithSameEmail = await this.patientsRepository.findOne({
         where: { email: updatePatientDto.email },
         select: { id: true },
       });
 
-      if (patientWithEmail && patientWithEmail.id !== id) {
+      if (patientWithSameEmail && patientWithSameEmail.id !== id) {
         this.logger.error(
-          { patientId: id, email: updatePatientDto.email },
+          {
+            patientId: id,
+            email: updatePatientDto.email,
+            userId: user.id,
+            userEmail: user.email,
+            role: user.role,
+          },
           'Update patient failed: Email already registered',
         );
         throw new ConflictException('O e-mail informado já está registrado.');
@@ -76,6 +98,14 @@ export class UpdatePatientUseCase {
 
     await this.patientsRepository.save({ id, ...updatePatientDto });
 
-    this.logger.log({ patientId: id }, 'Patient updated successfully');
+    this.logger.log(
+      {
+        patientId: id,
+        userId: user.id,
+        userEmail: user.email,
+        role: user.role,
+      },
+      'Patient updated successfully',
+    );
   }
 }

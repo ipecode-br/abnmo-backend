@@ -1,4 +1,9 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -51,10 +56,14 @@ export class ResetPasswordUseCase {
       );
     }
 
-    const { account_type: accountType, password } = resetPasswordDto;
+    const { account_type: accountType } = resetPasswordDto;
 
     const findOptions = {
-      select: { id: true, email: true, role: true },
+      select: {
+        id: true,
+        email: true,
+        role: accountType === 'patient' ? undefined : true,
+      },
       where: { id: resetToken.entity_id },
     };
 
@@ -68,19 +77,17 @@ export class ResetPasswordUseCase {
         { id: resetToken.entity_id, accountType },
         'Reset password failed: Entity not registered',
       );
-      throw new UnauthorizedException('Usuário não encontrado.');
+      throw new NotFoundException('Usuário não encontrado.');
     }
 
-    const hashedPassword = await this.cryptographyService.createHash(password);
+    const password = await this.cryptographyService.createHash(
+      resetPasswordDto.password,
+    );
 
     if (accountType === 'patient') {
-      await this.usersRepository.update(entity.id, {
-        password: hashedPassword,
-      });
+      await this.usersRepository.update(entity.id, { password });
     } else {
-      await this.patientsRepository.update(entity.id, {
-        password: hashedPassword,
-      });
+      await this.patientsRepository.update(entity.id, { password });
     }
 
     await this.tokensRepository.delete({ token });
