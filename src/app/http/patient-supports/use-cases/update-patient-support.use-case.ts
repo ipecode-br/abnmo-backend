@@ -18,8 +18,6 @@ interface UpdatePatientSupportUseCaseRequest {
   updatePatientSupportDto: UpdatePatientSupportDto;
 }
 
-type UpdatePatientSupportUseCaseResponse = Promise<void>;
-
 @Injectable()
 export class UpdatePatientSupportUseCase {
   private readonly logger = new Logger(UpdatePatientSupportUseCase.name);
@@ -33,7 +31,7 @@ export class UpdatePatientSupportUseCase {
     id,
     user,
     updatePatientSupportDto,
-  }: UpdatePatientSupportUseCaseRequest): UpdatePatientSupportUseCaseResponse {
+  }: UpdatePatientSupportUseCaseRequest): Promise<void> {
     const patientSupport = await this.patientSupportsRepository.findOne({
       select: { id: true, patient_id: true },
       where: { id },

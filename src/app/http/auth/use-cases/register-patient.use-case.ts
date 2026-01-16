@@ -1,19 +1,21 @@
 import { ConflictException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import type { Response } from 'express';
 import { Repository } from 'typeorm';
 
 import { CryptographyService } from '@/app/cryptography/crypography.service';
+import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
+import { COOKIES_MAPPING } from '@/domain/cookies';
 import { Patient } from '@/domain/entities/patient';
-import { Token } from '@/domain/entities/token';
 import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
+import { UtilsService } from '@/utils/utils.service';
 
 import type { RegisterPatientDto } from '../auth.dtos';
 
-interface RegisterPatientUseCaseRequest {
+interface RegisterPatientUseCaseInput {
   registerPatientDto: RegisterPatientDto;
+  response: Response;
 }
-
-type RegisterPatientUseCaseResponse = Promise<{ accessToken: string }>;
 
 @Injectable()
 export class RegisterPatientUseCase {
@@ -22,26 +24,23 @@ export class RegisterPatientUseCase {
   constructor(
     @InjectRepository(Patient)
     private readonly patientsRepository: Repository<Patient>,
-    @InjectRepository(Token)
-    private readonly tokensRepository: Repository<Token>,
+    private readonly createTokenUseCase: CreateTokenUseCase,
     private readonly cryptographyService: CryptographyService,
+    private readonly utilsService: UtilsService,
   ) {}
 
   async execute({
     registerPatientDto,
-  }: RegisterPatientUseCaseRequest): RegisterPatientUseCaseResponse {
+    response,
+  }: RegisterPatientUseCaseInput): Promise<void> {
     const { email, name } = registerPatientDto;
 
-    const patient = await this.patientsRepository.findOne({
+    const patientWithSameEmail = await this.patientsRepository.findOne({
       select: { id: true },
       where: { email },
     });
 
-    if (patient) {
-      this.logger.error(
-        { email },
-        'Patient registration failed: Email already registered',
-      );
+    if (patientWithSameEmail) {
       throw new ConflictException(
         'Já existe uma conta cadastrada com este e-mail. Tente fazer login ou clique em "Esqueceu sua senha?" para recuperar o acesso.',
       );
@@ -51,35 +50,24 @@ export class RegisterPatientUseCase {
       registerPatientDto.password,
     );
 
-    const newPatient = this.patientsRepository.create({
-      name,
-      email,
-      password,
-    });
+    const patient = this.patientsRepository.create({ name, email, password });
 
-    await this.patientsRepository.save(newPatient);
+    await this.patientsRepository.save(patient);
 
     this.logger.log(
-      { patientId: newPatient.id, email },
+      { patientId: patient.id, email },
       'Patient registered successfully',
     );
 
-    const accessToken = await this.cryptographyService.createToken(
-      AUTH_TOKENS_MAPPING.access_token,
-      { sub: newPatient.id, role: 'patient' },
-      { expiresIn: '12h' },
-    );
-
-    const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + 12);
-
-    await this.tokensRepository.save({
+    const { maxAge, token } = await this.createTokenUseCase.execute({
       type: AUTH_TOKENS_MAPPING.access_token,
-      entity_id: newPatient.id,
-      expires_at: expiresAt,
-      token: accessToken,
+      payload: { sub: patient.id, accountType: 'patient' },
     });
 
-    return { accessToken };
+    this.utilsService.setCookie(response, {
+      name: COOKIES_MAPPING.access_token,
+      value: token,
+      maxAge,
+    });
   }
 }

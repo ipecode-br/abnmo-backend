@@ -21,8 +21,6 @@ interface GetTotalPatientsUseCaseRequest {
   endDate?: Date;
 }
 
-type GetTotalPatientsUseCaseResponse = Promise<number>;
-
 @Injectable()
 export class GetTotalPatientsUseCase {
   constructor(
@@ -36,7 +34,7 @@ export class GetTotalPatientsUseCase {
     period,
     startDate,
     endDate,
-  }: GetTotalPatientsUseCaseRequest = {}): GetTotalPatientsUseCaseResponse {
+  }: GetTotalPatientsUseCaseRequest = {}): Promise<number> {
     const where: FindOptionsWhere<Patient> = {
       status: status ?? Not('pending'),
     };

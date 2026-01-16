@@ -14,8 +14,6 @@ interface CancelReferralUseCaseRequest {
   userId: string;
 }
 
-type CancelReferralUseCaseResponse = Promise<void>;
-
 @Injectable()
 export class CancelReferralUseCase {
   private readonly logger = new Logger(CancelReferralUseCase.name);
@@ -25,10 +23,7 @@ export class CancelReferralUseCase {
     private readonly referralsRepository: Repository<Referral>,
   ) {}
 
-  async execute({
-    id,
-    userId,
-  }: CancelReferralUseCaseRequest): CancelReferralUseCaseResponse {
+  async execute({ id, userId }: CancelReferralUseCaseRequest): Promise<void> {
     const referral = await this.referralsRepository.findOne({
       select: { id: true, status: true },
       where: { id },

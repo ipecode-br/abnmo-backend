@@ -21,10 +21,10 @@ interface GetAppointmentsUseCaseRequest {
   query: GetAppointmentsQuery;
 }
 
-type GetAppointmentsUseCaseResponse = Promise<{
+interface GetAppointmentsUseCaseResponse {
   appointments: AppointmentResponse[];
   total: number;
-}>;
+}
 
 @Injectable()
 export class GetAppointmentsUseCase {
@@ -36,7 +36,7 @@ export class GetAppointmentsUseCase {
   async execute({
     user,
     query,
-  }: GetAppointmentsUseCaseRequest): GetAppointmentsUseCaseResponse {
+  }: GetAppointmentsUseCaseRequest): Promise<GetAppointmentsUseCaseResponse> {
     const { search, status, category, condition, page, perPage } = query;
     const startDate = query.startDate ? new Date(query.startDate) : null;
     const endDate = query.endDate ? new Date(query.endDate) : null;

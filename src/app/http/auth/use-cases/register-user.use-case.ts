@@ -5,20 +5,24 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import type { Response } from 'express';
 import { Repository } from 'typeorm';
 
 import { CryptographyService } from '@/app/cryptography/crypography.service';
+import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
+import { COOKIES_MAPPING } from '@/domain/cookies';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
+import type { InviteUserTokenPayload } from '@/domain/schemas/tokens';
+import { UtilsService } from '@/utils/utils.service';
 
 import { RegisterUserDto } from '../auth.dtos';
 
-interface RegisterUserUseCaseRequest {
+interface RegisterUserUseCaseInput {
   registerUserDto: RegisterUserDto;
+  response: Response;
 }
-
-type RegisterUserUseCaseResponse = Promise<{ accessToken: string }>;
 
 @Injectable()
 export class RegisterUserUseCase {
@@ -29,38 +33,41 @@ export class RegisterUserUseCase {
     private readonly tokensRepository: Repository<Token>,
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    private readonly createTokenUseCase: CreateTokenUseCase,
     private readonly cryptographyService: CryptographyService,
+    private readonly utilsService: UtilsService,
   ) {}
 
   async execute({
     registerUserDto,
-  }: RegisterUserUseCaseRequest): RegisterUserUseCaseResponse {
+    response,
+  }: RegisterUserUseCaseInput): Promise<void> {
     const { invite_token: token, name } = registerUserDto;
 
     const inviteToken = await this.tokensRepository.findOne({
       where: { token },
     });
 
+    const payload =
+      await this.cryptographyService.verifyToken<InviteUserTokenPayload>(token);
+
     if (
+      !payload ||
       !inviteToken ||
-      inviteToken.type !== AUTH_TOKENS_MAPPING.invite_token ||
+      inviteToken.type !== AUTH_TOKENS_MAPPING.invite_user_token ||
       (inviteToken.expires_at && inviteToken.expires_at < new Date())
     ) {
       throw new UnauthorizedException('Token de convite inválido ou expirado.');
     }
 
-    const email = inviteToken.email;
+    const { role, email } = payload;
 
-    if (!email) {
-      throw new UnauthorizedException('Token de convite inválido.');
-    }
-
-    const user = await this.usersRepository.findOne({
+    const userWithSameEmail = await this.usersRepository.findOne({
       select: { id: true },
       where: { email },
     });
 
-    if (user) {
+    if (userWithSameEmail) {
       throw new ConflictException('Este e-mail já está cadastrado.');
     }
 
@@ -68,33 +75,27 @@ export class RegisterUserUseCase {
       registerUserDto.password,
     );
 
-    const newUser = this.usersRepository.create({ name, email, password });
+    const user = this.usersRepository.create({ name, email, password, role });
 
-    await this.usersRepository.save(newUser);
+    await this.usersRepository.save(user);
 
     this.logger.log(
-      { userId: newUser.id, email, role: newUser.role },
+      { userId: user.id, email, role },
       'User registered successfully',
     );
 
     await this.tokensRepository.delete({ token });
 
-    const accessToken = await this.cryptographyService.createToken(
-      AUTH_TOKENS_MAPPING.access_token,
-      { sub: newUser.id, role: newUser.role },
-      { expiresIn: '12h' },
-    );
+    const { maxAge, token: accessToken } =
+      await this.createTokenUseCase.execute({
+        type: AUTH_TOKENS_MAPPING.access_token,
+        payload: { sub: user.id, accountType: 'user' },
+      });
 
-    const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + 12);
-
-    await this.tokensRepository.save({
-      type: AUTH_TOKENS_MAPPING.access_token,
-      expires_at: expiresAt,
-      entity_id: newUser.id,
-      token: accessToken,
+    this.utilsService.setCookie(response, {
+      name: COOKIES_MAPPING.access_token,
+      value: accessToken,
+      maxAge,
     });
-
-    return { accessToken };
   }
 }

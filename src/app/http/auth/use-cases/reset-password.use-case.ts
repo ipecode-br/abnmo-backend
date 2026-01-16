@@ -5,23 +5,27 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import type { Response } from 'express';
 import { Repository } from 'typeorm';
 
 import { CryptographyService } from '@/app/cryptography/crypography.service';
+import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
+import { COOKIES_MAPPING } from '@/domain/cookies';
 import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
 import type { UserRole } from '@/domain/enums/users';
+import type { PasswordResetPayload } from '@/domain/schemas/tokens';
+import { UtilsService } from '@/utils/utils.service';
 
 import type { ResetPasswordDto } from '../auth.dtos';
 
-interface ResetPasswordUseCaseRequest {
-  token: string;
+interface ResetPasswordUseCaseInput {
   resetPasswordDto: ResetPasswordDto;
+  response: Response;
+  token?: string;
 }
-
-type ResetPasswordUseCaseResponse = Promise<{ accessToken: string }>;
 
 @Injectable()
 export class ResetPasswordUseCase {
@@ -34,20 +38,28 @@ export class ResetPasswordUseCase {
     private readonly patientsRepository: Repository<Patient>,
     @InjectRepository(Token)
     private readonly tokensRepository: Repository<Token>,
+    private readonly createTokenUseCase: CreateTokenUseCase,
     private readonly cryptographyService: CryptographyService,
+    private readonly utilsService: UtilsService,
   ) {}
 
   async execute({
-    token,
     resetPasswordDto,
-  }: ResetPasswordUseCaseRequest): ResetPasswordUseCaseResponse {
-    const resetToken = await this.tokensRepository.findOne({
-      where: { token },
-    });
+    response,
+    token,
+  }: ResetPasswordUseCaseInput): Promise<void> {
+    if (!token) {
+      throw new UnauthorizedException('Token de redefinição de senha ausente.');
+    }
+
+    const [resetToken, payload] = await Promise.all([
+      this.tokensRepository.findOne({ where: { token } }),
+      this.cryptographyService.verifyToken<PasswordResetPayload>(token),
+    ]);
 
     if (
+      !payload ||
       !resetToken ||
-      !resetToken.entity_id ||
       resetToken.type !== AUTH_TOKENS_MAPPING.password_reset ||
       (resetToken.expires_at && resetToken.expires_at < new Date())
     ) {
@@ -56,15 +68,15 @@ export class ResetPasswordUseCase {
       );
     }
 
-    const { account_type: accountType } = resetPasswordDto;
+    const { sub: id, accountType } = payload;
 
     const findOptions = {
+      where: { id },
       select: {
         id: true,
         email: true,
         role: accountType === 'patient' ? undefined : true,
       },
-      where: { id: resetToken.entity_id },
     };
 
     const entity: { id: string; email: string; role?: UserRole } | null =
@@ -74,7 +86,7 @@ export class ResetPasswordUseCase {
 
     if (!entity) {
       this.logger.warn(
-        { id: resetToken.entity_id, accountType },
+        { id, accountType },
         'Reset password failed: Entity not registered',
       );
       throw new NotFoundException('Usuário não encontrado.');
@@ -85,34 +97,28 @@ export class ResetPasswordUseCase {
     );
 
     if (accountType === 'patient') {
-      await this.usersRepository.update(entity.id, { password });
-    } else {
       await this.patientsRepository.update(entity.id, { password });
+    } else {
+      await this.usersRepository.update(entity.id, { password });
     }
-
-    await this.tokensRepository.delete({ token });
 
     this.logger.log(
       { id: entity.id, email: entity.email, accountType },
       'Password reseted successfully',
     );
 
-    const accessToken = await this.cryptographyService.createToken(
-      AUTH_TOKENS_MAPPING.access_token,
-      { sub: entity.id, role: entity.role ?? 'patient' },
-      { expiresIn: '12h' },
-    );
+    await this.tokensRepository.delete({ token });
 
-    const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + 12);
+    const { maxAge, token: accessToken } =
+      await this.createTokenUseCase.execute({
+        type: AUTH_TOKENS_MAPPING.access_token,
+        payload: { sub: entity.id, accountType },
+      });
 
-    await this.tokensRepository.save({
-      type: AUTH_TOKENS_MAPPING.access_token,
-      expires_at: expiresAt,
-      entity_id: entity.id,
-      token: accessToken,
+    this.utilsService.setCookie(response, {
+      name: COOKIES_MAPPING.access_token,
+      value: accessToken,
+      maxAge,
     });
-
-    return { accessToken };
   }
 }

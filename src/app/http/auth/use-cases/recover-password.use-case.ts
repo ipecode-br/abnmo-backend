@@ -1,20 +1,22 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import type { Response } from 'express';
 import { Repository } from 'typeorm';
 
-import { CryptographyService } from '@/app/cryptography/crypography.service';
+import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
+import { COOKIES_MAPPING } from '@/domain/cookies';
 import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
+import { UtilsService } from '@/utils/utils.service';
 
 import type { RecoverPasswordDto } from '../auth.dtos';
 
-interface RecoverPasswordUseCaseRequest {
+interface RecoverPasswordUseCaseInput {
   recoverPasswordDto: RecoverPasswordDto;
+  response: Response;
 }
-
-type RecoverPasswordUseCaseResponse = Promise<{ resetToken: string }>;
 
 @Injectable()
 export class RecoverPasswordUseCase {
@@ -27,12 +29,14 @@ export class RecoverPasswordUseCase {
     private readonly patientsRepository: Repository<Patient>,
     @InjectRepository(Token)
     private readonly tokensRepository: Repository<Token>,
-    private readonly cryptographyService: CryptographyService,
+    private readonly createTokenUseCase: CreateTokenUseCase,
+    private readonly utilsService: UtilsService,
   ) {}
 
   async execute({
     recoverPasswordDto,
-  }: RecoverPasswordUseCaseRequest): RecoverPasswordUseCaseResponse {
+    response,
+  }: RecoverPasswordUseCaseInput): Promise<void> {
     const { email, account_type: accountType } = recoverPasswordDto;
 
     const findOptions = { select: { id: true }, where: { email } };
@@ -47,31 +51,30 @@ export class RecoverPasswordUseCase {
         { email, accountType },
         'Attempt to recover password for non-registered email',
       );
-
-      return { resetToken: 'dummy_token' };
+      return;
     }
 
-    const resetToken = await this.cryptographyService.createToken(
-      AUTH_TOKENS_MAPPING.password_reset,
-      { sub: entity.id, accountType },
-      { expiresIn: '4h' },
-    );
-
-    const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + 4);
+    const { expiresAt, maxAge, token } = await this.createTokenUseCase.execute({
+      type: COOKIES_MAPPING.password_reset,
+      payload: { sub: entity.id, accountType },
+    });
 
     await this.tokensRepository.save({
       type: AUTH_TOKENS_MAPPING.password_reset,
       expires_at: expiresAt,
       entity_id: entity.id,
-      token: resetToken,
+      token,
+    });
+
+    this.utilsService.setCookie(response, {
+      name: COOKIES_MAPPING.password_reset,
+      value: token,
+      maxAge,
     });
 
     this.logger.log(
       { entityId: entity.id, email, accountType },
       'Password reset token generated successfully',
     );
-
-    return { resetToken };
   }
 }

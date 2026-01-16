@@ -5,6 +5,7 @@ import { EnvModule } from '@/env/env.module';
 import { EnvService } from '@/env/env.service';
 
 import { CryptographyService } from './crypography.service';
+import { CreateTokenUseCase } from './use-cases/create-token.use-case';
 
 @Module({
   imports: [
@@ -13,11 +14,11 @@ import { CryptographyService } from './crypography.service';
       inject: [EnvService],
       useFactory: (envService: EnvService) => ({
         secret: envService.get('JWT_SECRET'),
-        signOptions: { expiresIn: '12h' },
+        signOptions: { expiresIn: '8h' },
       }),
     }),
   ],
-  providers: [CryptographyService],
-  exports: [CryptographyService],
+  providers: [CryptographyService, CreateTokenUseCase],
+  exports: [CryptographyService, CreateTokenUseCase],
 })
 export class CryptographyModule {}

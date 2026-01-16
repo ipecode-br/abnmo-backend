@@ -16,8 +16,6 @@ interface CancelAppointmentUseCaseRequest {
   user: AuthUserDto;
 }
 
-type CancelAppointmentUseCaseResponse = Promise<void>;
-
 @Injectable()
 export class CancelAppointmentUseCase {
   private readonly logger = new Logger(CancelAppointmentUseCase.name);
@@ -27,10 +25,7 @@ export class CancelAppointmentUseCase {
     private readonly appointmentsRepository: Repository<Appointment>,
   ) {}
 
-  async execute({
-    id,
-    user,
-  }: CancelAppointmentUseCaseRequest): CancelAppointmentUseCaseResponse {
+  async execute({ id, user }: CancelAppointmentUseCaseRequest): Promise<void> {
     const appointment = await this.appointmentsRepository.findOne({
       select: { id: true, status: true },
       where: { id },

@@ -13,15 +13,17 @@ import { GetUserUseCase } from './use-cases/get-user.use-case';
 export class UsersController {
   constructor(private readonly getUserUseCase: GetUserUseCase) {}
 
-  @Get('profile')
+  @Get('me')
   @Roles(['manager', 'nurse', 'specialist'])
-  async getProfile(@AuthUser() user: AuthUserDto): Promise<GetUserResponse> {
-    const data = await this.getUserUseCase.execute({ id: user.id });
+  async getProfile(
+    @AuthUser() authUser: AuthUserDto,
+  ): Promise<GetUserResponse> {
+    const { user } = await this.getUserUseCase.execute({ id: authUser.id });
 
     return {
       success: true,
       message: 'Dados do usuário retornado com sucesso.',
-      data,
+      data: user,
     };
   }
 }

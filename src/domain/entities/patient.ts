@@ -34,7 +34,7 @@ export class Patient implements PatientSchema {
   @Column({ type: 'varchar', length: 64 })
   name: string;
 
-  @Column({ type: 'varchar', length: 64 })
+  @Column({ type: 'varchar', length: 64, unique: true })
   email: string;
 
   @Column({ type: 'varchar', nullable: true })

@@ -19,8 +19,6 @@ interface UpdatePatientUseCaseRequest {
   updatePatientDto: UpdatePatientDto;
 }
 
-type UpdatePatientUseCaseResponse = Promise<void>;
-
 @Injectable()
 export class UpdatePatientUseCase {
   private readonly logger = new Logger(UpdatePatientUseCase.name);
@@ -34,7 +32,7 @@ export class UpdatePatientUseCase {
     id,
     user,
     updatePatientDto,
-  }: UpdatePatientUseCaseRequest): UpdatePatientUseCaseResponse {
+  }: UpdatePatientUseCaseRequest): Promise<void> {
     if (user.role === 'patient' && user.id !== id) {
       this.logger.log(
         { id, userId: user.id, userEmail: user.email, role: user.role },

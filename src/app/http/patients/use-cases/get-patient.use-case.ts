@@ -8,7 +8,9 @@ interface GetPatientUseCaseRequest {
   id: string;
 }
 
-type GetPatientUseCaseResponse = Promise<Patient>;
+interface GetPatientUseCaseResponse {
+  patient: Patient;
+}
 
 @Injectable()
 export class GetPatientUseCase {
@@ -17,7 +19,9 @@ export class GetPatientUseCase {
     private readonly patientsRepository: Repository<Patient>,
   ) {}
 
-  async execute({ id }: GetPatientUseCaseRequest): GetPatientUseCaseResponse {
+  async execute({
+    id,
+  }: GetPatientUseCaseRequest): Promise<GetPatientUseCaseResponse> {
     const patient = await this.patientsRepository.findOne({
       relations: { supports: true },
       where: { id },
@@ -47,6 +51,6 @@ export class GetPatientUseCase {
       throw new NotFoundException('Paciente não encontrado.');
     }
 
-    return patient;
+    return { patient };
   }
 }

@@ -12,10 +12,10 @@ interface GetTotalReferredPatientsByStateUseCaseRequest {
   query: GetReferredPatientsByStateQuery;
 }
 
-type GetTotalReferredPatientsByStateUseCaseResponse = Promise<{
+interface GetTotalReferredPatientsByStateUseCaseResponse {
   states: TotalReferredPatientsByStateSchema[];
   total: number;
-}>;
+}
 
 @Injectable()
 export class GetTotalReferredPatientsByStateUseCase {
@@ -27,7 +27,7 @@ export class GetTotalReferredPatientsByStateUseCase {
 
   async execute({
     query,
-  }: GetTotalReferredPatientsByStateUseCaseRequest): GetTotalReferredPatientsByStateUseCaseResponse {
+  }: GetTotalReferredPatientsByStateUseCaseRequest): Promise<GetTotalReferredPatientsByStateUseCaseResponse> {
     const { startDate, endDate } = this.utilsService.getDateRangeForPeriod(
       query.period,
     );

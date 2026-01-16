@@ -22,7 +22,7 @@ export class User implements UserSchema {
   @Column({ type: 'varchar', length: 64 })
   name: string;
 
-  @Column({ type: 'varchar', length: 64 })
+  @Column({ type: 'varchar', length: 64, unique: true })
   email: string;
 
   @Column({ type: 'varchar' })

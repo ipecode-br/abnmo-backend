@@ -56,6 +56,13 @@ export type GetPatientsByCityResponse = z.infer<
   typeof getPatientsByCityResponseSchema
 >;
 
+// Appointments
+
+export const getTotalAppointments = baseResponseSchema.extend({
+  data: z.object({ total: z.number() }),
+});
+export type GetTotalAppointmentsResponse = z.infer<typeof getTotalAppointments>;
+
 // Referrals
 
 export const getTotalReferralsAndReferredPatientsPercentageResponseSchema =

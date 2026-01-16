@@ -1,10 +1,4 @@
-import {
-  Body,
-  Controller,
-  Post,
-  Res,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Body, Controller, Post, Res } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
 import type { Response } from 'express';
 
@@ -12,7 +6,6 @@ import { Cookies } from '@/common/decorators/cookies.decorator';
 import { Public } from '@/common/decorators/public.decorator';
 import { COOKIES_MAPPING } from '@/domain/cookies';
 import type { BaseResponse } from '@/domain/schemas/base';
-import { UtilsService } from '@/utils/utils.service';
 
 import {
   RecoverPasswordDto,
@@ -32,13 +25,12 @@ import { SignInWithEmailUseCase } from './use-cases/sign-in-with-email.use-case'
 @Controller()
 export class AuthController {
   constructor(
-    private utilsService: UtilsService,
-    private signInUseCase: SignInWithEmailUseCase,
-    private logoutUseCase: LogoutUseCase,
-    private recoverPasswordUseCase: RecoverPasswordUseCase,
-    private resetPasswordUseCase: ResetPasswordUseCase,
-    private registerPatientUseCase: RegisterPatientUseCase,
-    private registerUserUseCase: RegisterUserUseCase,
+    private readonly signInUseCase: SignInWithEmailUseCase,
+    private readonly logoutUseCase: LogoutUseCase,
+    private readonly recoverPasswordUseCase: RecoverPasswordUseCase,
+    private readonly resetPasswordUseCase: ResetPasswordUseCase,
+    private readonly registerPatientUseCase: RegisterPatientUseCase,
+    private readonly registerUserUseCase: RegisterUserUseCase,
   ) {}
 
   @Post('login')
@@ -47,19 +39,7 @@ export class AuthController {
     @Body() signInWithEmailDto: SignInWithEmailDto,
     @Res({ passthrough: true }) response: Response,
   ): Promise<BaseResponse> {
-    const TWELVE_HOURS_IN_MS = 1000 * 60 * 60 * 12;
-
-    const { accessToken } = await this.signInUseCase.execute({
-      signInWithEmailDto,
-    });
-
-    this.utilsService.setCookie(response, {
-      name: COOKIES_MAPPING.access_token,
-      value: accessToken,
-      maxAge: signInWithEmailDto.keep_logged_in
-        ? TWELVE_HOURS_IN_MS * 60
-        : TWELVE_HOURS_IN_MS,
-    });
+    await this.signInUseCase.execute({ signInWithEmailDto, response });
 
     return {
       success: true,
@@ -73,17 +53,7 @@ export class AuthController {
     @Body() registerPatientDto: RegisterPatientDto,
     @Res({ passthrough: true }) response: Response,
   ): Promise<BaseResponse> {
-    const TWELVE_HOURS_IN_MS = 1000 * 60 * 60 * 12;
-
-    const { accessToken } = await this.registerPatientUseCase.execute({
-      registerPatientDto,
-    });
-
-    this.utilsService.setCookie(response, {
-      name: COOKIES_MAPPING.access_token,
-      value: accessToken,
-      maxAge: TWELVE_HOURS_IN_MS,
-    });
+    await this.registerPatientUseCase.execute({ registerPatientDto, response });
 
     return {
       success: true,
@@ -97,17 +67,7 @@ export class AuthController {
     @Body() registerUserDto: RegisterUserDto,
     @Res({ passthrough: true }) response: Response,
   ): Promise<BaseResponse> {
-    const TWELVE_HOURS_IN_MS = 1000 * 60 * 60 * 12;
-
-    const { accessToken } = await this.registerUserUseCase.execute({
-      registerUserDto,
-    });
-
-    this.utilsService.setCookie(response, {
-      name: COOKIES_MAPPING.access_token,
-      value: accessToken,
-      maxAge: TWELVE_HOURS_IN_MS,
-    });
+    await this.registerUserUseCase.execute({ registerUserDto, response });
 
     return {
       success: true,
@@ -121,17 +81,7 @@ export class AuthController {
     @Body() recoverPasswordDto: RecoverPasswordDto,
     @Res({ passthrough: true }) response: Response,
   ): Promise<BaseResponse> {
-    const { resetToken } = await this.recoverPasswordUseCase.execute({
-      recoverPasswordDto,
-    });
-
-    const FOUR_HOURS_IN_MS = 1000 * 60 * 60 * 4;
-
-    this.utilsService.setCookie(response, {
-      name: COOKIES_MAPPING.password_reset,
-      maxAge: FOUR_HOURS_IN_MS,
-      value: resetToken,
-    });
+    await this.recoverPasswordUseCase.execute({ response, recoverPasswordDto });
 
     return {
       success: true,
@@ -147,21 +97,10 @@ export class AuthController {
     @Body() resetPasswordDto: ResetPasswordDto,
     @Res({ passthrough: true }) response: Response,
   ): Promise<BaseResponse> {
-    if (!token) {
-      throw new UnauthorizedException('Token de redefinição de senha ausente.');
-    }
-
-    const TWELVE_HOURS_IN_MS = 1000 * 60 * 60 * 12;
-
-    const { accessToken } = await this.resetPasswordUseCase.execute({
+    await this.resetPasswordUseCase.execute({
       resetPasswordDto,
+      response,
       token,
-    });
-
-    this.utilsService.setCookie(response, {
-      name: COOKIES_MAPPING.access_token,
-      maxAge: TWELVE_HOURS_IN_MS,
-      value: accessToken,
     });
 
     return {
@@ -171,18 +110,12 @@ export class AuthController {
   }
 
   @Post('logout')
-  @ApiOperation({ summary: 'Logout' })
+  @ApiOperation({ summary: 'Logout do usuário ou paciente' })
   async logout(
-    @Cookies('access_token') accessToken: string,
+    @Cookies(COOKIES_MAPPING.refresh_token) refreshToken: string,
     @Res({ passthrough: true }) response: Response,
   ): Promise<BaseResponse> {
-    if (!accessToken) {
-      throw new UnauthorizedException('Token de acesso ausente.');
-    }
-
-    await this.logoutUseCase.execute({ token: accessToken });
-
-    this.utilsService.deleteCookie(response, COOKIES_MAPPING.access_token);
+    await this.logoutUseCase.execute({ response, refreshToken });
 
     return {
       success: true,

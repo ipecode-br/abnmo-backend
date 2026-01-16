@@ -16,8 +16,6 @@ interface ApprovePatientRequirementUseCaseRequest {
   user: AuthUserDto;
 }
 
-type ApprovePatientRequirementUseCaseResponse = Promise<void>;
-
 @Injectable()
 export class ApprovePatientRequirementUseCase {
   private readonly logger = new Logger(ApprovePatientRequirementUseCase.name);
@@ -30,7 +28,7 @@ export class ApprovePatientRequirementUseCase {
   async execute({
     id,
     user,
-  }: ApprovePatientRequirementUseCaseRequest): ApprovePatientRequirementUseCaseResponse {
+  }: ApprovePatientRequirementUseCaseRequest): Promise<void> {
     const requirement = await this.patientRequirementsRepository.findOne({
       select: { id: true, status: true },
       where: { id },

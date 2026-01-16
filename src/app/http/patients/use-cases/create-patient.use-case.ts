@@ -14,8 +14,6 @@ interface CreatePatientUseCaseRequest {
   createPatientDto: CreatePatientDto;
 }
 
-type CreatePatientUseCaseResponse = Promise<void>;
-
 @Injectable()
 export class CreatePatientUseCase {
   private readonly logger = new Logger(CreatePatientUseCase.name);
@@ -30,7 +28,7 @@ export class CreatePatientUseCase {
   async execute({
     user,
     createPatientDto,
-  }: CreatePatientUseCaseRequest): CreatePatientUseCaseResponse {
+  }: CreatePatientUseCaseRequest): Promise<void> {
     const { email, cpf, supports, ...patientData } = createPatientDto;
 
     const patientWithSameEmail = await this.patientsRepository.findOne({

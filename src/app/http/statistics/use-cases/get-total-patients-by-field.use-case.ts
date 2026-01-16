@@ -14,10 +14,10 @@ interface GetTotalPatientsByFieldUseCaseRequest {
   query: GetTotalPatientsByFieldQuery;
 }
 
-type GetTotalPatientsByFieldUseCaseResponse<T> = Promise<{
+interface GetTotalPatientsByFieldUseCaseResponse<T> {
   items: T[];
   total: number;
-}>;
+}
 
 @Injectable()
 export class GetTotalPatientsByFieldUseCase {
@@ -31,7 +31,9 @@ export class GetTotalPatientsByFieldUseCase {
   async execute<T>({
     field,
     query,
-  }: GetTotalPatientsByFieldUseCaseRequest): GetTotalPatientsByFieldUseCaseResponse<T> {
+  }: GetTotalPatientsByFieldUseCaseRequest): Promise<
+    GetTotalPatientsByFieldUseCaseResponse<T>
+  > {
     const { startDate, endDate } = this.utilsService.getDateRangeForPeriod(
       query.period,
     );

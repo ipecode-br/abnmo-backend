@@ -4,11 +4,11 @@ import type { Repository } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
 
-type GetTotalPatientsByStatusUseCaseResponse = Promise<{
+interface GetTotalPatientsByStatusUseCaseResponse {
   total: number;
   active: number;
   inactive: number;
-}>;
+}
 
 @Injectable()
 export class GetTotalPatientsByStatusUseCase {
@@ -17,7 +17,7 @@ export class GetTotalPatientsByStatusUseCase {
     private readonly patientsRepository: Repository<Patient>,
   ) {}
 
-  async execute(): GetTotalPatientsByStatusUseCaseResponse {
+  async execute(): Promise<GetTotalPatientsByStatusUseCaseResponse> {
     const queryBuilder = await this.patientsRepository
       .createQueryBuilder('patient')
       .select('COUNT(patient.id)', 'total')

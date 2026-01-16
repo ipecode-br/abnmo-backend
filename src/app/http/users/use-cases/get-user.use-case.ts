@@ -9,7 +9,9 @@ interface GetUserUseCaseRequest {
   id: string;
 }
 
-type GetUserUseCaseResponse = Promise<UserResponse>;
+interface GetUserUseCaseResponse {
+  user: UserResponse;
+}
 
 @Injectable()
 export class GetUserUseCase {
@@ -18,7 +20,9 @@ export class GetUserUseCase {
     private readonly usersRepository: Repository<User>,
   ) {}
 
-  async execute({ id }: GetUserUseCaseRequest): GetUserUseCaseResponse {
+  async execute({
+    id,
+  }: GetUserUseCaseRequest): Promise<GetUserUseCaseResponse> {
     const user = await this.usersRepository.findOne({
       where: { id },
       select: {
@@ -34,6 +38,6 @@ export class GetUserUseCase {
       throw new NotFoundException('Usuário não encontrado.');
     }
 
-    return user;
+    return { user };
   }
 }

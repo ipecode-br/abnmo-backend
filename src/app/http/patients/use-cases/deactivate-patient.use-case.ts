@@ -16,8 +16,6 @@ interface DeactivatePatientUseCaseRequest {
   user: AuthUserDto;
 }
 
-type DeactivatePatientUseCaseResponse = Promise<void>;
-
 @Injectable()
 export class DeactivatePatientUseCase {
   private readonly logger = new Logger(DeactivatePatientUseCase.name);
@@ -27,10 +25,7 @@ export class DeactivatePatientUseCase {
     private readonly patientsRepository: Repository<Patient>,
   ) {}
 
-  async execute({
-    id,
-    user,
-  }: DeactivatePatientUseCaseRequest): DeactivatePatientUseCaseResponse {
+  async execute({ id, user }: DeactivatePatientUseCaseRequest): Promise<void> {
     const patient = await this.patientsRepository.findOne({
       select: { id: true, status: true },
       where: { id },

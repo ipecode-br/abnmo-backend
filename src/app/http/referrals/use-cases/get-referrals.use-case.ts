@@ -11,7 +11,7 @@ import {
 
 import { Referral } from '@/domain/entities/referral';
 import type { ReferralOrderBy } from '@/domain/enums/referrals';
-import type { GetReferralsResponse } from '@/domain/schemas/referrals/responses';
+import type { ReferralResponse } from '@/domain/schemas/referrals/responses';
 
 import { GetReferralsQuery } from '../referrals.dtos';
 
@@ -19,7 +19,10 @@ interface GetReferralsUseCaseRequest {
   query: GetReferralsQuery;
 }
 
-type GetReferralsUseCaseResponse = Promise<GetReferralsResponse['data']>;
+interface GetReferralsUseCaseResponse {
+  referrals: ReferralResponse[];
+  total: number;
+}
 
 @Injectable()
 export class GetReferralsUseCase {
@@ -30,7 +33,7 @@ export class GetReferralsUseCase {
 
   async execute({
     query,
-  }: GetReferralsUseCaseRequest): GetReferralsUseCaseResponse {
+  }: GetReferralsUseCaseRequest): Promise<GetReferralsUseCaseResponse> {
     const { search, status, category, condition, page, perPage } = query;
     const startDate = query.startDate ? new Date(query.startDate) : null;
     const endDate = query.endDate ? new Date(query.endDate) : null;

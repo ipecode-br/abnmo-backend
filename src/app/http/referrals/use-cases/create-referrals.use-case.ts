@@ -12,8 +12,6 @@ interface CreateReferralUseCaseRequest {
   createReferralDto: CreateReferralDto;
 }
 
-type CreateReferralUseCaseResponse = Promise<void>;
-
 @Injectable()
 export class CreateReferralUseCase {
   private readonly logger = new Logger(CreateReferralUseCase.name);
@@ -27,7 +25,7 @@ export class CreateReferralUseCase {
   async execute({
     createReferralDto,
     userId,
-  }: CreateReferralUseCaseRequest): CreateReferralUseCaseResponse {
+  }: CreateReferralUseCaseRequest): Promise<void> {
     const { patient_id } = createReferralDto;
 
     const patient = await this.patientsRepository.findOne({

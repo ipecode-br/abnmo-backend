@@ -16,8 +16,6 @@ interface DeclinePatientRequirementUseCaseRequest {
   user: AuthUserDto;
 }
 
-type DeclinePatientRequirementUseCaseResponse = Promise<void>;
-
 @Injectable()
 export class DeclinePatientRequirementUseCase {
   private readonly logger = new Logger(DeclinePatientRequirementUseCase.name);
@@ -30,7 +28,7 @@ export class DeclinePatientRequirementUseCase {
   async execute({
     id,
     user,
-  }: DeclinePatientRequirementUseCaseRequest): DeclinePatientRequirementUseCaseResponse {
+  }: DeclinePatientRequirementUseCaseRequest): Promise<void> {
     const requirement = await this.patientRequirementsRepository.findOne({
       select: { id: true, status: true },
       where: { id },

@@ -12,10 +12,10 @@ interface GetTotalReferralsByCategoryUseCaseRequest {
   query: GetTotalReferralsByCategoryQuery;
 }
 
-type GetTotalReferralsByCategoryUseCaseResponse = Promise<{
+interface GetTotalReferralsByCategoryUseCaseResponse {
   categories: TotalReferralsByCategory[];
   total: number;
-}>;
+}
 
 @Injectable()
 export class GetTotalReferralsByCategoryUseCase {
@@ -27,7 +27,7 @@ export class GetTotalReferralsByCategoryUseCase {
 
   async execute({
     query,
-  }: GetTotalReferralsByCategoryUseCaseRequest): GetTotalReferralsByCategoryUseCaseResponse {
+  }: GetTotalReferralsByCategoryUseCaseRequest): Promise<GetTotalReferralsByCategoryUseCaseResponse> {
     const { startDate, endDate } = this.utilsService.getDateRangeForPeriod(
       query.period,
     );

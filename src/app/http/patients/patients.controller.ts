@@ -60,12 +60,12 @@ export class PatientsController {
   @Roles(['manager', 'nurse', 'specialist'])
   @ApiOperation({ summary: 'Busca um paciente pelo ID' })
   async getPatientById(@Param('id') id: string): Promise<GetPatientResponse> {
-    const data = await this.getPatientUseCase.execute({ id });
+    const { patient } = await this.getPatientUseCase.execute({ id });
 
     return {
       success: true,
       message: 'Paciente retornado com sucesso.',
-      data,
+      data: patient,
     };
   }
 

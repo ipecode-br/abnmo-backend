@@ -1,21 +1,24 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import type { Response } from 'express';
 import { Repository } from 'typeorm';
 
 import { CryptographyService } from '@/app/cryptography/crypography.service';
+import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
+import { COOKIES_MAPPING } from '@/domain/cookies';
 import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
 import type { UserRole } from '@/domain/enums/users';
+import { UtilsService } from '@/utils/utils.service';
 
 import type { SignInWithEmailDto } from '../auth.dtos';
 
-interface SignInWithEmailUseCaseRequest {
+interface SignInWithEmailUseCaseInput {
   signInWithEmailDto: SignInWithEmailDto;
+  response: Response;
 }
-
-type SignInWithEmailUseCaseResponse = Promise<{ accessToken: string }>;
 
 @Injectable()
 export class SignInWithEmailUseCase {
@@ -28,12 +31,15 @@ export class SignInWithEmailUseCase {
     private readonly patientsRepository: Repository<Patient>,
     @InjectRepository(Token)
     private readonly tokensRepository: Repository<Token>,
+    private readonly createTokenUseCase: CreateTokenUseCase,
     private readonly cryptographyService: CryptographyService,
+    private readonly utilsService: UtilsService,
   ) {}
 
   async execute({
     signInWithEmailDto,
-  }: SignInWithEmailUseCaseRequest): SignInWithEmailUseCaseResponse {
+    response,
+  }: SignInWithEmailUseCaseInput): Promise<void> {
     const {
       email,
       password,
@@ -42,12 +48,12 @@ export class SignInWithEmailUseCase {
     } = signInWithEmailDto;
 
     const findOptions = {
+      where: { email },
       select: {
         id: true,
         password: true,
         role: accountType === 'patient' ? undefined : true,
       },
-      where: { email },
     };
 
     const entity: {
@@ -76,32 +82,50 @@ export class SignInWithEmailUseCase {
       );
     }
 
-    const accessToken = await this.cryptographyService.createToken(
-      AUTH_TOKENS_MAPPING.access_token,
-      { sub: entity.id, role: entity.role ?? 'patient' },
-      { expiresIn: keepLoggedIn ? '30d' : '12h' },
-    );
+    const role = entity.role ?? 'patient';
 
-    const expiresAt = new Date();
+    const { maxAge: accessTokenMaxAge, token: accessToken } =
+      await this.createTokenUseCase.execute({
+        type: AUTH_TOKENS_MAPPING.access_token,
+        payload: { sub: entity.id, accountType },
+      });
 
-    if (keepLoggedIn) {
-      expiresAt.setDate(expiresAt.getDate() + 30);
-    } else {
-      expiresAt.setHours(expiresAt.getHours() + 12);
-    }
-
-    await this.tokensRepository.save({
-      type: AUTH_TOKENS_MAPPING.access_token,
-      expires_at: expiresAt,
-      entity_id: entity.id,
-      token: accessToken,
+    this.utilsService.setCookie(response, {
+      name: COOKIES_MAPPING.access_token,
+      maxAge: accessTokenMaxAge,
+      value: accessToken,
     });
 
+    if (keepLoggedIn) {
+      // Delete ALL refresh tokens for this entity before generate a new one
+      await this.tokensRepository.delete({ entity_id: entity.id });
+
+      const {
+        maxAge: refreshTokenMaxAge,
+        token: refreshToken,
+        expiresAt,
+      } = await this.createTokenUseCase.execute({
+        type: AUTH_TOKENS_MAPPING.refresh_token,
+        payload: { sub: entity.id, accountType },
+      });
+
+      this.utilsService.setCookie(response, {
+        name: COOKIES_MAPPING.refresh_token,
+        maxAge: refreshTokenMaxAge,
+        value: refreshToken,
+      });
+
+      await this.tokensRepository.save({
+        type: AUTH_TOKENS_MAPPING.refresh_token,
+        expires_at: expiresAt,
+        entity_id: entity.id,
+        token: refreshToken,
+      });
+    }
+
     this.logger.log(
-      { entityId: entity.id, email },
+      { entityId: entity.id, email, role, keepLoggedIn },
       'Entity signed in with e-mail',
     );
-
-    return { accessToken };
   }
 }

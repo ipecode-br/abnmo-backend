@@ -19,8 +19,6 @@ interface CreatePatientSupportUseCaseRequest {
   createPatientSupportDto: CreatePatientSupportDto;
 }
 
-type CreatePatientSupportUseCaseResponse = Promise<void>;
-
 @Injectable()
 export class CreatePatientSupportUseCase {
   private readonly logger = new Logger(CreatePatientSupportUseCase.name);
@@ -36,7 +34,7 @@ export class CreatePatientSupportUseCase {
     user,
     patientId,
     createPatientSupportDto,
-  }: CreatePatientSupportUseCaseRequest): CreatePatientSupportUseCaseResponse {
+  }: CreatePatientSupportUseCaseRequest): Promise<void> {
     if (user.id !== patientId) {
       this.logger.log(
         { patientId, userId: user.id, role: user.role },

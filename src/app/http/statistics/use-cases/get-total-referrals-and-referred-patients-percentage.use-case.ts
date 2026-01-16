@@ -9,10 +9,10 @@ interface GetTotalReferralsAndReferredPatientsPercentageUseCaseRequest {
   query: GetTotalReferralsAndReferredPatientsPercentageQuery;
 }
 
-type GetTotalReferralsAndReferredPatientsPercentageUseCaseResponse = Promise<{
+interface GetTotalReferralsAndReferredPatientsPercentageUseCaseResponse {
   totalReferrals: number;
   referredPatientsPercentage: number;
-}>;
+}
 
 @Injectable()
 export class GetTotalReferralsAndReferredPatientsPercentageUseCase {
@@ -24,7 +24,7 @@ export class GetTotalReferralsAndReferredPatientsPercentageUseCase {
 
   async execute({
     query,
-  }: GetTotalReferralsAndReferredPatientsPercentageUseCaseRequest): GetTotalReferralsAndReferredPatientsPercentageUseCaseResponse {
+  }: GetTotalReferralsAndReferredPatientsPercentageUseCaseRequest): Promise<GetTotalReferralsAndReferredPatientsPercentageUseCaseResponse> {
     const { period } = query;
 
     const [totalPatients, totalReferrals, totalReferredPatients] =

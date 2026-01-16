@@ -24,8 +24,6 @@ interface GetTotalAppointmentsUseCaseRequest {
   endDate?: Date;
 }
 
-type GetTotalAppointmentsUseCaseResponse = Promise<number>;
-
 @Injectable()
 export class GetTotalAppointmentsUseCase {
   constructor(
@@ -41,7 +39,7 @@ export class GetTotalAppointmentsUseCase {
     period,
     startDate,
     endDate,
-  }: GetTotalAppointmentsUseCaseRequest = {}): GetTotalAppointmentsUseCaseResponse {
+  }: GetTotalAppointmentsUseCaseRequest = {}): Promise<number> {
     const where: FindOptionsWhere<Appointment> = {};
 
     if (period) {

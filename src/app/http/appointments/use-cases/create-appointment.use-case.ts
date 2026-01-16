@@ -13,8 +13,6 @@ interface CreateAppointmentUseCaseRequest {
   user: AuthUserDto;
 }
 
-type CreateAppointmentUseCaseResponse = Promise<void>;
-
 @Injectable()
 export class CreateAppointmentUseCase {
   private readonly logger = new Logger(CreateAppointmentUseCase.name);
@@ -29,7 +27,7 @@ export class CreateAppointmentUseCase {
   async execute({
     createAppointmentDto,
     user,
-  }: CreateAppointmentUseCaseRequest): CreateAppointmentUseCaseResponse {
+  }: CreateAppointmentUseCaseRequest): Promise<void> {
     const { patient_id: patientId, date } = createAppointmentDto;
 
     const MAX_APPOINTMENT_MONTHS_LIMIT = 3;

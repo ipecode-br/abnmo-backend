@@ -18,10 +18,10 @@ interface GetPatientRequirementsByPatientIdUseCaseRequest {
   query: GetPatientRequirementsByPatientIdQuery;
 }
 
-type GetPatientRequirementsByPatientIdUseCaseResponse = Promise<{
+interface GetPatientRequirementsByPatientIdUseCaseResponse {
   requirements: PatientRequirementByPatientId[];
   total: number;
-}>;
+}
 
 @Injectable()
 export class GetPatientRequirementsByPatientIdUseCase {
@@ -33,7 +33,7 @@ export class GetPatientRequirementsByPatientIdUseCase {
   async execute({
     patientId,
     query,
-  }: GetPatientRequirementsByPatientIdUseCaseRequest): GetPatientRequirementsByPatientIdUseCaseResponse {
+  }: GetPatientRequirementsByPatientIdUseCaseRequest): Promise<GetPatientRequirementsByPatientIdUseCaseResponse> {
     const { status, page, perPage } = query;
     const startDate = query.startDate ? new Date(query.startDate) : null;
     const endDate = query.endDate ? new Date(query.endDate) : null;

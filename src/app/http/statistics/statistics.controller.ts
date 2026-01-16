@@ -6,6 +6,8 @@ import type {
   GetPatientsByCityResponse,
   GetPatientsByGenderResponse,
   GetReferredPatientsByStateResponse,
+  GetTotalAppointmentsResponse,
+  GetTotalPatientsByStatusResponse,
   GetTotalReferralsAndReferredPatientsPercentageResponse,
   GetTotalReferralsByCategoryResponse,
   TotalPatientsByCity,
@@ -40,7 +42,7 @@ export class StatisticsController {
 
   @Get('appointments-total')
   @ApiOperation({ summary: 'Número total de atendimentos' })
-  async getTotalAppointments() {
+  async getTotalAppointments(): Promise<GetTotalAppointmentsResponse> {
     const total = await this.getTotalAppointmentsUseCase.execute();
 
     return {
@@ -52,12 +54,12 @@ export class StatisticsController {
 
   @Get('patients-total')
   @ApiOperation({ summary: 'Estatísticas totais de pacientes' })
-  async getPatientsTotal() {
+  async getTotalPatients(): Promise<GetTotalPatientsByStatusResponse> {
     const data = await this.getTotalPatientsByStatusUseCase.execute();
 
     return {
       success: true,
-      message: 'Estatísticas com total de pacientes retornada com sucesso.',
+      message: 'Número total de pacientes retornado com sucesso.',
       data,
     };
   }
@@ -69,10 +71,7 @@ export class StatisticsController {
   ): Promise<GetPatientsByGenderResponse> {
     const { items: genders, total } =
       await this.getTotalPatientsByPeriodUseCase.execute<TotalPatientsByGender>(
-        {
-          field: 'gender',
-          query,
-        },
+        { field: 'gender', query },
       );
 
     return {

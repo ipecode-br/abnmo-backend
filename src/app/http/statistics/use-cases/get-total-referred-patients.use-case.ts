@@ -20,8 +20,6 @@ interface GetTotalReferredPatientsUseCaseRequest {
   endDate?: Date;
 }
 
-type GetTotalReferredPatientsUseCaseResponse = Promise<number>;
-
 @Injectable()
 export class GetTotalReferredPatientsUseCase {
   constructor(
@@ -34,7 +32,7 @@ export class GetTotalReferredPatientsUseCase {
     period,
     startDate,
     endDate,
-  }: GetTotalReferredPatientsUseCaseRequest = {}): GetTotalReferredPatientsUseCaseResponse {
+  }: GetTotalReferredPatientsUseCaseRequest = {}): Promise<number> {
     const where: FindOptionsWhere<Patient> = {
       referrals: { id: Not(IsNull()) },
     };

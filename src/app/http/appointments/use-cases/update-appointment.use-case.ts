@@ -18,8 +18,6 @@ interface UpdateAppointmentUseCaseRequest {
   updateAppointmentDto: UpdateAppointmentDto;
 }
 
-type UpdateAppointmentUseCaseResponse = Promise<void>;
-
 @Injectable()
 export class UpdateAppointmentUseCase {
   private readonly logger = new Logger(UpdateAppointmentUseCase.name);
@@ -33,7 +31,7 @@ export class UpdateAppointmentUseCase {
     id,
     user,
     updateAppointmentDto,
-  }: UpdateAppointmentUseCaseRequest): UpdateAppointmentUseCaseResponse {
+  }: UpdateAppointmentUseCaseRequest): Promise<void> {
     const appointment = await this.appointmentsRepository.findOne({
       where: { id },
     });

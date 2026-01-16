@@ -18,8 +18,6 @@ interface UpdateUserUseCaseRequest {
   updateUserDto: UpdateUserDto;
 }
 
-type UpdateUserUseCaseResponse = Promise<void>;
-
 @Injectable()
 export class UpdateUserUseCase {
   private readonly logger = new Logger(UpdateUserUseCase.name);
@@ -33,7 +31,7 @@ export class UpdateUserUseCase {
     id,
     user,
     updateUserDto,
-  }: UpdateUserUseCaseRequest): UpdateUserUseCaseResponse {
+  }: UpdateUserUseCaseRequest): Promise<void> {
     if (user.role !== 'admin' && user.id !== id) {
       this.logger.log(
         { id, userId: user.id, role: user.role },

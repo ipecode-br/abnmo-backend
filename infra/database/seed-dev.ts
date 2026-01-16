@@ -8,7 +8,7 @@ import { Patient } from '@/domain/entities/patient';
 import { PatientRequirement } from '@/domain/entities/patient-requirement';
 import { PatientSupport } from '@/domain/entities/patient-support';
 import { Referral } from '@/domain/entities/referral';
-// import { Specialist } from '@/domain/entities/specialist';
+import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { APPOINTMENT_STATUSES } from '@/domain/enums/appointments';
 import {
@@ -70,6 +70,7 @@ async function main() {
     await dataSource.manager.clear(PatientRequirement);
     await dataSource.manager.clear(Patient);
     await dataSource.manager.clear(User);
+    await dataSource.manager.clear(Token);
     await dataSource.query('SET FOREIGN_KEY_CHECKS = 1');
     console.log('✅ Old data deleted.');
 
