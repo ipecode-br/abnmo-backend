@@ -8,7 +8,7 @@ import { Patient } from '@/domain/entities/patient';
 import type { AuthUserDto } from '../../auth/auth.dtos';
 import type { CreateAppointmentDto } from '../appointments.dtos';
 
-interface CreateAppointmentUseCaseRequest {
+interface CreateAppointmentUseCaseInput {
   createAppointmentDto: CreateAppointmentDto;
   user: AuthUserDto;
 }
@@ -27,7 +27,7 @@ export class CreateAppointmentUseCase {
   async execute({
     createAppointmentDto,
     user,
-  }: CreateAppointmentUseCaseRequest): Promise<void> {
+  }: CreateAppointmentUseCaseInput): Promise<void> {
     const { patient_id: patientId, date } = createAppointmentDto;
 
     const MAX_APPOINTMENT_MONTHS_LIMIT = 3;

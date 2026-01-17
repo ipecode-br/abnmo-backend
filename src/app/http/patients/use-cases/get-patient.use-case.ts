@@ -4,11 +4,11 @@ import type { Repository } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
 
-interface GetPatientUseCaseRequest {
+interface GetPatientUseCaseInput {
   id: string;
 }
 
-interface GetPatientUseCaseResponse {
+interface GetPatientUseCaseOutput {
   patient: Patient;
 }
 
@@ -21,7 +21,7 @@ export class GetPatientUseCase {
 
   async execute({
     id,
-  }: GetPatientUseCaseRequest): Promise<GetPatientUseCaseResponse> {
+  }: GetPatientUseCaseInput): Promise<GetPatientUseCaseOutput> {
     const patient = await this.patientsRepository.findOne({
       relations: { supports: true },
       where: { id },

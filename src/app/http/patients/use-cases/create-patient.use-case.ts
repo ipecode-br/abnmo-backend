@@ -9,7 +9,7 @@ import { PatientSupport } from '@/domain/entities/patient-support';
 import type { AuthUserDto } from '../../auth/auth.dtos';
 import type { CreatePatientDto } from '../patients.dtos';
 
-interface CreatePatientUseCaseRequest {
+interface CreatePatientUseCaseInput {
   user: AuthUserDto;
   createPatientDto: CreatePatientDto;
 }
@@ -28,7 +28,7 @@ export class CreatePatientUseCase {
   async execute({
     user,
     createPatientDto,
-  }: CreatePatientUseCaseRequest): Promise<void> {
+  }: CreatePatientUseCaseInput): Promise<void> {
     const { email, cpf, supports, ...patientData } = createPatientDto;
 
     const patientWithSameEmail = await this.patientsRepository.findOne({

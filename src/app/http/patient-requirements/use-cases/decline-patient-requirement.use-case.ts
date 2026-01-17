@@ -11,7 +11,7 @@ import { PatientRequirement } from '@/domain/entities/patient-requirement';
 
 import type { AuthUserDto } from '../../auth/auth.dtos';
 
-interface DeclinePatientRequirementUseCaseRequest {
+interface DeclinePatientRequirementUseCaseInput {
   id: string;
   user: AuthUserDto;
 }
@@ -28,7 +28,7 @@ export class DeclinePatientRequirementUseCase {
   async execute({
     id,
     user,
-  }: DeclinePatientRequirementUseCaseRequest): Promise<void> {
+  }: DeclinePatientRequirementUseCaseInput): Promise<void> {
     const requirement = await this.patientRequirementsRepository.findOne({
       select: { id: true, status: true },
       where: { id },

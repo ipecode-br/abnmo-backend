@@ -11,7 +11,7 @@ import { Appointment } from '@/domain/entities/appointment';
 
 import type { AuthUserDto } from '../../auth/auth.dtos';
 
-interface CancelAppointmentUseCaseRequest {
+interface CancelAppointmentUseCaseInput {
   id: string;
   user: AuthUserDto;
 }
@@ -25,7 +25,7 @@ export class CancelAppointmentUseCase {
     private readonly appointmentsRepository: Repository<Appointment>,
   ) {}
 
-  async execute({ id, user }: CancelAppointmentUseCaseRequest): Promise<void> {
+  async execute({ id, user }: CancelAppointmentUseCaseInput): Promise<void> {
     const appointment = await this.appointmentsRepository.findOne({
       select: { id: true, status: true },
       where: { id },

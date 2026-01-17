@@ -11,7 +11,7 @@ import { PatientSupport } from '@/domain/entities/patient-support';
 
 import type { AuthUserDto } from '../../auth/auth.dtos';
 
-interface DeletePatientSupportUseCaseRequest {
+interface DeletePatientSupportUseCaseInput {
   id: string;
   user: AuthUserDto;
 }
@@ -25,10 +25,7 @@ export class DeletePatientSupportUseCase {
     private readonly patientSupportsRepository: Repository<PatientSupport>,
   ) {}
 
-  async execute({
-    id,
-    user,
-  }: DeletePatientSupportUseCaseRequest): Promise<void> {
+  async execute({ id, user }: DeletePatientSupportUseCaseInput): Promise<void> {
     const patientSupport = await this.patientSupportsRepository.findOne({
       select: { id: true, patient_id: true },
       where: { id },

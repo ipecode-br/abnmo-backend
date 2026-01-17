@@ -13,7 +13,7 @@ import { PatientSupport } from '@/domain/entities/patient-support';
 import type { AuthUserDto } from '../../auth/auth.dtos';
 import type { CreatePatientSupportDto } from '../patient-supports.dtos';
 
-interface CreatePatientSupportUseCaseRequest {
+interface CreatePatientSupportUseCaseInput {
   user: AuthUserDto;
   patientId: string;
   createPatientSupportDto: CreatePatientSupportDto;
@@ -34,7 +34,7 @@ export class CreatePatientSupportUseCase {
     user,
     patientId,
     createPatientSupportDto,
-  }: CreatePatientSupportUseCaseRequest): Promise<void> {
+  }: CreatePatientSupportUseCaseInput): Promise<void> {
     if (user.id !== patientId) {
       this.logger.log(
         { patientId, userId: user.id, role: user.role },

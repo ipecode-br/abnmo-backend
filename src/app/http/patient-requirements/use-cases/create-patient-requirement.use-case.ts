@@ -8,7 +8,7 @@ import { PatientRequirement } from '@/domain/entities/patient-requirement';
 import type { AuthUserDto } from '../../auth/auth.dtos';
 import type { CreatePatientRequirementDto } from '../patient-requirements.dtos';
 
-interface CreatePatientRequirementUseCaseRequest {
+interface CreatePatientRequirementUseCaseInput {
   createPatientRequirementDto: CreatePatientRequirementDto;
   user: AuthUserDto;
 }
@@ -27,7 +27,7 @@ export class CreatePatientRequirementUseCase {
   async execute({
     createPatientRequirementDto,
     user,
-  }: CreatePatientRequirementUseCaseRequest): Promise<void> {
+  }: CreatePatientRequirementUseCaseInput): Promise<void> {
     const { patient_id } = createPatientRequirementDto;
 
     const patient = await this.patientsRepository.findOne({

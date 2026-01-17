@@ -9,12 +9,12 @@ import { UtilsService } from '@/utils/utils.service';
 import type { GetTotalPatientsByFieldQuery } from '../statistics.dtos';
 import { GetTotalPatientsUseCase } from './get-total-patients.use-case';
 
-interface GetTotalPatientsByFieldUseCaseRequest {
+interface GetTotalPatientsByFieldUseCaseInput {
   field: PatientsStatisticField;
   query: GetTotalPatientsByFieldQuery;
 }
 
-interface GetTotalPatientsByFieldUseCaseResponse<T> {
+interface GetTotalPatientsByFieldUseCaseOutput<T> {
   items: T[];
   total: number;
 }
@@ -31,8 +31,8 @@ export class GetTotalPatientsByFieldUseCase {
   async execute<T>({
     field,
     query,
-  }: GetTotalPatientsByFieldUseCaseRequest): Promise<
-    GetTotalPatientsByFieldUseCaseResponse<T>
+  }: GetTotalPatientsByFieldUseCaseInput): Promise<
+    GetTotalPatientsByFieldUseCaseOutput<T>
   > {
     const { startDate, endDate } = this.utilsService.getDateRangeForPeriod(
       query.period,

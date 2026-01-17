@@ -16,11 +16,11 @@ import type { PatientResponse } from '@/domain/schemas/patients/responses';
 
 import type { GetPatientsQuery } from '../patients.dtos';
 
-interface GetPatientsUseCaseRequest {
+interface GetPatientsUseCaseInput {
   query: GetPatientsQuery;
 }
 
-interface GetPatientsUseCaseResponse {
+interface GetPatientsUseCaseOutput {
   patients: PatientResponse[];
   total: number;
 }
@@ -34,7 +34,7 @@ export class GetPatientsUseCase {
 
   async execute({
     query,
-  }: GetPatientsUseCaseRequest): Promise<GetPatientsUseCaseResponse> {
+  }: GetPatientsUseCaseInput): Promise<GetPatientsUseCaseOutput> {
     const { search, order, orderBy, status, page, perPage } = query;
     const startDate = query.startDate ? new Date(query.startDate) : null;
     const endDate = query.endDate ? new Date(query.endDate) : null;

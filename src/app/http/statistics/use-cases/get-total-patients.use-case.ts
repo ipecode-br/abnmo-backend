@@ -14,7 +14,7 @@ import type { PatientStatus } from '@/domain/enums/patients';
 import type { QueryPeriod } from '@/domain/enums/queries';
 import { UtilsService } from '@/utils/utils.service';
 
-interface GetTotalPatientsUseCaseRequest {
+interface GetTotalPatientsUseCaseInput {
   status?: PatientStatus;
   period?: QueryPeriod;
   startDate?: Date;
@@ -34,7 +34,7 @@ export class GetTotalPatientsUseCase {
     period,
     startDate,
     endDate,
-  }: GetTotalPatientsUseCaseRequest = {}): Promise<number> {
+  }: GetTotalPatientsUseCaseInput = {}): Promise<number> {
     const where: FindOptionsWhere<Patient> = {
       status: status ?? Not('pending'),
     };

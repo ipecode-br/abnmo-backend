@@ -13,7 +13,7 @@ import { Patient } from '@/domain/entities/patient';
 import type { AuthUserDto } from '../../auth/auth.dtos';
 import type { UpdatePatientDto } from '../patients.dtos';
 
-interface UpdatePatientUseCaseRequest {
+interface UpdatePatientUseCaseInput {
   id: string;
   user: AuthUserDto;
   updatePatientDto: UpdatePatientDto;
@@ -32,7 +32,7 @@ export class UpdatePatientUseCase {
     id,
     user,
     updatePatientDto,
-  }: UpdatePatientUseCaseRequest): Promise<void> {
+  }: UpdatePatientUseCaseInput): Promise<void> {
     if (user.role === 'patient' && user.id !== id) {
       this.logger.log(
         { id, userId: user.id, userEmail: user.email, role: user.role },

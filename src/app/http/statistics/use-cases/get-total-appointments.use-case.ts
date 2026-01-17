@@ -15,7 +15,7 @@ import type { QueryPeriod } from '@/domain/enums/queries';
 import type { SpecialtyCategory } from '@/domain/enums/shared';
 import { UtilsService } from '@/utils/utils.service';
 
-interface GetTotalAppointmentsUseCaseRequest {
+interface GetTotalAppointmentsUseCaseInput {
   status?: AppointmentStatus;
   category?: SpecialtyCategory;
   condition?: PatientCondition;
@@ -39,7 +39,7 @@ export class GetTotalAppointmentsUseCase {
     period,
     startDate,
     endDate,
-  }: GetTotalAppointmentsUseCaseRequest = {}): Promise<number> {
+  }: GetTotalAppointmentsUseCaseInput = {}): Promise<number> {
     const where: FindOptionsWhere<Appointment> = {};
 
     if (period) {

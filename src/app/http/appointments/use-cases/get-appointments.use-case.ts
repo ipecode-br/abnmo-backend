@@ -16,12 +16,12 @@ import type { AppointmentResponse } from '@/domain/schemas/appointments/response
 import type { AuthUserDto } from '../../auth/auth.dtos';
 import type { GetAppointmentsQuery } from '../appointments.dtos';
 
-interface GetAppointmentsUseCaseRequest {
+interface GetAppointmentsUseCaseInput {
   user: AuthUserDto;
   query: GetAppointmentsQuery;
 }
 
-interface GetAppointmentsUseCaseResponse {
+interface GetAppointmentsUseCaseOutput {
   appointments: AppointmentResponse[];
   total: number;
 }
@@ -36,7 +36,7 @@ export class GetAppointmentsUseCase {
   async execute({
     user,
     query,
-  }: GetAppointmentsUseCaseRequest): Promise<GetAppointmentsUseCaseResponse> {
+  }: GetAppointmentsUseCaseInput): Promise<GetAppointmentsUseCaseOutput> {
     const { search, status, category, condition, page, perPage } = query;
     const startDate = query.startDate ? new Date(query.startDate) : null;
     const endDate = query.endDate ? new Date(query.endDate) : null;

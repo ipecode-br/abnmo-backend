@@ -93,12 +93,14 @@ export class AppointmentsController {
 One use-case per file, one responsibility. Define input/output types explicitly:
 
 ```typescript
-interface GetAppointmentsUseCaseRequest {
+interface GetAppointmentsUseCaseInput {
   query: GetAppointmentsQuery;
   user: AuthUserDto;
 }
 
-type GetAppointmentsUseCaseResponse = Promise<Appointment[]>;
+interface GetAppointmentsUseCaseOutput = {
+  appointments: Appointment[]>
+}
 
 @Injectable()
 export class GetAppointmentsUseCase {
@@ -108,8 +110,8 @@ export class GetAppointmentsUseCase {
   ) {}
 
   async execute(
-    request: GetAppointmentsUseCaseRequest,
-  ): GetAppointmentsUseCaseResponse {
+    request: GetAppointmentsUseCaseInput,
+  ): Promise<GetAppointmentsUseCaseOutput> {
     // Implementation
   }
 }

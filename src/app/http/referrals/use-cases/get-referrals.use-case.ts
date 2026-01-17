@@ -15,11 +15,11 @@ import type { ReferralResponse } from '@/domain/schemas/referrals/responses';
 
 import { GetReferralsQuery } from '../referrals.dtos';
 
-interface GetReferralsUseCaseRequest {
+interface GetReferralsUseCaseInput {
   query: GetReferralsQuery;
 }
 
-interface GetReferralsUseCaseResponse {
+interface GetReferralsUseCaseOutput {
   referrals: ReferralResponse[];
   total: number;
 }
@@ -33,7 +33,7 @@ export class GetReferralsUseCase {
 
   async execute({
     query,
-  }: GetReferralsUseCaseRequest): Promise<GetReferralsUseCaseResponse> {
+  }: GetReferralsUseCaseInput): Promise<GetReferralsUseCaseOutput> {
     const { search, status, category, condition, page, perPage } = query;
     const startDate = query.startDate ? new Date(query.startDate) : null;
     const endDate = query.endDate ? new Date(query.endDate) : null;

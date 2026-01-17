@@ -4,7 +4,7 @@ import type { Repository } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
 
-interface GetTotalPatientsByStatusUseCaseResponse {
+interface GetTotalPatientsByStatusUseCaseOutput {
   total: number;
   active: number;
   inactive: number;
@@ -17,7 +17,7 @@ export class GetTotalPatientsByStatusUseCase {
     private readonly patientsRepository: Repository<Patient>,
   ) {}
 
-  async execute(): Promise<GetTotalPatientsByStatusUseCaseResponse> {
+  async execute(): Promise<GetTotalPatientsByStatusUseCaseOutput> {
     const queryBuilder = await this.patientsRepository
       .createQueryBuilder('patient')
       .select('COUNT(patient.id)', 'total')

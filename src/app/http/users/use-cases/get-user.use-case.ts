@@ -5,11 +5,11 @@ import { Repository } from 'typeorm';
 import { User } from '@/domain/entities/user';
 import type { UserResponse } from '@/domain/schemas/users/responses';
 
-interface GetUserUseCaseRequest {
+interface GetUserUseCaseInput {
   id: string;
 }
 
-interface GetUserUseCaseResponse {
+interface GetUserUseCaseOutput {
   user: UserResponse;
 }
 
@@ -20,9 +20,7 @@ export class GetUserUseCase {
     private readonly usersRepository: Repository<User>,
   ) {}
 
-  async execute({
-    id,
-  }: GetUserUseCaseRequest): Promise<GetUserUseCaseResponse> {
+  async execute({ id }: GetUserUseCaseInput): Promise<GetUserUseCaseOutput> {
     const user = await this.usersRepository.findOne({
       where: { id },
       select: {

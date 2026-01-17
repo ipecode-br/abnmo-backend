@@ -8,11 +8,11 @@ import { UtilsService } from '@/utils/utils.service';
 
 import type { GetTotalReferralsByCategoryQuery } from '../statistics.dtos';
 
-interface GetTotalReferralsByCategoryUseCaseRequest {
+interface GetTotalReferralsByCategoryUseCaseInput {
   query: GetTotalReferralsByCategoryQuery;
 }
 
-interface GetTotalReferralsByCategoryUseCaseResponse {
+interface GetTotalReferralsByCategoryUseCaseOutput {
   categories: TotalReferralsByCategory[];
   total: number;
 }
@@ -27,7 +27,7 @@ export class GetTotalReferralsByCategoryUseCase {
 
   async execute({
     query,
-  }: GetTotalReferralsByCategoryUseCaseRequest): Promise<GetTotalReferralsByCategoryUseCaseResponse> {
+  }: GetTotalReferralsByCategoryUseCaseInput): Promise<GetTotalReferralsByCategoryUseCaseOutput> {
     const { startDate, endDate } = this.utilsService.getDateRangeForPeriod(
       query.period,
     );

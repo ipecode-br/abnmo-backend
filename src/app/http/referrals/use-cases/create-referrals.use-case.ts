@@ -7,7 +7,7 @@ import { Referral } from '@/domain/entities/referral';
 
 import { CreateReferralDto } from '../referrals.dtos';
 
-interface CreateReferralUseCaseRequest {
+interface CreateReferralUseCaseInput {
   userId: string;
   createReferralDto: CreateReferralDto;
 }
@@ -25,7 +25,7 @@ export class CreateReferralUseCase {
   async execute({
     createReferralDto,
     userId,
-  }: CreateReferralUseCaseRequest): Promise<void> {
+  }: CreateReferralUseCaseInput): Promise<void> {
     const { patient_id } = createReferralDto;
 
     const patient = await this.patientsRepository.findOne({

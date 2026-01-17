@@ -11,7 +11,7 @@ import { PatientRequirement } from '@/domain/entities/patient-requirement';
 
 import type { AuthUserDto } from '../../auth/auth.dtos';
 
-interface ApprovePatientRequirementUseCaseRequest {
+interface ApprovePatientRequirementUseCaseInput {
   id: string;
   user: AuthUserDto;
 }
@@ -28,7 +28,7 @@ export class ApprovePatientRequirementUseCase {
   async execute({
     id,
     user,
-  }: ApprovePatientRequirementUseCaseRequest): Promise<void> {
+  }: ApprovePatientRequirementUseCaseInput): Promise<void> {
     const requirement = await this.patientRequirementsRepository.findOne({
       select: { id: true, status: true },
       where: { id },

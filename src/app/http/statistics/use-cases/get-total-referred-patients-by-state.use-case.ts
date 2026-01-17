@@ -8,11 +8,11 @@ import { UtilsService } from '@/utils/utils.service';
 
 import type { GetReferredPatientsByStateQuery } from '../statistics.dtos';
 
-interface GetTotalReferredPatientsByStateUseCaseRequest {
+interface GetTotalReferredPatientsByStateUseCaseInput {
   query: GetReferredPatientsByStateQuery;
 }
 
-interface GetTotalReferredPatientsByStateUseCaseResponse {
+interface GetTotalReferredPatientsByStateUseCaseOutput {
   states: TotalReferredPatientsByStateSchema[];
   total: number;
 }
@@ -27,7 +27,7 @@ export class GetTotalReferredPatientsByStateUseCase {
 
   async execute({
     query,
-  }: GetTotalReferredPatientsByStateUseCaseRequest): Promise<GetTotalReferredPatientsByStateUseCaseResponse> {
+  }: GetTotalReferredPatientsByStateUseCaseInput): Promise<GetTotalReferredPatientsByStateUseCaseOutput> {
     const { startDate, endDate } = this.utilsService.getDateRangeForPeriod(
       query.period,
     );

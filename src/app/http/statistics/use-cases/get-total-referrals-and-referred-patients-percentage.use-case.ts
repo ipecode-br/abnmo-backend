@@ -5,11 +5,11 @@ import { GetTotalPatientsUseCase } from './get-total-patients.use-case';
 import { GetTotalReferralsUseCase } from './get-total-referrals.use-case';
 import { GetTotalReferredPatientsUseCase } from './get-total-referred-patients.use-case';
 
-interface GetTotalReferralsAndReferredPatientsPercentageUseCaseRequest {
+interface GetTotalReferralsAndReferredPatientsPercentageUseCaseInput {
   query: GetTotalReferralsAndReferredPatientsPercentageQuery;
 }
 
-interface GetTotalReferralsAndReferredPatientsPercentageUseCaseResponse {
+interface GetTotalReferralsAndReferredPatientsPercentageUseCaseOutput {
   totalReferrals: number;
   referredPatientsPercentage: number;
 }
@@ -24,7 +24,7 @@ export class GetTotalReferralsAndReferredPatientsPercentageUseCase {
 
   async execute({
     query,
-  }: GetTotalReferralsAndReferredPatientsPercentageUseCaseRequest): Promise<GetTotalReferralsAndReferredPatientsPercentageUseCaseResponse> {
+  }: GetTotalReferralsAndReferredPatientsPercentageUseCaseInput): Promise<GetTotalReferralsAndReferredPatientsPercentageUseCaseOutput> {
     const { period } = query;
 
     const [totalPatients, totalReferrals, totalReferredPatients] =

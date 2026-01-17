@@ -15,7 +15,7 @@ import type { ReferralStatus } from '@/domain/enums/referrals';
 import type { SpecialtyCategory } from '@/domain/enums/shared';
 import { UtilsService } from '@/utils/utils.service';
 
-interface GetTotalReferralsUseCaseRequest {
+interface GetTotalReferralsUseCaseInput {
   status?: ReferralStatus;
   category?: SpecialtyCategory;
   condition?: PatientCondition;
@@ -39,7 +39,7 @@ export class GetTotalReferralsUseCase {
     period,
     startDate,
     endDate,
-  }: GetTotalReferralsUseCaseRequest = {}): Promise<number> {
+  }: GetTotalReferralsUseCaseInput = {}): Promise<number> {
     const where: FindOptionsWhere<Referral> = {};
 
     if (period) {

@@ -12,7 +12,7 @@ import { PatientSupport } from '@/domain/entities/patient-support';
 import type { AuthUserDto } from '../../auth/auth.dtos';
 import type { UpdatePatientSupportDto } from '../patient-supports.dtos';
 
-interface UpdatePatientSupportUseCaseRequest {
+interface UpdatePatientSupportUseCaseInput {
   id: string;
   user: AuthUserDto;
   updatePatientSupportDto: UpdatePatientSupportDto;
@@ -31,7 +31,7 @@ export class UpdatePatientSupportUseCase {
     id,
     user,
     updatePatientSupportDto,
-  }: UpdatePatientSupportUseCaseRequest): Promise<void> {
+  }: UpdatePatientSupportUseCaseInput): Promise<void> {
     const patientSupport = await this.patientSupportsRepository.findOne({
       select: { id: true, patient_id: true },
       where: { id },

@@ -12,7 +12,7 @@ import { User } from '@/domain/entities/user';
 import type { AuthUserDto } from '../../auth/auth.dtos';
 import type { UpdateUserDto } from '../users.dtos';
 
-interface UpdateUserUseCaseRequest {
+interface UpdateUserUseCaseInput {
   id: string;
   user: AuthUserDto;
   updateUserDto: UpdateUserDto;
@@ -31,7 +31,7 @@ export class UpdateUserUseCase {
     id,
     user,
     updateUserDto,
-  }: UpdateUserUseCaseRequest): Promise<void> {
+  }: UpdateUserUseCaseInput): Promise<void> {
     if (user.role !== 'admin' && user.id !== id) {
       this.logger.log(
         { id, userId: user.id, role: user.role },

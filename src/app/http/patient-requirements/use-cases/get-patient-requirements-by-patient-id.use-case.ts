@@ -13,12 +13,12 @@ import type { PatientRequirementByPatientId } from '@/domain/schemas/patient-req
 
 import type { GetPatientRequirementsByPatientIdQuery } from '../patient-requirements.dtos';
 
-interface GetPatientRequirementsByPatientIdUseCaseRequest {
+interface GetPatientRequirementsByPatientIdUseCaseInput {
   patientId: string;
   query: GetPatientRequirementsByPatientIdQuery;
 }
 
-interface GetPatientRequirementsByPatientIdUseCaseResponse {
+interface GetPatientRequirementsByPatientIdUseCaseOutput {
   requirements: PatientRequirementByPatientId[];
   total: number;
 }
@@ -33,7 +33,7 @@ export class GetPatientRequirementsByPatientIdUseCase {
   async execute({
     patientId,
     query,
-  }: GetPatientRequirementsByPatientIdUseCaseRequest): Promise<GetPatientRequirementsByPatientIdUseCaseResponse> {
+  }: GetPatientRequirementsByPatientIdUseCaseInput): Promise<GetPatientRequirementsByPatientIdUseCaseOutput> {
     const { status, page, perPage } = query;
     const startDate = query.startDate ? new Date(query.startDate) : null;
     const endDate = query.endDate ? new Date(query.endDate) : null;

@@ -14,7 +14,7 @@ import { Patient } from '@/domain/entities/patient';
 import type { QueryPeriod } from '@/domain/enums/queries';
 import { UtilsService } from '@/utils/utils.service';
 
-interface GetTotalReferredPatientsUseCaseRequest {
+interface GetTotalReferredPatientsUseCaseInput {
   period?: QueryPeriod;
   startDate?: Date;
   endDate?: Date;
@@ -32,7 +32,7 @@ export class GetTotalReferredPatientsUseCase {
     period,
     startDate,
     endDate,
-  }: GetTotalReferredPatientsUseCaseRequest = {}): Promise<number> {
+  }: GetTotalReferredPatientsUseCaseInput = {}): Promise<number> {
     const where: FindOptionsWhere<Patient> = {
       referrals: { id: Not(IsNull()) },
     };

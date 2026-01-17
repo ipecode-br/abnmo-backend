@@ -9,7 +9,7 @@ import type { Repository } from 'typeorm';
 
 import { Referral } from '@/domain/entities/referral';
 
-interface CancelReferralUseCaseRequest {
+interface CancelReferralUseCaseInput {
   id: string;
   userId: string;
 }
@@ -23,7 +23,7 @@ export class CancelReferralUseCase {
     private readonly referralsRepository: Repository<Referral>,
   ) {}
 
-  async execute({ id, userId }: CancelReferralUseCaseRequest): Promise<void> {
+  async execute({ id, userId }: CancelReferralUseCaseInput): Promise<void> {
     const referral = await this.referralsRepository.findOne({
       select: { id: true, status: true },
       where: { id },

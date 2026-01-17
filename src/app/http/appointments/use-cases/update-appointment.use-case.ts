@@ -12,7 +12,7 @@ import { Appointment } from '@/domain/entities/appointment';
 import type { AuthUserDto } from '../../auth/auth.dtos';
 import type { UpdateAppointmentDto } from '../appointments.dtos';
 
-interface UpdateAppointmentUseCaseRequest {
+interface UpdateAppointmentUseCaseInput {
   id: string;
   user: AuthUserDto;
   updateAppointmentDto: UpdateAppointmentDto;
@@ -31,7 +31,7 @@ export class UpdateAppointmentUseCase {
     id,
     user,
     updateAppointmentDto,
-  }: UpdateAppointmentUseCaseRequest): Promise<void> {
+  }: UpdateAppointmentUseCaseInput): Promise<void> {
     const appointment = await this.appointmentsRepository.findOne({
       where: { id },
     });
