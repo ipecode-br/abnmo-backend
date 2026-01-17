@@ -115,12 +115,14 @@ export class SignInWithEmailUseCase {
         value: refreshToken,
       });
 
-      await this.tokensRepository.save({
+      const token = this.tokensRepository.create({
         type: AUTH_TOKENS_MAPPING.refresh_token,
         expires_at: expiresAt,
         entity_id: entity.id,
         token: refreshToken,
       });
+
+      await this.tokensRepository.save(token);
     }
 
     this.logger.log(

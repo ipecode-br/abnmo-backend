@@ -57,7 +57,7 @@ export class AuthController {
 
     return {
       success: true,
-      message: 'Conta de paciente registrada com sucesso.',
+      message: 'Sua conta foi registrada com sucesso.',
     };
   }
 
@@ -71,7 +71,7 @@ export class AuthController {
 
     return {
       success: true,
-      message: 'Conta de usuário registrada com sucesso.',
+      message: 'Sua conta foi registrada com sucesso.',
     };
   }
 
@@ -86,7 +86,7 @@ export class AuthController {
     return {
       success: true,
       message:
-        'O link para redefinição de senha foi enviado ao e-mail solicitado.',
+        'O link para redefinição de senha foi enviado ao e-mail informado.',
     };
   }
 

@@ -2,6 +2,7 @@ import {
   ConflictException,
   Injectable,
   Logger,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -33,8 +34,8 @@ export class RegisterUserUseCase {
     private readonly tokensRepository: Repository<Token>,
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
-    private readonly createTokenUseCase: CreateTokenUseCase,
     private readonly cryptographyService: CryptographyService,
+    private readonly createTokenUseCase: CreateTokenUseCase,
     private readonly utilsService: UtilsService,
   ) {}
 
@@ -48,19 +49,28 @@ export class RegisterUserUseCase {
       where: { token },
     });
 
-    const payload =
-      await this.cryptographyService.verifyToken<InviteUserTokenPayload>(token);
+    if (!inviteToken) {
+      throw new NotFoundException('Token de convite não encontrado.');
+    }
 
     if (
-      !payload ||
-      !inviteToken ||
+      !inviteToken.email ||
       inviteToken.type !== AUTH_TOKENS_MAPPING.invite_user_token ||
       (inviteToken.expires_at && inviteToken.expires_at < new Date())
     ) {
+      await this.tokensRepository.delete({ token });
       throw new UnauthorizedException('Token de convite inválido ou expirado.');
     }
 
-    const { role, email } = payload;
+    const payload =
+      await this.cryptographyService.verifyToken<InviteUserTokenPayload>(token);
+
+    if (!payload) {
+      throw new UnauthorizedException('Token de convite inválido ou expirado.');
+    }
+
+    const { email } = inviteToken;
+    const { role } = payload;
 
     const userWithSameEmail = await this.usersRepository.findOne({
       select: { id: true },
@@ -80,7 +90,7 @@ export class RegisterUserUseCase {
     await this.usersRepository.save(user);
 
     this.logger.log(
-      { userId: user.id, email, role },
+      { id: user.id, email, role },
       'User registered successfully',
     );
 

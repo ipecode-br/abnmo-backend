@@ -2,10 +2,17 @@ import { z } from 'zod';
 
 import { userSchema } from '.';
 
+export const createUserInviteSchema = userSchema.pick({
+  email: true,
+  role: true,
+});
+export type CreateUserInviteSchema = z.infer<typeof createUserInviteSchema>;
+
 export const createUserSchema = userSchema.pick({
   name: true,
   email: true,
   password: true,
+  avatar_url: true,
 });
 export type CreateUser = z.infer<typeof createUserSchema>;
 

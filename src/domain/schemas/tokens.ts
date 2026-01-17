@@ -33,11 +33,7 @@ export type PasswordResetPayload = {
   accountType: AuthAccountType;
 };
 
-export type InviteUserTokenPayload = {
-  sub: string;
-  email: string;
-  role: UserRole;
-};
+export type InviteUserTokenPayload = { role: UserRole };
 
 export type AuthTokenPayloads = {
   [AUTH_TOKENS_MAPPING.access_token]: AccessTokenPayload;
