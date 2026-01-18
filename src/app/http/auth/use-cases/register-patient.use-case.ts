@@ -50,9 +50,11 @@ export class RegisterPatientUseCase {
       registerPatientDto.password,
     );
 
-    const patient = this.patientsRepository.create({ name, email, password });
-
-    await this.patientsRepository.save(patient);
+    const patient = await this.patientsRepository.save({
+      name,
+      email,
+      password,
+    });
 
     this.logger.log(
       { patientId: patient.id, email },

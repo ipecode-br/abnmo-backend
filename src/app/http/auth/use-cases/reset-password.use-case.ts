@@ -16,7 +16,7 @@ import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
 import type { UserRole } from '@/domain/enums/users';
-import type { PasswordResetPayload } from '@/domain/schemas/tokens';
+import type { ResetPasswordPayload } from '@/domain/schemas/tokens';
 import { UtilsService } from '@/utils/utils.service';
 
 import type { ResetPasswordDto } from '../auth.dtos';
@@ -24,7 +24,6 @@ import type { ResetPasswordDto } from '../auth.dtos';
 interface ResetPasswordUseCaseInput {
   resetPasswordDto: ResetPasswordDto;
   response: Response;
-  token?: string;
 }
 
 @Injectable()
@@ -46,20 +45,24 @@ export class ResetPasswordUseCase {
   async execute({
     resetPasswordDto,
     response,
-    token,
   }: ResetPasswordUseCaseInput): Promise<void> {
-    if (!token) {
-      throw new UnauthorizedException('Token de redefinição de senha ausente.');
+    const { reset_token: token } = resetPasswordDto;
+
+    const resetToken = await this.tokensRepository.findOne({
+      where: { token },
+    });
+
+    if (!resetToken) {
+      throw new NotFoundException(
+        'Token de redefinição de senha não encontrado.',
+      );
     }
 
-    const [resetToken, payload] = await Promise.all([
-      this.tokensRepository.findOne({ where: { token } }),
-      this.cryptographyService.verifyToken<PasswordResetPayload>(token),
-    ]);
+    const payload =
+      await this.cryptographyService.verifyToken<ResetPasswordPayload>(token);
 
     if (
       !payload ||
-      !resetToken ||
       resetToken.type !== AUTH_TOKENS_MAPPING.password_reset ||
       (resetToken.expires_at && resetToken.expires_at < new Date())
     ) {

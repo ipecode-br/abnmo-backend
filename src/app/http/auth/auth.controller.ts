@@ -79,9 +79,8 @@ export class AuthController {
   @ApiOperation({ summary: 'Recuperação de senha' })
   async recoverPassword(
     @Body() recoverPasswordDto: RecoverPasswordDto,
-    @Res({ passthrough: true }) response: Response,
   ): Promise<BaseResponse> {
-    await this.recoverPasswordUseCase.execute({ response, recoverPasswordDto });
+    await this.recoverPasswordUseCase.execute({ recoverPasswordDto });
 
     return {
       success: true,
@@ -93,15 +92,10 @@ export class AuthController {
   @Post('reset-password')
   @ApiOperation({ summary: 'Redefinição de senha' })
   async resetPassword(
-    @Cookies(COOKIES_MAPPING.password_reset) token: string,
     @Body() resetPasswordDto: ResetPasswordDto,
     @Res({ passthrough: true }) response: Response,
   ): Promise<BaseResponse> {
-    await this.resetPasswordUseCase.execute({
-      resetPasswordDto,
-      response,
-      token,
-    });
+    await this.resetPasswordUseCase.execute({ resetPasswordDto, response });
 
     return {
       success: true,

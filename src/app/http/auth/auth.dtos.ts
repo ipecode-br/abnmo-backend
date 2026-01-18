@@ -9,7 +9,6 @@ import {
   resetPasswordSchema,
   signInWithEmailSchema,
 } from '@/domain/schemas/auth';
-import { createAuthTokenSchema } from '@/domain/schemas/tokens';
 
 export class AuthUserDto extends createZodDto(authUserSchema) {}
 
@@ -24,5 +23,3 @@ export class RecoverPasswordDto extends createZodDto(recoverPasswordSchema) {}
 export class ResetPasswordDto extends createZodDto(resetPasswordSchema) {}
 
 export class ChangePasswordDto extends createZodDto(changePasswordSchema) {}
-
-export class CreateAuthTokenDto extends createZodDto(createAuthTokenSchema) {}

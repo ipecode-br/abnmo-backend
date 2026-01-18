@@ -38,11 +38,10 @@ export const recoverPasswordSchema = z.object({
 
 export const resetPasswordSchema = z.object({
   password: passwordSchema,
-  account_type: accountTypeSchema,
+  reset_token: z.string().min(1),
 });
 
 export const changePasswordSchema = z.object({
   password: passwordSchema,
   new_password: passwordSchema,
-  account_type: accountTypeSchema,
 });

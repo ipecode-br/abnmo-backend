@@ -17,27 +17,19 @@ export const authTokenSchema = z
   .strict();
 export type AuthToken = z.infer<typeof authTokenSchema>;
 
-export const createAuthTokenSchema = authTokenSchema.pick({
-  entity_id: true,
-  email: true,
-  token: true,
-  type: true,
-  expires_at: true,
-});
-
 export type AccessTokenPayload = { sub: string; accountType: AuthAccountType };
 export type RefreshTokenPayload = { sub: string; accountType: AuthAccountType };
 
-export type PasswordResetPayload = {
+export type ResetPasswordPayload = {
   sub: string;
   accountType: AuthAccountType;
 };
 
-export type InviteUserTokenPayload = { role: UserRole };
+export type InviteUserPayload = { role: UserRole };
 
 export type AuthTokenPayloads = {
   [AUTH_TOKENS_MAPPING.access_token]: AccessTokenPayload;
   [AUTH_TOKENS_MAPPING.refresh_token]: RefreshTokenPayload;
-  [AUTH_TOKENS_MAPPING.password_reset]: PasswordResetPayload;
-  [AUTH_TOKENS_MAPPING.invite_user_token]: InviteUserTokenPayload;
+  [AUTH_TOKENS_MAPPING.password_reset]: ResetPasswordPayload;
+  [AUTH_TOKENS_MAPPING.invite_user]: InviteUserPayload;
 };

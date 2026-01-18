@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import type { Response } from 'express';
 import { Repository } from 'typeorm';
 
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
@@ -9,14 +8,17 @@ import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
-import { UtilsService } from '@/utils/utils.service';
 
 import type { RecoverPasswordDto } from '../auth.dtos';
 
 interface RecoverPasswordUseCaseInput {
   recoverPasswordDto: RecoverPasswordDto;
-  response: Response;
 }
+
+type PasswordResetToken = Pick<
+  Token,
+  'entity_id' | 'email' | 'token' | 'expires_at'
+> & { type: typeof AUTH_TOKENS_MAPPING.password_reset };
 
 @Injectable()
 export class RecoverPasswordUseCase {
@@ -30,12 +32,10 @@ export class RecoverPasswordUseCase {
     @InjectRepository(Token)
     private readonly tokensRepository: Repository<Token>,
     private readonly createTokenUseCase: CreateTokenUseCase,
-    private readonly utilsService: UtilsService,
   ) {}
 
   async execute({
     recoverPasswordDto,
-    response,
   }: RecoverPasswordUseCaseInput): Promise<void> {
     const { email, account_type: accountType } = recoverPasswordDto;
 
@@ -54,23 +54,24 @@ export class RecoverPasswordUseCase {
       return;
     }
 
-    const { expiresAt, maxAge, token } = await this.createTokenUseCase.execute({
-      type: COOKIES_MAPPING.password_reset,
-      payload: { sub: entity.id, accountType },
-    });
+    const [{ token, expiresAt }] = await Promise.all([
+      this.createTokenUseCase.execute({
+        type: COOKIES_MAPPING.password_reset,
+        payload: { sub: entity.id, accountType },
+      }),
+      // Delete all tokens for this email before creating a new one
+      this.tokensRepository.delete({ email }),
+    ]);
 
-    await this.tokensRepository.save({
+    await this.tokensRepository.save<PasswordResetToken>({
       type: AUTH_TOKENS_MAPPING.password_reset,
       expires_at: expiresAt,
       entity_id: entity.id,
       token,
+      email,
     });
 
-    this.utilsService.setCookie(response, {
-      name: COOKIES_MAPPING.password_reset,
-      value: token,
-      maxAge,
-    });
+    // TODO: send email with password reset URL including reset token
 
     this.logger.log(
       { entityId: entity.id, email, accountType },

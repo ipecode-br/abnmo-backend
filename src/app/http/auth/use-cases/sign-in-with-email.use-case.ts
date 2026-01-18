@@ -20,6 +20,13 @@ interface SignInWithEmailUseCaseInput {
   response: Response;
 }
 
+type RefreshToken = Pick<
+  Token,
+  'entity_id' | 'email' | 'token' | 'expires_at'
+> & {
+  type: typeof AUTH_TOKENS_MAPPING.refresh_token;
+};
+
 @Injectable()
 export class SignInWithEmailUseCase {
   private readonly logger = new Logger(SignInWithEmailUseCase.name);
@@ -82,8 +89,6 @@ export class SignInWithEmailUseCase {
       );
     }
 
-    const role = entity.role ?? 'patient';
-
     const { maxAge: accessTokenMaxAge, token: accessToken } =
       await this.createTokenUseCase.execute({
         type: AUTH_TOKENS_MAPPING.access_token,
@@ -109,24 +114,28 @@ export class SignInWithEmailUseCase {
         payload: { sub: entity.id, accountType },
       });
 
+      await this.tokensRepository.save<RefreshToken>({
+        type: AUTH_TOKENS_MAPPING.refresh_token,
+        expires_at: expiresAt,
+        entity_id: entity.id,
+        token: refreshToken,
+        email,
+      });
+
       this.utilsService.setCookie(response, {
         name: COOKIES_MAPPING.refresh_token,
         maxAge: refreshTokenMaxAge,
         value: refreshToken,
       });
-
-      const token = this.tokensRepository.create({
-        type: AUTH_TOKENS_MAPPING.refresh_token,
-        expires_at: expiresAt,
-        entity_id: entity.id,
-        token: refreshToken,
-      });
-
-      await this.tokensRepository.save(token);
     }
 
     this.logger.log(
-      { entityId: entity.id, email, role, keepLoggedIn },
+      {
+        entityId: entity.id,
+        email,
+        role: entity.role ?? 'patient',
+        keepLoggedIn,
+      },
       'Entity signed in with e-mail',
     );
   }

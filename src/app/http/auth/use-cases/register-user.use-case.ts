@@ -15,7 +15,7 @@ import { COOKIES_MAPPING } from '@/domain/cookies';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
-import type { InviteUserTokenPayload } from '@/domain/schemas/tokens';
+import type { InviteUserPayload } from '@/domain/schemas/tokens';
 import { UtilsService } from '@/utils/utils.service';
 
 import { RegisterUserDto } from '../auth.dtos';
@@ -55,7 +55,7 @@ export class RegisterUserUseCase {
 
     if (
       !inviteToken.email ||
-      inviteToken.type !== AUTH_TOKENS_MAPPING.invite_user_token ||
+      inviteToken.type !== AUTH_TOKENS_MAPPING.invite_user ||
       (inviteToken.expires_at && inviteToken.expires_at < new Date())
     ) {
       await this.tokensRepository.delete({ token });
@@ -63,7 +63,7 @@ export class RegisterUserUseCase {
     }
 
     const payload =
-      await this.cryptographyService.verifyToken<InviteUserTokenPayload>(token);
+      await this.cryptographyService.verifyToken<InviteUserPayload>(token);
 
     if (!payload) {
       throw new UnauthorizedException('Token de convite inválido ou expirado.');
@@ -85,9 +85,12 @@ export class RegisterUserUseCase {
       registerUserDto.password,
     );
 
-    const user = this.usersRepository.create({ name, email, password, role });
-
-    await this.usersRepository.save(user);
+    const user = await this.usersRepository.save({
+      name,
+      email,
+      password,
+      role,
+    });
 
     this.logger.log(
       { id: user.id, email, role },
