@@ -14,8 +14,7 @@ export class CreateUserInviteDto extends createZodDto(createUserInviteSchema) {}
 
 export class UpdateUserDto extends createZodDto(updateUserSchema) {}
 
+export class GetUserResponse extends createZodDto(getUserResponseSchema) {}
+
 export class GetUsersQuery extends createZodDto(getUsersQuerySchema) {}
-
-export class GetUserResponseDto extends createZodDto(getUserResponseSchema) {}
-
-export class GetUsersResponseDto extends createZodDto(getUsersResponseSchema) {}
+export class GetUsersResponse extends createZodDto(getUsersResponseSchema) {}

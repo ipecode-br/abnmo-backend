@@ -12,7 +12,6 @@ import { GetTotalPatientsUseCase } from './use-cases/get-total-patients.use-case
 import { GetTotalPatientsByFieldUseCase } from './use-cases/get-total-patients-by-field.use-case';
 import { GetTotalPatientsByStatusUseCase } from './use-cases/get-total-patients-by-status.use-case';
 import { GetTotalReferralsUseCase } from './use-cases/get-total-referrals.use-case';
-import { GetTotalReferralsAndReferredPatientsPercentageUseCase } from './use-cases/get-total-referrals-and-referred-patients-percentage.use-case';
 import { GetTotalReferralsByCategoryUseCase } from './use-cases/get-total-referrals-by-category.use-case';
 import { GetTotalReferredPatientsUseCase } from './use-cases/get-total-referred-patients.use-case';
 import { GetTotalReferredPatientsByStateUseCase } from './use-cases/get-total-referred-patients-by-state.use-case';
@@ -30,7 +29,6 @@ import { GetTotalReferredPatientsByStateUseCase } from './use-cases/get-total-re
     GetTotalPatientsByStatusUseCase,
     GetTotalReferralsUseCase,
     GetTotalReferralsByCategoryUseCase,
-    GetTotalReferralsAndReferredPatientsPercentageUseCase,
     GetTotalReferredPatientsUseCase,
     GetTotalReferredPatientsByStateUseCase,
   ],

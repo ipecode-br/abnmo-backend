@@ -11,9 +11,9 @@ import { GetUserUseCase } from './use-cases/get-user.use-case';
 import { GetUsersUseCase } from './use-cases/get-users.use-case';
 import {
   CreateUserInviteDto,
-  GetUserResponseDto,
+  GetUserResponse,
   GetUsersQuery,
-  GetUsersResponseDto,
+  GetUsersResponse,
 } from './users.dtos';
 
 @ApiTags('Usuários')
@@ -43,8 +43,8 @@ export class UsersController {
   @Get()
   @Roles(['manager'])
   @ApiOperation({ summary: 'Lista todos os usuários' })
-  @ApiResponse({ status: 200, type: GetUsersResponseDto })
-  async getUsers(@Query() query: GetUsersQuery): Promise<GetUsersResponseDto> {
+  @ApiResponse({ status: 200, type: GetUsersResponse })
+  async getUsers(@Query() query: GetUsersQuery): Promise<GetUsersResponse> {
     const data = await this.getUsersUseCase.execute({ query });
 
     return {
@@ -57,8 +57,8 @@ export class UsersController {
   @Get('me')
   @Roles(['manager', 'nurse', 'specialist'])
   @ApiOperation({ summary: 'Retorna os dados do usuário autenticado' })
-  @ApiResponse({ status: 200, type: GetUserResponseDto })
-  async getProfile(@AuthUser() user: AuthUserDto): Promise<GetUserResponseDto> {
+  @ApiResponse({ status: 200, type: GetUserResponse })
+  async getProfile(@AuthUser() user: AuthUserDto): Promise<GetUserResponse> {
     const { user: data } = await this.getUserUseCase.execute({ id: user.id });
 
     return {

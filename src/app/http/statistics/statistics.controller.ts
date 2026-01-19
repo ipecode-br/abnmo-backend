@@ -1,30 +1,33 @@
 import { Controller, Get, Query } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { Roles } from '@/common/decorators/roles.decorator';
 import type {
-  GetPatientsByCityResponse,
-  GetPatientsByGenderResponse,
-  GetReferredPatientsByStateResponse,
-  GetTotalAppointmentsResponse,
-  GetTotalPatientsByStatusResponse,
-  GetTotalReferralsAndReferredPatientsPercentageResponse,
-  GetTotalReferralsByCategoryResponse,
   TotalPatientsByCity,
   TotalPatientsByGender,
 } from '@/domain/schemas/statistics/responses';
 
 import {
-  GetReferredPatientsByStateQuery,
+  GetTotalAppointmentsResponse,
+  GetTotalPatientsByCityResponse,
   GetTotalPatientsByFieldQuery,
-  GetTotalReferralsAndReferredPatientsPercentageQuery,
+  GetTotalPatientsByGenderResponse,
+  GetTotalPatientsByStatusResponse,
   GetTotalReferralsByCategoryQuery,
+  GetTotalReferralsByCategoryResponse,
+  GetTotalReferralsQuery,
+  GetTotalReferralsResponse,
+  GetTotalReferredPatientsByStateQuery,
+  GetTotalReferredPatientsByStateResponse,
+  GetTotalReferredPatientsQuery,
+  GetTotalReferredPatientsResponse,
 } from './statistics.dtos';
 import { GetTotalAppointmentsUseCase } from './use-cases/get-total-appointments.use-case';
 import { GetTotalPatientsByFieldUseCase } from './use-cases/get-total-patients-by-field.use-case';
 import { GetTotalPatientsByStatusUseCase } from './use-cases/get-total-patients-by-status.use-case';
-import { GetTotalReferralsAndReferredPatientsPercentageUseCase } from './use-cases/get-total-referrals-and-referred-patients-percentage.use-case';
+import { GetTotalReferralsUseCase } from './use-cases/get-total-referrals.use-case';
 import { GetTotalReferralsByCategoryUseCase } from './use-cases/get-total-referrals-by-category.use-case';
+import { GetTotalReferredPatientsUseCase } from './use-cases/get-total-referred-patients.use-case';
 import { GetTotalReferredPatientsByStateUseCase } from './use-cases/get-total-referred-patients-by-state.use-case';
 
 @ApiTags('Estatísticas')
@@ -32,18 +35,24 @@ import { GetTotalReferredPatientsByStateUseCase } from './use-cases/get-total-re
 @Controller('statistics')
 export class StatisticsController {
   constructor(
+    private readonly getTotalAppointmentsUseCase: GetTotalAppointmentsUseCase,
     private readonly getTotalPatientsByStatusUseCase: GetTotalPatientsByStatusUseCase,
     private readonly getTotalPatientsByPeriodUseCase: GetTotalPatientsByFieldUseCase,
+    private readonly getTotalReferralsUseCase: GetTotalReferralsUseCase,
     private readonly getTotalReferredPatientsByStateUseCase: GetTotalReferredPatientsByStateUseCase,
+    private readonly getTotalReferredPatientsUseCase: GetTotalReferredPatientsUseCase,
     private readonly getTotalReferralsByCategoryUseCase: GetTotalReferralsByCategoryUseCase,
-    private readonly getTotalReferralsAndReferredPatientsPercentageUseCase: GetTotalReferralsAndReferredPatientsPercentageUseCase,
-    private readonly getTotalAppointmentsUseCase: GetTotalAppointmentsUseCase,
   ) {}
 
   @Get('appointments-total')
   @ApiOperation({ summary: 'Retorna o número total de atendimentos' })
-  async getTotalAppointments(): Promise<GetTotalAppointmentsResponse> {
-    const total = await this.getTotalAppointmentsUseCase.execute();
+  @ApiResponse({ status: 200, type: GetTotalAppointmentsResponse })
+  async getTotalAppointments(
+    @Query() query: GetTotalReferralsQuery,
+  ): Promise<GetTotalAppointmentsResponse> {
+    const { period } = query;
+
+    const total = await this.getTotalAppointmentsUseCase.execute({ period });
 
     return {
       success: true,
@@ -54,6 +63,7 @@ export class StatisticsController {
 
   @Get('patients-total')
   @ApiOperation({ summary: 'Retorna o número total de pacientes' })
+  @ApiResponse({ status: 200, type: GetTotalPatientsByStatusResponse })
   async getTotalPatients(): Promise<GetTotalPatientsByStatusResponse> {
     const data = await this.getTotalPatientsByStatusUseCase.execute();
 
@@ -66,54 +76,64 @@ export class StatisticsController {
 
   @Get('patients-by-gender')
   @ApiOperation({ summary: 'Retorna o número total de pacientes por gênero' })
+  @ApiResponse({ status: 200, type: GetTotalPatientsByGenderResponse })
   async getPatientsByGender(
     @Query() query: GetTotalPatientsByFieldQuery,
-  ): Promise<GetPatientsByGenderResponse> {
+  ): Promise<GetTotalPatientsByGenderResponse> {
+    const { period, limit, order, withPercentage } = query;
+
     const { items: genders, total } =
       await this.getTotalPatientsByPeriodUseCase.execute<TotalPatientsByGender>(
-        { field: 'gender', query },
+        { field: 'gender', period, limit, order, withPercentage },
       );
 
     return {
       success: true,
-      message: 'Estatísticas de pacientes por gênero retornada com sucesso.',
+      message:
+        'Lista com o total de pacientes por gênero retornado com sucesso.',
       data: { genders, total },
     };
   }
 
   @Get('patients-by-city')
   @ApiOperation({ summary: 'Retorna o número total de pacientes por cidade' })
+  @ApiResponse({ status: 200, type: GetTotalPatientsByCityResponse })
   async getPatientsByCity(
     @Query() query: GetTotalPatientsByFieldQuery,
-  ): Promise<GetPatientsByCityResponse> {
+  ): Promise<GetTotalPatientsByCityResponse> {
+    const { period, limit, order, withPercentage } = query;
+
     const { items: cities, total } =
       await this.getTotalPatientsByPeriodUseCase.execute<TotalPatientsByCity>({
         field: 'city',
-        query,
+        period,
+        order,
+        limit,
+        withPercentage,
       });
 
     return {
       success: true,
-      message: 'Estatísticas de pacientes por cidade retornada com sucesso.',
+      message:
+        'Lista com o total de pacientes por cidade retornado com sucesso.',
       data: { cities, total },
     };
   }
 
   @Get('referrals-total')
   @ApiOperation({ summary: 'Retorna o número total de encaminhamentos' })
-  async getTotalReferralsAndReferredPatientsPercentage(
-    @Query() query: GetTotalReferralsAndReferredPatientsPercentageQuery,
-  ): Promise<GetTotalReferralsAndReferredPatientsPercentageResponse> {
-    const data =
-      await this.getTotalReferralsAndReferredPatientsPercentageUseCase.execute({
-        query,
-      });
+  @ApiResponse({ status: 200, type: GetTotalReferralsResponse })
+  async getTotalReferrals(
+    @Query() query: GetTotalReferralsQuery,
+  ): Promise<GetTotalReferralsResponse> {
+    const { period } = query;
+
+    const total = await this.getTotalReferralsUseCase.execute({ period });
 
     return {
       success: true,
-      message:
-        'Estatísticas com total de encaminhamentos retornada com sucesso.',
-      data,
+      message: 'Número total de encaminhamentos retornado com sucesso.',
+      data: { total },
     };
   }
 
@@ -121,11 +141,14 @@ export class StatisticsController {
   @ApiOperation({
     summary: 'Retorna o número total de encaminhamentos por categoria',
   })
+  @ApiResponse({ status: 200, type: GetTotalReferralsByCategoryResponse })
   async getTotalReferralsByCategory(
     @Query() query: GetTotalReferralsByCategoryQuery,
   ): Promise<GetTotalReferralsByCategoryResponse> {
+    const { period } = query;
+
     const { categories, total } =
-      await this.getTotalReferralsByCategoryUseCase.execute({ query });
+      await this.getTotalReferralsByCategoryUseCase.execute({ period });
 
     return {
       success: true,
@@ -139,17 +162,43 @@ export class StatisticsController {
   @ApiOperation({
     summary: 'Retorna o número total de encaminhamentos por estado',
   })
+  @ApiResponse({ status: 200, type: GetTotalReferredPatientsByStateResponse })
   async getReferredPatientsByState(
-    @Query() query: GetReferredPatientsByStateQuery,
-  ): Promise<GetReferredPatientsByStateResponse> {
+    @Query() query: GetTotalReferredPatientsByStateQuery,
+  ): Promise<GetTotalReferredPatientsByStateResponse> {
+    const { period, limit } = query;
+
     const { states, total } =
-      await this.getTotalReferredPatientsByStateUseCase.execute({ query });
+      await this.getTotalReferredPatientsByStateUseCase.execute({
+        period,
+        limit,
+      });
 
     return {
       success: true,
       message:
         'Lista com o total de pacientes encaminhados por estado retornada com sucesso.',
       data: { states, total },
+    };
+  }
+
+  @Get('referred-patients-total')
+  @ApiOperation({ summary: 'Retorna o número total de pacientes encaminhados' })
+  @ApiResponse({ status: 200, type: GetTotalReferredPatientsResponse })
+  async getTotalReferredPatients(
+    @Query() query: GetTotalReferredPatientsQuery,
+  ): Promise<GetTotalReferredPatientsResponse> {
+    const { period } = query;
+
+    const total = await this.getTotalReferredPatientsUseCase.execute({
+      period,
+    });
+
+    return {
+      success: true,
+      message:
+        'Número total de pacientes encaminhamados retornado com sucesso.',
+      data: { total },
     };
   }
 }
