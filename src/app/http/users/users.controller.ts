@@ -60,7 +60,7 @@ export class UsersController {
 
     return {
       success: true,
-      message: 'Dados do usuário retornado com sucesso.',
+      message: 'Dados do usuário retornados com sucesso.',
       data,
     };
   }

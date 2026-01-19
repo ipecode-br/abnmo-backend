@@ -6,8 +6,6 @@ import { envSchema } from '@/env/env';
 import { EnvModule } from '@/env/env.module';
 import { EnvService } from '@/env/env.service';
 
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
 import { AppointmentsModule } from './http/appointments/appointments.module';
 import { AuthModule } from './http/auth/auth.module';
@@ -56,10 +54,8 @@ import { UsersModule } from './http/users/users.module';
     ReferralsModule,
     AppointmentsModule,
     StatisticsModule,
-    PatientSupportsModule,
     PatientRequirementsModule,
+    PatientSupportsModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}

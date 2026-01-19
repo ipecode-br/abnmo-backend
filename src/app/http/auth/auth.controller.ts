@@ -40,7 +40,7 @@ export class AuthController {
 
   @Public()
   @Post('login')
-  @ApiOperation({ summary: 'Login de usuário ou paciente' })
+  @ApiOperation({ summary: 'Inicia a sessão do usuário ou paciente' })
   async login(
     @Body() signInWithEmailDto: SignInWithEmailDto,
     @Res({ passthrough: true }) response: Response,
@@ -55,7 +55,7 @@ export class AuthController {
 
   @Public()
   @Post('register/patient')
-  @ApiOperation({ summary: 'Registro de novo paciente' })
+  @ApiOperation({ summary: 'Registra um novo paciente' })
   async registerPatient(
     @Body() registerPatientDto: RegisterPatientDto,
     @Res({ passthrough: true }) response: Response,
@@ -70,7 +70,7 @@ export class AuthController {
 
   @Public()
   @Post('register/user')
-  @ApiOperation({ summary: 'Registro de novo usuário via convite' })
+  @ApiOperation({ summary: 'Registro um novo usuário via convite' })
   async registerUser(
     @Body() registerUserDto: RegisterUserDto,
     @Res({ passthrough: true }) response: Response,
@@ -85,7 +85,7 @@ export class AuthController {
 
   @Public()
   @Post('recover-password')
-  @ApiOperation({ summary: 'Recuperação de senha' })
+  @ApiOperation({ summary: 'Solicita recuperação de senha' })
   async recoverPassword(
     @Body() recoverPasswordDto: RecoverPasswordDto,
   ): Promise<BaseResponse> {
@@ -100,7 +100,7 @@ export class AuthController {
 
   @Public()
   @Post('reset-password')
-  @ApiOperation({ summary: 'Redefinição de senha' })
+  @ApiOperation({ summary: 'Solicita redefinição de senha' })
   async resetPassword(
     @Body() resetPasswordDto: ResetPasswordDto,
     @Res({ passthrough: true }) response: Response,
@@ -116,7 +116,7 @@ export class AuthController {
   @Roles(['all'])
   @Post('change-password')
   @ApiOperation({
-    summary: 'Alteração de senha do usuário ou paciente autenticado',
+    summary: 'Altera a senha do usuário ou paciente autenticado',
   })
   async changePassword(
     @AuthUser() user: AuthUserDto,
@@ -132,7 +132,7 @@ export class AuthController {
 
   @Roles(['all'])
   @Post('logout')
-  @ApiOperation({ summary: 'Logout do usuário ou paciente' })
+  @ApiOperation({ summary: 'Encerra a sessão do usuário ou paciente' })
   async logout(
     @Cookies(COOKIES_MAPPING.refresh_token) refreshToken: string,
     @Res({ passthrough: true }) response: Response,

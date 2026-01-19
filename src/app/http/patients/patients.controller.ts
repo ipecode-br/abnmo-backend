@@ -58,7 +58,7 @@ export class PatientsController {
 
   @Get(':id')
   @Roles(['manager', 'nurse', 'specialist'])
-  @ApiOperation({ summary: 'Busca um paciente pelo ID' })
+  @ApiOperation({ summary: 'Retorna os dados do paciente' })
   async getPatientById(@Param('id') id: string): Promise<GetPatientResponse> {
     const { patient } = await this.getPatientUseCase.execute({ id });
 
@@ -86,7 +86,7 @@ export class PatientsController {
 
   @Put(':id')
   @Roles(['manager', 'nurse', 'patient'])
-  @ApiOperation({ summary: 'Atualiza um paciente pelo ID' })
+  @ApiOperation({ summary: 'Atualiza os dados do paciente' })
   async update(
     @Param('id') id: string,
     @AuthUser() user: AuthUserDto,
@@ -102,7 +102,7 @@ export class PatientsController {
 
   @Patch(':id/deactivate')
   @Roles(['manager'])
-  @ApiOperation({ summary: 'Inativa um paciente pelo ID' })
+  @ApiOperation({ summary: 'Inativa o paciente' })
   async deactivatePatient(
     @Param('id') id: string,
     @AuthUser() user: AuthUserDto,

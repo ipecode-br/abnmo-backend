@@ -31,7 +31,7 @@ export class ReferralsController {
 
   @Get()
   @Roles(['manager', 'nurse'])
-  @ApiOperation({ summary: 'Lista encaminhamentos cadastrados no sistema' })
+  @ApiOperation({ summary: 'Lista todos os encaminhamentos' })
   async getReferrals(
     @Query() query: GetReferralsQuery,
   ): Promise<GetReferralsResponse> {
@@ -61,7 +61,7 @@ export class ReferralsController {
 
   @Patch(':id/cancel')
   @Roles(['nurse', 'manager'])
-  @ApiOperation({ summary: 'Cancela um encaminhamento' })
+  @ApiOperation({ summary: 'Cancela o encaminhamento' })
   async cancel(
     @Param('id') id: string,
     @AuthUser() user: AuthUserDto,

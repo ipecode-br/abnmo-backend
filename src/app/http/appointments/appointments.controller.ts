@@ -69,6 +69,7 @@ export class AppointmentsController {
 
   @Put(':id')
   @Roles(['nurse', 'manager', 'specialist'])
+  @ApiOperation({ summary: 'Atualiza os dados do atendimento' })
   public async update(
     @Param('id') id: string,
     @AuthUser() user: AuthUserDto,
@@ -88,6 +89,7 @@ export class AppointmentsController {
 
   @Roles(['nurse', 'manager', 'specialist'])
   @Patch(':id/cancel')
+  @ApiOperation({ summary: 'Cancela o atendimento' })
   async cancel(
     @Param('id') id: string,
     @AuthUser() user: AuthUserDto,

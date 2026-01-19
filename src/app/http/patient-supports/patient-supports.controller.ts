@@ -26,7 +26,7 @@ export class PatientSupportsController {
   @Post(':patientId')
   @Roles(['nurse', 'manager', 'patient'])
   @ApiOperation({
-    summary: 'Registra um novo contato de apoio para um paciente',
+    summary: 'Cadastra um novo contato de apoio para o paciente',
   })
   async createPatientSupport(
     @Param('patientId') patientId: string,
@@ -41,13 +41,13 @@ export class PatientSupportsController {
 
     return {
       success: true,
-      message: 'Contato de apoio registrado com sucesso.',
+      message: 'Contato de apoio cadastrado com sucesso.',
     };
   }
 
   @Put(':id')
   @Roles(['nurse', 'manager', 'patient'])
-  @ApiOperation({ summary: 'Atualiza um contato de apoio pelo ID' })
+  @ApiOperation({ summary: 'Atualiza os dados do contato de apoio' })
   async updatePatientSupport(
     @Param('id') id: string,
     @AuthUser() user: AuthUserDto,
@@ -67,7 +67,7 @@ export class PatientSupportsController {
 
   @Delete(':id')
   @Roles(['nurse', 'manager', 'patient'])
-  @ApiOperation({ summary: 'Remove um contato de apoio pelo ID' })
+  @ApiOperation({ summary: 'Remove o contato de apoio' })
   async removePatientSupport(
     @Param('id') id: string,
     @AuthUser() user: AuthUserDto,

@@ -42,9 +42,7 @@ export class PatientRequirementsController {
 
   @Get()
   @Roles(['nurse', 'manager'])
-  @ApiOperation({
-    summary: 'Lista as solicitações com paginação e filtros',
-  })
+  @ApiOperation({ summary: 'Lista todas as solicitações' })
   async getPatientRequirements(
     @Query() query: GetPatientRequirementsQuery,
   ): Promise<GetPatientRequirementsResponse> {
@@ -57,58 +55,9 @@ export class PatientRequirementsController {
     };
   }
 
-  @Post()
-  @Roles(['nurse', 'manager'])
-  @ApiOperation({ summary: 'Adiciona uma nova solicitação.' })
-  async create(
-    @AuthUser() user: AuthUserDto,
-    @Body() createPatientRequirementDto: CreatePatientRequirementDto,
-  ): Promise<BaseResponse> {
-    await this.createPatientRequirementUseCase.execute({
-      user,
-      createPatientRequirementDto,
-    });
-
-    return {
-      success: true,
-      message: 'Solicitação adicionada com sucesso.',
-    };
-  }
-
-  @Patch(':id/approve')
-  @Roles(['nurse', 'manager'])
-  @ApiOperation({ summary: 'Aprova uma solicitação pelo ID.' })
-  async approve(
-    @Param('id') id: string,
-    @AuthUser() user: AuthUserDto,
-  ): Promise<BaseResponse> {
-    await this.approvePatientRequirementUseCase.execute({ id, user });
-
-    return {
-      success: true,
-      message: 'Solicitação aprovada com sucesso.',
-    };
-  }
-
-  @Patch(':id/decline')
-  @Roles(['nurse', 'manager'])
-  @ApiOperation({ summary: 'Recusa uma solicitação pelo ID.' })
-  async decline(
-    @Param('id') id: string,
-    @AuthUser() user: AuthUserDto,
-  ): Promise<BaseResponse> {
-    await this.declinePatientRequirementUseCase.execute({ id, user });
-
-    return {
-      success: true,
-      message: 'Solicitação recusada com sucesso.',
-    };
-  }
-
   @Get('me')
   @ApiOperation({
-    summary:
-      'Lista as solicitações do paciente logado com paginação e filtros.',
+    summary: 'Lista todas as solicitações do paciente autenticado',
   })
   async getPatientRequirementsLogged(
     @AuthUser() user: AuthUserDto,
@@ -123,6 +72,54 @@ export class PatientRequirementsController {
       success: true,
       message: 'Lista de solicitações retornada com sucesso.',
       data,
+    };
+  }
+
+  @Post()
+  @Roles(['nurse', 'manager'])
+  @ApiOperation({ summary: 'Cadastra uma nova solicitação' })
+  async create(
+    @AuthUser() user: AuthUserDto,
+    @Body() createPatientRequirementDto: CreatePatientRequirementDto,
+  ): Promise<BaseResponse> {
+    await this.createPatientRequirementUseCase.execute({
+      user,
+      createPatientRequirementDto,
+    });
+
+    return {
+      success: true,
+      message: 'Solicitação cadastrada com sucesso.',
+    };
+  }
+
+  @Patch(':id/approve')
+  @Roles(['nurse', 'manager'])
+  @ApiOperation({ summary: 'Aprova a solicitação' })
+  async approve(
+    @Param('id') id: string,
+    @AuthUser() user: AuthUserDto,
+  ): Promise<BaseResponse> {
+    await this.approvePatientRequirementUseCase.execute({ id, user });
+
+    return {
+      success: true,
+      message: 'Solicitação aprovada com sucesso.',
+    };
+  }
+
+  @Patch(':id/decline')
+  @Roles(['nurse', 'manager'])
+  @ApiOperation({ summary: 'Recusa a solicitação' })
+  async decline(
+    @Param('id') id: string,
+    @AuthUser() user: AuthUserDto,
+  ): Promise<BaseResponse> {
+    await this.declinePatientRequirementUseCase.execute({ id, user });
+
+    return {
+      success: true,
+      message: 'Solicitação recusada com sucesso.',
     };
   }
 }

@@ -41,7 +41,7 @@ export class StatisticsController {
   ) {}
 
   @Get('appointments-total')
-  @ApiOperation({ summary: 'Número total de atendimentos' })
+  @ApiOperation({ summary: 'Retorna o número total de atendimentos' })
   async getTotalAppointments(): Promise<GetTotalAppointmentsResponse> {
     const total = await this.getTotalAppointmentsUseCase.execute();
 
@@ -53,7 +53,7 @@ export class StatisticsController {
   }
 
   @Get('patients-total')
-  @ApiOperation({ summary: 'Estatísticas totais de pacientes' })
+  @ApiOperation({ summary: 'Retorna o número total de pacientes' })
   async getTotalPatients(): Promise<GetTotalPatientsByStatusResponse> {
     const data = await this.getTotalPatientsByStatusUseCase.execute();
 
@@ -65,7 +65,7 @@ export class StatisticsController {
   }
 
   @Get('patients-by-gender')
-  @ApiOperation({ summary: 'Estatísticas de pacientes por gênero' })
+  @ApiOperation({ summary: 'Retorna o número total de pacientes por gênero' })
   async getPatientsByGender(
     @Query() query: GetTotalPatientsByFieldQuery,
   ): Promise<GetPatientsByGenderResponse> {
@@ -82,7 +82,7 @@ export class StatisticsController {
   }
 
   @Get('patients-by-city')
-  @ApiOperation({ summary: 'Estatísticas de pacientes por cidade' })
+  @ApiOperation({ summary: 'Retorna o número total de pacientes por cidade' })
   async getPatientsByCity(
     @Query() query: GetTotalPatientsByFieldQuery,
   ): Promise<GetPatientsByCityResponse> {
@@ -100,7 +100,7 @@ export class StatisticsController {
   }
 
   @Get('referrals-total')
-  @ApiOperation({ summary: 'Estatísticas do total de encaminhamentos' })
+  @ApiOperation({ summary: 'Retorna o número total de encaminhamentos' })
   async getTotalReferralsAndReferredPatientsPercentage(
     @Query() query: GetTotalReferralsAndReferredPatientsPercentageQuery,
   ): Promise<GetTotalReferralsAndReferredPatientsPercentageResponse> {
@@ -119,7 +119,7 @@ export class StatisticsController {
 
   @Get('referrals-by-category')
   @ApiOperation({
-    summary: 'Lista com o total de encaminhamentos por categoria',
+    summary: 'Retorna o número total de encaminhamentos por categoria',
   })
   async getTotalReferralsByCategory(
     @Query() query: GetTotalReferralsByCategoryQuery,
@@ -137,7 +137,7 @@ export class StatisticsController {
 
   @Get('referrals-by-state')
   @ApiOperation({
-    summary: 'Lista com o total de pacientes encaminhados por estado',
+    summary: 'Retorna o número total de encaminhamentos por estado',
   })
   async getReferredPatientsByState(
     @Query() query: GetReferredPatientsByStateQuery,
