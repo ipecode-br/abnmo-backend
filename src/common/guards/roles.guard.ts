@@ -31,7 +31,6 @@ export class RolesGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest<{ user?: AuthUserDto }>();
-
     const user = request.user;
 
     if (!user) {
@@ -40,7 +39,10 @@ export class RolesGuard implements CanActivate {
       );
     }
 
-    const isAllowed = roles.includes(user.role) || user.role === 'admin';
+    const isAllowed =
+      roles.includes(user.role) ||
+      roles.includes('all') ||
+      user.role === 'admin';
 
     if (!isAllowed) {
       throw new UnauthorizedException(

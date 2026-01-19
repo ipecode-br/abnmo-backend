@@ -2,18 +2,23 @@ import { Body, Controller, Post, Res } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
 import type { Response } from 'express';
 
+import { AuthUser } from '@/common/decorators/auth-user.decorator';
 import { Cookies } from '@/common/decorators/cookies.decorator';
 import { Public } from '@/common/decorators/public.decorator';
+import { Roles } from '@/common/decorators/roles.decorator';
 import { COOKIES_MAPPING } from '@/domain/cookies';
 import type { BaseResponse } from '@/domain/schemas/base';
 
 import {
+  AuthUserDto,
+  ChangePasswordDto,
   RecoverPasswordDto,
   RegisterPatientDto,
   RegisterUserDto,
   ResetPasswordDto,
   SignInWithEmailDto,
 } from './auth.dtos';
+import { ChangePasswordUseCase } from './use-cases/change-password.use-case';
 import { LogoutUseCase } from './use-cases/logout.use-case';
 import { RecoverPasswordUseCase } from './use-cases/recover-password.use-case';
 import { RegisterPatientUseCase } from './use-cases/register-patient.use-case';
@@ -21,7 +26,6 @@ import { RegisterUserUseCase } from './use-cases/register-user.use-case';
 import { ResetPasswordUseCase } from './use-cases/reset-password.use-case';
 import { SignInWithEmailUseCase } from './use-cases/sign-in-with-email.use-case';
 
-@Public()
 @Controller()
 export class AuthController {
   constructor(
@@ -31,8 +35,10 @@ export class AuthController {
     private readonly resetPasswordUseCase: ResetPasswordUseCase,
     private readonly registerPatientUseCase: RegisterPatientUseCase,
     private readonly registerUserUseCase: RegisterUserUseCase,
+    private readonly changePasswordUseCase: ChangePasswordUseCase,
   ) {}
 
+  @Public()
   @Post('login')
   @ApiOperation({ summary: 'Login de usuário ou paciente' })
   async login(
@@ -47,6 +53,7 @@ export class AuthController {
     };
   }
 
+  @Public()
   @Post('register/patient')
   @ApiOperation({ summary: 'Registro de novo paciente' })
   async registerPatient(
@@ -61,6 +68,7 @@ export class AuthController {
     };
   }
 
+  @Public()
   @Post('register/user')
   @ApiOperation({ summary: 'Registro de novo usuário via convite' })
   async registerUser(
@@ -75,6 +83,7 @@ export class AuthController {
     };
   }
 
+  @Public()
   @Post('recover-password')
   @ApiOperation({ summary: 'Recuperação de senha' })
   async recoverPassword(
@@ -89,6 +98,7 @@ export class AuthController {
     };
   }
 
+  @Public()
   @Post('reset-password')
   @ApiOperation({ summary: 'Redefinição de senha' })
   async resetPassword(
@@ -103,6 +113,24 @@ export class AuthController {
     };
   }
 
+  @Roles(['all'])
+  @Post('change-password')
+  @ApiOperation({
+    summary: 'Alteração de senha do usuário ou paciente autenticado',
+  })
+  async changePassword(
+    @AuthUser() user: AuthUserDto,
+    @Body() changePasswordDto: ChangePasswordDto,
+  ): Promise<BaseResponse> {
+    await this.changePasswordUseCase.execute({ user, changePasswordDto });
+
+    return {
+      success: true,
+      message: 'Senha alterada com sucesso.',
+    };
+  }
+
+  @Roles(['all'])
   @Post('logout')
   @ApiOperation({ summary: 'Logout do usuário ou paciente' })
   async logout(

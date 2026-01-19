@@ -13,6 +13,7 @@ import { UtilsModule } from '@/utils/utils.module';
 
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
+import { ChangePasswordUseCase } from './use-cases/change-password.use-case';
 import { LogoutUseCase } from './use-cases/logout.use-case';
 import { RecoverPasswordUseCase } from './use-cases/recover-password.use-case';
 import { RegisterPatientUseCase } from './use-cases/register-patient.use-case';
@@ -35,6 +36,7 @@ import { SignInWithEmailUseCase } from './use-cases/sign-in-with-email.use-case'
     ResetPasswordUseCase,
     RegisterPatientUseCase,
     RegisterUserUseCase,
+    ChangePasswordUseCase,
     { provide: APP_GUARD, useClass: AuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
   ],

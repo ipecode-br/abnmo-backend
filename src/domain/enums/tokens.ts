@@ -17,3 +17,6 @@ export const AUTH_TOKENS = [
 
 export const AUTH_TOKEN_ROLES = [...USER_ROLES, 'patient'] as const;
 export type AuthTokenRole = (typeof AUTH_TOKEN_ROLES)[number];
+
+export const ALLOWED_ROLES = ['all', ...AUTH_TOKEN_ROLES] as const;
+export type AllowedRole = (typeof ALLOWED_ROLES)[number];
