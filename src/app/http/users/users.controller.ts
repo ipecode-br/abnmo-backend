@@ -1,19 +1,20 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { AuthUser } from '@/common/decorators/auth-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
 import type { BaseResponse } from '@/domain/schemas/base';
-import type {
-  GetUserResponse,
-  GetUsersResponse,
-} from '@/domain/schemas/users/responses';
 
 import type { AuthUserDto } from '../auth/auth.dtos';
 import { CreateUserInviteUseCase } from './use-cases/create-user-invite.use-case';
 import { GetUserUseCase } from './use-cases/get-user.use-case';
 import { GetUsersUseCase } from './use-cases/get-users.use-case';
-import { CreateUserInviteDto, GetUsersQuery } from './users.dtos';
+import {
+  CreateUserInviteDto,
+  GetUserResponseDto,
+  GetUsersQuery,
+  GetUsersResponseDto,
+} from './users.dtos';
 
 @ApiTags('Usuários')
 @Controller('users')
@@ -42,7 +43,8 @@ export class UsersController {
   @Get()
   @Roles(['manager'])
   @ApiOperation({ summary: 'Lista todos os usuários' })
-  async getUsers(@Query() query: GetUsersQuery): Promise<GetUsersResponse> {
+  @ApiResponse({ status: 200, type: GetUsersResponseDto })
+  async getUsers(@Query() query: GetUsersQuery): Promise<GetUsersResponseDto> {
     const data = await this.getUsersUseCase.execute({ query });
 
     return {
@@ -55,7 +57,8 @@ export class UsersController {
   @Get('me')
   @Roles(['manager', 'nurse', 'specialist'])
   @ApiOperation({ summary: 'Retorna os dados do usuário autenticado' })
-  async getProfile(@AuthUser() user: AuthUserDto): Promise<GetUserResponse> {
+  @ApiResponse({ status: 200, type: GetUserResponseDto })
+  async getProfile(@AuthUser() user: AuthUserDto): Promise<GetUserResponseDto> {
     const { user: data } = await this.getUserUseCase.execute({ id: user.id });
 
     return {

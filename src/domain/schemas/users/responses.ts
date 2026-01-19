@@ -16,7 +16,6 @@ export type UserResponse = z.infer<typeof userResponseSchema>;
 export const getUserResponseSchema = baseResponseSchema.extend({
   data: userResponseSchema,
 });
-export type GetUserResponse = z.infer<typeof getUserResponseSchema>;
 
 export const getUsersResponseSchema = baseResponseSchema.extend({
   data: z.object({
@@ -24,4 +23,3 @@ export const getUsersResponseSchema = baseResponseSchema.extend({
     total: z.number(),
   }),
 });
-export type GetUsersResponse = z.infer<typeof getUsersResponseSchema>;
