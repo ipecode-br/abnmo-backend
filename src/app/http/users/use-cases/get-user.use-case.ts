@@ -29,6 +29,7 @@ export class GetUserUseCase {
         email: true,
         avatar_url: true,
         status: true,
+        role: true,
       },
     });
 

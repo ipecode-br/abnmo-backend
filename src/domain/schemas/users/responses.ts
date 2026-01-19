@@ -9,6 +9,7 @@ export const userResponseSchema = userSchema.pick({
   email: true,
   avatar_url: true,
   status: true,
+  role: true,
 });
 export type UserResponse = z.infer<typeof userResponseSchema>;
 
@@ -16,3 +17,11 @@ export const getUserResponseSchema = baseResponseSchema.extend({
   data: userResponseSchema,
 });
 export type GetUserResponse = z.infer<typeof getUserResponseSchema>;
+
+export const getUsersResponseSchema = baseResponseSchema.extend({
+  data: z.object({
+    users: z.array(userResponseSchema),
+    total: z.number(),
+  }),
+});
+export type GetUsersResponse = z.infer<typeof getUsersResponseSchema>;
