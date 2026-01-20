@@ -37,26 +37,31 @@ npm install
 ### Executando pela primeira vez
 
 1. Copie o arquivo `.env.example` e renomeie para `.env` ou execute o comando:
+
 ```bash
 cp .env.example .env
 ```
 
 2. Com o Docker em execução, inicie a instância do banco de dados:
+
 ```bash
 npm run services:up
 ```
 
 3. Execute as migrações do banco de dados:
+
 ```bash
 npm run db:migrate
 ```
 
 4. Popule o banco de dados com dados de exemplo:
+
 ```bash
 npm run db:seed-dev
 ```
 
 5. Inicie a aplicação em modo de desenvolvimento:
+
 ```bash
 npm run dev
 ```
@@ -64,6 +69,7 @@ npm run dev
 ### Executando a aplicação
 
 Para iniciar a aplicação novamente, execute o comando abaixo com o Docker em funcionamento:
+
 ```bash
 npm run dev
 ```
