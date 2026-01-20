@@ -9,9 +9,11 @@ import type { Repository } from 'typeorm';
 
 import { Referral } from '@/domain/entities/referral';
 
+import type { AuthUserDto } from '../../auth/auth.dtos';
+
 interface CancelReferralUseCaseInput {
   id: string;
-  userId: string;
+  user: AuthUserDto;
 }
 
 @Injectable()
@@ -23,7 +25,7 @@ export class CancelReferralUseCase {
     private readonly referralsRepository: Repository<Referral>,
   ) {}
 
-  async execute({ id, userId }: CancelReferralUseCaseInput): Promise<void> {
+  async execute({ id, user }: CancelReferralUseCaseInput): Promise<void> {
     const referral = await this.referralsRepository.findOne({
       select: { id: true, status: true },
       where: { id },
@@ -37,8 +39,11 @@ export class CancelReferralUseCase {
       throw new BadRequestException('Este encaminhamento já está cancelado.');
     }
 
-    await this.referralsRepository.save({ id, status: 'canceled' });
+    await this.referralsRepository.update({ id }, { status: 'canceled' });
 
-    this.logger.log({ id, userId }, 'Referral canceled successfully.');
+    this.logger.log(
+      { id, userId: user.id, userEmail: user.email, userRole: user.role },
+      'Referral canceled successfully.',
+    );
   }
 }

@@ -28,10 +28,10 @@ export class CreatePatientRequirementUseCase {
     createPatientRequirementDto,
     user,
   }: CreatePatientRequirementUseCaseInput): Promise<void> {
-    const { patient_id } = createPatientRequirementDto;
+    const { patient_id: patientId } = createPatientRequirementDto;
 
     const patient = await this.patientsRepository.findOne({
-      where: { id: patient_id },
+      where: { id: patientId },
       select: { id: true },
     });
 
@@ -49,10 +49,10 @@ export class CreatePatientRequirementUseCase {
     this.logger.log(
       {
         id: patientRequirement.id,
-        patientId: patient_id,
+        patientId,
         userId: user.id,
         userEmail: user.email,
-        role: user.role,
+        userRole: user.role,
       },
       'Requirement created successfully',
     );

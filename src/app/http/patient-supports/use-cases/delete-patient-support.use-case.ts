@@ -44,7 +44,7 @@ export class DeletePatientSupportUseCase {
           patientId,
           userId: user.id,
           userEmail: user.email,
-          role: user.role,
+          userRole: user.role,
         },
         'Remove patient support failed: User does not have permission to remove this patient support',
       );
@@ -61,7 +61,7 @@ export class DeletePatientSupportUseCase {
         patientId,
         userId: user.id,
         userEmail: user.email,
-        role: user.role,
+        userRole: user.role,
       },
       'Patient support removed successfully',
     );

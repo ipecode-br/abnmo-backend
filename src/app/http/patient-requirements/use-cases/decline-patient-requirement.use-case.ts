@@ -52,7 +52,7 @@ export class DeclinePatientRequirementUseCase {
     });
 
     this.logger.log(
-      { id, userId: user.id, userEmail: user.email, role: user.role },
+      { id, userId: user.id, userEmail: user.email, userRole: user.role },
       'Patient requirement declined successfully',
     );
   }

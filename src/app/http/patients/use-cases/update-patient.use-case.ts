@@ -35,7 +35,7 @@ export class UpdatePatientUseCase {
   }: UpdatePatientUseCaseInput): Promise<void> {
     if (user.role === 'patient' && user.id !== id) {
       this.logger.log(
-        { id, userId: user.id, userEmail: user.email, role: user.role },
+        { id, userId: user.id, userEmail: user.email, userRole: user.role },
         'Update patient failed: User does not have permission to update this patient',
       );
       throw new ForbiddenException(
@@ -65,7 +65,7 @@ export class UpdatePatientUseCase {
             cpf: updatePatientDto.cpf,
             userId: user.id,
             userEmail: user.email,
-            role: user.role,
+            userRole: user.role,
           },
           'Update patient failed: CPF already registered',
         );
@@ -82,11 +82,11 @@ export class UpdatePatientUseCase {
       if (patientWithSameEmail && patientWithSameEmail.id !== id) {
         this.logger.error(
           {
-            patientId: id,
+            id,
             email: updatePatientDto.email,
             userId: user.id,
             userEmail: user.email,
-            role: user.role,
+            userRole: user.role,
           },
           'Update patient failed: Email already registered',
         );
@@ -97,12 +97,7 @@ export class UpdatePatientUseCase {
     await this.patientsRepository.save({ id, ...updatePatientDto });
 
     this.logger.log(
-      {
-        patientId: id,
-        userId: user.id,
-        userEmail: user.email,
-        role: user.role,
-      },
+      { id, userId: user.id, userEmail: user.email, userRole: user.role },
       'Patient updated successfully',
     );
   }

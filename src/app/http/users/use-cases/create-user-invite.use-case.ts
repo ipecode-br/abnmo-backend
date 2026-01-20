@@ -71,7 +71,14 @@ export class CreateUserInviteUseCase {
     // TODO: send email with register user URL including invite token
 
     this.logger.log(
-      { id: newInviteUserToken.id, email, role, createdBy: user.id },
+      {
+        id: newInviteUserToken.id,
+        email,
+        role,
+        userId: user.id,
+        userEmail: user.email,
+        userRole: user.role,
+      },
       'Invite user token created successfully',
     );
   }

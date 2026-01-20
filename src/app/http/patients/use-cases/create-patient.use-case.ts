@@ -38,7 +38,7 @@ export class CreatePatientUseCase {
 
     if (patientWithSameEmail) {
       this.logger.error(
-        { email, userId: user.id, userEmail: user.email, role: user.role },
+        { email, userId: user.id, userEmail: user.email, userRole: user.role },
         'Create patient failed: Email already registered',
       );
       throw new ConflictException('O e-mail informado já está registrado.');
@@ -51,7 +51,7 @@ export class CreatePatientUseCase {
 
     if (patientWithSameCpf) {
       this.logger.error(
-        { cpf, userId: user.id, userEmail: user.email, role: user.role },
+        { cpf, userId: user.id, userEmail: user.email, userRole: user.role },
         'Create patient failed: CPF already registered',
       );
       throw new ConflictException('O CPF informado já está registrado.');
@@ -89,7 +89,7 @@ export class CreatePatientUseCase {
           email,
           userId: user.id,
           userEmail: user.email,
-          role: user.role,
+          userRole: user.role,
         },
         'Patient created successfully',
       );

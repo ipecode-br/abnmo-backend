@@ -39,14 +39,14 @@ export class DeactivatePatientUseCase {
       throw new ConflictException('Este paciente já está inativo.');
     }
 
-    await this.patientsRepository.save({ id, status: 'inactive' });
+    await this.patientsRepository.update({ id }, { status: 'inactive' });
 
     this.logger.log(
       {
         patientId: id,
         userId: user.id,
         userEmail: user.email,
-        role: user.role,
+        userRole: user.role,
       },
       'Patient deactivated successfully',
     );

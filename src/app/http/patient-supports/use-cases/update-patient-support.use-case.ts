@@ -50,7 +50,7 @@ export class UpdatePatientSupportUseCase {
           patientId,
           userId: user.id,
           userEmail: user.email,
-          role: user.role,
+          userRole: user.role,
         },
         'Update patient support failed: User does not have permission to update this patient support',
       );
@@ -70,7 +70,7 @@ export class UpdatePatientSupportUseCase {
         patientId,
         userId: user.id,
         userEmail: user.email,
-        role: user.role,
+        userRole: user.role,
       },
       'Patient support updated successfully',
     );

@@ -37,7 +37,7 @@ export class CreatePatientSupportUseCase {
   }: CreatePatientSupportUseCaseInput): Promise<void> {
     if (user.id !== patientId) {
       this.logger.log(
-        { patientId, userId: user.id, role: user.role },
+        { patientId, userId: user.id, userRole: user.role },
         'Create patient support failed: User does not have permission to create patient support for this patient',
       );
       throw new ForbiddenException(
@@ -67,7 +67,7 @@ export class CreatePatientSupportUseCase {
         patientId,
         userId: user.id,
         userEmail: user.email,
-        role: user.role,
+        userRole: user.role,
       },
       'Patient support created successfully',
     );

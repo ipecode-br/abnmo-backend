@@ -34,7 +34,7 @@ export class UpdateUserUseCase {
   }: UpdateUserUseCaseInput): Promise<void> {
     if (user.role !== 'admin' && user.id !== id) {
       this.logger.log(
-        { id, userId: user.id, role: user.role },
+        { id, userId: user.id, userEmail: user.email, userRole: user.role },
         'Update user failed: User does not have permission to update this user',
       );
       throw new ForbiddenException(
@@ -53,7 +53,13 @@ export class UpdateUserUseCase {
     await this.usersRepository.save(userToUpdate);
 
     this.logger.log(
-      { id, email: updateUserDto.email },
+      {
+        id,
+        email: updateUserDto.email,
+        userId: user.id,
+        userEmail: user.email,
+        userRole: user.role,
+      },
       'User updated successfully',
     );
   }

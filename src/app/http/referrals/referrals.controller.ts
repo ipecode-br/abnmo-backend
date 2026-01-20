@@ -57,8 +57,8 @@ export class ReferralsController {
     @Body() createReferralDto: CreateReferralDto,
   ): Promise<BaseResponse> {
     await this.createReferralUseCase.execute({
-      userId: user.id,
       createReferralDto,
+      user,
     });
 
     return { success: true, message: 'Encaminhamento cadastrado com sucesso.' };
@@ -72,7 +72,7 @@ export class ReferralsController {
     @Param('id') id: string,
     @AuthUser() user: AuthUserDto,
   ): Promise<BaseResponse> {
-    await this.cancelReferralUseCase.execute({ id, userId: user.id });
+    await this.cancelReferralUseCase.execute({ id, user });
 
     return {
       success: true,

@@ -39,10 +39,10 @@ export class CancelAppointmentUseCase {
       throw new BadRequestException('Este atendimento já está cancelado.');
     }
 
-    await this.appointmentsRepository.save({ id, status: 'canceled' });
+    await this.appointmentsRepository.update({ id }, { status: 'canceled' });
 
     this.logger.log(
-      { id, userId: user.id, userEmail: user.email, role: user.role },
+      { id, userId: user.id, userEmail: user.email, userRole: user.role },
       'Appointment canceled successfully.',
     );
   }

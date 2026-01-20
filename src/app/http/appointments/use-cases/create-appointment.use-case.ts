@@ -63,10 +63,10 @@ export class CreateAppointmentUseCase {
     this.logger.log(
       {
         id: appointment.id,
-        patientId: patientId,
+        patientId,
         userId: user.id,
         userEmail: user.email,
-        role: user.role,
+        userRole: user.role,
       },
       'Appointment created successfully',
     );
