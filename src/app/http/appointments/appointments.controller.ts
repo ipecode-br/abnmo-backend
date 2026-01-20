@@ -8,17 +8,17 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { AuthUser } from '@/common/decorators/auth-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
-import type { GetAppointmentsResponse } from '@/domain/schemas/appointments/responses';
-import { BaseResponse } from '@/domain/schemas/base';
+import { BaseResponse } from '@/common/dtos';
 
 import type { AuthUserDto } from '../auth/auth.dtos';
-import { GetAppointmentsQuery } from './appointments.dtos';
 import {
   CreateAppointmentDto,
+  GetAppointmentsQuery,
+  GetAppointmentsResponse,
   UpdateAppointmentDto,
 } from './appointments.dtos';
 import { CancelAppointmentUseCase } from './use-cases/cancel-appointment.use-case';
@@ -39,6 +39,7 @@ export class AppointmentsController {
   @Get()
   @Roles(['manager', 'nurse', 'specialist', 'patient'])
   @ApiOperation({ summary: 'Lista todos os atendimentos' })
+  @ApiResponse({ type: GetAppointmentsResponse })
   async getAppointments(
     @Query() query: GetAppointmentsQuery,
     @AuthUser() user: AuthUserDto,
@@ -55,6 +56,7 @@ export class AppointmentsController {
   @Post()
   @Roles(['nurse', 'manager'])
   @ApiOperation({ summary: 'Cadastra um novo atendimento' })
+  @ApiResponse({ type: BaseResponse })
   async create(
     @AuthUser() user: AuthUserDto,
     @Body() createAppointmentDto: CreateAppointmentDto,
@@ -70,6 +72,7 @@ export class AppointmentsController {
   @Put(':id')
   @Roles(['nurse', 'manager', 'specialist'])
   @ApiOperation({ summary: 'Atualiza os dados do atendimento' })
+  @ApiResponse({ type: BaseResponse })
   public async update(
     @Param('id') id: string,
     @AuthUser() user: AuthUserDto,
@@ -90,6 +93,7 @@ export class AppointmentsController {
   @Roles(['nurse', 'manager', 'specialist'])
   @Patch(':id/cancel')
   @ApiOperation({ summary: 'Cancela o atendimento' })
+  @ApiResponse({ type: BaseResponse })
   async cancel(
     @Param('id') id: string,
     @AuthUser() user: AuthUserDto,

@@ -44,12 +44,10 @@ export const createPatientSchema = z
       medication_desc: true,
     }),
   );
-export type CreatePatient = z.infer<typeof createPatientSchema>;
 
 export const updatePatientSchema = createPatientSchema
   .omit({ supports: true })
   .merge(patientSchema.pick({ status: true }));
-export type UpdatePatient = z.infer<typeof updatePatientSchema>;
 
 export const getPatientsQuerySchema = baseQuerySchema
   .pick({
@@ -76,4 +74,3 @@ export const getPatientsQuerySchema = baseQuerySchema
       path: ['endDate'],
     },
   );
-export type GetPatientsQuery = z.infer<typeof getPatientsQuerySchema>;

@@ -16,7 +16,6 @@ export const createReferralSchema = referralSchema.pick({
   annotation: true,
   professional_name: true,
 });
-export type CreateReferral = z.infer<typeof createReferralSchema>;
 
 export const getReferralsQuerySchema = baseQuerySchema
   .pick({

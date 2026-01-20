@@ -46,7 +46,7 @@ export class StatisticsController {
 
   @Get('appointments-total')
   @ApiOperation({ summary: 'Retorna o número total de atendimentos' })
-  @ApiResponse({ status: 200, type: GetTotalAppointmentsResponse })
+  @ApiResponse({ type: GetTotalAppointmentsResponse })
   async getTotalAppointments(
     @Query() query: GetTotalReferralsQuery,
   ): Promise<GetTotalAppointmentsResponse> {
@@ -63,7 +63,7 @@ export class StatisticsController {
 
   @Get('patients-total')
   @ApiOperation({ summary: 'Retorna o número total de pacientes' })
-  @ApiResponse({ status: 200, type: GetTotalPatientsByStatusResponse })
+  @ApiResponse({ type: GetTotalPatientsByStatusResponse })
   async getTotalPatients(): Promise<GetTotalPatientsByStatusResponse> {
     const data = await this.getTotalPatientsByStatusUseCase.execute();
 
@@ -76,7 +76,7 @@ export class StatisticsController {
 
   @Get('patients-by-gender')
   @ApiOperation({ summary: 'Retorna o número total de pacientes por gênero' })
-  @ApiResponse({ status: 200, type: GetTotalPatientsByGenderResponse })
+  @ApiResponse({ type: GetTotalPatientsByGenderResponse })
   async getPatientsByGender(
     @Query() query: GetTotalPatientsByFieldQuery,
   ): Promise<GetTotalPatientsByGenderResponse> {
@@ -97,7 +97,7 @@ export class StatisticsController {
 
   @Get('patients-by-city')
   @ApiOperation({ summary: 'Retorna o número total de pacientes por cidade' })
-  @ApiResponse({ status: 200, type: GetTotalPatientsByCityResponse })
+  @ApiResponse({ type: GetTotalPatientsByCityResponse })
   async getPatientsByCity(
     @Query() query: GetTotalPatientsByFieldQuery,
   ): Promise<GetTotalPatientsByCityResponse> {
@@ -122,7 +122,7 @@ export class StatisticsController {
 
   @Get('referrals-total')
   @ApiOperation({ summary: 'Retorna o número total de encaminhamentos' })
-  @ApiResponse({ status: 200, type: GetTotalReferralsResponse })
+  @ApiResponse({ type: GetTotalReferralsResponse })
   async getTotalReferrals(
     @Query() query: GetTotalReferralsQuery,
   ): Promise<GetTotalReferralsResponse> {
@@ -141,7 +141,7 @@ export class StatisticsController {
   @ApiOperation({
     summary: 'Retorna o número total de encaminhamentos por categoria',
   })
-  @ApiResponse({ status: 200, type: GetTotalReferralsByCategoryResponse })
+  @ApiResponse({ type: GetTotalReferralsByCategoryResponse })
   async getTotalReferralsByCategory(
     @Query() query: GetTotalReferralsByCategoryQuery,
   ): Promise<GetTotalReferralsByCategoryResponse> {
@@ -160,9 +160,9 @@ export class StatisticsController {
 
   @Get('referrals-by-state')
   @ApiOperation({
-    summary: 'Retorna o número total de encaminhamentos por estado',
+    summary: 'Retorna o número total de pacientes encaminhados por estado',
   })
-  @ApiResponse({ status: 200, type: GetTotalReferredPatientsByStateResponse })
+  @ApiResponse({ type: GetTotalReferredPatientsByStateResponse })
   async getReferredPatientsByState(
     @Query() query: GetTotalReferredPatientsByStateQuery,
   ): Promise<GetTotalReferredPatientsByStateResponse> {
@@ -184,7 +184,7 @@ export class StatisticsController {
 
   @Get('referred-patients-total')
   @ApiOperation({ summary: 'Retorna o número total de pacientes encaminhados' })
-  @ApiResponse({ status: 200, type: GetTotalReferredPatientsResponse })
+  @ApiResponse({ type: GetTotalReferredPatientsResponse })
   async getTotalReferredPatients(
     @Query() query: GetTotalReferredPatientsQuery,
   ): Promise<GetTotalReferredPatientsResponse> {
@@ -196,8 +196,7 @@ export class StatisticsController {
 
     return {
       success: true,
-      message:
-        'Número total de pacientes encaminhamados retornado com sucesso.',
+      message: 'Número total de pacientes encaminhados retornado com sucesso.',
       data: { total },
     };
   }

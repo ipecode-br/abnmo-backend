@@ -8,20 +8,18 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { AuthUser } from '@/common/decorators/auth-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
-import { BaseResponse } from '@/domain/schemas/base';
-import type {
-  GetPatientResponse,
-  GetPatientsResponse,
-} from '@/domain/schemas/patients/responses';
+import { BaseResponse } from '@/common/dtos';
 
 import type { AuthUserDto } from '../auth/auth.dtos';
 import {
   CreatePatientDto,
+  GetPatientResponse,
   GetPatientsQuery,
+  GetPatientsResponse,
   UpdatePatientDto,
 } from './patients.dtos';
 import { CreatePatientUseCase } from './use-cases/create-patient.use-case';
@@ -44,6 +42,7 @@ export class PatientsController {
   @Get()
   @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Lista todos os pacientes' })
+  @ApiResponse({ type: GetPatientsResponse })
   async getPatients(
     @Query() query: GetPatientsQuery,
   ): Promise<GetPatientsResponse> {
@@ -59,6 +58,7 @@ export class PatientsController {
   @Get(':id')
   @Roles(['manager', 'nurse', 'specialist'])
   @ApiOperation({ summary: 'Retorna os dados do paciente' })
+  @ApiResponse({ type: GetPatientResponse })
   async getPatientById(@Param('id') id: string): Promise<GetPatientResponse> {
     const { patient } = await this.getPatientUseCase.execute({ id });
 
@@ -72,6 +72,7 @@ export class PatientsController {
   @Post()
   @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Cadastra um novo paciente' })
+  @ApiResponse({ type: BaseResponse })
   async create(
     @AuthUser() user: AuthUserDto,
     @Body() createPatientDto: CreatePatientDto,
@@ -87,6 +88,7 @@ export class PatientsController {
   @Put(':id')
   @Roles(['manager', 'nurse', 'patient'])
   @ApiOperation({ summary: 'Atualiza os dados do paciente' })
+  @ApiResponse({ type: BaseResponse })
   async update(
     @Param('id') id: string,
     @AuthUser() user: AuthUserDto,
@@ -103,6 +105,7 @@ export class PatientsController {
   @Patch(':id/deactivate')
   @Roles(['manager'])
   @ApiOperation({ summary: 'Inativa o paciente' })
+  @ApiResponse({ type: BaseResponse })
   async deactivatePatient(
     @Param('id') id: string,
     @AuthUser() user: AuthUserDto,

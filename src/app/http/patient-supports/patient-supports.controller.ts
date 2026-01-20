@@ -1,9 +1,9 @@
 import { Body, Controller, Delete, Param, Post, Put } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { AuthUser } from '@/common/decorators/auth-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
-import type { BaseResponse } from '@/domain/schemas/base';
+import { BaseResponse } from '@/common/dtos';
 
 import type { AuthUserDto } from '../auth/auth.dtos';
 import {
@@ -28,6 +28,7 @@ export class PatientSupportsController {
   @ApiOperation({
     summary: 'Cadastra um novo contato de apoio para o paciente',
   })
+  @ApiResponse({ type: BaseResponse })
   async createPatientSupport(
     @Param('patientId') patientId: string,
     @AuthUser() user: AuthUserDto,
@@ -48,6 +49,7 @@ export class PatientSupportsController {
   @Put(':id')
   @Roles(['nurse', 'manager', 'patient'])
   @ApiOperation({ summary: 'Atualiza os dados do contato de apoio' })
+  @ApiResponse({ type: BaseResponse })
   async updatePatientSupport(
     @Param('id') id: string,
     @AuthUser() user: AuthUserDto,
@@ -68,6 +70,7 @@ export class PatientSupportsController {
   @Delete(':id')
   @Roles(['nurse', 'manager', 'patient'])
   @ApiOperation({ summary: 'Remove o contato de apoio' })
+  @ApiResponse({ type: BaseResponse })
   async removePatientSupport(
     @Param('id') id: string,
     @AuthUser() user: AuthUserDto,

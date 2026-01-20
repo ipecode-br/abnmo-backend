@@ -7,21 +7,19 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { AuthUser } from '@/common/decorators/auth-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
-import { BaseResponse } from '@/domain/schemas/base';
-import type {
-  GetPatientRequirementsByPatientIdResponse,
-  GetPatientRequirementsResponse,
-} from '@/domain/schemas/patient-requirement/responses';
+import { BaseResponse } from '@/common/dtos';
 
 import type { AuthUserDto } from '../auth/auth.dtos';
 import {
   CreatePatientRequirementDto,
   GetPatientRequirementsByPatientIdQuery,
+  GetPatientRequirementsByPatientIdResponse,
   GetPatientRequirementsQuery,
+  GetPatientRequirementsResponse,
 } from './patient-requirements.dtos';
 import { ApprovePatientRequirementUseCase } from './use-cases/approve-patient-requirement.use-case';
 import { CreatePatientRequirementUseCase } from './use-cases/create-patient-requirement.use-case';
@@ -43,6 +41,7 @@ export class PatientRequirementsController {
   @Get()
   @Roles(['nurse', 'manager'])
   @ApiOperation({ summary: 'Lista todas as solicitações' })
+  @ApiResponse({ type: GetPatientRequirementsResponse })
   async getPatientRequirements(
     @Query() query: GetPatientRequirementsQuery,
   ): Promise<GetPatientRequirementsResponse> {
@@ -59,6 +58,7 @@ export class PatientRequirementsController {
   @ApiOperation({
     summary: 'Lista todas as solicitações do paciente autenticado',
   })
+  @ApiResponse({ type: GetPatientRequirementsByPatientIdResponse })
   async getPatientRequirementsLogged(
     @AuthUser() user: AuthUserDto,
     @Query() query: GetPatientRequirementsByPatientIdQuery,
@@ -78,6 +78,7 @@ export class PatientRequirementsController {
   @Post()
   @Roles(['nurse', 'manager'])
   @ApiOperation({ summary: 'Cadastra uma nova solicitação' })
+  @ApiResponse({ type: BaseResponse })
   async create(
     @AuthUser() user: AuthUserDto,
     @Body() createPatientRequirementDto: CreatePatientRequirementDto,
@@ -96,6 +97,7 @@ export class PatientRequirementsController {
   @Patch(':id/approve')
   @Roles(['nurse', 'manager'])
   @ApiOperation({ summary: 'Aprova a solicitação' })
+  @ApiResponse({ type: BaseResponse })
   async approve(
     @Param('id') id: string,
     @AuthUser() user: AuthUserDto,
@@ -111,6 +113,7 @@ export class PatientRequirementsController {
   @Patch(':id/decline')
   @Roles(['nurse', 'manager'])
   @ApiOperation({ summary: 'Recusa a solicitação' })
+  @ApiResponse({ type: BaseResponse })
   async decline(
     @Param('id') id: string,
     @AuthUser() user: AuthUserDto,

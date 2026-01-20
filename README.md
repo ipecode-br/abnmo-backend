@@ -1,10 +1,12 @@
-# 🧠 ABNMO Backend
+# Sistema Viver Melhor (SVM) - ABNMO - Back-End
 
-Este repositório contém a API do projeto ABNMO, construída com [NestJS](https://nestjs.com/), [TypeORM](https://typeorm.io/) e banco de dados MySQL.
+Aplicação Back-End do Sistema Viver Melhor (SVM), desenvolvida para a ABNMO. Este sistema foi projetado para equipes multidisciplinares de saúde, proporcionando uma plataforma centralizada para acompanhamento de pacientes, gerenciamento de encaminhamentos e consolidação de informações clínicas.
+
+O sistema otimiza o fluxo de atendimento com integração de dados em uma interface responsiva, acessível e adaptável a diversos dispositivos.
 
 ---
 
-## 🚀 Tecnologias Utilizadas
+## Tecnologias utilizadas
 
 - Node.js
 - NestJS
@@ -12,101 +14,68 @@ Este repositório contém a API do projeto ABNMO, construída com [NestJS](https
 - MySQL
 - Jest (testes)
 - ESLint + Prettier (linting e formatação)
-- Zod (validação)
+- Zod (schemas e validação)
+- Swagger (documentação)
+- Docker (containers com banco de dados e app de desenvolvimento)
 
 ---
 
-## 📦 Instalação
+## Instalação
 
 Clone o repositório e instale as dependências:
 
 ```bash
-git clone https://github.com/seu-usuario/abnmo-backend.git
+git clone https://github.com/ipecode-br/abnmo-backend.git
 cd abnmo-backend
 npm install
 ```
 
 ---
 
-## ⚙️ Ambiente de Desenvolvimento
+## Ambiente de desenvolvimento
 
-Para rodar o projeto localmente:
+### Executando pela primeira vez
 
-1. Crie um arquivo `.env` na raiz do projeto com as credenciais de acesso ao banco de dados e outras variáveis necessárias.
-2. Execute o comando:
-
+1. Copie o arquivo `.env.example` e renomeie para `.env` ou execute o comando:
 ```bash
-npm run start:dev
+cp .env.example .env
 ```
 
-Isso iniciará o servidor em modo de desenvolvimento com `watch`.
-
----
-
-## 🧪 Testes
-
-Execute os testes unitários com:
-
+2. Com o Docker em execução, inicie a instância do banco de dados:
 ```bash
-npm run test
+npm run services:up
 ```
 
-Para ver a cobertura:
-
-```bash
-npm run test:cov
-```
-
----
-
-## 🧬 Migrations
-
-Para gerar uma nova migration:
-
-```bash
-npm run db:generate NomeDaMigration
-```
-
-Para rodar as migrations:
-
+3. Execute as migrações do banco de dados:
 ```bash
 npm run db:migrate
 ```
 
-## 👨‍💻 Scripts úteis
+4. Popule o banco de dados com dados de exemplo:
+```bash
+npm run db:seed-dev
+```
 
-- `npm run build`: Compila o projeto
-- `npm run start`: Inicia o app em produção
-- `npm run start:prod`: Inicia usando o `dist`
-- `npm run lint:eslint:check`: Verifica problemas de lint
-- `npm run lint:prettier:fix`: Corrige problemas de formatação
+5. Inicie a aplicação em modo de desenvolvimento:
+```bash
+npm run dev
+```
+
+### Executando a aplicação
+
+Para iniciar a aplicação novamente, execute o comando abaixo com o Docker em funcionamento:
+```bash
+npm run dev
+```
 
 ---
 
-## 📡 Padrão de Respostas da API
+## Scripts úteis
 
-### ✅ Sucesso
-
-```json
-{
-  "success": true,
-  "message": "Mensagem descritiva do sucesso",
-  "data": {
-    // dados retornados
-  }
-}
-```
-
-### ❌ Erro
-
-```json
-{
-  "success": false,
-  "message": "Mensagem descritiva do erro",
-  "data": null
-}
-```
-
-## Para mais detalhes consulte o Wiki do projeto em:
-
-## https://github.com/ipecode-br/abnmo-backend/wiki
+- `npm run dev`: Inicia o container do banco de dados (Docker), aguarda a conexão estar disponível, executa as migrações (se houver pendências) e inicia o app em desenvolvimento
+- `npm run start:dev`: Inicia apenas o app em desenvolvimento
+- `npm run services:stop`: Interrompe a execução do container do banco de dados (Docker)
+- `npm run services:down`: Exclui o container do banco de dados (Docker)
+- `npm run lint:eslint:check`: Verifica problemas de lint
+- `npm run lint:prettier:check`: Verifica problemas de formatação
+- `npm run lint:prettier:fix`: Corrige problemas de formatação

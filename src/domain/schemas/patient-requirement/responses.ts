@@ -27,9 +27,6 @@ export const getPatientRequirementsResponseSchema = baseResponseSchema.extend({
     total: z.number(),
   }),
 });
-export type GetPatientRequirementsResponse = z.infer<
-  typeof getPatientRequirementsResponseSchema
->;
 
 export const patientRequirementByPatientIdSchema =
   patientRequirementSchema.pick({
@@ -54,6 +51,3 @@ export const getPatientRequirementsByPatientIdResponseSchema =
       total: z.number(),
     }),
   });
-export type GetPatientRequirementsByPatientIdResponse = z.infer<
-  typeof getPatientRequirementsByPatientIdResponseSchema
->;

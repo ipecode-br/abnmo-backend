@@ -1,13 +1,13 @@
 import { Body, Controller, Post, Res } from '@nestjs/common';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 import { AuthUser } from '@/common/decorators/auth-user.decorator';
 import { Cookies } from '@/common/decorators/cookies.decorator';
 import { Public } from '@/common/decorators/public.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
+import { BaseResponse } from '@/common/dtos';
 import { COOKIES_MAPPING } from '@/domain/cookies';
-import type { BaseResponse } from '@/domain/schemas/base';
 
 import {
   AuthUserDto,
@@ -41,6 +41,7 @@ export class AuthController {
   @Public()
   @Post('login')
   @ApiOperation({ summary: 'Inicia a sessão do usuário ou paciente' })
+  @ApiResponse({ type: BaseResponse })
   async login(
     @Body() signInWithEmailDto: SignInWithEmailDto,
     @Res({ passthrough: true }) response: Response,
@@ -56,6 +57,7 @@ export class AuthController {
   @Public()
   @Post('register/patient')
   @ApiOperation({ summary: 'Registra um novo paciente' })
+  @ApiResponse({ type: BaseResponse })
   async registerPatient(
     @Body() registerPatientDto: RegisterPatientDto,
     @Res({ passthrough: true }) response: Response,
@@ -71,6 +73,7 @@ export class AuthController {
   @Public()
   @Post('register/user')
   @ApiOperation({ summary: 'Registro um novo usuário via convite' })
+  @ApiResponse({ type: BaseResponse })
   async registerUser(
     @Body() registerUserDto: RegisterUserDto,
     @Res({ passthrough: true }) response: Response,
@@ -86,6 +89,7 @@ export class AuthController {
   @Public()
   @Post('recover-password')
   @ApiOperation({ summary: 'Solicita recuperação de senha' })
+  @ApiResponse({ type: BaseResponse })
   async recoverPassword(
     @Body() recoverPasswordDto: RecoverPasswordDto,
   ): Promise<BaseResponse> {
@@ -101,6 +105,7 @@ export class AuthController {
   @Public()
   @Post('reset-password')
   @ApiOperation({ summary: 'Solicita redefinição de senha' })
+  @ApiResponse({ type: BaseResponse })
   async resetPassword(
     @Body() resetPasswordDto: ResetPasswordDto,
     @Res({ passthrough: true }) response: Response,
@@ -118,6 +123,7 @@ export class AuthController {
   @ApiOperation({
     summary: 'Altera a senha do usuário ou paciente autenticado',
   })
+  @ApiResponse({ type: BaseResponse })
   async changePassword(
     @AuthUser() user: AuthUserDto,
     @Body() changePasswordDto: ChangePasswordDto,
@@ -133,6 +139,7 @@ export class AuthController {
   @Roles(['all'])
   @Post('logout')
   @ApiOperation({ summary: 'Encerra a sessão do usuário ou paciente' })
+  @ApiResponse({ type: BaseResponse })
   async logout(
     @Cookies(COOKIES_MAPPING.refresh_token) refreshToken: string,
     @Res({ passthrough: true }) response: Response,

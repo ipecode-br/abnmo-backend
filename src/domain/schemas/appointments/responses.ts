@@ -15,6 +15,3 @@ export const getAppointmentsResponseSchema = baseResponseSchema.extend({
     total: z.number(),
   }),
 });
-export type GetAppointmentsResponse = z.infer<
-  typeof getAppointmentsResponseSchema
->;

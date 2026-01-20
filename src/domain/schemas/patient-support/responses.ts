@@ -9,13 +9,7 @@ export const getPatientSupportsResponseSchema = baseResponseSchema.extend({
     total: z.number(),
   }),
 });
-export type GetPatientSupportsResponse = z.infer<
-  typeof getPatientSupportsResponseSchema
->;
 
 export const getPatientSupportResponseSchema = baseResponseSchema.extend({
   data: patientSupportSchema,
 });
-export type GetPatientSupportResponse = z.infer<
-  typeof getPatientSupportResponseSchema
->;

@@ -11,8 +11,9 @@ import {
 
 import { User } from '@/domain/entities/user';
 import type { UsersOrderBy } from '@/domain/enums/users';
-import type { GetUsersQuery } from '@/domain/schemas/users/requests';
 import type { UserResponse } from '@/domain/schemas/users/responses';
+
+import type { GetUsersQuery } from '../users.dtos';
 
 interface GetUsersUseCaseInput {
   query: GetUsersQuery;

@@ -15,4 +15,3 @@ export const getReferralsResponseSchema = baseResponseSchema.extend({
     total: z.number(),
   }),
 });
-export type GetReferralsResponse = z.infer<typeof getReferralsResponseSchema>;

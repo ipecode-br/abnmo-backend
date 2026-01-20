@@ -5,8 +5,23 @@ import {
   getPatientsQuerySchema,
   updatePatientSchema,
 } from '@/domain/schemas/patients/requests';
+import {
+  getAllPatientsListResponseSchema,
+  getPatientResponseSchema,
+  getPatientsResponseSchema,
+} from '@/domain/schemas/patients/responses';
 
 export class GetPatientsQuery extends createZodDto(getPatientsQuerySchema) {}
+export class GetPatientsResponse extends createZodDto(
+  getPatientsResponseSchema,
+) {}
+export class GetAllPatientsListResponse extends createZodDto(
+  getAllPatientsListResponseSchema,
+) {}
+
+export class GetPatientResponse extends createZodDto(
+  getPatientResponseSchema,
+) {}
 
 export class CreatePatientDto extends createZodDto(createPatientSchema) {}
 

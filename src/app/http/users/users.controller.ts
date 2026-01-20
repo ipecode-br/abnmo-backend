@@ -3,7 +3,7 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { AuthUser } from '@/common/decorators/auth-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
-import type { BaseResponse } from '@/domain/schemas/base';
+import { BaseResponse } from '@/common/dtos';
 
 import type { AuthUserDto } from '../auth/auth.dtos';
 import { CreateUserInviteUseCase } from './use-cases/create-user-invite.use-case';
@@ -28,6 +28,7 @@ export class UsersController {
   @Post('invite')
   @Roles(['manager'])
   @ApiOperation({ summary: 'Cria convite para registro de usuário' })
+  @ApiResponse({ type: BaseResponse })
   async createUserInvite(
     @AuthUser() user: AuthUserDto,
     @Body() createUserInviteDto: CreateUserInviteDto,
@@ -43,7 +44,7 @@ export class UsersController {
   @Get()
   @Roles(['manager'])
   @ApiOperation({ summary: 'Lista todos os usuários' })
-  @ApiResponse({ status: 200, type: GetUsersResponse })
+  @ApiResponse({ type: GetUsersResponse })
   async getUsers(@Query() query: GetUsersQuery): Promise<GetUsersResponse> {
     const data = await this.getUsersUseCase.execute({ query });
 
@@ -57,7 +58,7 @@ export class UsersController {
   @Get('me')
   @Roles(['manager', 'nurse', 'specialist'])
   @ApiOperation({ summary: 'Retorna os dados do usuário autenticado' })
-  @ApiResponse({ status: 200, type: GetUserResponse })
+  @ApiResponse({ type: GetUserResponse })
   async getProfile(@AuthUser() user: AuthUserDto): Promise<GetUserResponse> {
     const { user: data } = await this.getUserUseCase.execute({ id: user.id });
 

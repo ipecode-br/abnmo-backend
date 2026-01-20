@@ -14,9 +14,6 @@ export const createPatientRequirementSchema = patientRequirementSchema.pick({
   title: true,
   description: true,
 });
-export type CreatePatientRequirement = z.infer<
-  typeof createPatientRequirementSchema
->;
 
 export const getPatientRequirementsQuerySchema = baseQuerySchema
   .pick({
@@ -43,9 +40,6 @@ export const getPatientRequirementsQuerySchema = baseQuerySchema
       path: ['endDate'],
     },
   );
-export type GetPatientRequirementsQuery = z.infer<
-  typeof getPatientRequirementsQuerySchema
->;
 
 export const getPatientRequirementsByPatientIdQuerySchema = baseQuerySchema
   .pick({
@@ -68,6 +62,3 @@ export const getPatientRequirementsByPatientIdQuerySchema = baseQuerySchema
       path: ['endDate'],
     },
   );
-export type GetPatientRequirementsByPatientIdQuery = z.infer<
-  typeof getPatientRequirementsByPatientIdQuerySchema
->;

@@ -10,11 +10,11 @@ import {
   getUsersResponseSchema,
 } from '@/domain/schemas/users/responses';
 
-export class CreateUserInviteDto extends createZodDto(createUserInviteSchema) {}
-
-export class UpdateUserDto extends createZodDto(updateUserSchema) {}
+export class GetUsersQuery extends createZodDto(getUsersQuerySchema) {}
+export class GetUsersResponse extends createZodDto(getUsersResponseSchema) {}
 
 export class GetUserResponse extends createZodDto(getUserResponseSchema) {}
 
-export class GetUsersQuery extends createZodDto(getUsersQuerySchema) {}
-export class GetUsersResponse extends createZodDto(getUsersResponseSchema) {}
+export class CreateUserInviteDto extends createZodDto(createUserInviteSchema) {}
+
+export class UpdateUserDto extends createZodDto(updateUserSchema) {}

@@ -14,7 +14,6 @@ export const createUserInviteSchema = userSchema.pick({
   email: true,
   role: true,
 });
-export type CreateUserInviteSchema = z.infer<typeof createUserInviteSchema>;
 
 export const createUserSchema = userSchema.pick({
   name: true,
@@ -22,7 +21,6 @@ export const createUserSchema = userSchema.pick({
   password: true,
   avatar_url: true,
 });
-export type CreateUser = z.infer<typeof createUserSchema>;
 
 export const updateUserSchema = userSchema.omit({
   id: true,
@@ -30,7 +28,6 @@ export const updateUserSchema = userSchema.omit({
   created_at: true,
   updated_at: true,
 });
-export type UpdateUser = z.infer<typeof updateUserSchema>;
 
 export const getUsersQuerySchema = baseQuerySchema
   .pick({
@@ -58,4 +55,3 @@ export const getUsersQuerySchema = baseQuerySchema
       path: ['endDate'],
     },
   );
-export type GetUsersQuery = z.infer<typeof getUsersQuerySchema>;
