@@ -5,32 +5,29 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-import {
-  AUTH_TOKENS,
-  type AuthTokenSchema,
-  type AuthTokenType,
-} from '../schemas/token';
+import { AUTH_TOKENS, type AuthTokenType } from '../enums/tokens';
+import type { AuthToken } from '../schemas/tokens';
 
 @Entity('tokens')
-export class Token implements AuthTokenSchema {
+export class Token implements AuthToken {
   @PrimaryGeneratedColumn({ type: 'integer' })
   id: number;
 
   @Column({ type: 'uuid', nullable: true })
-  user_id: string | null;
+  entity_id: string | null;
 
   @Column({ type: 'varchar', nullable: true })
   email: string | null;
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar' })
   token: string;
 
   @Column({ type: 'enum', enum: AUTH_TOKENS })
   type: AuthTokenType;
 
-  @CreateDateColumn({ type: 'timestamp', nullable: true })
+  @CreateDateColumn({ type: 'datetime', nullable: true })
   expires_at: Date | null;
 
-  @CreateDateColumn({ type: 'timestamp' })
+  @CreateDateColumn({ type: 'datetime' })
   created_at: Date;
 }

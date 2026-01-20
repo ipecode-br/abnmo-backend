@@ -6,7 +6,7 @@ export const APPOINTMENT_STATUSES = [
 ] as const;
 export type AppointmentStatus = (typeof APPOINTMENT_STATUSES)[number];
 
-export const APPOINTMENT_ORDER_BY = [
+export const APPOINTMENTS_ORDER_BY = [
   'date',
   'patient',
   'status',
@@ -14,4 +14,4 @@ export const APPOINTMENT_ORDER_BY = [
   'condition',
   'professional',
 ] as const;
-export type AppointmentOrderBy = (typeof APPOINTMENT_ORDER_BY)[number];
+export type AppointmentsOrderBy = (typeof APPOINTMENTS_ORDER_BY)[number];

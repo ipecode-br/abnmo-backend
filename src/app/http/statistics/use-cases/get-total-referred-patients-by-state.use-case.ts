@@ -3,19 +3,21 @@ import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository, SelectQueryBuilder } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
-import type { TotalReferredPatientsByStateSchema } from '@/domain/schemas/statistics/responses';
+import type { QueryPeriod } from '@/domain/enums/queries';
+import type { TotalReferredPatientsByState } from '@/domain/schemas/statistics/responses';
 import { UtilsService } from '@/utils/utils.service';
 
-import type { GetReferredPatientsByStateQuery } from '../statistics.dtos';
-
-interface GetTotalReferredPatientsByStateUseCaseRequest {
-  query: GetReferredPatientsByStateQuery;
+interface GetTotalReferredPatientsByStateUseCaseInput {
+  period?: QueryPeriod;
+  startDate?: Date;
+  endDate?: Date;
+  limit?: number;
 }
 
-type GetTotalReferredPatientsByStateUseCaseResponse = Promise<{
-  states: TotalReferredPatientsByStateSchema[];
+interface GetTotalReferredPatientsByStateUseCaseOutput {
+  states: TotalReferredPatientsByState[];
   total: number;
-}>;
+}
 
 @Injectable()
 export class GetTotalReferredPatientsByStateUseCase {
@@ -26,54 +28,48 @@ export class GetTotalReferredPatientsByStateUseCase {
   ) {}
 
   async execute({
-    query,
-  }: GetTotalReferredPatientsByStateUseCaseRequest): GetTotalReferredPatientsByStateUseCaseResponse {
-    const { startDate, endDate } = this.utilsService.getDateRangeForPeriod(
-      query.period,
-    );
+    period,
+    startDate,
+    endDate,
+    limit,
+  }: GetTotalReferredPatientsByStateUseCaseInput = {}): Promise<GetTotalReferredPatientsByStateUseCaseOutput> {
+    const dateRange = period
+      ? this.utilsService.getDateRangeForPeriod(period)
+      : { startDate, endDate };
 
-    const createQueryBuilder = (): SelectQueryBuilder<Patient> => {
-      return this.patientsRepository
+    const createBaseQuery = (): SelectQueryBuilder<Patient> => {
+      const baseQuery = this.patientsRepository
         .createQueryBuilder('patient')
         .innerJoin('patient.referrals', 'referral')
-        .where('referral.referred_to IS NOT NULL')
-        .andWhere('referral.referred_to != :empty', { empty: '' });
-    };
+        .where('referral.id IS NOT NULL');
 
-    function getQueryBuilderWithFilters(
-      queryBuilder: SelectQueryBuilder<Patient>,
-    ) {
-      if (startDate && endDate) {
-        queryBuilder.andWhere('referral.date BETWEEN :start AND :end', {
-          start: startDate,
-          end: endDate,
+      if (dateRange.startDate && dateRange.endDate) {
+        baseQuery.andWhere('referral.created_at BETWEEN :start AND :end', {
+          start: dateRange.startDate,
+          end: dateRange.endDate,
         });
       }
 
-      return queryBuilder;
-    }
+      return baseQuery;
+    };
 
-    const stateListQuery = getQueryBuilderWithFilters(
-      createQueryBuilder()
-        .select('patient.state', 'state')
-        .addSelect('COUNT(DISTINCT patient.id)', 'total')
-        .groupBy('patient.state')
-        .orderBy('COUNT(DISTINCT patient.id)', 'DESC')
-        .limit(query.limit),
-    );
+    const listStatesQuery = createBaseQuery()
+      .select('patient.state', 'state')
+      .addSelect('COUNT(DISTINCT patient.id)', 'total')
+      .groupBy('patient.state')
+      .orderBy('COUNT(DISTINCT patient.id)', 'DESC')
+      .limit(limit);
 
-    const totalStatesQuery = getQueryBuilderWithFilters(
-      createQueryBuilder().select('COUNT(DISTINCT patient.state)', 'total'),
+    const totalQuery = createBaseQuery().select(
+      'COUNT(DISTINCT patient.state)',
+      'total',
     );
 
     const [states, totalResult] = await Promise.all([
-      stateListQuery.getRawMany<TotalReferredPatientsByStateSchema>(),
-      totalStatesQuery.getRawOne<{ total: string }>(),
+      listStatesQuery.getRawMany<TotalReferredPatientsByState>(),
+      totalQuery.getRawOne<{ total: string }>(),
     ]);
 
-    return {
-      states,
-      total: Number(totalResult?.total || 0),
-    };
+    return { states, total: Number(totalResult?.total || 0) };
   }
 }

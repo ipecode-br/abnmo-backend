@@ -11,16 +11,14 @@ import {
 } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
-import type { QueryPeriod } from '@/domain/schemas/query';
+import type { QueryPeriod } from '@/domain/enums/queries';
 import { UtilsService } from '@/utils/utils.service';
 
-interface GetTotalReferredPatientsUseCaseRequest {
+interface GetTotalReferredPatientsUseCaseInput {
   period?: QueryPeriod;
   startDate?: Date;
   endDate?: Date;
 }
-
-type GetTotalReferredPatientsUseCaseResponse = Promise<number>;
 
 @Injectable()
 export class GetTotalReferredPatientsUseCase {
@@ -34,7 +32,7 @@ export class GetTotalReferredPatientsUseCase {
     period,
     startDate,
     endDate,
-  }: GetTotalReferredPatientsUseCaseRequest = {}): GetTotalReferredPatientsUseCaseResponse {
+  }: GetTotalReferredPatientsUseCaseInput = {}): Promise<number> {
     const where: FindOptionsWhere<Patient> = {
       referrals: { id: Not(IsNull()) },
     };

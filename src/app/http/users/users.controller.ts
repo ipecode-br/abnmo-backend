@@ -1,31 +1,71 @@
-import { Controller, Get } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { AuthUser } from '@/common/decorators/auth-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
-import type {
-  GetUserProfileResponseSchema,
-  UserSchema,
-} from '@/domain/schemas/user';
+import { BaseResponse } from '@/common/dtos';
 
-import { UsersService } from './users.service';
+import type { AuthUserDto } from '../auth/auth.dtos';
+import { CreateUserInviteUseCase } from './use-cases/create-user-invite.use-case';
+import { GetUserUseCase } from './use-cases/get-user.use-case';
+import { GetUsersUseCase } from './use-cases/get-users.use-case';
+import {
+  CreateUserInviteDto,
+  GetUserResponse,
+  GetUsersQuery,
+  GetUsersResponse,
+} from './users.dtos';
 
 @ApiTags('Usuários')
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly createUserInviteUseCase: CreateUserInviteUseCase,
+    private readonly getUserUseCase: GetUserUseCase,
+    private readonly getUsersUseCase: GetUsersUseCase,
+  ) {}
 
-  @Get('profile')
-  @Roles(['manager', 'nurse', 'specialist', 'patient'])
-  async getProfile(
-    @CurrentUser() requestUser: UserSchema,
-  ): Promise<GetUserProfileResponseSchema> {
-    const user = await this.usersService.getProfile(requestUser.id);
+  @Post('invite')
+  @Roles(['manager'])
+  @ApiOperation({ summary: 'Cria convite para registro de usuário' })
+  @ApiResponse({ type: BaseResponse })
+  async createUserInvite(
+    @AuthUser() user: AuthUserDto,
+    @Body() createUserInviteDto: CreateUserInviteDto,
+  ): Promise<BaseResponse> {
+    await this.createUserInviteUseCase.execute({ user, createUserInviteDto });
 
     return {
       success: true,
-      message: 'Dados do usuário retornado com sucesso.',
-      data: user,
+      message: 'Convite do usuário criado com sucesso.',
+    };
+  }
+
+  @Get()
+  @Roles(['manager'])
+  @ApiOperation({ summary: 'Lista todos os usuários' })
+  @ApiResponse({ type: GetUsersResponse })
+  async getUsers(@Query() query: GetUsersQuery): Promise<GetUsersResponse> {
+    const data = await this.getUsersUseCase.execute({ query });
+
+    return {
+      success: true,
+      message: 'Lista de usuários retornada com sucesso.',
+      data,
+    };
+  }
+
+  @Get('me')
+  @Roles(['manager', 'nurse', 'specialist'])
+  @ApiOperation({ summary: 'Retorna os dados do usuário autenticado' })
+  @ApiResponse({ type: GetUserResponse })
+  async getProfile(@AuthUser() user: AuthUserDto): Promise<GetUserResponse> {
+    const { user: data } = await this.getUserUseCase.execute({ id: user.id });
+
+    return {
+      success: true,
+      message: 'Dados do usuário retornados com sucesso.',
+      data,
     };
   }
 }

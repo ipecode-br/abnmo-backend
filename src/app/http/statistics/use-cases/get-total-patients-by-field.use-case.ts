@@ -3,21 +3,26 @@ import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository, SelectQueryBuilder } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
+import type { QueryOrder, QueryPeriod } from '@/domain/enums/queries';
 import type { PatientsStatisticField } from '@/domain/enums/statistics';
 import { UtilsService } from '@/utils/utils.service';
 
-import type { GetTotalPatientsByFieldQuery } from '../statistics.dtos';
 import { GetTotalPatientsUseCase } from './get-total-patients.use-case';
 
-interface GetTotalPatientsByFieldUseCaseRequest {
+interface GetTotalPatientsByFieldUseCaseInput {
   field: PatientsStatisticField;
-  query: GetTotalPatientsByFieldQuery;
+  period?: QueryPeriod;
+  startDate?: Date;
+  endDate?: Date;
+  order?: QueryOrder;
+  limit?: number;
+  withPercentage?: boolean;
 }
 
-type GetTotalPatientsByFieldUseCaseResponse<T> = Promise<{
+interface GetTotalPatientsByFieldUseCaseOutput<T> {
   items: T[];
   total: number;
-}>;
+}
 
 @Injectable()
 export class GetTotalPatientsByFieldUseCase {
@@ -30,27 +35,38 @@ export class GetTotalPatientsByFieldUseCase {
 
   async execute<T>({
     field,
-    query,
-  }: GetTotalPatientsByFieldUseCaseRequest): GetTotalPatientsByFieldUseCaseResponse<T> {
-    const { startDate, endDate } = this.utilsService.getDateRangeForPeriod(
-      query.period,
-    );
+    period,
+    startDate,
+    endDate,
+    order,
+    limit,
+    withPercentage,
+  }: GetTotalPatientsByFieldUseCaseInput): Promise<
+    GetTotalPatientsByFieldUseCaseOutput<T>
+  > {
+    const dateRange = period
+      ? this.utilsService.getDateRangeForPeriod(period)
+      : { startDate, endDate };
 
     const totalPatients = await this.getTotalPatientsUseCase.execute({
-      startDate,
-      endDate,
+      startDate: dateRange.startDate,
+      endDate: dateRange.endDate,
     });
 
     const createBaseQuery = (): SelectQueryBuilder<Patient> => {
-      return this.patientsRepository
-        .createQueryBuilder('patient')
-        .where('patient.created_at BETWEEN :start AND :end', {
-          start: startDate,
-          end: endDate,
+      const baseQuery = this.patientsRepository.createQueryBuilder('patient');
+
+      if (dateRange.startDate && dateRange.endDate) {
+        baseQuery.where('patient.created_at BETWEEN :start AND :end', {
+          start: dateRange.startDate,
+          end: dateRange.endDate,
         });
+      }
+
+      return baseQuery;
     };
 
-    const totalFieldQuery = createBaseQuery().select(
+    const totalQuery = createBaseQuery().select(
       `COUNT(DISTINCT patient.${field})`,
       'total',
     );
@@ -59,10 +75,10 @@ export class GetTotalPatientsByFieldUseCase {
       .select(`patient.${field}`, field)
       .addSelect('COUNT(patient.id)', 'total')
       .groupBy(`patient.${field}`)
-      .orderBy('total', query.order)
-      .limit(query.limit);
+      .orderBy('total', order)
+      .limit(limit);
 
-    if (query.withPercentage) {
+    if (withPercentage) {
       fieldQuery.addSelect(
         `ROUND((COUNT(patient.id) * 100.0 / ${totalPatients}), 1)`,
         'percentage',
@@ -71,7 +87,7 @@ export class GetTotalPatientsByFieldUseCase {
 
     const [items, totalResult] = await Promise.all([
       fieldQuery.getRawMany<T>(),
-      totalFieldQuery.getRawOne<{ total: string }>(),
+      totalQuery.getRawOne<{ total: string }>(),
     ]);
 
     return { items, total: Number(totalResult?.total || 0) };

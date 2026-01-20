@@ -2,9 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  JoinColumn,
   OneToMany,
-  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -13,15 +11,16 @@ import {
   BRAZILIAN_STATES,
   type BrazilianState,
 } from '@/constants/brazilian-states';
-import { User } from '@/domain/entities/user';
 
 import {
-  Gender,
-  GENDERS,
-  PATIENT_STATUS,
-  PatientSchema,
-  PatientStatus,
-} from '../schemas/patient';
+  PATIENT_GENDERS,
+  PATIENT_NMO_DIAGNOSTICS,
+  PATIENT_STATUSES,
+  type PatientGender,
+  type PatientNmoDiagnosis,
+  type PatientStatus,
+} from '../enums/patients';
+import type { PatientSchema } from '../schemas/patients';
 import { Appointment } from './appointment';
 import { PatientRequirement } from './patient-requirement';
 import { PatientSupport } from './patient-support';
@@ -32,26 +31,38 @@ export class Patient implements PatientSchema {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column('uuid')
-  user_id: string;
+  @Column({ type: 'varchar', length: 64 })
+  name: string;
 
-  @Column({ type: 'enum', enum: GENDERS })
-  gender: Gender;
+  @Column({ type: 'varchar', length: 64, unique: true })
+  email: string;
 
-  @Column({ type: 'date' })
-  date_of_birth: Date;
+  @Column({ type: 'varchar', nullable: true })
+  password: string | null;
 
-  @Column({ type: 'char', length: 11 })
-  phone: string;
+  @Column({ type: 'varchar', nullable: true })
+  avatar_url: string | null;
 
-  @Column({ type: 'char', length: 11, unique: true })
-  cpf: string;
+  @Column({ type: 'enum', enum: PATIENT_STATUSES, default: 'pending' })
+  status: PatientStatus;
 
-  @Column({ type: 'enum', enum: BRAZILIAN_STATES })
-  state: BrazilianState;
+  @Column({ type: 'enum', enum: PATIENT_GENDERS, default: 'prefer_not_to_say' })
+  gender: PatientGender;
 
-  @Column({ type: 'varchar', length: 50 })
-  city: string;
+  @Column({ type: 'datetime', nullable: true })
+  date_of_birth: Date | null;
+
+  @Column({ type: 'varchar', length: 11, nullable: true })
+  phone: string | null;
+
+  @Column({ type: 'varchar', length: 11, unique: true, nullable: true })
+  cpf: string | null;
+
+  @Column({ type: 'enum', enum: BRAZILIAN_STATES, nullable: true })
+  state: BrazilianState | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  city: string | null;
 
   @Column({ type: 'tinyint', width: 1, default: 0 })
   has_disability: boolean;
@@ -68,21 +79,14 @@ export class Patient implements PatientSchema {
   @Column({ type: 'varchar', length: 500, nullable: true })
   medication_desc: string | null;
 
-  @Column({ type: 'tinyint', width: 1, default: 0 })
-  has_nmo_diagnosis: boolean;
+  @Column({ type: 'enum', enum: PATIENT_NMO_DIAGNOSTICS, nullable: true })
+  nmo_diagnosis: PatientNmoDiagnosis | null;
 
-  @Column({ type: 'enum', enum: PATIENT_STATUS, default: 'pending' })
-  status: PatientStatus;
-
-  @CreateDateColumn({ type: 'timestamp' })
+  @CreateDateColumn({ type: 'datetime' })
   created_at: Date;
 
-  @UpdateDateColumn({ type: 'timestamp' })
+  @UpdateDateColumn({ type: 'datetime' })
   updated_at: Date;
-
-  @OneToOne(() => User)
-  @JoinColumn({ name: 'user_id' })
-  user: User;
 
   @OneToMany(() => PatientSupport, (support) => support.patient)
   supports: PatientSupport[];

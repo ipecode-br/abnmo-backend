@@ -23,27 +23,28 @@ export async function createNestApp(adapter?: ExpressAdapter) {
   app.useGlobalFilters(new HttpExceptionFilter());
 
   const envService = app.get(EnvService);
-  const allowLocalRequests = false;
 
-  app.enableCors({
-    origin: (origin, callback) => {
-      const allowedOrigins = allowLocalRequests
-        ? [envService.get('APP_URL'), envService.get('APP_LOCAL_URL')]
-        : [envService.get('APP_URL')];
+  // TODO: remove the block below after review
+  // app.enableCors({
+  //   origin: (origin, callback) => {
+  //     const allowedOrigins = [
+  //       envService.get('APP_URL'),
+  //       `${envService.get('API_BASE_URL')}:${envService.get('API_PORT')}`,
+  //     ];
 
-      // Allow requests with no origin (like mobile apps or curl requests)
-      if (!origin) return callback(null, true);
+  //     // Allow requests with no origin (like mobile apps or curl requests)
+  //     if (!origin) return callback(null, true);
 
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
+  //     if (allowedOrigins.includes(origin)) {
+  //       return callback(null, true);
+  //     }
 
-      return callback(new Error(`Origin ${origin} not allowed by CORS`));
-    },
-    allowedHeaders: ['Authorization', 'Content-Type', 'Content-Length'],
-    methods: ['OPTIONS', 'GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
-    credentials: true,
-  });
+  //     return callback(new Error(`Origin ${origin} not allowed by CORS`));
+  //   },
+  //   allowedHeaders: ['Authorization', 'Content-Type', 'Content-Length'],
+  //   methods: ['OPTIONS', 'GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
+  //   credentials: true,
+  // });
 
   app.use(cookieParser(envService.get('COOKIE_SECRET')));
   app.useLogger(app.get(Logger));

@@ -1,10 +1,16 @@
 import { z } from 'zod';
 
 import { BRAZILIAN_STATES } from '@/constants/brazilian-states';
-import { SPECIALTY_CATEGORIES } from '@/domain/enums/specialties';
+import { PATIENT_GENDERS } from '@/domain/enums/patients';
+import { SPECIALTY_CATEGORIES } from '@/domain/enums/shared';
 
 import { baseResponseSchema } from '../base';
-import { GENDERS } from '../patient';
+
+// Appointments
+
+export const getTotalAppointmentsResponseSchema = baseResponseSchema.extend({
+  data: z.object({ total: z.number() }),
+});
 
 // Patients
 
@@ -17,76 +23,41 @@ export const getTotalPatientsByStatusResponseSchema = baseResponseSchema.extend(
     }),
   },
 );
-export type GetTotalPatientsByStatusResponse = z.infer<
-  typeof getTotalPatientsByStatusResponseSchema
->;
 
 export const totalPatientsByGenderSchema = z.object({
-  gender: z.enum(GENDERS),
+  gender: z.enum(PATIENT_GENDERS),
   total: z.number(),
 });
 export type TotalPatientsByGender = z.infer<typeof totalPatientsByGenderSchema>;
 
-export const getPatientsByGenderResponseSchema = baseResponseSchema.extend({
-  data: z.object({
-    genders: z.array(totalPatientsByGenderSchema),
-    total: z.number(),
-  }),
-});
-export type GetPatientsByGenderResponse = z.infer<
-  typeof getPatientsByGenderResponseSchema
->;
+export const getTotalPatientsByGenderResponseSchema = baseResponseSchema.extend(
+  {
+    data: z.object({
+      genders: z.array(totalPatientsByGenderSchema),
+      total: z.number(),
+    }),
+  },
+);
 
-export const totalPatientsByCitySchema = z
-  .object({
-    city: z.string(),
-    total: z.number(),
-    percentage: z.number(),
-  })
-  .strict();
+export const totalPatientsByCitySchema = z.object({
+  city: z.string(),
+  total: z.number(),
+  percentage: z.number(),
+});
 export type TotalPatientsByCity = z.infer<typeof totalPatientsByCitySchema>;
 
-export const getPatientsByCityResponseSchema = baseResponseSchema.extend({
+export const getTotalPatientsByCityResponseSchema = baseResponseSchema.extend({
   data: z.object({
     cities: z.array(totalPatientsByCitySchema),
     total: z.number(),
   }),
 });
-export type GetPatientsByCityResponse = z.infer<
-  typeof getPatientsByCityResponseSchema
->;
 
 // Referrals
 
-export const getTotalReferralsAndReferredPatientsPercentageResponseSchema =
-  baseResponseSchema.extend({
-    data: z.object({
-      totalReferrals: z.number(),
-      referredPatientsPercentage: z.number(),
-    }),
-  });
-export type GetTotalReferralsAndReferredPatientsPercentageResponse = z.infer<
-  typeof getTotalReferralsAndReferredPatientsPercentageResponseSchema
->;
-
-export const totalReferredPatientsByStateSchema = z.object({
-  state: z.enum(BRAZILIAN_STATES),
-  total: z.number(),
+export const getTotalReferralsResponseSchema = baseResponseSchema.extend({
+  data: z.object({ total: z.number() }),
 });
-export type TotalReferredPatientsByStateSchema = z.infer<
-  typeof totalReferredPatientsByStateSchema
->;
-
-export const getReferredPatientsByStateResponseSchema =
-  baseResponseSchema.extend({
-    data: z.object({
-      states: z.array(totalReferredPatientsByStateSchema),
-      total: z.number(),
-    }),
-  });
-export type GetReferredPatientsByStateResponse = z.infer<
-  typeof getReferredPatientsByStateResponseSchema
->;
 
 export const totalReferralsByCategorySchema = z.object({
   category: z.enum(SPECIALTY_CATEGORIES),
@@ -103,6 +74,25 @@ export const getTotalReferralsByCategoryResponseSchema =
       total: z.number(),
     }),
   });
-export type GetTotalReferralsByCategoryResponse = z.infer<
-  typeof getTotalReferralsByCategoryResponseSchema
+
+export const getTotalReferredPatientsResponseSchema = baseResponseSchema.extend(
+  {
+    data: z.object({ total: z.number() }),
+  },
+);
+
+export const totalReferredPatientsByStateSchema = z.object({
+  state: z.enum(BRAZILIAN_STATES),
+  total: z.number(),
+});
+export type TotalReferredPatientsByState = z.infer<
+  typeof totalReferredPatientsByStateSchema
 >;
+
+export const getTotalReferredPatientsByStateResponseSchema =
+  baseResponseSchema.extend({
+    data: z.object({
+      states: z.array(totalReferredPatientsByStateSchema),
+      total: z.number(),
+    }),
+  });

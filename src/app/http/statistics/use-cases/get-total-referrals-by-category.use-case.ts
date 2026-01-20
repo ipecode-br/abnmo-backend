@@ -3,19 +3,21 @@ import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository, SelectQueryBuilder } from 'typeorm';
 
 import { Referral } from '@/domain/entities/referral';
+import type { QueryPeriod } from '@/domain/enums/queries';
 import type { TotalReferralsByCategory } from '@/domain/schemas/statistics/responses';
 import { UtilsService } from '@/utils/utils.service';
 
-import type { GetTotalReferralsByCategoryQuery } from '../statistics.dtos';
-
-interface GetTotalReferralsByCategoryUseCaseRequest {
-  query: GetTotalReferralsByCategoryQuery;
+interface GetTotalReferralsByCategoryUseCaseInput {
+  period?: QueryPeriod;
+  startDate?: Date;
+  endDate?: Date;
+  limit?: number;
 }
 
-type GetTotalReferralsByCategoryUseCaseResponse = Promise<{
+interface GetTotalReferralsByCategoryUseCaseOutput {
   categories: TotalReferralsByCategory[];
   total: number;
-}>;
+}
 
 @Injectable()
 export class GetTotalReferralsByCategoryUseCase {
@@ -26,50 +28,45 @@ export class GetTotalReferralsByCategoryUseCase {
   ) {}
 
   async execute({
-    query,
-  }: GetTotalReferralsByCategoryUseCaseRequest): GetTotalReferralsByCategoryUseCaseResponse {
-    const { startDate, endDate } = this.utilsService.getDateRangeForPeriod(
-      query.period,
-    );
+    period,
+    startDate,
+    endDate,
+    limit,
+  }: GetTotalReferralsByCategoryUseCaseInput = {}): Promise<GetTotalReferralsByCategoryUseCaseOutput> {
+    const dateRange = period
+      ? this.utilsService.getDateRangeForPeriod(period)
+      : { startDate, endDate };
 
-    const createQueryBuilder = (): SelectQueryBuilder<Referral> => {
-      return this.referralsRepository.createQueryBuilder('referral');
-    };
+    const createBaseQuery = (): SelectQueryBuilder<Referral> => {
+      const baseQuery = this.referralsRepository.createQueryBuilder('referral');
 
-    function getQueryBuilderWithFilters(
-      queryBuilder: SelectQueryBuilder<Referral>,
-    ) {
-      if (startDate && endDate) {
-        queryBuilder.andWhere('referral.date BETWEEN :start AND :end', {
-          start: startDate,
-          end: endDate,
+      if (dateRange.startDate && dateRange.endDate) {
+        baseQuery.where('referral.created_at BETWEEN :start AND :end', {
+          start: dateRange.startDate,
+          end: dateRange.endDate,
         });
       }
 
-      return queryBuilder;
-    }
+      return baseQuery;
+    };
 
-    const categoryListQuery = getQueryBuilderWithFilters(
-      createQueryBuilder()
-        .select('referral.category', 'category')
-        .addSelect('COUNT(referral.id)', 'total')
-        .groupBy('referral.category')
-        .orderBy('COUNT(referral.id)', 'DESC')
-        .limit(query.limit),
-    );
+    const listCategoriesQuery = createBaseQuery()
+      .select('referral.category', 'category')
+      .addSelect('COUNT(referral.id)', 'total')
+      .groupBy('referral.category')
+      .orderBy('COUNT(referral.id)', 'DESC')
+      .limit(limit);
 
-    const totalCategoriesQuery = getQueryBuilderWithFilters(
-      createQueryBuilder().select('COUNT(DISTINCT referral.category)', 'total'),
+    const totalQuery = createBaseQuery().select(
+      'COUNT(DISTINCT referral.category)',
+      'total',
     );
 
     const [categories, totalResult] = await Promise.all([
-      categoryListQuery.getRawMany<TotalReferralsByCategory>(),
-      totalCategoriesQuery.getRawOne<{ total: string }>(),
+      listCategoriesQuery.getRawMany<TotalReferralsByCategory>(),
+      totalQuery.getRawOne<{ total: string }>(),
     ]);
 
-    return {
-      categories,
-      total: Number(totalResult?.total || 0),
-    };
+    return { categories, total: Number(totalResult?.total || 0) };
   }
 }

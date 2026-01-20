@@ -8,14 +8,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
 import { Appointment } from '@/domain/entities/appointment';
-import { UserSchema } from '@/domain/schemas/user';
 
-interface CancelAppointmentUseCaseRequest {
+import type { AuthUserDto } from '../../auth/auth.dtos';
+
+interface CancelAppointmentUseCaseInput {
   id: string;
-  user: UserSchema;
+  user: AuthUserDto;
 }
-
-type CancelAppointmentUseCaseResponse = Promise<void>;
 
 @Injectable()
 export class CancelAppointmentUseCase {
@@ -26,11 +25,9 @@ export class CancelAppointmentUseCase {
     private readonly appointmentsRepository: Repository<Appointment>,
   ) {}
 
-  async execute({
-    id,
-    user,
-  }: CancelAppointmentUseCaseRequest): CancelAppointmentUseCaseResponse {
+  async execute({ id, user }: CancelAppointmentUseCaseInput): Promise<void> {
     const appointment = await this.appointmentsRepository.findOne({
+      select: { id: true, status: true },
       where: { id },
     });
 
@@ -42,10 +39,10 @@ export class CancelAppointmentUseCase {
       throw new BadRequestException('Este atendimento já está cancelado.');
     }
 
-    await this.appointmentsRepository.save({ id, status: 'canceled' });
+    await this.appointmentsRepository.update({ id }, { status: 'canceled' });
 
     this.logger.log(
-      { appointmentId: id, userId: user.id },
+      { id, userId: user.id, userEmail: user.email, userRole: user.role },
       'Appointment canceled successfully.',
     );
   }

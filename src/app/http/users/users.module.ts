@@ -2,16 +2,23 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { CryptographyModule } from '@/app/cryptography/cryptography.module';
+import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 
+import { CreateUserInviteUseCase } from './use-cases/create-user-invite.use-case';
+import { GetUserUseCase } from './use-cases/get-user.use-case';
+import { GetUsersUseCase } from './use-cases/get-users.use-case';
+import { UpdateUserUseCase } from './use-cases/update-user.use-case';
 import { UsersController } from './users.controller';
-import { UsersRepository } from './users.repository';
-import { UsersService } from './users.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User]), CryptographyModule],
-  providers: [UsersRepository, UsersService],
+  imports: [TypeOrmModule.forFeature([User, Token]), CryptographyModule],
+  providers: [
+    CreateUserInviteUseCase,
+    UpdateUserUseCase,
+    GetUserUseCase,
+    GetUsersUseCase,
+  ],
   controllers: [UsersController],
-  exports: [UsersRepository, UsersService],
 })
 export class UsersModule {}

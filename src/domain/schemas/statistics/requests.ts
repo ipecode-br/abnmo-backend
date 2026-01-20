@@ -1,22 +1,42 @@
-import { baseQuerySchema } from '../query';
+import { z } from 'zod';
+
+import {
+  queryLimitSchema,
+  queryOrderSchema,
+  queryPercentageSchema,
+  queryPeriodSchema,
+} from '../query';
+
+// Appointments
+
+export const getTotalAppointmentsQuerySchema = z.object({
+  period: queryPeriodSchema.optional(),
+});
 
 // Patients
 
-export const getTotalPatientsByFieldQuerySchema = baseQuerySchema
-  .pick({ period: true, limit: true, order: true, withPercentage: true })
-  .extend({ order: baseQuerySchema.shape.order.default('DESC') });
+export const getTotalPatientsByFieldQuerySchema = z.object({
+  period: queryPeriodSchema.optional(),
+  order: queryOrderSchema.optional().default('DESC'),
+  limit: queryLimitSchema,
+  withPercentage: queryPercentageSchema,
+});
 
 // Referrals
 
-export const getTotalReferralsAndReferredPatientsPercentageQuerySchema =
-  baseQuerySchema.pick({ period: true });
-
-export const getReferredPatientsByStateQuerySchema = baseQuerySchema.pick({
-  period: true,
-  limit: true,
+export const getTotalReferralsQuerySchema = z.object({
+  period: queryPeriodSchema.optional(),
 });
 
-export const getTotalReferralsByCategoryQuerySchema = baseQuerySchema.pick({
-  period: true,
-  limit: true,
+export const getTotalReferralsByCategoryQuerySchema = z.object({
+  period: queryPeriodSchema.optional(),
+});
+
+export const getTotalReferredPatientsQuerySchema = z.object({
+  period: queryPeriodSchema.optional(),
+});
+
+export const getTotalReferredPatientsByStateQuerySchema = z.object({
+  period: queryPeriodSchema.optional(),
+  limit: queryLimitSchema,
 });

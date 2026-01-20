@@ -8,22 +8,23 @@ import { Patient } from '@/domain/entities/patient';
 import { PatientRequirement } from '@/domain/entities/patient-requirement';
 import { PatientSupport } from '@/domain/entities/patient-support';
 import { Referral } from '@/domain/entities/referral';
-// import { Specialist } from '@/domain/entities/specialist';
+import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { APPOINTMENT_STATUSES } from '@/domain/enums/appointments';
-import { REFERRAL_STATUSES } from '@/domain/enums/referrals';
-import { SPECIALTY_CATEGORIES } from '@/domain/enums/specialties';
 import {
-  GENDERS,
+  PATIENT_REQUIREMENT_STATUSES,
+  PATIENT_REQUIREMENT_TYPES,
+} from '@/domain/enums/patient-requirements';
+import {
   PATIENT_CONDITIONS,
-  PATIENT_STATUS,
-} from '@/domain/schemas/patient';
-import {
-  PATIENT_REQUIREMENT_STATUS,
-  PATIENT_REQUIREMENT_TYPE,
-} from '@/domain/schemas/patient-requirement';
-// import { SPECIALIST_STATUS } from '@/domain/schemas/specialist';
-import { USER_ROLES } from '@/domain/schemas/user';
+  PATIENT_GENDERS,
+  PATIENT_NMO_DIAGNOSTICS,
+  PATIENT_STATUSES,
+  type PatientStatus,
+} from '@/domain/enums/patients';
+import { REFERRAL_STATUSES } from '@/domain/enums/referrals';
+import { SPECIALTY_CATEGORIES } from '@/domain/enums/shared';
+import { USER_ROLES } from '@/domain/enums/users';
 
 import dataSource from './data.source';
 
@@ -68,64 +69,31 @@ async function main() {
     await dataSource.manager.clear(Referral);
     await dataSource.manager.clear(PatientRequirement);
     await dataSource.manager.clear(Patient);
-    // await dataSource.manager.clear(Specialist);
     await dataSource.manager.clear(User);
+    await dataSource.manager.clear(Token);
     await dataSource.query('SET FOREIGN_KEY_CHECKS = 1');
     console.log('✅ Old data deleted.');
 
-    const userRepository = dataSource.getRepository(User);
-    const patientRepository = dataSource.getRepository(Patient);
-    const supportNetworkRepository = dataSource.getRepository(PatientSupport);
-    // const specialistRepository = dataSource.getRepository(Specialist);
-    const appointmentRepository = dataSource.getRepository(Appointment);
-    const patientRequirementRepository =
+    const usersRepository = dataSource.getRepository(User);
+    const patientsRepository = dataSource.getRepository(Patient);
+    const patientSupportsRepository = dataSource.getRepository(PatientSupport);
+    const appointmentsRepository = dataSource.getRepository(Appointment);
+    const referralsRepository = dataSource.getRepository(Referral);
+    const patientRequirementsRepository =
       dataSource.getRepository(PatientRequirement);
-    const referralRepository = dataSource.getRepository(Referral);
 
     console.log('👤 Creating users...');
     for (const role of USER_ROLES) {
-      const user = userRepository.create({
+      const user = usersRepository.create({
         name: faker.person.fullName(),
         email: `${role}@ipecode.com.br`,
         password,
         role,
         avatar_url: faker.image.avatar(),
       });
-      await userRepository.save(user);
+      await usersRepository.save(user);
     }
     console.log('👤 Users created successfully...');
-
-    // const specialties = [
-    //   'Cirurgia oncológica',
-    //   'Cirurgia geral',
-    //   'Cirurgia plástica',
-    //   'Geriatria',
-    //   'Mastologia',
-    //   'Medicina preventiva e social',
-    // ];
-
-    // console.log('👨‍⚕️ Creating 5 specialists...');
-    // const specialists: Specialist[] = [];
-    // for (let i = 0; i < 5; i++) {
-    //   const user = userRepository.create({
-    //     name: faker.person.fullName(),
-    //     email: faker.internet.email().toLocaleLowerCase(),
-    //     password,
-    //     role: 'specialist',
-    //     avatar_url: faker.image.avatar(),
-    //   });
-    //   await userRepository.save(user);
-
-    //   const specialist = specialistRepository.create({
-    //     user_id: user.id,
-    //     specialty: faker.helpers.arrayElement(specialties),
-    //     registry: faker.string.numeric(10),
-    //     status: faker.helpers.arrayElement(SPECIALIST_STATUS),
-    //   });
-    //   const savedSpecialist = await specialistRepository.save(specialist);
-    //   specialists.push(savedSpecialist);
-    // }
-    // console.log('👨‍⚕️ Specialists created successfully...');
 
     const oneMonthAgo = new Date();
     oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
@@ -137,37 +105,53 @@ async function main() {
     const twoMonthsAhead = new Date();
     twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() + 2);
 
-    const totalOfPatients = 100;
+    const patient = patientsRepository.create({
+      name: faker.person.fullName(),
+      email: 'patient@ipecode.com.br',
+      password,
+      avatar_url: faker.image.avatar(),
+      status: 'active',
+      gender: faker.helpers.arrayElement(PATIENT_GENDERS),
+      date_of_birth: faker.date.birthdate({ min: 18, max: 80, mode: 'age' }),
+      phone: faker.string.numeric(11),
+      cpf: faker.string.numeric(11),
+      state: 'BA',
+      city: getRandomCity('BA'),
+      has_disability: faker.datatype.boolean(),
+      disability_desc: faker.lorem.sentence(),
+      need_legal_assistance: faker.datatype.boolean(),
+      take_medication: faker.datatype.boolean(),
+      medication_desc: faker.lorem.sentence(),
+      nmo_diagnosis: faker.helpers.arrayElement(PATIENT_NMO_DIAGNOSTICS),
+      created_at: faker.date.between({ from: fourMonthsAgo, to: new Date() }),
+    });
+    await patientsRepository.save(patient);
 
+    const totalOfPatients = 100;
     for (let i = 0; i < totalOfPatients; i++) {
       if ((i + 1) % 20 === 0) {
         console.log(`👥 Creating ${i + 1} patients...`);
       }
 
-      const user = userRepository.create({
-        name: faker.person.fullName(),
-        email: faker.internet.email().toLocaleLowerCase(),
-        password,
-        role: 'patient',
-        avatar_url: faker.image.avatar(),
-      });
-      await userRepository.save(user);
-
       const selectedState = faker.helpers.arrayElement(statesWithCities);
 
       // Set patient status: 10 pending, rest distributed among other statuses
-      let patientStatus: (typeof PATIENT_STATUS)[number];
+      let patientStatus: PatientStatus;
       if (i < 10) {
         patientStatus = 'pending';
       } else {
         patientStatus = faker.helpers.arrayElement(
-          PATIENT_STATUS.filter((s) => s !== 'pending'),
+          PATIENT_STATUSES.filter((s) => s !== 'pending'),
         );
       }
 
-      const patient = patientRepository.create({
-        user_id: user.id,
-        gender: faker.helpers.arrayElement(GENDERS),
+      const newPatient = patientsRepository.create({
+        name: faker.person.fullName(),
+        email: faker.internet.email().toLowerCase(),
+        password,
+        avatar_url: faker.image.avatar(),
+        status: patientStatus,
+        gender: faker.helpers.arrayElement(PATIENT_GENDERS),
         date_of_birth: faker.date.birthdate({ min: 18, max: 80, mode: 'age' }),
         phone: faker.string.numeric(11),
         cpf: faker.string.numeric(11),
@@ -178,16 +162,15 @@ async function main() {
         need_legal_assistance: faker.datatype.boolean(),
         take_medication: faker.datatype.boolean(),
         medication_desc: faker.lorem.sentence(),
-        has_nmo_diagnosis: faker.datatype.boolean(),
-        status: patientStatus,
+        nmo_diagnosis: faker.helpers.arrayElement(PATIENT_NMO_DIAGNOSTICS),
         created_at: faker.date.between({ from: fourMonthsAgo, to: new Date() }),
       });
-      await patientRepository.save(patient);
+      await patientsRepository.save(newPatient);
 
       const supportNetworkCount = faker.number.int({ min: 0, max: 3 });
       for (let j = 0; j < supportNetworkCount; j++) {
-        const support = supportNetworkRepository.create({
-          patient: patient,
+        const support = patientSupportsRepository.create({
+          patient: newPatient,
           name: faker.person.fullName(),
           phone: faker.string.numeric(11),
           kinship: faker.helpers.arrayElement([
@@ -198,33 +181,14 @@ async function main() {
             'Avó',
           ]),
         });
-        await supportNetworkRepository.save(support);
-      }
-
-      // Create between 0 and 2 referrals for each patient
-      const referralCount = faker.number.int({ min: 0, max: 2 });
-      for (let j = 0; j < referralCount; j++) {
-        await referralRepository.save({
-          patient_id: patient.id,
-          date: faker.date.between({ from: twoMonthsAgo, to: twoMonthsAhead }),
-          status: faker.helpers.arrayElement(REFERRAL_STATUSES),
-          category: faker.helpers.arrayElement(SPECIALTY_CATEGORIES),
-          condition: faker.helpers.arrayElement(PATIENT_CONDITIONS),
-          annotation: faker.datatype.boolean() ? faker.lorem.sentence() : null,
-          professional_name: faker.person.fullName(),
-          created_by: faker.string.uuid(),
-          created_at: faker.date.between({
-            from: fourMonthsAgo,
-            to: new Date(),
-          }),
-        });
+        await patientSupportsRepository.save(support);
       }
 
       // Create between 0 and 2 appointments for each patient
       const appointmentCount = faker.number.int({ min: 0, max: 2 });
       for (let j = 0; j < appointmentCount; j++) {
-        await appointmentRepository.save({
-          patient_id: patient.id,
+        const appointment = appointmentsRepository.create({
+          patient_id: newPatient.id,
           date: faker.date.between({ from: twoMonthsAgo, to: twoMonthsAhead }),
           status: faker.helpers.arrayElement(APPOINTMENT_STATUSES),
           category: faker.helpers.arrayElement(SPECIALTY_CATEGORIES),
@@ -237,33 +201,54 @@ async function main() {
             to: new Date(),
           }),
         });
+        await appointmentsRepository.save(appointment);
+      }
+
+      // Create between 0 and 2 referrals for each patient
+      const referralCount = faker.number.int({ min: 0, max: 2 });
+      for (let j = 0; j < referralCount; j++) {
+        const referral = referralsRepository.create({
+          patient_id: newPatient.id,
+          date: faker.date.between({ from: twoMonthsAgo, to: twoMonthsAhead }),
+          status: faker.helpers.arrayElement(REFERRAL_STATUSES),
+          category: faker.helpers.arrayElement(SPECIALTY_CATEGORIES),
+          condition: faker.helpers.arrayElement(PATIENT_CONDITIONS),
+          annotation: faker.datatype.boolean() ? faker.lorem.sentence() : null,
+          professional_name: faker.person.fullName(),
+          created_by: faker.string.uuid(),
+          created_at: faker.date.between({
+            from: fourMonthsAgo,
+            to: new Date(),
+          }),
+        });
+        await referralsRepository.save(referral);
       }
 
       // Create between 0 and 2 requirements for each patient
       const requirementCount = faker.number.int({ min: 0, max: 2 });
       for (let j = 0; j < requirementCount; j++) {
-        const status = faker.helpers.arrayElement(PATIENT_REQUIREMENT_STATUS);
-        const requirement = patientRequirementRepository.create({
-          patient_id: patient.id,
-          type: faker.helpers.arrayElement(PATIENT_REQUIREMENT_TYPE),
+        const status = faker.helpers.arrayElement(PATIENT_REQUIREMENT_STATUSES);
+        const patientRequirement = patientRequirementsRepository.create({
+          patient_id: newPatient.id,
+          type: faker.helpers.arrayElement(PATIENT_REQUIREMENT_TYPES),
           title: faker.lorem.words(3),
           description: faker.lorem.sentence(),
           status,
-          required_by: faker.string.uuid(),
           submitted_at:
             status === 'under_review'
               ? faker.date.between({ from: oneMonthAgo, to: new Date() })
-              : new Date(),
+              : null,
           approved_at:
             status === 'approved'
-              ? faker.date.between({ from: oneMonthAgo, to: new Date() })
-              : null,
-          created_at:
-            status === 'pending'
               ? faker.date.between({ from: twoMonthsAgo, to: new Date() })
-              : new Date(),
+              : null,
+          created_by: faker.string.uuid(),
+          created_at: faker.date.between({
+            from: fourMonthsAgo,
+            to: new Date(),
+          }),
         });
-        await patientRequirementRepository.save(requirement);
+        await patientRequirementsRepository.save(patientRequirement);
       }
     }
 

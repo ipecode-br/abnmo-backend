@@ -3,7 +3,7 @@ import { hash } from 'bcryptjs';
 import request, { Response } from 'supertest';
 
 import { User } from '@/domain/entities/user';
-import type { UserRoleType } from '@/domain/schemas/user';
+import type { UserRole } from '@/domain/enums/users';
 
 import { getTestApp, getTestDataSource } from './setup';
 
@@ -21,16 +21,16 @@ interface RequestOptions {
 interface CachedUser {
   email: string;
   password: string;
-  role: UserRoleType;
+  role: UserRole;
   id: string;
   createdAt: number;
 }
 
 class UserCache {
-  private static cache = new Map<UserRoleType, CachedUser>();
+  private static cache = new Map<UserRole, CachedUser>();
   private static cacheTimeout = 30000; // 30 seconds cache
 
-  static async getOrCreateUser(role: UserRoleType): Promise<CachedUser> {
+  static async getOrCreateUser(role: UserRole): Promise<CachedUser> {
     const now = Date.now();
     const cached = this.cache.get(role);
 
@@ -288,7 +288,7 @@ class ApiClient {
    * @returns Authenticated API client for the created user
    */
   async createUserWithRoleAndLogin(
-    role: UserRoleType = 'patient',
+    role: UserRole,
     userData?: Partial<{
       name: string;
       email: string;
@@ -377,11 +377,11 @@ class ApiClient {
   /**
    * Convenience method to create and login as patient user (default role)
    */
-  async createPatientAndLogin(
-    userData?: Partial<{ name: string; email: string; password: string }>,
-  ): Promise<AuthenticatedApiClient> {
-    return this.createUserWithRoleAndLogin('patient', userData);
-  }
+  // async createPatientAndLogin(
+  //   userData?: Partial<{ name: string; email: string; password: string }>,
+  // ): Promise<AuthenticatedApiClient> {
+  //   return this.createUserWithRoleAndLogin('patient', userData);
+  // }
 }
 
 class CookieAuthenticatedApiClient extends ApiClient {

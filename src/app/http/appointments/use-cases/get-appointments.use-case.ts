@@ -10,21 +10,21 @@ import {
 } from 'typeorm';
 
 import { Appointment } from '@/domain/entities/appointment';
-import type { AppointmentOrderBy } from '@/domain/enums/appointments';
+import type { AppointmentsOrderBy } from '@/domain/enums/appointments';
 import type { AppointmentResponse } from '@/domain/schemas/appointments/responses';
-import { UserSchema } from '@/domain/schemas/user';
 
+import type { AuthUserDto } from '../../auth/auth.dtos';
 import type { GetAppointmentsQuery } from '../appointments.dtos';
 
-interface GetAppointmentsUseCaseRequest {
-  user: UserSchema;
+interface GetAppointmentsUseCaseInput {
+  user: AuthUserDto;
   query: GetAppointmentsQuery;
 }
 
-type GetAppointmentsUseCaseResponse = Promise<{
+interface GetAppointmentsUseCaseOutput {
   appointments: AppointmentResponse[];
   total: number;
-}>;
+}
 
 @Injectable()
 export class GetAppointmentsUseCase {
@@ -36,10 +36,12 @@ export class GetAppointmentsUseCase {
   async execute({
     user,
     query,
-  }: GetAppointmentsUseCaseRequest): GetAppointmentsUseCaseResponse {
+  }: GetAppointmentsUseCaseInput): Promise<GetAppointmentsUseCaseOutput> {
     const { search, status, category, condition, page, perPage } = query;
+    const startDate = query.startDate ? new Date(query.startDate) : null;
+    const endDate = query.endDate ? new Date(query.endDate) : null;
 
-    const ORDER_BY_MAPPING: Record<AppointmentOrderBy, keyof Appointment> = {
+    const ORDER_BY_MAPPING: Record<AppointmentsOrderBy, keyof Appointment> = {
       date: 'created_at',
       patient: 'patient',
       status: 'status',
@@ -49,23 +51,21 @@ export class GetAppointmentsUseCase {
     };
 
     const where: FindOptionsWhere<Appointment> = {};
-    const startDate = query.startDate ? new Date(query.startDate) : null;
-    const endDate = query.endDate ? new Date(query.endDate) : null;
 
     if (user.role === 'patient') {
-      where.patient = { user: { id: user.id } };
+      where.patient = { id: user.id };
     }
 
     if (startDate && !endDate) {
-      where.date = MoreThanOrEqual(startDate);
+      where.created_at = MoreThanOrEqual(startDate);
     }
 
     if (endDate && !startDate) {
-      where.date = LessThanOrEqual(endDate);
+      where.created_at = LessThanOrEqual(endDate);
     }
 
     if (startDate && endDate) {
-      where.date = Between(startDate, endDate);
+      where.created_at = Between(startDate, endDate);
     }
 
     if (status) {
@@ -81,7 +81,7 @@ export class GetAppointmentsUseCase {
     }
 
     if (search) {
-      where.patient = { user: { name: ILike(`%${search}%`) } };
+      where.patient = { name: ILike(`%${search}%`) };
     }
 
     const total = await this.appointmentsRepository.count({ where });
@@ -89,41 +89,17 @@ export class GetAppointmentsUseCase {
     const orderBy = ORDER_BY_MAPPING[query.orderBy];
     const order =
       orderBy === 'patient'
-        ? { patient: { user: { name: query.order } } }
+        ? { patient: { name: query.order } }
         : { [orderBy]: query.order };
 
-    const appointmentsQuery = await this.appointmentsRepository.find({
-      relations: { patient: { user: true } },
-      select: {
-        patient: {
-          id: true,
-          user: { name: true, avatar_url: true },
-        },
-      },
+    const appointments = await this.appointmentsRepository.find({
+      select: { patient: { id: true, name: true, avatar_url: true } },
+      relations: { patient: true },
       skip: (page - 1) * perPage,
       take: perPage,
       order,
       where,
     });
-
-    const appointments = appointmentsQuery.map((appointment) => ({
-      id: appointment.id,
-      patient_id: appointment.patient_id,
-      date: appointment.date,
-      status: appointment.status,
-      category: appointment.category,
-      condition: appointment.condition,
-      annotation: appointment.annotation,
-      professional_name: appointment.professional_name,
-      created_by: appointment.created_by,
-      created_at: appointment.created_at,
-      updated_at: appointment.updated_at,
-      patient: {
-        name: appointment.patient.user.name,
-        email: appointment.patient.user.email,
-        avatar_url: appointment.patient.user.avatar_url,
-      },
-    }));
 
     return { appointments, total };
   }

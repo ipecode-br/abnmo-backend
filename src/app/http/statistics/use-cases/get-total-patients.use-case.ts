@@ -10,18 +10,16 @@ import {
 } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
-import type { PatientStatus } from '@/domain/schemas/patient';
-import type { QueryPeriod } from '@/domain/schemas/query';
+import type { PatientStatus } from '@/domain/enums/patients';
+import type { QueryPeriod } from '@/domain/enums/queries';
 import { UtilsService } from '@/utils/utils.service';
 
-interface GetTotalPatientsUseCaseRequest {
+interface GetTotalPatientsUseCaseInput {
   status?: PatientStatus;
   period?: QueryPeriod;
   startDate?: Date;
   endDate?: Date;
 }
-
-type GetTotalPatientsUseCaseResponse = Promise<number>;
 
 @Injectable()
 export class GetTotalPatientsUseCase {
@@ -36,7 +34,7 @@ export class GetTotalPatientsUseCase {
     period,
     startDate,
     endDate,
-  }: GetTotalPatientsUseCaseRequest = {}): GetTotalPatientsUseCaseResponse {
+  }: GetTotalPatientsUseCaseInput = {}): Promise<number> {
     const where: FindOptionsWhere<Patient> = {
       status: status ?? Not('pending'),
     };

@@ -1,24 +1,47 @@
 import { z } from 'zod';
 
-export const signInWithEmailSchema = z.object({
+import { AUTH_ACCOUNT_TYPES } from '../enums/auth';
+import { AUTH_TOKEN_ROLES } from '../enums/tokens';
+import { emailSchema, nameSchema, passwordSchema } from './shared';
+
+export const authUserSchema = z.object({
+  id: z.string().uuid(),
   email: z.string().email(),
-  password: z.string().min(8),
-  rememberMe: z.boolean().default(false),
+  role: z.enum(AUTH_TOKEN_ROLES),
 });
-export type SignInWithEmailSchema = z.infer<typeof signInWithEmailSchema>;
+
+const accountTypeSchema = z.enum(AUTH_ACCOUNT_TYPES);
+
+export const registerPatientSchema = z.object({
+  name: nameSchema,
+  email: emailSchema,
+  password: passwordSchema,
+});
+
+export const registerUserSchema = z.object({
+  name: nameSchema,
+  password: passwordSchema,
+  invite_token: z.string().min(1),
+});
+
+export const signInWithEmailSchema = z.object({
+  email: emailSchema,
+  password: passwordSchema,
+  keep_logged_in: z.boolean().default(false),
+  account_type: accountTypeSchema,
+});
 
 export const recoverPasswordSchema = z.object({
-  email: z.string().email('E-mail inválido'),
+  email: emailSchema,
+  account_type: accountTypeSchema,
 });
-export type RecoverPasswordSchema = z.infer<typeof recoverPasswordSchema>;
 
 export const resetPasswordSchema = z.object({
-  password: z.string().min(8).max(255),
+  password: passwordSchema,
+  reset_token: z.string().min(1),
 });
-export type ResetPasswordSchema = z.infer<typeof resetPasswordSchema>;
 
 export const changePasswordSchema = z.object({
-  password: z.string().min(8).max(255),
-  newPassword: z.string().min(8).max(255),
+  password: passwordSchema,
+  new_password: passwordSchema,
 });
-export type ChangePasswordSchema = z.infer<typeof changePasswordSchema>;

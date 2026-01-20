@@ -1,5 +1,5 @@
 import { Reflector } from '@nestjs/core';
 
-import type { UserRoleType } from '@/domain/schemas/user';
+import type { AllowedRole } from '@/domain/enums/tokens';
 
-export const Roles = Reflector.createDecorator<UserRoleType[]>();
+export const Roles = Reflector.createDecorator<AllowedRole[]>();

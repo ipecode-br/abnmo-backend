@@ -9,13 +9,13 @@ import {
 } from 'typeorm';
 
 import { Referral } from '@/domain/entities/referral';
+import type { PatientCondition } from '@/domain/enums/patients';
+import type { QueryPeriod } from '@/domain/enums/queries';
 import type { ReferralStatus } from '@/domain/enums/referrals';
-import type { SpecialtyCategory } from '@/domain/enums/specialties';
-import type { PatientCondition } from '@/domain/schemas/patient';
-import type { QueryPeriod } from '@/domain/schemas/query';
+import type { SpecialtyCategory } from '@/domain/enums/shared';
 import { UtilsService } from '@/utils/utils.service';
 
-interface GetTotalReferralsUseCaseRequest {
+interface GetTotalReferralsUseCaseInput {
   status?: ReferralStatus;
   category?: SpecialtyCategory;
   condition?: PatientCondition;
@@ -23,8 +23,6 @@ interface GetTotalReferralsUseCaseRequest {
   startDate?: Date;
   endDate?: Date;
 }
-
-type GetTotalReferralsUseCaseResponse = Promise<number>;
 
 @Injectable()
 export class GetTotalReferralsUseCase {
@@ -41,7 +39,7 @@ export class GetTotalReferralsUseCase {
     period,
     startDate,
     endDate,
-  }: GetTotalReferralsUseCaseRequest = {}): GetTotalReferralsUseCaseResponse {
+  }: GetTotalReferralsUseCaseInput = {}): Promise<number> {
     const where: FindOptionsWhere<Referral> = {};
 
     if (period) {

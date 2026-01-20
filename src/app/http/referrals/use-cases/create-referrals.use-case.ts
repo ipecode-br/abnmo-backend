@@ -5,14 +5,13 @@ import { type Repository } from 'typeorm';
 import { Patient } from '@/domain/entities/patient';
 import { Referral } from '@/domain/entities/referral';
 
+import type { AuthUserDto } from '../../auth/auth.dtos';
 import { CreateReferralDto } from '../referrals.dtos';
 
-interface CreateReferralUseCaseRequest {
+interface CreateReferralUseCaseInput {
+  user: AuthUserDto;
   createReferralDto: CreateReferralDto;
-  userId: string;
 }
-
-type CreateReferralUseCaseResponse = Promise<void>;
 
 @Injectable()
 export class CreateReferralUseCase {
@@ -25,13 +24,13 @@ export class CreateReferralUseCase {
     private readonly referralsRepository: Repository<Referral>,
   ) {}
   async execute({
+    user,
     createReferralDto,
-    userId,
-  }: CreateReferralUseCaseRequest): CreateReferralUseCaseResponse {
-    const { patient_id } = createReferralDto;
+  }: CreateReferralUseCaseInput): Promise<void> {
+    const { patient_id: patientId } = createReferralDto;
 
     const patient = await this.patientsRepository.findOne({
-      where: { id: patient_id },
+      where: { id: patientId },
       select: { id: true },
     });
 
@@ -39,14 +38,20 @@ export class CreateReferralUseCase {
       throw new NotFoundException('Paciente não encontrado.');
     }
 
-    await this.referralsRepository.save({
+    const referral = await this.referralsRepository.save({
       ...createReferralDto,
       status: 'scheduled',
-      referred_by: userId,
+      created_by: user.id,
     });
 
     this.logger.log(
-      { patientId: patient_id, referredBy: userId },
+      {
+        id: referral.id,
+        patientId,
+        userId: user.id,
+        userEmail: user.email,
+        userRole: user.role,
+      },
       'Referral created successfully',
     );
   }

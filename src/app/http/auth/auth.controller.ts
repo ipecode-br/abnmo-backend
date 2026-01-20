@@ -1,58 +1,52 @@
-import {
-  Body,
-  Controller,
-  Post,
-  Req,
-  Res,
-  UnauthorizedException,
-} from '@nestjs/common';
-import { ApiOperation } from '@nestjs/swagger';
-import type { Request, Response } from 'express';
+import { Body, Controller, Post, Res } from '@nestjs/common';
+import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import type { Response } from 'express';
 
-import { Cookies } from '@/common/decorators/cookies';
-import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { AuthUser } from '@/common/decorators/auth-user.decorator';
+import { Cookies } from '@/common/decorators/cookies.decorator';
 import { Public } from '@/common/decorators/public.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
+import { BaseResponse } from '@/common/dtos';
 import { COOKIES_MAPPING } from '@/domain/cookies';
-import type { BaseResponseSchema } from '@/domain/schemas/base';
-import { UserSchema } from '@/domain/schemas/user';
-import { UtilsService } from '@/utils/utils.service';
 
-import { CreateUserDto } from '../users/users.dtos';
 import {
+  AuthUserDto,
   ChangePasswordDto,
   RecoverPasswordDto,
+  RegisterPatientDto,
+  RegisterUserDto,
   ResetPasswordDto,
   SignInWithEmailDto,
 } from './auth.dtos';
-import { AuthService } from './auth.service';
+import { ChangePasswordUseCase } from './use-cases/change-password.use-case';
+import { LogoutUseCase } from './use-cases/logout.use-case';
+import { RecoverPasswordUseCase } from './use-cases/recover-password.use-case';
+import { RegisterPatientUseCase } from './use-cases/register-patient.use-case';
+import { RegisterUserUseCase } from './use-cases/register-user.use-case';
+import { ResetPasswordUseCase } from './use-cases/reset-password.use-case';
+import { SignInWithEmailUseCase } from './use-cases/sign-in-with-email.use-case';
 
 @Controller()
 export class AuthController {
   constructor(
-    private authService: AuthService,
-    private utilsService: UtilsService,
+    private readonly signInUseCase: SignInWithEmailUseCase,
+    private readonly logoutUseCase: LogoutUseCase,
+    private readonly recoverPasswordUseCase: RecoverPasswordUseCase,
+    private readonly resetPasswordUseCase: ResetPasswordUseCase,
+    private readonly registerPatientUseCase: RegisterPatientUseCase,
+    private readonly registerUserUseCase: RegisterUserUseCase,
+    private readonly changePasswordUseCase: ChangePasswordUseCase,
   ) {}
 
   @Public()
   @Post('login')
-  @ApiOperation({ summary: 'Login do usuário' })
-  async signIn(
-    @Req() request: Request,
+  @ApiOperation({ summary: 'Inicia a sessão do usuário ou paciente' })
+  @ApiResponse({ type: BaseResponse })
+  async login(
     @Body() signInWithEmailDto: SignInWithEmailDto,
     @Res({ passthrough: true }) response: Response,
-  ): Promise<BaseResponseSchema> {
-    const TWELVE_HOURS_IN_MS = 1000 * 60 * 60 * 12;
-
-    const { accessToken } = await this.authService.signIn(signInWithEmailDto);
-
-    this.utilsService.setCookie(response, {
-      name: COOKIES_MAPPING.access_token,
-      value: accessToken,
-      maxAge: signInWithEmailDto.rememberMe
-        ? TWELVE_HOURS_IN_MS * 60
-        : TWELVE_HOURS_IN_MS,
-    });
+  ): Promise<BaseResponse> {
+    await this.signInUseCase.execute({ signInWithEmailDto, response });
 
     return {
       success: true,
@@ -61,111 +55,100 @@ export class AuthController {
   }
 
   @Public()
-  @Post('register')
-  @ApiOperation({ summary: 'Registro de um novo usuário' })
-  async register(
-    @Body() createUserDto: CreateUserDto,
-  ): Promise<BaseResponseSchema> {
-    await this.authService.register(createUserDto);
+  @Post('register/patient')
+  @ApiOperation({ summary: 'Registra um novo paciente' })
+  @ApiResponse({ type: BaseResponse })
+  async registerPatient(
+    @Body() registerPatientDto: RegisterPatientDto,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<BaseResponse> {
+    await this.registerPatientUseCase.execute({ registerPatientDto, response });
 
     return {
       success: true,
-      message: 'Conta registrada com sucesso.',
+      message: 'Sua conta foi registrada com sucesso.',
     };
   }
 
   @Public()
-  @Post('logout')
-  @ApiOperation({ summary: 'Logout do usuário' })
-  async logout(
-    @Req() request: Request,
-    @Cookies('access_token') accessToken: string,
+  @Post('register/user')
+  @ApiOperation({ summary: 'Registro um novo usuário via convite' })
+  @ApiResponse({ type: BaseResponse })
+  async registerUser(
+    @Body() registerUserDto: RegisterUserDto,
     @Res({ passthrough: true }) response: Response,
-  ) {
-    if (!accessToken) {
-      throw new UnauthorizedException('Token de acesso ausente.');
-    }
-
-    await this.authService.logout(accessToken);
-
-    this.utilsService.deleteCookie(response, COOKIES_MAPPING.access_token);
+  ): Promise<BaseResponse> {
+    await this.registerUserUseCase.execute({ registerUserDto, response });
 
     return {
       success: true,
-      message: 'Logout realizado com sucesso.',
-    };
-  }
-
-  @Public()
-  @Post('reset-password')
-  async resetPassword(
-    @Req() request: Request,
-    @Cookies(COOKIES_MAPPING.password_reset)
-    passwordResetToken: string,
-    @Body() resetPasswordDto: ResetPasswordDto,
-    @Res({ passthrough: true }) response: Response,
-  ) {
-    const TWELVE_HOURS_IN_MS = 1000 * 60 * 60 * 12;
-
-    if (!passwordResetToken) {
-      throw new UnauthorizedException('Token de redefinição de senha ausente.');
-    }
-
-    const { accessToken } = await this.authService.resetPassword(
-      passwordResetToken,
-      resetPasswordDto.password,
-    );
-
-    this.utilsService.setCookie(response, {
-      name: COOKIES_MAPPING.access_token,
-      value: accessToken,
-      maxAge: TWELVE_HOURS_IN_MS,
-    });
-
-    return {
-      success: true,
-      message: 'Senha atualizada com sucesso.',
+      message: 'Sua conta foi registrada com sucesso.',
     };
   }
 
   @Public()
   @Post('recover-password')
-  @ApiOperation({ summary: 'Recuperação de senha' })
+  @ApiOperation({ summary: 'Solicita recuperação de senha' })
+  @ApiResponse({ type: BaseResponse })
   async recoverPassword(
-    @Req() request: Request,
     @Body() recoverPasswordDto: RecoverPasswordDto,
-    @Res({ passthrough: true }) response: Response,
-  ): Promise<BaseResponseSchema> {
-    const { passwordResetToken } = await this.authService.forgotPassword(
-      recoverPasswordDto.email,
-    );
-
-    const FOUR_HOURS_IN_MS = 1000 * 60 * 60 * 4;
-
-    this.utilsService.setCookie(response, {
-      name: COOKIES_MAPPING.password_reset,
-      value: passwordResetToken,
-      maxAge: FOUR_HOURS_IN_MS,
-    });
+  ): Promise<BaseResponse> {
+    await this.recoverPasswordUseCase.execute({ recoverPasswordDto });
 
     return {
       success: true,
       message:
-        'O link para redefinição de senha foi enviado ao e-mail solicitado.',
+        'O link para redefinição de senha foi enviado ao e-mail informado.',
     };
   }
 
-  @Post('change-password')
-  @Roles(['nurse', 'manager', 'patient', 'specialist', 'admin'])
-  async changePassword(
-    @Body() changePasswordDto: ChangePasswordDto,
-    @CurrentUser() user: UserSchema,
-  ): Promise<BaseResponseSchema> {
-    await this.authService.changePassword(user, changePasswordDto);
+  @Public()
+  @Post('reset-password')
+  @ApiOperation({ summary: 'Solicita redefinição de senha' })
+  @ApiResponse({ type: BaseResponse })
+  async resetPassword(
+    @Body() resetPasswordDto: ResetPasswordDto,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<BaseResponse> {
+    await this.resetPasswordUseCase.execute({ resetPasswordDto, response });
 
     return {
       success: true,
       message: 'Senha atualizada com sucesso.',
+    };
+  }
+
+  @Roles(['all'])
+  @Post('change-password')
+  @ApiOperation({
+    summary: 'Altera a senha do usuário ou paciente autenticado',
+  })
+  @ApiResponse({ type: BaseResponse })
+  async changePassword(
+    @AuthUser() user: AuthUserDto,
+    @Body() changePasswordDto: ChangePasswordDto,
+  ): Promise<BaseResponse> {
+    await this.changePasswordUseCase.execute({ user, changePasswordDto });
+
+    return {
+      success: true,
+      message: 'Senha alterada com sucesso.',
+    };
+  }
+
+  @Roles(['all'])
+  @Post('logout')
+  @ApiOperation({ summary: 'Encerra a sessão do usuário ou paciente' })
+  @ApiResponse({ type: BaseResponse })
+  async logout(
+    @Cookies(COOKIES_MAPPING.refresh_token) refreshToken: string,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<BaseResponse> {
+    await this.logoutUseCase.execute({ response, refreshToken });
+
+    return {
+      success: true,
+      message: 'Logout realizado com sucesso.',
     };
   }
 }

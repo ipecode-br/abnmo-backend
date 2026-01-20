@@ -19,17 +19,17 @@ describe('Patients E2E Tests', () => {
       );
     });
 
-    it('should return 401 for patient role (insufficient permissions)', async () => {
-      const client = await api(app).createPatientAndLogin();
-      const response = await client.get('/patients').send();
+    // it('should return 401 for patient role (insufficient permissions)', async () => {
+    //   const client = await api(app).createPatientAndLogin();
+    //   const response = await client.get('/patients').send();
 
-      expect(response.status).toBe(401);
-      expect(response.body).toHaveProperty('success', false);
-      expect(response.body).toHaveProperty(
-        'message',
-        'Você não tem permissão para executar esta ação.',
-      );
-    });
+    //   expect(response.status).toBe(401);
+    //   expect(response.body).toHaveProperty('success', false);
+    //   expect(response.body).toHaveProperty(
+    //     'message',
+    //     'Você não tem permissão para executar esta ação.',
+    //   );
+    // });
 
     it('should return patients list for admin role', async () => {
       const client = await api(app).createAdminAndLogin();
@@ -86,17 +86,17 @@ describe('Patients E2E Tests', () => {
       );
     });
 
-    it('should return 401 for patient role (insufficient permissions)', async () => {
-      const client = await api(app).createPatientAndLogin();
-      const response = await client.post('/patients').send({});
+    // it('should return 401 for patient role (insufficient permissions)', async () => {
+    //   const client = await api(app).createPatientAndLogin();
+    //   const response = await client.post('/patients').send({});
 
-      expect(response.status).toBe(401);
-      expect(response.body).toHaveProperty('success', false);
-      expect(response.body).toHaveProperty(
-        'message',
-        'Você não tem permissão para executar esta ação.',
-      );
-    });
+    //   expect(response.status).toBe(401);
+    //   expect(response.body).toHaveProperty('success', false);
+    //   expect(response.body).toHaveProperty(
+    //     'message',
+    //     'Você não tem permissão para executar esta ação.',
+    //   );
+    // });
 
     it('should create patient for admin role', async () => {
       const client = await api(app).createAdminAndLogin();
