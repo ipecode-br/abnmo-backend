@@ -89,10 +89,12 @@ export class SignInWithEmailUseCase {
       );
     }
 
+    const role = entity.role ?? 'patient';
+
     const { maxAge: accessTokenMaxAge, token: accessToken } =
       await this.createTokenUseCase.execute({
         type: AUTH_TOKENS_MAPPING.access_token,
-        payload: { sub: entity.id, accountType },
+        payload: { sub: entity.id, role },
       });
 
     this.utilsService.setCookie(response, {
@@ -111,7 +113,7 @@ export class SignInWithEmailUseCase {
         expiresAt,
       } = await this.createTokenUseCase.execute({
         type: AUTH_TOKENS_MAPPING.refresh_token,
-        payload: { sub: entity.id, accountType },
+        payload: { sub: entity.id, role },
       });
 
       await this.tokensRepository.save<RefreshToken>({
@@ -130,12 +132,7 @@ export class SignInWithEmailUseCase {
     }
 
     this.logger.log(
-      {
-        entityId: entity.id,
-        email,
-        role: entity.role ?? 'patient',
-        keepLoggedIn,
-      },
+      { entityId: entity.id, email, role, keepLoggedIn },
       'Entity signed in with e-mail',
     );
   }

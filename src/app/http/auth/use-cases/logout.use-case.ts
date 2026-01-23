@@ -42,9 +42,6 @@ export class LogoutUseCase {
 
     this.utilsService.deleteCookie(response, COOKIES_MAPPING.refresh_token);
 
-    this.logger.log(
-      { id: payload.sub, accountType: payload.accountType },
-      'User logged out',
-    );
+    this.logger.log({ id: payload.sub, role: payload.role }, 'User logged out');
   }
 }

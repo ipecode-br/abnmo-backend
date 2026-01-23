@@ -86,7 +86,19 @@ export class GetReferralsUseCase {
         : { [orderBy]: query.order };
 
     const referrals = await this.referralsRepository.find({
-      select: { patient: { id: true, name: true, avatar_url: true } },
+      select: {
+        id: true,
+        patient_id: true,
+        date: true,
+        status: true,
+        category: true,
+        condition: true,
+        annotation: true,
+        professional_name: true,
+        created_at: true,
+        updated_at: true,
+        patient: { id: true, name: true, avatar_url: true },
+      },
       relations: { patient: true },
       skip: (page - 1) * perPage,
       take: perPage,

@@ -10,6 +10,8 @@ export const userResponseSchema = userSchema.pick({
   avatar_url: true,
   status: true,
   role: true,
+  updated_at: true,
+  created_at: true,
 });
 export type UserResponse = z.infer<typeof userResponseSchema>;
 

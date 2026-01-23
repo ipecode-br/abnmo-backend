@@ -30,6 +30,8 @@ export class GetUserUseCase {
         avatar_url: true,
         status: true,
         role: true,
+        updated_at: true,
+        created_at: true,
       },
     });
 

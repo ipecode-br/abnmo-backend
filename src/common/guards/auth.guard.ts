@@ -158,13 +158,13 @@ export class AuthGuard implements CanActivate {
     >(token);
 
     const entityId = payload.sub;
-    const accountType = payload.accountType;
+    const role = payload.role;
 
     if (!entityId) {
       return null;
     }
 
-    if (accountType === 'patient') {
+    if (role === 'patient') {
       const patient = await this.patientsRepository.findOne({
         select: { id: true, email: true },
         where: { id: entityId },

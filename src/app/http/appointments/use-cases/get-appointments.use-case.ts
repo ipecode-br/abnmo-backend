@@ -37,7 +37,7 @@ export class GetAppointmentsUseCase {
     user,
     query,
   }: GetAppointmentsUseCaseInput): Promise<GetAppointmentsUseCaseOutput> {
-    const { search, status, category, condition, page, perPage } = query;
+    const { search, status, category, condition, page, perPage, limit } = query;
     const startDate = query.startDate ? new Date(query.startDate) : null;
     const endDate = query.endDate ? new Date(query.endDate) : null;
 
@@ -93,10 +93,22 @@ export class GetAppointmentsUseCase {
         : { [orderBy]: query.order };
 
     const appointments = await this.appointmentsRepository.find({
-      select: { patient: { id: true, name: true, avatar_url: true } },
+      select: {
+        id: true,
+        patient_id: true,
+        date: true,
+        status: true,
+        category: true,
+        condition: true,
+        annotation: true,
+        professional_name: true,
+        created_at: true,
+        updated_at: true,
+        patient: { id: true, name: true, avatar_url: true },
+      },
       relations: { patient: true },
       skip: (page - 1) * perPage,
-      take: perPage,
+      take: limit ?? perPage,
       order,
       where,
     });

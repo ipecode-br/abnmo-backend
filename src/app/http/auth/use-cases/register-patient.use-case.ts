@@ -56,14 +56,9 @@ export class RegisterPatientUseCase {
       password,
     });
 
-    this.logger.log(
-      { patientId: patient.id, email },
-      'Patient registered successfully',
-    );
-
     const { maxAge, token } = await this.createTokenUseCase.execute({
       type: AUTH_TOKENS_MAPPING.access_token,
-      payload: { sub: patient.id, accountType: 'patient' },
+      payload: { sub: patient.id, role: 'patient' },
     });
 
     this.utilsService.setCookie(response, {
@@ -71,5 +66,10 @@ export class RegisterPatientUseCase {
       value: token,
       maxAge,
     });
+
+    this.logger.log(
+      { id: patient.id, email },
+      'Patient registered successfully',
+    );
   }
 }

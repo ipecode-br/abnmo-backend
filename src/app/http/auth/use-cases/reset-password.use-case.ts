@@ -105,17 +105,12 @@ export class ResetPasswordUseCase {
       await this.usersRepository.update(entity.id, { password });
     }
 
-    this.logger.log(
-      { id: entity.id, email: entity.email, accountType },
-      'Password reseted successfully',
-    );
-
     await this.tokensRepository.delete({ token });
 
     const { maxAge, token: accessToken } =
       await this.createTokenUseCase.execute({
         type: AUTH_TOKENS_MAPPING.access_token,
-        payload: { sub: entity.id, accountType },
+        payload: { sub: entity.id, role: entity.role ?? 'patient' },
       });
 
     this.utilsService.setCookie(response, {
@@ -123,5 +118,10 @@ export class ResetPasswordUseCase {
       value: accessToken,
       maxAge,
     });
+
+    this.logger.log(
+      { id: entity.id, email: entity.email, accountType },
+      'Password reseted successfully',
+    );
   }
 }

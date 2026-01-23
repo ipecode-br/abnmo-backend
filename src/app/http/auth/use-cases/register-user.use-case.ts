@@ -92,17 +92,12 @@ export class RegisterUserUseCase {
       role,
     });
 
-    this.logger.log(
-      { id: user.id, email, role },
-      'User registered successfully',
-    );
-
     await this.tokensRepository.delete({ token });
 
     const { maxAge, token: accessToken } =
       await this.createTokenUseCase.execute({
         type: AUTH_TOKENS_MAPPING.access_token,
-        payload: { sub: user.id, accountType: 'user' },
+        payload: { sub: user.id, role: user.role },
       });
 
     this.utilsService.setCookie(response, {
@@ -110,5 +105,10 @@ export class RegisterUserUseCase {
       value: accessToken,
       maxAge,
     });
+
+    this.logger.log(
+      { id: user.id, email, role },
+      'User registered successfully',
+    );
   }
 }
