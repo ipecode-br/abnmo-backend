@@ -17,6 +17,7 @@ import { BaseResponse } from '@/common/dtos';
 import type { AuthUserDto } from '../auth/auth.dtos';
 import {
   CreatePatientDto,
+  GetPatientOptionsResponse,
   GetPatientResponse,
   GetPatientsQuery,
   GetPatientsResponse,
@@ -25,6 +26,7 @@ import {
 import { CreatePatientUseCase } from './use-cases/create-patient.use-case';
 import { DeactivatePatientUseCase } from './use-cases/deactivate-patient.use-case';
 import { GetPatientUseCase } from './use-cases/get-patient.use-case';
+import { GetPatientOptionsUseCase } from './use-cases/get-patient-options.use-case';
 import { GetPatientsUseCase } from './use-cases/get-patients.use-case';
 import { UpdatePatientUseCase } from './use-cases/update-patient.use-case';
 
@@ -34,6 +36,7 @@ export class PatientsController {
   constructor(
     private readonly getPatientsUseCase: GetPatientsUseCase,
     private readonly getPatientUseCase: GetPatientUseCase,
+    private readonly getPatientOptionsUseCase: GetPatientOptionsUseCase,
     private readonly createPatientUseCase: CreatePatientUseCase,
     private readonly updatePatientUseCase: UpdatePatientUseCase,
     private readonly deactivatePatientUseCase: DeactivatePatientUseCase,
@@ -51,6 +54,22 @@ export class PatientsController {
     return {
       success: true,
       message: 'Lista de pacientes retornada com sucesso.',
+      data,
+    };
+  }
+
+  @Get('/options')
+  @Roles(['manager', 'nurse'])
+  @ApiOperation({
+    summary: 'Retorna uma lista de opções com todos os pacientes ativos',
+  })
+  @ApiResponse({ type: GetPatientOptionsResponse })
+  async getPatientOptions(): Promise<GetPatientOptionsResponse> {
+    const data = await this.getPatientOptionsUseCase.execute();
+
+    return {
+      success: true,
+      message: 'Lista de opções de pacientes retornada com sucesso.',
       data,
     };
   }

@@ -22,14 +22,22 @@ export const getPatientsResponseSchema = baseResponseSchema.extend({
   }),
 });
 
+export const patientOptionResponseSchema = patientSchema.pick({
+  id: true,
+  name: true,
+  cpf: true,
+});
+export type PatientOptionResponse = z.infer<typeof patientOptionResponseSchema>;
+
+export const getPatientOptionsResponseSchema = baseResponseSchema.extend({
+  data: z.object({
+    patients: z.array(patientOptionResponseSchema),
+    total: z.number(),
+  }),
+});
+
 export const getPatientResponseSchema = baseResponseSchema.extend({
   data: patientSchema
     .omit({ password: true })
     .extend({ supports: z.array(patientSupportSchema) }),
-});
-
-export const getAllPatientsListResponseSchema = baseResponseSchema.extend({
-  data: z.object({
-    patients: z.array(patientSchema.pick({ id: true, name: true, cpf: true })),
-  }),
 });
