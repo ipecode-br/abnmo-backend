@@ -84,6 +84,7 @@ export const getTotalReferredPatientsResponseSchema = baseResponseSchema.extend(
 export const totalReferredPatientsByStateSchema = z.object({
   state: z.enum(BRAZILIAN_STATES),
   total: z.number(),
+  percentage: z.number(),
 });
 export type TotalReferredPatientsByState = z.infer<
   typeof totalReferredPatientsByStateSchema

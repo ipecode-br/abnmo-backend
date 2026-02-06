@@ -55,7 +55,16 @@ export class GetTotalReferredPatientsByStateUseCase {
 
     const listStatesQuery = createBaseQuery()
       .select('patient.state', 'state')
-      .addSelect('COUNT(DISTINCT patient.id)', 'total')
+      .addSelect('COUNT(DISTINCT patient.id)', 'total');
+
+    listStatesQuery
+      .addSelect(
+        `ROUND(
+          (COUNT(DISTINCT patient.id) / SUM(COUNT(DISTINCT patient.id)) OVER()) * 100,
+          1
+        )`,
+        'percentage',
+      )
       .groupBy('patient.state')
       .orderBy('COUNT(DISTINCT patient.id)', 'DESC')
       .limit(limit);
@@ -70,6 +79,8 @@ export class GetTotalReferredPatientsByStateUseCase {
       totalQuery.getRawOne<{ total: string }>(),
     ]);
 
-    return { states, total: Number(totalResult?.total || 0) };
+    const totalPatients = Number(totalResult?.total || 0);
+
+    return { states, total: totalPatients };
   }
 }
