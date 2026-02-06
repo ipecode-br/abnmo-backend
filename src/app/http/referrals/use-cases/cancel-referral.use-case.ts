@@ -43,7 +43,7 @@ export class CancelReferralUseCase {
 
     this.logger.log(
       { id, userId: user.id, userEmail: user.email, userRole: user.role },
-      'Referral canceled successfully.',
+      'Referral canceled successfully',
     );
   }
 }

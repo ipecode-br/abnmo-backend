@@ -39,7 +39,7 @@ export class GetReferralsUseCase {
     const endDate = query.endDate ? new Date(query.endDate) : null;
 
     const ORDER_BY_MAPPING: Record<ReferralOrderBy, keyof Referral> = {
-      date: 'created_at',
+      date: 'date',
       patient: 'patient',
       status: 'status',
       category: 'category',
@@ -48,6 +48,18 @@ export class GetReferralsUseCase {
     };
 
     const where: FindOptionsWhere<Referral> = {};
+
+    if (startDate && !endDate) {
+      where.date = MoreThanOrEqual(startDate);
+    }
+
+    if (endDate && !startDate) {
+      where.date = LessThanOrEqual(endDate);
+    }
+
+    if (startDate && endDate) {
+      where.date = Between(startDate, endDate);
+    }
 
     if (status) {
       where.status = status;
@@ -59,18 +71,6 @@ export class GetReferralsUseCase {
 
     if (category) {
       where.category = category;
-    }
-
-    if (startDate && !endDate) {
-      where.created_at = MoreThanOrEqual(startDate);
-    }
-
-    if (endDate && !startDate) {
-      where.created_at = LessThanOrEqual(endDate);
-    }
-
-    if (startDate && endDate) {
-      where.created_at = Between(startDate, endDate);
     }
 
     if (search) {

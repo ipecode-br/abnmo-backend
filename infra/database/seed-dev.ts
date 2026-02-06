@@ -103,7 +103,7 @@ async function main() {
     fourMonthsAgo.setMonth(fourMonthsAgo.getMonth() - 4);
 
     const twoMonthsAhead = new Date();
-    twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() + 2);
+    twoMonthsAhead.setMonth(twoMonthsAhead.getMonth() + 2);
 
     const patient = patientsRepository.create({
       name: faker.person.fullName(),

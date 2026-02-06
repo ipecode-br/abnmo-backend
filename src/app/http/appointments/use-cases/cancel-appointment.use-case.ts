@@ -43,7 +43,7 @@ export class CancelAppointmentUseCase {
 
     this.logger.log(
       { id, userId: user.id, userEmail: user.email, userRole: user.role },
-      'Appointment canceled successfully.',
+      'Appointment canceled successfully',
     );
   }
 }

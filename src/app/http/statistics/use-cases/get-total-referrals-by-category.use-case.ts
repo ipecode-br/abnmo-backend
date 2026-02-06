@@ -41,7 +41,7 @@ export class GetTotalReferralsByCategoryUseCase {
       const baseQuery = this.referralsRepository.createQueryBuilder('referral');
 
       if (dateRange.startDate && dateRange.endDate) {
-        baseQuery.where('referral.created_at BETWEEN :start AND :end', {
+        baseQuery.where('referral.date BETWEEN :start AND :end', {
           start: dateRange.startDate,
           end: dateRange.endDate,
         });

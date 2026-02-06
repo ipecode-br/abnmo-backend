@@ -44,19 +44,19 @@ export class GetTotalAppointmentsUseCase {
 
     if (period) {
       const dateRange = this.utilsService.getDateRangeForPeriod(period);
-      where.created_at = Between(dateRange.startDate, dateRange.endDate);
+      where.date = Between(dateRange.startDate, dateRange.endDate);
     }
 
     if (startDate && !endDate) {
-      where.created_at = MoreThanOrEqual(startDate);
+      where.date = MoreThanOrEqual(startDate);
     }
 
     if (endDate && !startDate) {
-      where.created_at = LessThanOrEqual(endDate);
+      where.date = LessThanOrEqual(endDate);
     }
 
     if (startDate && endDate) {
-      where.created_at = Between(startDate, endDate);
+      where.date = Between(startDate, endDate);
     }
 
     if (status) {

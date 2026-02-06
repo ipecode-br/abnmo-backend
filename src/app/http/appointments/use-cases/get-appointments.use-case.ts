@@ -42,7 +42,7 @@ export class GetAppointmentsUseCase {
     const endDate = query.endDate ? new Date(query.endDate) : null;
 
     const ORDER_BY_MAPPING: Record<AppointmentsOrderBy, keyof Appointment> = {
-      date: 'created_at',
+      date: 'date',
       patient: 'patient',
       status: 'status',
       category: 'category',
@@ -57,15 +57,15 @@ export class GetAppointmentsUseCase {
     }
 
     if (startDate && !endDate) {
-      where.created_at = MoreThanOrEqual(startDate);
+      where.date = MoreThanOrEqual(startDate);
     }
 
     if (endDate && !startDate) {
-      where.created_at = LessThanOrEqual(endDate);
+      where.date = LessThanOrEqual(endDate);
     }
 
     if (startDate && endDate) {
-      where.created_at = Between(startDate, endDate);
+      where.date = Between(startDate, endDate);
     }
 
     if (status) {

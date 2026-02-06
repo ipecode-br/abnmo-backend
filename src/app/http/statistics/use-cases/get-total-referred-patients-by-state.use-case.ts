@@ -44,7 +44,7 @@ export class GetTotalReferredPatientsByStateUseCase {
         .where('referral.id IS NOT NULL');
 
       if (dateRange.startDate && dateRange.endDate) {
-        baseQuery.andWhere('referral.created_at BETWEEN :start AND :end', {
+        baseQuery.andWhere('referral.date BETWEEN :start AND :end', {
           start: dateRange.startDate,
           end: dateRange.endDate,
         });

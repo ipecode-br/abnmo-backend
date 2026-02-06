@@ -52,7 +52,7 @@ export class UpdateAppointmentUseCase {
 
     this.logger.log(
       { id, userId: user.id, userEmail: user.email, userRole: user.role },
-      'Appointment updated successfully.',
+      'Appointment updated successfully',
     );
   }
 }
