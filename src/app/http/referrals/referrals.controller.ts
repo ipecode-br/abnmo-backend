@@ -5,6 +5,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -18,10 +19,12 @@ import {
   CreateReferralDto,
   GetReferralsQuery,
   GetReferralsResponse,
+  UpdateReferralDto,
 } from './referrals.dtos';
 import { CancelReferralUseCase } from './use-cases/cancel-referral.use-case';
 import { CreateReferralUseCase } from './use-cases/create-referrals.use-case';
 import { GetReferralsUseCase } from './use-cases/get-referrals.use-case';
+import { UpdateReferralUseCase } from './use-cases/update-referral.use-case';
 
 @ApiTags('Encaminhamentos')
 @Controller('referrals')
@@ -29,6 +32,7 @@ export class ReferralsController {
   constructor(
     private readonly getReferralsUseCase: GetReferralsUseCase,
     private readonly createReferralUseCase: CreateReferralUseCase,
+    private readonly updateReferralUseCase: UpdateReferralUseCase,
     private readonly cancelReferralUseCase: CancelReferralUseCase,
   ) {}
 
@@ -62,6 +66,27 @@ export class ReferralsController {
     });
 
     return { success: true, message: 'Encaminhamento cadastrado com sucesso.' };
+  }
+
+  @Put(':id')
+  @Roles(['nurse', 'manager', 'specialist'])
+  @ApiOperation({ summary: 'Atualiza os dados do encaminhamento' })
+  @ApiResponse({ type: BaseResponse })
+  public async update(
+    @Param('id') id: string,
+    @AuthUser() user: AuthUserDto,
+    @Body() updateReferralDto: UpdateReferralDto,
+  ): Promise<BaseResponse> {
+    await this.updateReferralUseCase.execute({
+      id,
+      user,
+      updateReferralDto,
+    });
+
+    return {
+      success: true,
+      message: 'Encaminhamento atualizado com sucesso.',
+    };
   }
 
   @Patch(':id/cancel')

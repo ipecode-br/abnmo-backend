@@ -17,6 +17,12 @@ export const createReferralSchema = referralSchema.pick({
   professional_name: true,
 });
 
+export const updateReferralSchema = referralSchema.pick({
+  date: true,
+  condition: true,
+  annotation: true,
+});
+
 export const getReferralsQuerySchema = baseQuerySchema
   .pick({
     search: true,

@@ -22,7 +22,6 @@ export const createAppointmentSchema = appointmentSchema.pick({
 
 export const updateAppointmentSchema = appointmentSchema.pick({
   date: true,
-  status: true,
   condition: true,
   annotation: true,
 });
