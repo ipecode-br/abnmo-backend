@@ -7,6 +7,7 @@ import {
   emailSchema,
   nameSchema,
   passwordSchema,
+  specialtySchema,
 } from '../shared';
 
 export const userSchema = z
@@ -17,6 +18,8 @@ export const userSchema = z
     password: passwordSchema,
     avatar_url: avatarSchema.nullable(),
     role: z.enum(USER_ROLES),
+    specialty: specialtySchema.nullable(),
+    registration_id: z.string().max(32).nullable(),
     status: z.enum(USER_STATUSES).default('active'),
     created_at: z.coerce.date(),
     updated_at: z.coerce.date(),

@@ -24,7 +24,7 @@ import {
 } from '@/domain/enums/patients';
 import { REFERRAL_STATUSES } from '@/domain/enums/referrals';
 import { SPECIALTY_CATEGORIES } from '@/domain/enums/shared';
-import { USER_ROLES } from '@/domain/enums/users';
+import { USER_ROLES, USER_STATUSES } from '@/domain/enums/users';
 
 import dataSource from './data.source';
 
@@ -82,19 +82,6 @@ async function main() {
     const patientRequirementsRepository =
       dataSource.getRepository(PatientRequirement);
 
-    console.log('👤 Creating users...');
-    for (const role of USER_ROLES) {
-      const user = usersRepository.create({
-        name: faker.person.fullName(),
-        email: `${role}@ipecode.com.br`,
-        password,
-        role,
-        avatar_url: faker.image.avatar(),
-      });
-      await usersRepository.save(user);
-    }
-    console.log('👤 Users created successfully...');
-
     const oneMonthAgo = new Date();
     oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
     const twoMonthsAgo = new Date();
@@ -104,6 +91,36 @@ async function main() {
 
     const twoMonthsAhead = new Date();
     twoMonthsAhead.setMonth(twoMonthsAhead.getMonth() + 2);
+
+    console.log('👤 Creating users...');
+    for (const role of USER_ROLES) {
+      const user = usersRepository.create({
+        name: faker.person.fullName(),
+        email: `${role}@ipecode.com.br`,
+        password,
+        role,
+        avatar_url: faker.image.avatar(),
+        created_at: faker.date.between({ from: fourMonthsAgo, to: new Date() }),
+      });
+      await usersRepository.save(user);
+    }
+
+    const totalOfUsers = 10;
+    for (let i = 0; i < totalOfUsers; i++) {
+      const user = usersRepository.create({
+        name: faker.person.fullName(),
+        email: faker.internet.email().toLowerCase(),
+        password,
+        role: 'specialist',
+        status: faker.helpers.arrayElement(USER_STATUSES),
+        specialty: faker.helpers.arrayElement(SPECIALTY_CATEGORIES),
+        registration_id: faker.vehicle.vrm(),
+        avatar_url: faker.image.avatar(),
+        created_at: faker.date.between({ from: fourMonthsAgo, to: new Date() }),
+      });
+      await usersRepository.save(user);
+    }
+    console.log('👤 Users created successfully...');
 
     const patient = patientsRepository.create({
       name: faker.person.fullName(),
