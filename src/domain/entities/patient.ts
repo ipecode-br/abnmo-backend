@@ -37,7 +37,7 @@ export class Patient implements PatientSchema {
   @Column({ type: 'varchar', length: 64, unique: true })
   email: string;
 
-  @Column({ type: 'varchar', nullable: true })
+  @Column({ type: 'varchar', length: 64, nullable: true })
   password: string | null;
 
   @Column({ type: 'varchar', nullable: true })
@@ -49,20 +49,20 @@ export class Patient implements PatientSchema {
   @Column({ type: 'enum', enum: PATIENT_GENDERS, default: 'prefer_not_to_say' })
   gender: PatientGender;
 
-  @Column({ type: 'datetime', nullable: true })
-  date_of_birth: Date | null;
+  @Column({ type: 'datetime' })
+  date_of_birth: Date;
 
-  @Column({ type: 'varchar', length: 11, nullable: true })
-  phone: string | null;
+  @Column({ type: 'varchar', length: 11 })
+  phone: string;
 
-  @Column({ type: 'varchar', length: 11, unique: true, nullable: true })
-  cpf: string | null;
+  @Column({ type: 'varchar', length: 11, unique: true })
+  cpf: string;
 
-  @Column({ type: 'enum', enum: BRAZILIAN_STATES, nullable: true })
-  state: BrazilianState | null;
+  @Column({ type: 'enum', enum: BRAZILIAN_STATES })
+  state: BrazilianState;
 
-  @Column({ type: 'varchar', nullable: true })
-  city: string | null;
+  @Column({ type: 'varchar' })
+  city: string;
 
   @Column({ type: 'tinyint', width: 1, default: 0 })
   has_disability: boolean;
@@ -79,8 +79,8 @@ export class Patient implements PatientSchema {
   @Column({ type: 'varchar', length: 500, nullable: true })
   medication_desc: string | null;
 
-  @Column({ type: 'enum', enum: PATIENT_NMO_DIAGNOSTICS, nullable: true })
-  nmo_diagnosis: PatientNmoDiagnosis | null;
+  @Column({ type: 'enum', enum: PATIENT_NMO_DIAGNOSTICS })
+  nmo_diagnosis: PatientNmoDiagnosis;
 
   @CreateDateColumn({ type: 'datetime' })
   created_at: Date;

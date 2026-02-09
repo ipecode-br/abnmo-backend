@@ -17,6 +17,8 @@ interface RegisterPatientUseCaseInput {
   response: Response;
 }
 
+// TODO: add all required fields to register a patient
+
 @Injectable()
 export class RegisterPatientUseCase {
   private readonly logger = new Logger(RegisterPatientUseCase.name);
