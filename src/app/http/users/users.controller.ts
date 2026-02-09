@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { AuthUser } from '@/common/decorators/auth-user.decorator';
@@ -6,11 +14,15 @@ import { Roles } from '@/common/decorators/roles.decorator';
 import { BaseResponse } from '@/common/dtos';
 
 import type { AuthUserDto } from '../auth/auth.dtos';
+import { CancelUserInviteUseCase } from './use-cases/cancel-user-invite.use-case';
 import { CreateUserInviteUseCase } from './use-cases/create-user-invite.use-case';
 import { GetUserUseCase } from './use-cases/get-user.use-case';
+import { GetUserInvitesUseCase } from './use-cases/get-user-invites.use-case';
 import { GetUsersUseCase } from './use-cases/get-users.use-case';
 import {
   CreateUserInviteDto,
+  GetUserInvitesQuery,
+  GetUserInvitesResponse,
   GetUserResponse,
   GetUsersQuery,
   GetUsersResponse,
@@ -23,23 +35,9 @@ export class UsersController {
     private readonly createUserInviteUseCase: CreateUserInviteUseCase,
     private readonly getUserUseCase: GetUserUseCase,
     private readonly getUsersUseCase: GetUsersUseCase,
+    private readonly getUserInvitesUseCase: GetUserInvitesUseCase,
+    private readonly cancelUserInviteUseCase: CancelUserInviteUseCase,
   ) {}
-
-  @Post('invite')
-  @Roles(['manager'])
-  @ApiOperation({ summary: 'Cria convite para registro de usuário' })
-  @ApiResponse({ type: BaseResponse })
-  async createUserInvite(
-    @AuthUser() user: AuthUserDto,
-    @Body() createUserInviteDto: CreateUserInviteDto,
-  ): Promise<BaseResponse> {
-    await this.createUserInviteUseCase.execute({ user, createUserInviteDto });
-
-    return {
-      success: true,
-      message: 'Convite do usuário criado com sucesso.',
-    };
-  }
 
   @Get()
   @Roles(['manager'])
@@ -66,6 +64,52 @@ export class UsersController {
       success: true,
       message: 'Dados do usuário retornados com sucesso.',
       data,
+    };
+  }
+
+  @Post('invites')
+  @Roles(['manager'])
+  @ApiOperation({ summary: 'Cria convite para registro de usuário' })
+  @ApiResponse({ type: BaseResponse })
+  async createUserInvite(
+    @AuthUser() user: AuthUserDto,
+    @Body() createUserInviteDto: CreateUserInviteDto,
+  ): Promise<BaseResponse> {
+    await this.createUserInviteUseCase.execute({ user, createUserInviteDto });
+
+    return {
+      success: true,
+      message: 'Convite do usuário criado com sucesso.',
+    };
+  }
+
+  @Get('invites')
+  @Roles(['manager'])
+  @ApiOperation({ summary: 'Lista todos os convites de usuário' })
+  @ApiResponse({ type: GetUserInvitesResponse })
+  async getUserInvites(@Query() query: GetUserInvitesQuery): Promise<any> {
+    const data = await this.getUserInvitesUseCase.execute({ query });
+
+    return {
+      success: true,
+      message: 'Lista de convites retornada com sucesso.',
+      data,
+    };
+  }
+
+  @Delete('invites/:id')
+  @Roles(['manager'])
+  @ApiOperation({ summary: 'Cancela convite de usuário' })
+  @ApiResponse({ type: BaseResponse })
+  async cancelUserInvite(
+    @Param('id') id: string,
+    @AuthUser() user: AuthUserDto,
+  ): Promise<BaseResponse> {
+    await this.cancelUserInviteUseCase.execute({ id: parseInt(id, 10), user });
+
+    return {
+      success: true,
+      message: 'Convite cancelado com sucesso.',
     };
   }
 }
