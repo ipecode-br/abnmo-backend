@@ -12,6 +12,44 @@ export const getTotalAppointmentsResponseSchema = baseResponseSchema.extend({
   data: z.object({ total: z.number() }),
 });
 
+export const totalAppointmentsByCategorySchema = z.object({
+  category: z.enum(SPECIALTY_CATEGORIES),
+  total: z.number(),
+});
+export type TotalAppointmentsByCategory = z.infer<
+  typeof totalAppointmentsByCategorySchema
+>;
+
+export const getTotalAppointmentsByCategoryResponseSchema =
+  baseResponseSchema.extend({
+    data: z.object({
+      categories: z.array(totalAppointmentsByCategorySchema),
+      total: z.number(),
+    }),
+  });
+
+export const getTotalPatientsWithAppointmentsResponseSchema =
+  baseResponseSchema.extend({
+    data: z.object({ total: z.number() }),
+  });
+
+export const totalPatientsWithAppointmentsByStateSchema = z.object({
+  state: z.enum(BRAZILIAN_STATES),
+  total: z.number(),
+  percentage: z.number(),
+});
+export type TotalPatientsWithAppointmentsByStateSchema = z.infer<
+  typeof totalPatientsWithAppointmentsByStateSchema
+>;
+
+export const getTotalPatientsWithAppointmentsByStateResponseSchema =
+  baseResponseSchema.extend({
+    data: z.object({
+      states: z.array(totalPatientsWithAppointmentsByStateSchema),
+      total: z.number(),
+    }),
+  });
+
 // Patients
 
 export const getTotalPatientsByStatusResponseSchema = baseResponseSchema.extend(

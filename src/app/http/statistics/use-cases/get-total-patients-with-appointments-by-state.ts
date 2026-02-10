@@ -1,0 +1,86 @@
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import type { Repository, SelectQueryBuilder } from 'typeorm';
+
+import { Patient } from '@/domain/entities/patient';
+import type { QueryPeriod } from '@/domain/enums/queries';
+import type { TotalReferredPatientsByState } from '@/domain/schemas/statistics/responses';
+import { UtilsService } from '@/utils/utils.service';
+
+interface GetTotalPatientsWithAppointmentsByStateUseCaseInput {
+  period?: QueryPeriod;
+  startDate?: Date;
+  endDate?: Date;
+  limit?: number;
+}
+
+interface GetTotalPatientsWithAppointmentsByStateUseCaseOutput {
+  states: TotalReferredPatientsByState[];
+  total: number;
+}
+
+@Injectable()
+export class GetTotalPatientsWithAppointmentsByStateUseCase {
+  constructor(
+    @InjectRepository(Patient)
+    private readonly patientsRepository: Repository<Patient>,
+    private readonly utilsService: UtilsService,
+  ) {}
+
+  async execute({
+    period,
+    startDate,
+    endDate,
+    limit,
+  }: GetTotalPatientsWithAppointmentsByStateUseCaseInput = {}): Promise<GetTotalPatientsWithAppointmentsByStateUseCaseOutput> {
+    const dateRange = period
+      ? this.utilsService.getDateRangeForPeriod(period)
+      : { startDate, endDate };
+
+    const createBaseQuery = (): SelectQueryBuilder<Patient> => {
+      const baseQuery = this.patientsRepository
+        .createQueryBuilder('patient')
+        .innerJoin('patient.appointments', 'appointment')
+        .where('appointment.id IS NOT NULL');
+
+      if (dateRange.startDate && dateRange.endDate) {
+        baseQuery.andWhere('appointment.date BETWEEN :start AND :end', {
+          start: dateRange.startDate,
+          end: dateRange.endDate,
+        });
+      }
+
+      return baseQuery;
+    };
+
+    const listStatesQuery = createBaseQuery()
+      .select('patient.state', 'state')
+      .addSelect('COUNT(DISTINCT patient.id)', 'total');
+
+    listStatesQuery
+      .addSelect(
+        `ROUND(
+          (COUNT(DISTINCT patient.id) / SUM(COUNT(DISTINCT patient.id)) OVER()) * 100,
+          1
+        )`,
+        'percentage',
+      )
+      .groupBy('patient.state')
+      .orderBy('COUNT(DISTINCT patient.id)', 'DESC')
+      .limit(limit);
+
+    const totalQuery = createBaseQuery().select(
+      'COUNT(DISTINCT patient.state)',
+      'total',
+    );
+
+    const [states, totalResult] = await Promise.all([
+      listStatesQuery.getRawMany<TotalReferredPatientsByState>(),
+      totalQuery.getRawOne<{ total: string }>(),
+    ]);
+
+    const totalPatients = Number(totalResult?.total || 0);
+
+    return { states, total: totalPatients };
+  }
+}

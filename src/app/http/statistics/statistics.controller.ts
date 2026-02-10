@@ -8,11 +8,17 @@ import type {
 } from '@/domain/schemas/statistics/responses';
 
 import {
+  GetTotalAppointmentsByCategoryQuery,
+  GetTotalAppointmentsByCategoryResponse,
   GetTotalAppointmentsResponse,
   GetTotalPatientsByCityResponse,
   GetTotalPatientsByFieldQuery,
   GetTotalPatientsByGenderResponse,
   GetTotalPatientsByStatusResponse,
+  GetTotalPatientsWithAppointmentsByStateQuery,
+  GetTotalPatientsWithAppointmentsByStateResponse,
+  type GetTotalPatientsWithAppointmentsQuery,
+  GetTotalPatientsWithAppointmentsResponse,
   GetTotalReferralsByCategoryQuery,
   GetTotalReferralsByCategoryResponse,
   GetTotalReferralsQuery,
@@ -23,8 +29,11 @@ import {
   GetTotalReferredPatientsResponse,
 } from './statistics.dtos';
 import { GetTotalAppointmentsUseCase } from './use-cases/get-total-appointments.use-case';
+import { GetTotalAppointmentsByCategoryUseCase } from './use-cases/get-total-appointments-by-category.use-case';
 import { GetTotalPatientsByFieldUseCase } from './use-cases/get-total-patients-by-field.use-case';
 import { GetTotalPatientsByStatusUseCase } from './use-cases/get-total-patients-by-status.use-case';
+import { GetTotalPatientsWithAppointmentsUseCase } from './use-cases/get-total-patients-with-appointments.use-case';
+import { GetTotalPatientsWithAppointmentsByStateUseCase } from './use-cases/get-total-patients-with-appointments-by-state';
 import { GetTotalReferralsUseCase } from './use-cases/get-total-referrals.use-case';
 import { GetTotalReferralsByCategoryUseCase } from './use-cases/get-total-referrals-by-category.use-case';
 import { GetTotalReferredPatientsUseCase } from './use-cases/get-total-referred-patients.use-case';
@@ -36,16 +45,21 @@ import { GetTotalReferredPatientsByStateUseCase } from './use-cases/get-total-re
 export class StatisticsController {
   constructor(
     private readonly getTotalAppointmentsUseCase: GetTotalAppointmentsUseCase,
+    private readonly getTotalAppointmentsByCategoryUseCase: GetTotalAppointmentsByCategoryUseCase,
     private readonly getTotalPatientsByStatusUseCase: GetTotalPatientsByStatusUseCase,
     private readonly getTotalPatientsByPeriodUseCase: GetTotalPatientsByFieldUseCase,
+    private readonly getTotalPatientsWithAppointmentsUseCase: GetTotalPatientsWithAppointmentsUseCase,
+    private readonly getTotalPatientsWithAppointmentsByStateUseCase: GetTotalPatientsWithAppointmentsByStateUseCase,
     private readonly getTotalReferralsUseCase: GetTotalReferralsUseCase,
     private readonly getTotalReferredPatientsByStateUseCase: GetTotalReferredPatientsByStateUseCase,
     private readonly getTotalReferredPatientsUseCase: GetTotalReferredPatientsUseCase,
     private readonly getTotalReferralsByCategoryUseCase: GetTotalReferralsByCategoryUseCase,
   ) {}
 
-  @Get('appointments-total')
-  @ApiOperation({ summary: 'Retorna o número total de atendimentos' })
+  // Appointments
+
+  @Get('appointments/total')
+  @ApiOperation({ summary: 'Número total de atendimentos' })
   @ApiResponse({ type: GetTotalAppointmentsResponse })
   async getTotalAppointments(
     @Query() query: GetTotalReferralsQuery,
@@ -61,8 +75,31 @@ export class StatisticsController {
     };
   }
 
-  @Get('patients-total')
-  @ApiOperation({ summary: 'Retorna o número total de pacientes' })
+  @Get('appointments/by-category')
+  @ApiOperation({
+    summary: 'Número total de atendimentos por categoria',
+  })
+  @ApiResponse({ type: GetTotalAppointmentsByCategoryResponse })
+  async getTotalAppointmentsByCategory(
+    @Query() query: GetTotalAppointmentsByCategoryQuery,
+  ): Promise<GetTotalAppointmentsByCategoryResponse> {
+    const { period } = query;
+
+    const { categories, total } =
+      await this.getTotalAppointmentsByCategoryUseCase.execute({ period });
+
+    return {
+      success: true,
+      message:
+        'Lista com o total de atendimentos por categoria retornada com sucesso.',
+      data: { categories, total },
+    };
+  }
+
+  // Patients
+
+  @Get('patients/total')
+  @ApiOperation({ summary: 'Número total de pacientes' })
   @ApiResponse({ type: GetTotalPatientsByStatusResponse })
   async getTotalPatients(): Promise<GetTotalPatientsByStatusResponse> {
     const data = await this.getTotalPatientsByStatusUseCase.execute();
@@ -74,8 +111,8 @@ export class StatisticsController {
     };
   }
 
-  @Get('patients-by-gender')
-  @ApiOperation({ summary: 'Retorna o número total de pacientes por gênero' })
+  @Get('patients/by-gender')
+  @ApiOperation({ summary: 'Número total de pacientes por gênero' })
   @ApiResponse({ type: GetTotalPatientsByGenderResponse })
   async getPatientsByGender(
     @Query() query: GetTotalPatientsByFieldQuery,
@@ -95,8 +132,8 @@ export class StatisticsController {
     };
   }
 
-  @Get('patients-by-city')
-  @ApiOperation({ summary: 'Retorna o número total de pacientes por cidade' })
+  @Get('patients/by-city')
+  @ApiOperation({ summary: 'Número total de pacientes por cidade' })
   @ApiResponse({ type: GetTotalPatientsByCityResponse })
   async getPatientsByCity(
     @Query() query: GetTotalPatientsByFieldQuery,
@@ -120,47 +157,71 @@ export class StatisticsController {
     };
   }
 
-  @Get('referrals-total')
-  @ApiOperation({ summary: 'Retorna o número total de encaminhamentos' })
-  @ApiResponse({ type: GetTotalReferralsResponse })
-  async getTotalReferrals(
-    @Query() query: GetTotalReferralsQuery,
-  ): Promise<GetTotalReferralsResponse> {
+  @Get('patients/with-appointments')
+  @ApiOperation({ summary: 'Número total de pacientes atendidos' })
+  @ApiResponse({ type: GetTotalPatientsWithAppointmentsResponse })
+  async getTotalPatientsWithAppointments(
+    @Query() query: GetTotalPatientsWithAppointmentsQuery,
+  ): Promise<GetTotalPatientsWithAppointmentsResponse> {
     const { period } = query;
 
-    const total = await this.getTotalReferralsUseCase.execute({ period });
+    const total = await this.getTotalPatientsWithAppointmentsUseCase.execute({
+      period,
+    });
 
     return {
       success: true,
-      message: 'Número total de encaminhamentos retornado com sucesso.',
+      message: 'Número total de pacientes atendidos retornado com sucesso.',
       data: { total },
     };
   }
 
-  @Get('referrals-by-category')
+  @Get('patients/with-appointments/by-state')
   @ApiOperation({
-    summary: 'Retorna o número total de encaminhamentos por categoria',
+    summary: 'Número total de pacientes atendidos por estado',
   })
-  @ApiResponse({ type: GetTotalReferralsByCategoryResponse })
-  async getTotalReferralsByCategory(
-    @Query() query: GetTotalReferralsByCategoryQuery,
-  ): Promise<GetTotalReferralsByCategoryResponse> {
-    const { period } = query;
+  @ApiResponse({ type: GetTotalPatientsWithAppointmentsByStateResponse })
+  async getTotalPatientsWithAppointmentsByState(
+    @Query() query: GetTotalPatientsWithAppointmentsByStateQuery,
+  ): Promise<GetTotalPatientsWithAppointmentsByStateResponse> {
+    const { period, limit } = query;
 
-    const { categories, total } =
-      await this.getTotalReferralsByCategoryUseCase.execute({ period });
+    const { states, total } =
+      await this.getTotalPatientsWithAppointmentsByStateUseCase.execute({
+        period,
+        limit,
+      });
 
     return {
       success: true,
       message:
-        'Lista com o total de encaminhamentos por categoria retornada com sucesso.',
-      data: { categories, total },
+        'Lista com o total de pacientes atendidos por estado retornada com sucesso.',
+      data: { states, total },
     };
   }
 
-  @Get('referrals-by-state')
+  @Get('patients/with-referrals')
+  @ApiOperation({ summary: 'Número total de pacientes encaminhados' })
+  @ApiResponse({ type: GetTotalReferredPatientsResponse })
+  async getTotalReferredPatients(
+    @Query() query: GetTotalReferredPatientsQuery,
+  ): Promise<GetTotalReferredPatientsResponse> {
+    const { period } = query;
+
+    const total = await this.getTotalReferredPatientsUseCase.execute({
+      period,
+    });
+
+    return {
+      success: true,
+      message: 'Número total de pacientes encaminhados retornado com sucesso.',
+      data: { total },
+    };
+  }
+
+  @Get('patients/with-referrals/by-state')
   @ApiOperation({
-    summary: 'Retorna o número total de pacientes encaminhados por estado',
+    summary: 'Número total de pacientes encaminhados por estado',
   })
   @ApiResponse({ type: GetTotalReferredPatientsByStateResponse })
   async getReferredPatientsByState(
@@ -182,22 +243,43 @@ export class StatisticsController {
     };
   }
 
-  @Get('referred-patients-total')
-  @ApiOperation({ summary: 'Retorna o número total de pacientes encaminhados' })
-  @ApiResponse({ type: GetTotalReferredPatientsResponse })
-  async getTotalReferredPatients(
-    @Query() query: GetTotalReferredPatientsQuery,
-  ): Promise<GetTotalReferredPatientsResponse> {
+  // Referrals
+
+  @Get('referrals/total')
+  @ApiOperation({ summary: 'Número total de encaminhamentos' })
+  @ApiResponse({ type: GetTotalReferralsResponse })
+  async getTotalReferrals(
+    @Query() query: GetTotalReferralsQuery,
+  ): Promise<GetTotalReferralsResponse> {
     const { period } = query;
 
-    const total = await this.getTotalReferredPatientsUseCase.execute({
-      period,
-    });
+    const total = await this.getTotalReferralsUseCase.execute({ period });
 
     return {
       success: true,
-      message: 'Número total de pacientes encaminhados retornado com sucesso.',
+      message: 'Número total de encaminhamentos retornado com sucesso.',
       data: { total },
+    };
+  }
+
+  @Get('referrals/by-category')
+  @ApiOperation({
+    summary: 'Número total de encaminhamentos por categoria',
+  })
+  @ApiResponse({ type: GetTotalReferralsByCategoryResponse })
+  async getTotalReferralsByCategory(
+    @Query() query: GetTotalReferralsByCategoryQuery,
+  ): Promise<GetTotalReferralsByCategoryResponse> {
+    const { period } = query;
+
+    const { categories, total } =
+      await this.getTotalReferralsByCategoryUseCase.execute({ period });
+
+    return {
+      success: true,
+      message:
+        'Lista com o total de encaminhamentos por categoria retornada com sucesso.',
+      data: { categories, total },
     };
   }
 }

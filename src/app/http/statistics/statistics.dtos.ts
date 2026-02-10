@@ -1,18 +1,24 @@
 import { createZodDto } from 'nestjs-zod';
 
 import {
+  getTotalAppointmentsByCategoryQuerySchema,
   getTotalAppointmentsQuerySchema,
   getTotalPatientsByFieldQuerySchema,
+  getTotalPatientsWithAppointmentsByStateQuerySchema,
+  getTotalPatientsWithAppointmentsQuerySchema,
   getTotalReferralsByCategoryQuerySchema,
   getTotalReferralsQuerySchema,
   getTotalReferredPatientsByStateQuerySchema,
   getTotalReferredPatientsQuerySchema,
 } from '@/domain/schemas/statistics/requests';
 import {
+  getTotalAppointmentsByCategoryResponseSchema,
   getTotalAppointmentsResponseSchema,
   getTotalPatientsByCityResponseSchema,
   getTotalPatientsByGenderResponseSchema,
   getTotalPatientsByStatusResponseSchema,
+  getTotalPatientsWithAppointmentsByStateResponseSchema,
+  getTotalPatientsWithAppointmentsResponseSchema,
   getTotalReferralsByCategoryResponseSchema,
   getTotalReferralsResponseSchema,
   getTotalReferredPatientsByStateResponseSchema,
@@ -26,6 +32,27 @@ export class GetTotalAppointmentsQuery extends createZodDto(
 ) {}
 export class GetTotalAppointmentsResponse extends createZodDto(
   getTotalAppointmentsResponseSchema,
+) {}
+
+export class GetTotalAppointmentsByCategoryQuery extends createZodDto(
+  getTotalAppointmentsByCategoryQuerySchema,
+) {}
+export class GetTotalAppointmentsByCategoryResponse extends createZodDto(
+  getTotalAppointmentsByCategoryResponseSchema,
+) {}
+
+export class GetTotalPatientsWithAppointmentsQuery extends createZodDto(
+  getTotalPatientsWithAppointmentsQuerySchema,
+) {}
+export class GetTotalPatientsWithAppointmentsResponse extends createZodDto(
+  getTotalPatientsWithAppointmentsResponseSchema,
+) {}
+
+export class GetTotalPatientsWithAppointmentsByStateQuery extends createZodDto(
+  getTotalPatientsWithAppointmentsByStateQuerySchema,
+) {}
+export class GetTotalPatientsWithAppointmentsByStateResponse extends createZodDto(
+  getTotalPatientsWithAppointmentsByStateResponseSchema,
 ) {}
 
 // Patients

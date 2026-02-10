@@ -13,6 +13,19 @@ export const getTotalAppointmentsQuerySchema = z.object({
   period: queryPeriodSchema.optional(),
 });
 
+export const getTotalAppointmentsByCategoryQuerySchema = z.object({
+  period: queryPeriodSchema.optional(),
+});
+
+export const getTotalPatientsWithAppointmentsQuerySchema = z.object({
+  period: queryPeriodSchema.optional(),
+});
+
+export const getTotalPatientsWithAppointmentsByStateQuerySchema = z.object({
+  period: queryPeriodSchema.optional(),
+  limit: queryLimitSchema,
+});
+
 // Patients
 
 export const getTotalPatientsByFieldQuerySchema = z.object({
