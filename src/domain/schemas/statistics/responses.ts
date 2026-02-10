@@ -28,39 +28,25 @@ export const getTotalAppointmentsByCategoryResponseSchema =
     }),
   });
 
-export const getTotalPatientsWithAppointmentsResponseSchema =
-  baseResponseSchema.extend({
-    data: z.object({ total: z.number() }),
-  });
+// Patients
 
-export const totalPatientsWithAppointmentsByStateSchema = z.object({
-  state: z.enum(BRAZILIAN_STATES),
+export const getTotalPatientsResponseSchema = baseResponseSchema.extend({
+  data: z.object({ total: z.number() }),
+});
+
+export const totalPatientsByCitySchema = z.object({
+  city: z.string(),
   total: z.number(),
   percentage: z.number(),
 });
-export type TotalPatientsWithAppointmentsByStateSchema = z.infer<
-  typeof totalPatientsWithAppointmentsByStateSchema
->;
+export type TotalPatientsByCity = z.infer<typeof totalPatientsByCitySchema>;
 
-export const getTotalPatientsWithAppointmentsByStateResponseSchema =
-  baseResponseSchema.extend({
-    data: z.object({
-      states: z.array(totalPatientsWithAppointmentsByStateSchema),
-      total: z.number(),
-    }),
-  });
-
-// Patients
-
-export const getTotalPatientsByStatusResponseSchema = baseResponseSchema.extend(
-  {
-    data: z.object({
-      total: z.number(),
-      active: z.number(),
-      inactive: z.number(),
-    }),
-  },
-);
+export const getTotalPatientsByCityResponseSchema = baseResponseSchema.extend({
+  data: z.object({
+    cities: z.array(totalPatientsByCitySchema),
+    total: z.number(),
+  }),
+});
 
 export const totalPatientsByGenderSchema = z.object({
   gender: z.enum(PATIENT_GENDERS),
@@ -77,19 +63,49 @@ export const getTotalPatientsByGenderResponseSchema = baseResponseSchema.extend(
   },
 );
 
-export const totalPatientsByCitySchema = z.object({
-  city: z.string(),
+export const getTotalPatientsWithAppointmentsResponseSchema =
+  baseResponseSchema.extend({
+    data: z.object({ total: z.number() }),
+  });
+
+export const totalPatientsWithAppointmentsByStateSchema = z.object({
+  state: z.enum(BRAZILIAN_STATES),
   total: z.number(),
   percentage: z.number(),
 });
-export type TotalPatientsByCity = z.infer<typeof totalPatientsByCitySchema>;
+export type TotalPatientsWithAppointmentsByState = z.infer<
+  typeof totalPatientsWithAppointmentsByStateSchema
+>;
 
-export const getTotalPatientsByCityResponseSchema = baseResponseSchema.extend({
-  data: z.object({
-    cities: z.array(totalPatientsByCitySchema),
-    total: z.number(),
-  }),
+export const getTotalPatientsWithAppointmentsByStateResponseSchema =
+  baseResponseSchema.extend({
+    data: z.object({
+      states: z.array(totalPatientsWithAppointmentsByStateSchema),
+      total: z.number(),
+    }),
+  });
+
+export const getTotalPatientsWithReferralsResponseSchema =
+  baseResponseSchema.extend({
+    data: z.object({ total: z.number() }),
+  });
+
+export const totalPatientsWithReferralsByStateSchema = z.object({
+  state: z.enum(BRAZILIAN_STATES),
+  total: z.number(),
+  percentage: z.number(),
 });
+export type TotalPatientsWithReferralsByState = z.infer<
+  typeof totalPatientsWithReferralsByStateSchema
+>;
+
+export const getTotalPatientsWithReferralsByStateResponseSchema =
+  baseResponseSchema.extend({
+    data: z.object({
+      states: z.array(totalPatientsWithReferralsByStateSchema),
+      total: z.number(),
+    }),
+  });
 
 // Referrals
 
@@ -109,29 +125,6 @@ export const getTotalReferralsByCategoryResponseSchema =
   baseResponseSchema.extend({
     data: z.object({
       categories: z.array(totalReferralsByCategorySchema),
-      total: z.number(),
-    }),
-  });
-
-export const getTotalReferredPatientsResponseSchema = baseResponseSchema.extend(
-  {
-    data: z.object({ total: z.number() }),
-  },
-);
-
-export const totalReferredPatientsByStateSchema = z.object({
-  state: z.enum(BRAZILIAN_STATES),
-  total: z.number(),
-  percentage: z.number(),
-});
-export type TotalReferredPatientsByState = z.infer<
-  typeof totalReferredPatientsByStateSchema
->;
-
-export const getTotalReferredPatientsByStateResponseSchema =
-  baseResponseSchema.extend({
-    data: z.object({
-      states: z.array(totalReferredPatientsByStateSchema),
       total: z.number(),
     }),
   });

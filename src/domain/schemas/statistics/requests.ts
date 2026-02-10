@@ -17,6 +17,15 @@ export const getTotalAppointmentsByCategoryQuerySchema = z.object({
   period: queryPeriodSchema.optional(),
 });
 
+// Patients
+
+export const getTotalPatientsByFieldQuerySchema = z.object({
+  period: queryPeriodSchema.optional(),
+  order: queryOrderSchema.optional().default('DESC'),
+  limit: queryLimitSchema,
+  withPercentage: queryPercentageSchema,
+});
+
 export const getTotalPatientsWithAppointmentsQuerySchema = z.object({
   period: queryPeriodSchema.optional(),
 });
@@ -26,13 +35,13 @@ export const getTotalPatientsWithAppointmentsByStateQuerySchema = z.object({
   limit: queryLimitSchema,
 });
 
-// Patients
-
-export const getTotalPatientsByFieldQuerySchema = z.object({
+export const getTotalPatientsWithReferralsQuerySchema = z.object({
   period: queryPeriodSchema.optional(),
-  order: queryOrderSchema.optional().default('DESC'),
+});
+
+export const getTotalPatientsWithReferralsByStateQuerySchema = z.object({
+  period: queryPeriodSchema.optional(),
   limit: queryLimitSchema,
-  withPercentage: queryPercentageSchema,
 });
 
 // Referrals
@@ -43,13 +52,4 @@ export const getTotalReferralsQuerySchema = z.object({
 
 export const getTotalReferralsByCategoryQuerySchema = z.object({
   period: queryPeriodSchema.optional(),
-});
-
-export const getTotalReferredPatientsQuerySchema = z.object({
-  period: queryPeriodSchema.optional(),
-});
-
-export const getTotalReferredPatientsByStateQuerySchema = z.object({
-  period: queryPeriodSchema.optional(),
-  limit: queryLimitSchema,
 });

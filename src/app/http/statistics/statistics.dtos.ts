@@ -6,23 +6,23 @@ import {
   getTotalPatientsByFieldQuerySchema,
   getTotalPatientsWithAppointmentsByStateQuerySchema,
   getTotalPatientsWithAppointmentsQuerySchema,
+  getTotalPatientsWithReferralsByStateQuerySchema,
+  getTotalPatientsWithReferralsQuerySchema,
   getTotalReferralsByCategoryQuerySchema,
   getTotalReferralsQuerySchema,
-  getTotalReferredPatientsByStateQuerySchema,
-  getTotalReferredPatientsQuerySchema,
 } from '@/domain/schemas/statistics/requests';
 import {
   getTotalAppointmentsByCategoryResponseSchema,
   getTotalAppointmentsResponseSchema,
   getTotalPatientsByCityResponseSchema,
   getTotalPatientsByGenderResponseSchema,
-  getTotalPatientsByStatusResponseSchema,
+  getTotalPatientsResponseSchema,
   getTotalPatientsWithAppointmentsByStateResponseSchema,
   getTotalPatientsWithAppointmentsResponseSchema,
+  getTotalPatientsWithReferralsByStateResponseSchema,
+  getTotalPatientsWithReferralsResponseSchema,
   getTotalReferralsByCategoryResponseSchema,
   getTotalReferralsResponseSchema,
-  getTotalReferredPatientsByStateResponseSchema,
-  getTotalReferredPatientsResponseSchema,
 } from '@/domain/schemas/statistics/responses';
 
 // Appointments
@@ -41,6 +41,24 @@ export class GetTotalAppointmentsByCategoryResponse extends createZodDto(
   getTotalAppointmentsByCategoryResponseSchema,
 ) {}
 
+// Patients
+
+export class GetTotalPatientsResponse extends createZodDto(
+  getTotalPatientsResponseSchema,
+) {}
+
+export class GetTotalPatientsByFieldQuery extends createZodDto(
+  getTotalPatientsByFieldQuerySchema,
+) {}
+
+export class GetTotalPatientsByCityResponse extends createZodDto(
+  getTotalPatientsByCityResponseSchema,
+) {}
+
+export class GetTotalPatientsByGenderResponse extends createZodDto(
+  getTotalPatientsByGenderResponseSchema,
+) {}
+
 export class GetTotalPatientsWithAppointmentsQuery extends createZodDto(
   getTotalPatientsWithAppointmentsQuerySchema,
 ) {}
@@ -55,22 +73,18 @@ export class GetTotalPatientsWithAppointmentsByStateResponse extends createZodDt
   getTotalPatientsWithAppointmentsByStateResponseSchema,
 ) {}
 
-// Patients
-
-export class GetTotalPatientsByStatusResponse extends createZodDto(
-  getTotalPatientsByStatusResponseSchema,
+export class GetTotalPatientsWithReferralsQuery extends createZodDto(
+  getTotalPatientsWithReferralsQuerySchema,
+) {}
+export class GetTotalPatientsWithReferralsResponse extends createZodDto(
+  getTotalPatientsWithReferralsResponseSchema,
 ) {}
 
-export class GetTotalPatientsByGenderResponse extends createZodDto(
-  getTotalPatientsByGenderResponseSchema,
+export class GetTotalPatientsWithReferralsByStateQuery extends createZodDto(
+  getTotalPatientsWithReferralsByStateQuerySchema,
 ) {}
-
-export class GetTotalPatientsByCityResponse extends createZodDto(
-  getTotalPatientsByCityResponseSchema,
-) {}
-
-export class GetTotalPatientsByFieldQuery extends createZodDto(
-  getTotalPatientsByFieldQuerySchema,
+export class GetTotalPatientsWithReferralsByStateResponse extends createZodDto(
+  getTotalPatientsWithReferralsByStateResponseSchema,
 ) {}
 
 // Referrals
@@ -87,18 +101,4 @@ export class GetTotalReferralsByCategoryQuery extends createZodDto(
 ) {}
 export class GetTotalReferralsByCategoryResponse extends createZodDto(
   getTotalReferralsByCategoryResponseSchema,
-) {}
-
-export class GetTotalReferredPatientsQuery extends createZodDto(
-  getTotalReferredPatientsQuerySchema,
-) {}
-export class GetTotalReferredPatientsResponse extends createZodDto(
-  getTotalReferredPatientsResponseSchema,
-) {}
-
-export class GetTotalReferredPatientsByStateQuery extends createZodDto(
-  getTotalReferredPatientsByStateQuerySchema,
-) {}
-export class GetTotalReferredPatientsByStateResponse extends createZodDto(
-  getTotalReferredPatientsByStateResponseSchema,
 ) {}

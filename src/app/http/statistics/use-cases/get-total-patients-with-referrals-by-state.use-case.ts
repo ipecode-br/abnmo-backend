@@ -4,23 +4,23 @@ import type { Repository, SelectQueryBuilder } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
 import type { QueryPeriod } from '@/domain/enums/queries';
-import type { TotalReferredPatientsByState } from '@/domain/schemas/statistics/responses';
+import type { TotalPatientsWithReferralsByState } from '@/domain/schemas/statistics/responses';
 import { UtilsService } from '@/utils/utils.service';
 
-interface GetTotalReferredPatientsByStateUseCaseInput {
+interface GetTotalPatientsWithReferralsByStateUseCaseInput {
   period?: QueryPeriod;
   startDate?: Date;
   endDate?: Date;
   limit?: number;
 }
 
-interface GetTotalReferredPatientsByStateUseCaseOutput {
-  states: TotalReferredPatientsByState[];
+interface GetTotalPatientsWithReferralsByStateUseCaseOutput {
+  states: TotalPatientsWithReferralsByState[];
   total: number;
 }
 
 @Injectable()
-export class GetTotalReferredPatientsByStateUseCase {
+export class GetTotalPatientsWithReferralsByStateUseCase {
   constructor(
     @InjectRepository(Patient)
     private readonly patientsRepository: Repository<Patient>,
@@ -32,7 +32,7 @@ export class GetTotalReferredPatientsByStateUseCase {
     startDate,
     endDate,
     limit,
-  }: GetTotalReferredPatientsByStateUseCaseInput = {}): Promise<GetTotalReferredPatientsByStateUseCaseOutput> {
+  }: GetTotalPatientsWithReferralsByStateUseCaseInput = {}): Promise<GetTotalPatientsWithReferralsByStateUseCaseOutput> {
     const dateRange = period
       ? this.utilsService.getDateRangeForPeriod(period)
       : { startDate, endDate };
@@ -75,7 +75,7 @@ export class GetTotalReferredPatientsByStateUseCase {
     );
 
     const [states, totalResult] = await Promise.all([
-      listStatesQuery.getRawMany<TotalReferredPatientsByState>(),
+      listStatesQuery.getRawMany<TotalPatientsWithReferralsByState>(),
       totalQuery.getRawOne<{ total: string }>(),
     ]);
 

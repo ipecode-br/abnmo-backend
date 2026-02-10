@@ -14,14 +14,14 @@ import { Patient } from '@/domain/entities/patient';
 import type { QueryPeriod } from '@/domain/enums/queries';
 import { UtilsService } from '@/utils/utils.service';
 
-interface GetTotalReferredPatientsUseCaseInput {
+interface GetTotalPatientsWithReferralsUseCaseInput {
   period?: QueryPeriod;
   startDate?: Date;
   endDate?: Date;
 }
 
 @Injectable()
-export class GetTotalReferredPatientsUseCase {
+export class GetTotalPatientsWithReferralsUseCase {
   constructor(
     @InjectRepository(Patient)
     private readonly patientsRepository: Repository<Patient>,
@@ -32,7 +32,7 @@ export class GetTotalReferredPatientsUseCase {
     period,
     startDate,
     endDate,
-  }: GetTotalReferredPatientsUseCaseInput = {}): Promise<number> {
+  }: GetTotalPatientsWithReferralsUseCaseInput = {}): Promise<number> {
     const where: FindOptionsWhere<Patient> = {
       referrals: { id: Not(IsNull()) },
     };

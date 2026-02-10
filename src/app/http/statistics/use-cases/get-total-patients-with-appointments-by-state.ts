@@ -4,7 +4,7 @@ import type { Repository, SelectQueryBuilder } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
 import type { QueryPeriod } from '@/domain/enums/queries';
-import type { TotalReferredPatientsByState } from '@/domain/schemas/statistics/responses';
+import type { TotalPatientsWithAppointmentsByState } from '@/domain/schemas/statistics/responses';
 import { UtilsService } from '@/utils/utils.service';
 
 interface GetTotalPatientsWithAppointmentsByStateUseCaseInput {
@@ -15,7 +15,7 @@ interface GetTotalPatientsWithAppointmentsByStateUseCaseInput {
 }
 
 interface GetTotalPatientsWithAppointmentsByStateUseCaseOutput {
-  states: TotalReferredPatientsByState[];
+  states: TotalPatientsWithAppointmentsByState[];
   total: number;
 }
 
@@ -75,7 +75,7 @@ export class GetTotalPatientsWithAppointmentsByStateUseCase {
     );
 
     const [states, totalResult] = await Promise.all([
-      listStatesQuery.getRawMany<TotalReferredPatientsByState>(),
+      listStatesQuery.getRawMany<TotalPatientsWithAppointmentsByState>(),
       totalQuery.getRawOne<{ total: string }>(),
     ]);
 

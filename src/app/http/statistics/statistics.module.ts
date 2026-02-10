@@ -11,13 +11,12 @@ import { GetTotalAppointmentsUseCase } from './use-cases/get-total-appointments.
 import { GetTotalAppointmentsByCategoryUseCase } from './use-cases/get-total-appointments-by-category.use-case';
 import { GetTotalPatientsUseCase } from './use-cases/get-total-patients.use-case';
 import { GetTotalPatientsByFieldUseCase } from './use-cases/get-total-patients-by-field.use-case';
-import { GetTotalPatientsByStatusUseCase } from './use-cases/get-total-patients-by-status.use-case';
 import { GetTotalPatientsWithAppointmentsUseCase } from './use-cases/get-total-patients-with-appointments.use-case';
 import { GetTotalPatientsWithAppointmentsByStateUseCase } from './use-cases/get-total-patients-with-appointments-by-state';
+import { GetTotalPatientsWithReferralsUseCase } from './use-cases/get-total-patients-with-referrals.use-case';
+import { GetTotalPatientsWithReferralsByStateUseCase } from './use-cases/get-total-patients-with-referrals-by-state.use-case';
 import { GetTotalReferralsUseCase } from './use-cases/get-total-referrals.use-case';
 import { GetTotalReferralsByCategoryUseCase } from './use-cases/get-total-referrals-by-category.use-case';
-import { GetTotalReferredPatientsUseCase } from './use-cases/get-total-referred-patients.use-case';
-import { GetTotalReferredPatientsByStateUseCase } from './use-cases/get-total-referred-patients-by-state.use-case';
 
 @Module({
   imports: [
@@ -30,13 +29,12 @@ import { GetTotalReferredPatientsByStateUseCase } from './use-cases/get-total-re
     GetTotalAppointmentsByCategoryUseCase,
     GetTotalPatientsUseCase,
     GetTotalPatientsByFieldUseCase,
-    GetTotalPatientsByStatusUseCase,
     GetTotalPatientsWithAppointmentsUseCase,
     GetTotalPatientsWithAppointmentsByStateUseCase,
+    GetTotalPatientsWithReferralsUseCase,
+    GetTotalPatientsWithReferralsByStateUseCase,
     GetTotalReferralsUseCase,
     GetTotalReferralsByCategoryUseCase,
-    GetTotalReferredPatientsUseCase,
-    GetTotalReferredPatientsByStateUseCase,
   ],
 })
 export class StatisticsModule {}
