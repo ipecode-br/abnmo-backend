@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const envSchema = z.object({
   // Environment
   NODE_ENV: z.enum(['production', 'development', 'homolog', 'test']),
-  APP_ENVIRONMENT: z.enum(['production', 'development', 'homolog', 'local']),
+  APP_ENVIRONMENT: z.enum(['lambda', 'local']),
 
   // API
   API_BASE_URL: z.string().url().optional(),
@@ -16,6 +16,9 @@ export const envSchema = z.object({
   COOKIE_DOMAIN: z.string().min(1),
   COOKIE_SECRET: z.string().min(1),
   JWT_SECRET: z.string().min(1),
+
+  // Flags
+  ENABLE_EMAILS: z.enum(['true', 'false']).transform((val) => val === 'true'),
 
   // Database
   DB_HOST: z.string().min(1),

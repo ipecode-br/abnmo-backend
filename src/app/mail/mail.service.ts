@@ -7,10 +7,10 @@ import { EnvService } from '@/env/env.service';
 export class MailService {
   private readonly sesClient: SESClient;
   private readonly logger = new Logger(MailService.name);
-  private readonly fromEmail: string;
+  private readonly isEnable: boolean;
 
   constructor(private envService: EnvService) {
-    this.fromEmail = this.envService.get('AWS_SES_FROM_EMAIL');
+    this.isEnable = this.envService.get('ENABLE_EMAILS');
 
     this.sesClient = new SESClient({
       region: this.envService.get('AWS_REGION'),
@@ -21,12 +21,25 @@ export class MailService {
     });
   }
 
-  async sendEmail(
-    to: string,
-    subject: string,
-    htmlBody: string,
-    textBody?: string,
-  ) {
+  async send({
+    to,
+    subject,
+    htmlBody,
+    textBody,
+  }: {
+    to: string;
+    subject: string;
+    htmlBody: string;
+    textBody?: string;
+  }) {
+    if (!this.isEnable) {
+      this.logger.log(
+        { to, subject },
+        'E-mail sender skipped. "ENABLE_EMAILS" is set to false',
+      );
+      return true;
+    }
+
     const command = new SendEmailCommand({
       Destination: { ToAddresses: [to] },
       Message: {
@@ -36,19 +49,25 @@ export class MailService {
         },
         Subject: { Charset: 'UTF-8', Data: subject },
       },
-      Source: `SMV | ABNMO <${this.fromEmail}>`,
+      Source: `SVM | ABNMO <naoresponda@abnmo.org>`,
     });
 
     try {
       const result = await this.sesClient.send(command);
       this.logger.log(
-        { to, subject, messageId: result.MessageId },
+        {
+          to,
+          subject,
+          messageId: result.MessageId,
+          attempts: result.$metadata.attempts,
+        },
         'E-mail sent successfully',
       );
-      return result;
+      return true;
     } catch (error) {
-      this.logger.error(`Failed to send email to ${to}`, error);
-      throw error;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      this.logger.error({ to, subject, error }, 'Send e-mail failed');
+      return false;
     }
   }
 }

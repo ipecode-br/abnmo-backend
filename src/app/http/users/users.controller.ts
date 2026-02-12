@@ -79,7 +79,7 @@ export class UsersController {
 
     return {
       success: true,
-      message: 'Convite do usuário criado com sucesso.',
+      message: 'Convite do usuário enviado com sucesso.',
     };
   }
 
