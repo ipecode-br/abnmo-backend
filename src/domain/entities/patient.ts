@@ -15,9 +15,11 @@ import {
 import {
   PATIENT_GENDERS,
   PATIENT_NMO_DIAGNOSTICS,
+  PATIENT_RACES,
   PATIENT_STATUSES,
   type PatientGender,
   type PatientNmoDiagnosis,
+  type PatientRace,
   type PatientStatus,
 } from '../enums/patients';
 import type { PatientSchema } from '../schemas/patients';
@@ -48,6 +50,9 @@ export class Patient implements PatientSchema {
 
   @Column({ type: 'enum', enum: PATIENT_GENDERS, default: 'prefer_not_to_say' })
   gender: PatientGender;
+
+  @Column({ type: 'enum', enum: PATIENT_RACES, default: 'prefer_not_to_say' })
+  race: PatientRace;
 
   @Column({ type: 'datetime' })
   date_of_birth: Date;

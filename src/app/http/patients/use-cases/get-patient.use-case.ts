@@ -9,7 +9,7 @@ interface GetPatientUseCaseInput {
 }
 
 interface GetPatientUseCaseOutput {
-  patient: Patient;
+  patient: Omit<Patient, 'password'>;
 }
 
 @Injectable()
@@ -34,6 +34,7 @@ export class GetPatientUseCase {
         phone: true,
         cpf: true,
         gender: true,
+        race: true,
         date_of_birth: true,
         state: true,
         city: true,

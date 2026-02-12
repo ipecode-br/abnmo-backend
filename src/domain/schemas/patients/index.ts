@@ -4,6 +4,7 @@ import { BRAZILIAN_STATES } from '@/constants/brazilian-states';
 import {
   PATIENT_GENDERS,
   PATIENT_NMO_DIAGNOSTICS,
+  PATIENT_RACES,
   PATIENT_STATUSES,
 } from '@/domain/enums/patients';
 
@@ -24,6 +25,7 @@ export const patientSchema = z
     avatar_url: avatarSchema.nullable(),
     status: z.enum(PATIENT_STATUSES).default('pending'),
     gender: z.enum(PATIENT_GENDERS).default('prefer_not_to_say'),
+    race: z.enum(PATIENT_RACES).default('prefer_not_to_say'),
     date_of_birth: z.coerce.date(),
     phone: phoneSchema,
     cpf: z.string().max(11),

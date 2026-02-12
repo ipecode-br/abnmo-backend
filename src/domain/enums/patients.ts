@@ -1,3 +1,14 @@
+export const PATIENT_RACES = [
+  'white',
+  'black',
+  'yellow',
+  'mixed_race',
+  'indigenous',
+  'prefer_not_to_say',
+  'other',
+] as const;
+export type PatientRace = (typeof PATIENT_RACES)[number];
+
 export const PATIENT_GENDERS = [
   'male_cis',
   'female_cis',
@@ -5,6 +16,7 @@ export const PATIENT_GENDERS = [
   'female_trans',
   'non_binary',
   'prefer_not_to_say',
+  'other',
 ] as const;
 export type PatientGender = (typeof PATIENT_GENDERS)[number];
 

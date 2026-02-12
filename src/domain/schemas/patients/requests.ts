@@ -1,30 +1,31 @@
 import { z } from 'zod';
 
-import { BRAZILIAN_STATES } from '@/constants/brazilian-states';
-import {
-  PATIENT_GENDERS,
-  PATIENT_NMO_DIAGNOSTICS,
-  PATIENT_ORDER_BY,
-  PATIENT_STATUSES,
-} from '@/domain/enums/patients';
+import { PATIENT_ORDER_BY, PATIENT_STATUSES } from '@/domain/enums/patients';
 import { QUERY_ORDERS } from '@/domain/enums/queries';
 
 import { createPatientSupportSchema } from '../patient-support/requests';
 import { baseQuerySchema } from '../query';
-import { emailSchema, nameSchema, phoneSchema } from '../shared';
 import { patientSchema } from '.';
 
-export const createPatientSchema = z
-  .object({
-    name: nameSchema,
-    email: emailSchema,
-    gender: z.enum(PATIENT_GENDERS).default('prefer_not_to_say'),
-    date_of_birth: z.coerce.date(),
-    phone: phoneSchema,
-    cpf: z.string().max(11),
-    state: z.enum(BRAZILIAN_STATES),
-    city: z.string(),
-    nmo_diagnosis: z.enum(PATIENT_NMO_DIAGNOSTICS),
+export const createPatientSchema = patientSchema
+  .pick({
+    name: true,
+    date_of_birth: true,
+    cpf: true,
+    gender: true,
+    race: true,
+    state: true,
+    city: true,
+    email: true,
+    phone: true,
+    has_disability: true,
+    disability_desc: true,
+    take_medication: true,
+    medication_desc: true,
+    need_legal_assistance: true,
+    nmo_diagnosis: true,
+  })
+  .extend({
     supports: z
       .array(
         createPatientSupportSchema.pick({

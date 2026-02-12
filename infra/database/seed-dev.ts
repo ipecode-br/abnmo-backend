@@ -19,6 +19,7 @@ import {
   PATIENT_CONDITIONS,
   PATIENT_GENDERS,
   PATIENT_NMO_DIAGNOSTICS,
+  PATIENT_RACES,
   PATIENT_STATUSES,
   type PatientStatus,
 } from '@/domain/enums/patients';
@@ -129,6 +130,7 @@ async function main() {
       avatar_url: faker.image.avatar(),
       status: 'active',
       gender: faker.helpers.arrayElement(PATIENT_GENDERS),
+      race: faker.helpers.arrayElement(PATIENT_RACES),
       date_of_birth: faker.date.birthdate({ min: 18, max: 80, mode: 'age' }),
       phone: faker.string.numeric(11),
       cpf: faker.string.numeric(11),

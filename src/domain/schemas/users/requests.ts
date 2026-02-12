@@ -30,11 +30,13 @@ export const createUserSchema = userSchema.pick({
   avatar_url: true,
 });
 
-export const updateUserSchema = userSchema.omit({
-  id: true,
-  password: true,
-  created_at: true,
-  updated_at: true,
+export const updateUserSchema = userSchema.pick({
+  name: true,
+  email: true,
+  avatar_url: true,
+  role: true,
+  specialty: true,
+  registration_id: true,
 });
 
 export const getUsersQuerySchema = baseQuerySchema
