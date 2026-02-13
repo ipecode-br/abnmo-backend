@@ -13,10 +13,10 @@ export class MailService {
     this.isEnable = this.envService.get('ENABLE_EMAILS');
 
     this.sesClient = new SESClient({
-      region: this.envService.get('AWS_REGION'),
+      region: this.envService.get('AWS_SES_REGION'),
       credentials: {
-        accessKeyId: this.envService.get('AWS_ACCESS_KEY_ID'),
-        secretAccessKey: this.envService.get('AWS_SECRET_ACCESS_KEY'),
+        accessKeyId: this.envService.get('AWS_SES_ACCESS_KEY_ID'),
+        secretAccessKey: this.envService.get('AWS_SES_SECRET_ACCESS_KEY'),
       },
     });
   }

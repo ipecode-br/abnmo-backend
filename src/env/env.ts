@@ -29,9 +29,9 @@ export const envSchema = z.object({
   DB_SCHEMA: z.string().optional(),
 
   // AWS
-  AWS_REGION: z.string().min(1),
-  AWS_ACCESS_KEY_ID: z.string().min(1),
-  AWS_SECRET_ACCESS_KEY: z.string().min(1),
+  AWS_SES_REGION: z.string().min(1),
+  AWS_SES_ACCESS_KEY_ID: z.string().min(1),
+  AWS_SES_SECRET_ACCESS_KEY: z.string().min(1),
   AWS_SES_FROM_EMAIL: z.string().email(),
 });
 
