@@ -108,13 +108,13 @@ export class CreateUserInviteUseCase {
           </br>
           <p>Acesse o link abaixo e preencha os dados necessários.</p>
           </br>
-          ${registerUserLink}
+          <a href="${registerUserLink}">${registerUserLink}</a>
         `,
       });
 
       if (!emailSent) {
         throw new ServiceUnavailableException(
-          'Falha ao enviar o convite. Por favor, tente novamente.',
+          'O envio do convite falhou. Por favor, tente novamente.',
         );
       }
     });
