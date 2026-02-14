@@ -6,7 +6,7 @@ export const REFERRAL_STATUSES = [
 ] as const;
 export type ReferralStatus = (typeof REFERRAL_STATUSES)[number];
 
-export const REFERRAL_ORDER_BY = [
+export const REFERRALS_ORDER_BY = [
   'date',
   'patient',
   'status',
@@ -14,4 +14,4 @@ export const REFERRAL_ORDER_BY = [
   'condition',
   'professional',
 ] as const;
-export type ReferralOrderBy = (typeof REFERRAL_ORDER_BY)[number];
+export type ReferralsOrderBy = (typeof REFERRALS_ORDER_BY)[number];

@@ -10,17 +10,34 @@ import {
 } from 'typeorm';
 
 import { Referral } from '@/domain/entities/referral';
-import type { ReferralOrderBy } from '@/domain/enums/referrals';
-import type { ReferralResponse } from '@/domain/schemas/referrals/responses';
+import type { PatientCondition } from '@/domain/enums/patients';
+import type { QueryOrder } from '@/domain/enums/queries';
+import type {
+  ReferralsOrderBy,
+  ReferralStatus,
+} from '@/domain/enums/referrals';
+import type { SpecialtyCategory } from '@/domain/enums/shared';
 
-import { GetReferralsQuery } from '../referrals.dtos';
+import type { AuthUserDto } from '../../auth/auth.dtos';
 
 interface GetReferralsUseCaseInput {
-  query: GetReferralsQuery;
+  user: AuthUserDto;
+  page: number;
+  perPage: number;
+  patientId?: string;
+  status?: ReferralStatus;
+  category?: SpecialtyCategory;
+  condition?: PatientCondition;
+  search?: string;
+  startDate?: string;
+  endDate?: string;
+  limit?: number;
+  orderBy?: ReferralsOrderBy;
+  order?: QueryOrder;
 }
 
 interface GetReferralsUseCaseOutput {
-  referrals: ReferralResponse[];
+  referrals: Referral[];
   total: number;
 }
 
@@ -32,13 +49,21 @@ export class GetReferralsUseCase {
   ) {}
 
   async execute({
-    query,
+    user,
+    patientId,
+    status,
+    category,
+    condition,
+    search,
+    page,
+    perPage,
+    limit,
+    ...props
   }: GetReferralsUseCaseInput): Promise<GetReferralsUseCaseOutput> {
-    const { search, status, category, condition, page, perPage } = query;
-    const startDate = query.startDate ? new Date(query.startDate) : null;
-    const endDate = query.endDate ? new Date(query.endDate) : null;
+    const startDate = props.startDate ? new Date(props.startDate) : null;
+    const endDate = props.endDate ? new Date(props.endDate) : null;
 
-    const ORDER_BY_MAPPING: Record<ReferralOrderBy, keyof Referral> = {
+    const ORDER_BY_MAPPING: Record<ReferralsOrderBy, keyof Referral> = {
       date: 'date',
       patient: 'patient',
       status: 'status',
@@ -48,6 +73,14 @@ export class GetReferralsUseCase {
     };
 
     const where: FindOptionsWhere<Referral> = {};
+
+    if (user.role === 'patient') {
+      where.patient_id = user.id;
+    }
+
+    if (patientId) {
+      where.patient_id = patientId;
+    }
 
     if (startDate && !endDate) {
       where.date = MoreThanOrEqual(startDate);
@@ -65,12 +98,12 @@ export class GetReferralsUseCase {
       where.status = status;
     }
 
-    if (condition) {
-      where.condition = condition;
-    }
-
     if (category) {
       where.category = category;
+    }
+
+    if (condition) {
+      where.condition = condition;
     }
 
     if (search) {
@@ -79,11 +112,11 @@ export class GetReferralsUseCase {
 
     const total = await this.referralsRepository.count({ where });
 
-    const orderBy = ORDER_BY_MAPPING[query.orderBy];
+    const orderBy = ORDER_BY_MAPPING[props.orderBy || 'date'];
     const order =
       orderBy === 'patient'
-        ? { patient: { name: query.order } }
-        : { [orderBy]: query.order };
+        ? { patient: { name: props.order } }
+        : { [orderBy]: props.order };
 
     const referrals = await this.referralsRepository.find({
       select: {
@@ -101,7 +134,7 @@ export class GetReferralsUseCase {
       },
       relations: { patient: true },
       skip: (page - 1) * perPage,
-      take: perPage,
+      take: limit ?? perPage,
       order,
       where,
     });

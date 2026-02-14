@@ -37,13 +37,14 @@ export class ReferralsController {
   ) {}
 
   @Get()
-  @Roles(['manager', 'nurse'])
+  @Roles(['manager', 'nurse', 'specialist', 'patient'])
   @ApiOperation({ summary: 'Lista todos os encaminhamentos' })
   @ApiResponse({ type: GetReferralsResponse })
   async getReferrals(
     @Query() query: GetReferralsQuery,
+    @AuthUser() user: AuthUserDto,
   ): Promise<GetReferralsResponse> {
-    const data = await this.getReferralsUseCase.execute({ query });
+    const data = await this.getReferralsUseCase.execute({ user, ...query });
 
     return {
       success: true,

@@ -1,11 +1,20 @@
 import { z } from 'zod';
 
 import { PATIENT_CONDITIONS } from '@/domain/enums/patients';
-import { QUERY_ORDERS } from '@/domain/enums/queries';
-import { REFERRAL_ORDER_BY, REFERRAL_STATUSES } from '@/domain/enums/referrals';
+import {
+  REFERRAL_STATUSES,
+  REFERRALS_ORDER_BY,
+} from '@/domain/enums/referrals';
 import { SPECIALTY_CATEGORIES } from '@/domain/enums/shared';
 
-import { baseQuerySchema } from '../query';
+import {
+  queryDateSchema,
+  queryLimitSchema,
+  queryOrderSchema,
+  queryPageSchema,
+  queryPerPageSchema,
+  querySearchSchema,
+} from '../query';
 import { referralSchema } from '.';
 
 export const createReferralSchema = referralSchema.pick({
@@ -23,21 +32,20 @@ export const updateReferralSchema = referralSchema.pick({
   annotation: true,
 });
 
-export const getReferralsQuerySchema = baseQuerySchema
-  .pick({
-    search: true,
-    startDate: true,
-    endDate: true,
-    page: true,
-    perPage: true,
-    limit: true,
-  })
-  .extend({
+export const getReferralsQuerySchema = z
+  .object({
+    patientId: z.string().optional(),
+    search: querySearchSchema.optional(),
     status: z.enum(REFERRAL_STATUSES).optional(),
     category: z.enum(SPECIALTY_CATEGORIES).optional(),
     condition: z.enum(PATIENT_CONDITIONS).optional(),
-    orderBy: z.enum(REFERRAL_ORDER_BY).optional().default('date'),
-    order: z.enum(QUERY_ORDERS).optional().default('DESC'),
+    orderBy: z.enum(REFERRALS_ORDER_BY).default('date'),
+    order: queryOrderSchema.default('DESC'),
+    startDate: queryDateSchema.optional(),
+    endDate: queryDateSchema.optional(),
+    page: queryPageSchema,
+    perPage: queryPerPageSchema,
+    limit: queryLimitSchema,
   })
   .refine(
     (data) => {
