@@ -8,7 +8,7 @@ export const patientSupportSchema = z
     patient_id: z.string().uuid(),
     name: nameSchema,
     phone: phoneSchema,
-    kinship: z.string().max(50),
+    kinship: z.string().max(32),
     created_at: z.coerce.date(),
     updated_at: z.coerce.date(),
   })

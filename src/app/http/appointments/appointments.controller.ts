@@ -44,7 +44,7 @@ export class AppointmentsController {
     @Query() query: GetAppointmentsQuery,
     @AuthUser() user: AuthUserDto,
   ): Promise<GetAppointmentsResponse> {
-    const data = await this.getAppointmentsUseCase.execute({ query, user });
+    const data = await this.getAppointmentsUseCase.execute({ user, ...query });
 
     return {
       success: true,

@@ -30,7 +30,7 @@ export const patientSchema = z
     phone: phoneSchema,
     cpf: z.string().max(11),
     state: z.enum(BRAZILIAN_STATES),
-    city: z.string(),
+    city: z.string().max(64),
     // medical report
     has_disability: z.boolean().default(false),
     disability_desc: z.string().max(500).nullable(),

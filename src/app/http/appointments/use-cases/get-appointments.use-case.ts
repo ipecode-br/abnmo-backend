@@ -10,19 +10,34 @@ import {
 } from 'typeorm';
 
 import { Appointment } from '@/domain/entities/appointment';
-import type { AppointmentsOrderBy } from '@/domain/enums/appointments';
-import type { AppointmentResponse } from '@/domain/schemas/appointments/responses';
+import type {
+  AppointmentsOrderBy,
+  AppointmentStatus,
+} from '@/domain/enums/appointments';
+import type { PatientCondition } from '@/domain/enums/patients';
+import type { QueryOrder } from '@/domain/enums/queries';
+import type { SpecialtyCategory } from '@/domain/enums/shared';
 
 import type { AuthUserDto } from '../../auth/auth.dtos';
-import type { GetAppointmentsQuery } from '../appointments.dtos';
 
 interface GetAppointmentsUseCaseInput {
   user: AuthUserDto;
-  query: GetAppointmentsQuery;
+  page: number;
+  perPage: number;
+  patientId?: string;
+  status?: AppointmentStatus;
+  category?: SpecialtyCategory;
+  condition?: PatientCondition;
+  search?: string;
+  startDate?: string;
+  endDate?: string;
+  limit?: number;
+  orderBy?: AppointmentsOrderBy;
+  order?: QueryOrder;
 }
 
 interface GetAppointmentsUseCaseOutput {
-  appointments: AppointmentResponse[];
+  appointments: Appointment[];
   total: number;
 }
 
@@ -35,11 +50,18 @@ export class GetAppointmentsUseCase {
 
   async execute({
     user,
-    query,
+    patientId,
+    status,
+    category,
+    condition,
+    search,
+    page,
+    perPage,
+    limit,
+    ...props
   }: GetAppointmentsUseCaseInput): Promise<GetAppointmentsUseCaseOutput> {
-    const { search, status, category, condition, page, perPage, limit } = query;
-    const startDate = query.startDate ? new Date(query.startDate) : null;
-    const endDate = query.endDate ? new Date(query.endDate) : null;
+    const startDate = props.startDate ? new Date(props.startDate) : null;
+    const endDate = props.endDate ? new Date(props.endDate) : null;
 
     const ORDER_BY_MAPPING: Record<AppointmentsOrderBy, keyof Appointment> = {
       date: 'date',
@@ -53,7 +75,11 @@ export class GetAppointmentsUseCase {
     const where: FindOptionsWhere<Appointment> = {};
 
     if (user.role === 'patient') {
-      where.patient = { id: user.id };
+      where.patient_id = user.id;
+    }
+
+    if (patientId) {
+      where.patient_id = patientId;
     }
 
     if (startDate && !endDate) {
@@ -86,11 +112,11 @@ export class GetAppointmentsUseCase {
 
     const total = await this.appointmentsRepository.count({ where });
 
-    const orderBy = ORDER_BY_MAPPING[query.orderBy];
+    const orderBy = ORDER_BY_MAPPING[props.orderBy || 'date'];
     const order =
       orderBy === 'patient'
-        ? { patient: { name: query.order } }
-        : { [orderBy]: query.order };
+        ? { patient: { name: props.order } }
+        : { [orderBy]: props.order };
 
     const appointments = await this.appointmentsRepository.find({
       select: {
