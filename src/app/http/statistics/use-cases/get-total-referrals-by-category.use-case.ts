@@ -8,6 +8,7 @@ import type { TotalReferralsByCategory } from '@/domain/schemas/statistics/respo
 import { UtilsService } from '@/utils/utils.service';
 
 interface GetTotalReferralsByCategoryUseCaseInput {
+  patientId?: string;
   period?: QueryPeriod;
   startDate?: Date;
   endDate?: Date;
@@ -28,6 +29,7 @@ export class GetTotalReferralsByCategoryUseCase {
   ) {}
 
   async execute({
+    patientId,
     period,
     startDate,
     endDate,
@@ -44,6 +46,12 @@ export class GetTotalReferralsByCategoryUseCase {
         baseQuery.where('referral.date BETWEEN :start AND :end', {
           start: dateRange.startDate,
           end: dateRange.endDate,
+        });
+      }
+
+      if (patientId) {
+        baseQuery.andWhere('referral.patient_id = :patientId', {
+          patientId,
         });
       }
 

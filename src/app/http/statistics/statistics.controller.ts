@@ -64,9 +64,7 @@ export class StatisticsController {
   async getTotalAppointments(
     @Query() query: GetTotalReferralsQuery,
   ): Promise<GetTotalAppointmentsResponse> {
-    const { period } = query;
-
-    const total = await this.getTotalAppointmentsUseCase.execute({ period });
+    const total = await this.getTotalAppointmentsUseCase.execute(query);
 
     return {
       success: true,
@@ -83,10 +81,8 @@ export class StatisticsController {
   async getTotalAppointmentsByCategory(
     @Query() query: GetTotalAppointmentsByCategoryQuery,
   ): Promise<GetTotalAppointmentsByCategoryResponse> {
-    const { period } = query;
-
     const { categories, total } =
-      await this.getTotalAppointmentsByCategoryUseCase.execute({ period });
+      await this.getTotalAppointmentsByCategoryUseCase.execute(query);
 
     return {
       success: true,
@@ -117,15 +113,10 @@ export class StatisticsController {
   async getTotalPatientsByGender(
     @Query() query: GetTotalPatientsByFieldQuery,
   ): Promise<GetTotalPatientsByGenderResponse> {
-    const { period, limit, order, withPercentage } = query;
-
     const { items: genders, total } =
       await this.getTotalPatientsByFieldUseCase.execute<TotalPatientsByGender>({
         field: 'gender',
-        period,
-        limit,
-        order,
-        withPercentage,
+        ...query,
       });
 
     return {
@@ -142,15 +133,10 @@ export class StatisticsController {
   async getTotalPatientsByCity(
     @Query() query: GetTotalPatientsByFieldQuery,
   ): Promise<GetTotalPatientsByCityResponse> {
-    const { period, limit, order, withPercentage } = query;
-
     const { items: cities, total } =
       await this.getTotalPatientsByFieldUseCase.execute<TotalPatientsByCity>({
         field: 'city',
-        period,
-        order,
-        limit,
-        withPercentage,
+        ...query,
       });
 
     return {
@@ -167,11 +153,8 @@ export class StatisticsController {
   async getTotalPatientsWithAppointments(
     @Query() query: GetTotalPatientsWithAppointmentsQuery,
   ): Promise<GetTotalPatientsWithAppointmentsResponse> {
-    const { period } = query;
-
-    const total = await this.getTotalPatientsWithAppointmentsUseCase.execute({
-      period,
-    });
+    const total =
+      await this.getTotalPatientsWithAppointmentsUseCase.execute(query);
 
     return {
       success: true,
@@ -188,13 +171,8 @@ export class StatisticsController {
   async getTotalPatientsWithAppointmentsByState(
     @Query() query: GetTotalPatientsWithAppointmentsByStateQuery,
   ): Promise<GetTotalPatientsWithAppointmentsByStateResponse> {
-    const { period, limit } = query;
-
     const { states, total } =
-      await this.getTotalPatientsWithAppointmentsByStateUseCase.execute({
-        period,
-        limit,
-      });
+      await this.getTotalPatientsWithAppointmentsByStateUseCase.execute(query);
 
     return {
       success: true,
@@ -210,11 +188,8 @@ export class StatisticsController {
   async getTotalPatientsWithReferrals(
     @Query() query: GetTotalPatientsWithReferralsQuery,
   ): Promise<GetTotalPatientsWithReferralsResponse> {
-    const { period } = query;
-
-    const total = await this.getTotalPatientsWithReferralsUseCase.execute({
-      period,
-    });
+    const total =
+      await this.getTotalPatientsWithReferralsUseCase.execute(query);
 
     return {
       success: true,
@@ -231,13 +206,8 @@ export class StatisticsController {
   async getTotalPatientsWithReferralsByStatel(
     @Query() query: GetTotalPatientsWithReferralsByStateQuery,
   ): Promise<GetTotalPatientsWithReferralsByStateResponse> {
-    const { period, limit } = query;
-
     const { states, total } =
-      await this.getTotalPatientsWithReferralsByStateUseCase.execute({
-        period,
-        limit,
-      });
+      await this.getTotalPatientsWithReferralsByStateUseCase.execute(query);
 
     return {
       success: true,
@@ -255,9 +225,7 @@ export class StatisticsController {
   async getTotalReferrals(
     @Query() query: GetTotalReferralsQuery,
   ): Promise<GetTotalReferralsResponse> {
-    const { period } = query;
-
-    const total = await this.getTotalReferralsUseCase.execute({ period });
+    const total = await this.getTotalReferralsUseCase.execute(query);
 
     return {
       success: true,
@@ -274,10 +242,8 @@ export class StatisticsController {
   async getTotalReferralsByCategory(
     @Query() query: GetTotalReferralsByCategoryQuery,
   ): Promise<GetTotalReferralsByCategoryResponse> {
-    const { period } = query;
-
     const { categories, total } =
-      await this.getTotalReferralsByCategoryUseCase.execute({ period });
+      await this.getTotalReferralsByCategoryUseCase.execute(query);
 
     return {
       success: true,

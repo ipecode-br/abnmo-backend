@@ -11,10 +11,12 @@ import {
 
 export const getTotalAppointmentsQuerySchema = z.object({
   period: queryPeriodSchema.optional(),
+  patientId: z.string().optional(),
 });
 
 export const getTotalAppointmentsByCategoryQuerySchema = z.object({
   period: queryPeriodSchema.optional(),
+  patientId: z.string().optional(),
 });
 
 // Patients
@@ -48,8 +50,10 @@ export const getTotalPatientsWithReferralsByStateQuerySchema = z.object({
 
 export const getTotalReferralsQuerySchema = z.object({
   period: queryPeriodSchema.optional(),
+  patientId: z.string().optional(),
 });
 
 export const getTotalReferralsByCategoryQuerySchema = z.object({
   period: queryPeriodSchema.optional(),
+  patientId: z.string().optional(),
 });

@@ -8,6 +8,7 @@ import type { TotalAppointmentsByCategory } from '@/domain/schemas/statistics/re
 import { UtilsService } from '@/utils/utils.service';
 
 interface GetTotalAppointmentsByCategoryUseCaseInput {
+  patientId?: string;
   period?: QueryPeriod;
   startDate?: Date;
   endDate?: Date;
@@ -28,6 +29,7 @@ export class GetTotalAppointmentsByCategoryUseCase {
   ) {}
 
   async execute({
+    patientId,
     period,
     startDate,
     endDate,
@@ -45,6 +47,12 @@ export class GetTotalAppointmentsByCategoryUseCase {
         baseQuery.where('appointment.date BETWEEN :start AND :end', {
           start: dateRange.startDate,
           end: dateRange.endDate,
+        });
+      }
+
+      if (patientId) {
+        baseQuery.andWhere('appointment.patient_id = :patientId', {
+          patientId,
         });
       }
 

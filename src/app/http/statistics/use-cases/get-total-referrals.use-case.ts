@@ -16,6 +16,7 @@ import type { SpecialtyCategory } from '@/domain/enums/shared';
 import { UtilsService } from '@/utils/utils.service';
 
 interface GetTotalReferralsUseCaseInput {
+  patientId?: string;
   status?: ReferralStatus;
   category?: SpecialtyCategory;
   condition?: PatientCondition;
@@ -33,6 +34,7 @@ export class GetTotalReferralsUseCase {
   ) {}
 
   async execute({
+    patientId,
     status,
     category,
     condition,
@@ -57,6 +59,10 @@ export class GetTotalReferralsUseCase {
 
     if (startDate && endDate) {
       where.date = Between(startDate, endDate);
+    }
+
+    if (patientId) {
+      where.patient_id = patientId;
     }
 
     if (status) {
