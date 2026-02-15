@@ -11,12 +11,13 @@ import { Patient } from '@/domain/entities/patient';
 import { PatientSupport } from '@/domain/entities/patient-support';
 
 import type { AuthUserDto } from '../../auth/auth.dtos';
-import type { CreatePatientSupportDto } from '../patient-supports.dtos';
 
 interface CreatePatientSupportUseCaseInput {
   user: AuthUserDto;
   patientId: string;
-  createPatientSupportDto: CreatePatientSupportDto;
+  name: string;
+  kinship: string;
+  phone: string;
 }
 
 @Injectable()
@@ -33,9 +34,11 @@ export class CreatePatientSupportUseCase {
   async execute({
     user,
     patientId,
-    createPatientSupportDto,
+    name,
+    kinship,
+    phone,
   }: CreatePatientSupportUseCaseInput): Promise<void> {
-    if (user.id !== patientId) {
+    if (user.id !== patientId && user.role !== 'admin') {
       this.logger.log(
         { patientId, userId: user.id, userRole: user.role },
         'Create patient support failed: User does not have permission to create patient support for this patient',
@@ -55,8 +58,10 @@ export class CreatePatientSupportUseCase {
     }
 
     const patientSupport = this.patientSupportsRepository.create({
-      ...createPatientSupportDto,
       patient_id: patientId,
+      name,
+      kinship,
+      phone,
     });
 
     await this.patientSupportsRepository.save(patientSupport);

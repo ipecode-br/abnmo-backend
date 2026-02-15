@@ -136,11 +136,11 @@ async function main() {
       cpf: faker.string.numeric(11),
       state: 'BA',
       city: getRandomCity('BA'),
-      has_disability: faker.datatype.boolean(),
+      has_disability: true,
       disability_desc: faker.lorem.sentence(),
       need_legal_assistance: faker.datatype.boolean(),
-      take_medication: faker.datatype.boolean(),
-      medication_desc: faker.lorem.sentence(),
+      take_medication: false,
+      medication_desc: null,
       nmo_diagnosis: faker.helpers.arrayElement(PATIENT_NMO_DIAGNOSTICS),
       created_at: faker.date.between({ from: fourMonthsAgo, to: new Date() }),
     });
@@ -164,6 +164,8 @@ async function main() {
         );
       }
 
+      const has_disability = faker.datatype.boolean();
+      const take_medication = faker.datatype.boolean();
       const newPatient = patientsRepository.create({
         name: faker.person.fullName(),
         email: faker.internet.email().toLowerCase(),
@@ -176,11 +178,11 @@ async function main() {
         cpf: faker.string.numeric(11),
         state: selectedState,
         city: getRandomCity(selectedState),
-        has_disability: faker.datatype.boolean(),
-        disability_desc: faker.lorem.sentence(),
+        has_disability,
+        disability_desc: has_disability ? faker.lorem.sentence() : null,
         need_legal_assistance: faker.datatype.boolean(),
-        take_medication: faker.datatype.boolean(),
-        medication_desc: faker.lorem.sentence(),
+        take_medication,
+        medication_desc: take_medication ? faker.lorem.sentence() : null,
         nmo_diagnosis: faker.helpers.arrayElement(PATIENT_NMO_DIAGNOSTICS),
         created_at: faker.date.between({ from: fourMonthsAgo, to: new Date() }),
       });

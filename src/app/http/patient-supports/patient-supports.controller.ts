@@ -37,7 +37,7 @@ export class PatientSupportsController {
     await this.createPatientSupportUseCase.execute({
       user,
       patientId,
-      createPatientSupportDto,
+      ...createPatientSupportDto,
     });
 
     return {

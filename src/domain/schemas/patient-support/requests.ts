@@ -1,7 +1,6 @@
 import { patientSupportSchema } from '.';
 
 export const createPatientSupportSchema = patientSupportSchema.pick({
-  patient_id: true,
   name: true,
   phone: true,
   kinship: true,
