@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
@@ -14,6 +14,8 @@ interface GetPatientUseCaseOutput {
 
 @Injectable()
 export class GetPatientUseCase {
+  private readonly logger = new Logger(GetPatientUseCase.name);
+
   constructor(
     @InjectRepository(Patient)
     private readonly patientsRepository: Repository<Patient>,
@@ -22,6 +24,8 @@ export class GetPatientUseCase {
   async execute({
     id,
   }: GetPatientUseCaseInput): Promise<GetPatientUseCaseOutput> {
+    const startTime = Date.now();
+
     const patient = await this.patientsRepository.findOne({
       relations: { supports: true },
       where: { id },
@@ -51,6 +55,11 @@ export class GetPatientUseCase {
     if (!patient) {
       throw new NotFoundException('Paciente não encontrado.');
     }
+
+    const endTime = Date.now();
+    const ms = endTime - startTime;
+
+    this.logger.log({ ms }, 'Patient data returned successfully');
 
     return { patient };
   }

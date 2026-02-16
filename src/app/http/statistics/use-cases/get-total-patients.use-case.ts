@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   Between,
@@ -23,6 +23,8 @@ interface GetTotalPatientsUseCaseInput {
 
 @Injectable()
 export class GetTotalPatientsUseCase {
+  private readonly logger = new Logger(GetTotalPatientsUseCase.name);
+
   constructor(
     @InjectRepository(Patient)
     private readonly patientsRepository: Repository<Patient>,
@@ -35,6 +37,8 @@ export class GetTotalPatientsUseCase {
     startDate,
     endDate,
   }: GetTotalPatientsUseCaseInput = {}): Promise<number> {
+    const startTime = Date.now();
+
     const where: FindOptionsWhere<Patient> = {
       status: status ?? Not('pending'),
     };
@@ -56,6 +60,19 @@ export class GetTotalPatientsUseCase {
       where.created_at = Between(startDate, endDate);
     }
 
-    return await this.patientsRepository.count({ select: { id: true }, where });
+    const result = await this.patientsRepository.count({
+      select: { id: true },
+      where,
+    });
+
+    const endTime = Date.now();
+    const ms = endTime - startTime;
+
+    this.logger.log(
+      { status, period, startDate, endDate, ms },
+      'Patients total returned successfully',
+    );
+
+    return result;
   }
 }

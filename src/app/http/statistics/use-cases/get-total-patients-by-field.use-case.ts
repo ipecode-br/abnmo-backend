@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository, SelectQueryBuilder } from 'typeorm';
 
@@ -26,6 +26,8 @@ interface GetTotalPatientsByFieldUseCaseOutput<T> {
 
 @Injectable()
 export class GetTotalPatientsByFieldUseCase {
+  private readonly logger = new Logger(GetTotalPatientsByFieldUseCase.name);
+
   constructor(
     @InjectRepository(Patient)
     private readonly patientsRepository: Repository<Patient>,
@@ -44,6 +46,8 @@ export class GetTotalPatientsByFieldUseCase {
   }: GetTotalPatientsByFieldUseCaseInput): Promise<
     GetTotalPatientsByFieldUseCaseOutput<T>
   > {
+    const startTime = Date.now();
+
     const dateRange = period
       ? this.utilsService.getDateRangeForPeriod(period)
       : { startDate, endDate };
@@ -89,6 +93,14 @@ export class GetTotalPatientsByFieldUseCase {
       fieldQuery.getRawMany<T>(),
       totalQuery.getRawOne<{ total: string }>(),
     ]);
+
+    const endTime = Date.now();
+    const ms = endTime - startTime;
+
+    this.logger.log(
+      { field, period, startDate, endDate, order, limit, withPercentage, ms },
+      'Patients total by field returned successfully',
+    );
 
     return { items, total: Number(totalResult?.total || 0) };
   }
