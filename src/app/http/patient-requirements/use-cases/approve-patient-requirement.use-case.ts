@@ -44,8 +44,7 @@ export class ApprovePatientRequirementUseCase {
       );
     }
 
-    await this.patientRequirementsRepository.save({
-      id,
+    await this.patientRequirementsRepository.update(id, {
       status: 'approved',
       approved_by: user.id,
       approved_at: new Date(),

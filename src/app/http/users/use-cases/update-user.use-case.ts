@@ -48,9 +48,7 @@ export class UpdateUserUseCase {
       throw new NotFoundException('Usuário não encontrado.');
     }
 
-    Object.assign(userToUpdate, updateUserDto);
-
-    await this.usersRepository.save(userToUpdate);
+    await this.usersRepository.update(userToUpdate.id, updateUserDto);
 
     this.logger.log(
       {

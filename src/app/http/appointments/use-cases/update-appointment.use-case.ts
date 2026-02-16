@@ -46,9 +46,10 @@ export class UpdateAppointmentUseCase {
       );
     }
 
-    Object.assign(appointment, updateAppointmentDto);
-
-    await this.appointmentsRepository.save(appointment);
+    await this.appointmentsRepository.update(
+      appointment.id,
+      updateAppointmentDto,
+    );
 
     this.logger.log(
       { id, userId: user.id, userEmail: user.email, userRole: user.role },

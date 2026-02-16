@@ -46,9 +46,7 @@ export const createPatientSchema = patientSchema
     }),
   );
 
-export const updatePatientSchema = createPatientSchema
-  .omit({ supports: true })
-  .merge(patientSchema.pick({ status: true }));
+export const updatePatientSchema = createPatientSchema.omit({ supports: true });
 
 export const getPatientsQuerySchema = baseQuerySchema
   .pick({

@@ -59,10 +59,7 @@ export class UpdatePatientSupportUseCase {
       );
     }
 
-    await this.patientSupportsRepository.save({
-      id,
-      ...updatePatientSupportDto,
-    });
+    await this.patientSupportsRepository.update(id, updatePatientSupportDto);
 
     this.logger.log(
       {

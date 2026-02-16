@@ -44,9 +44,7 @@ export class UpdateReferralUseCase {
       );
     }
 
-    Object.assign(referral, updateReferralDto);
-
-    await this.referralsRepository.save(referral);
+    await this.referralsRepository.update(referral.id, updateReferralDto);
 
     this.logger.log(
       { id, userId: user.id, userEmail: user.email, userRole: user.role },

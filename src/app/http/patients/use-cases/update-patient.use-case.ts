@@ -94,7 +94,7 @@ export class UpdatePatientUseCase {
       }
     }
 
-    await this.patientsRepository.save({ id, ...updatePatientDto });
+    await this.patientsRepository.update(id, updatePatientDto);
 
     this.logger.log(
       { id, userId: user.id, userEmail: user.email, userRole: user.role },
