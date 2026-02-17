@@ -23,13 +23,6 @@ export const createUserInviteSchema = userSchema.pick({
   role: true,
 });
 
-export const createUserSchema = userSchema.pick({
-  name: true,
-  email: true,
-  password: true,
-  avatar_url: true,
-});
-
 export const updateUserSchema = userSchema.pick({
   name: true,
   email: true,

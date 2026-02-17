@@ -4,12 +4,17 @@ import { ONLY_NUMBERS_REGEX } from '@/constants/regex';
 
 import { PATIENT_CONDITIONS } from '../enums/patients';
 import { SPECIALTY_CATEGORIES } from '../enums/shared';
+import { USER_ROLES } from '../enums/users';
 
 export const nameSchema = z.string().min(3).max(64);
 
 export const emailSchema = z.string().min(3).max(64).email();
 
 export const passwordSchema = z.string().min(8).max(64);
+
+export const userRoleSchema = z.enum(USER_ROLES);
+
+export const userRegistrationId = z.string().max(32);
 
 export const avatarSchema = z.string().url();
 

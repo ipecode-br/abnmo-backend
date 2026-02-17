@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { USER_ROLES, USER_STATUSES } from '@/domain/enums/users';
+import { USER_STATUSES } from '@/domain/enums/users';
 
 import {
   avatarSchema,
@@ -8,6 +8,8 @@ import {
   nameSchema,
   passwordSchema,
   specialtySchema,
+  userRegistrationId,
+  userRoleSchema,
 } from '../shared';
 
 export const userSchema = z
@@ -17,9 +19,9 @@ export const userSchema = z
     email: emailSchema,
     password: passwordSchema,
     avatar_url: avatarSchema.nullable(),
-    role: z.enum(USER_ROLES),
+    role: userRoleSchema,
     specialty: specialtySchema.nullable(),
-    registration_id: z.string().max(32).nullable(),
+    registration_id: userRegistrationId.nullable(),
     status: z.enum(USER_STATUSES).default('active'),
     created_at: z.coerce.date(),
     updated_at: z.coerce.date(),

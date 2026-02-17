@@ -78,7 +78,7 @@ export class AuthController {
     @Body() registerUserDto: RegisterUserDto,
     @Res({ passthrough: true }) response: Response,
   ): Promise<BaseResponse> {
-    await this.registerUserUseCase.execute({ registerUserDto, response });
+    await this.registerUserUseCase.execute({ ...registerUserDto, response });
 
     return {
       success: true,

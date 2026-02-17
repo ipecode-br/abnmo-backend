@@ -9,6 +9,7 @@ import { DataSource, Repository } from 'typeorm';
 
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
 import { MailService } from '@/app/mail/mail.service';
+import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
@@ -29,6 +30,8 @@ export class CreateUserInviteUseCase {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    @InjectRepository(Patient)
+    private readonly patientsRepository: Repository<Patient>,
     @InjectRepository(Token)
     private readonly tokensRepository: Repository<Token>,
     private readonly createTokenUseCase: CreateTokenUseCase,
@@ -43,12 +46,20 @@ export class CreateUserInviteUseCase {
   }: CreateUserInviteUseCaseInput): Promise<void> {
     const { email, role } = createUserInviteDto;
 
-    const [existingUser, existingInviteUserToken] = await Promise.all([
-      this.usersRepository.findOne({ where: { email }, select: { id: true } }),
-      this.tokensRepository.findOne({ where: { email } }),
-    ]);
+    const [existingInviteUserToken, existingUser, existingPatient] =
+      await Promise.all([
+        this.tokensRepository.findOne({ where: { email } }),
+        this.usersRepository.findOne({
+          where: { email },
+          select: { id: true },
+        }),
+        this.patientsRepository.findOne({
+          where: { email },
+          select: { id: true },
+        }),
+      ]);
 
-    if (existingUser) {
+    if (existingUser || existingPatient) {
       throw new ConflictException('Este e-mail já está cadastrado no sistema.');
     }
 
