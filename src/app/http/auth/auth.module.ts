@@ -3,6 +3,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { CryptographyModule } from '@/app/cryptography/cryptography.module';
+import { MailModule } from '@/app/mail/mail.module';
 import { AuthGuard } from '@/common/guards/auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import { Patient } from '@/domain/entities/patient';
@@ -28,6 +29,7 @@ import { SignInWithEmailUseCase } from './use-cases/sign-in-with-email.use-case'
     UsersModule,
     UtilsModule,
     EnvModule,
+    MailModule,
   ],
   providers: [
     SignInWithEmailUseCase,

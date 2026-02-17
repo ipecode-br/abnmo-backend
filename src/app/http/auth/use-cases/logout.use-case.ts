@@ -37,8 +37,7 @@ export class LogoutUseCase {
         refreshToken,
       );
 
-    // Delete ALL refresh tokens for this entity
-    await this.tokensRepository.delete({ entity_id: payload.sub });
+    await this.tokensRepository.delete({ token: refreshToken });
 
     this.utilsService.deleteCookie(response, COOKIES_MAPPING.refresh_token);
 

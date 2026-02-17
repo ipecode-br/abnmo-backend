@@ -7,6 +7,7 @@ import {
   registerPatientSchema,
   registerUserSchema,
   resetPasswordSchema,
+  signInWithEmailResponseSchema,
   signInWithEmailSchema,
 } from '@/domain/schemas/auth';
 
@@ -17,6 +18,9 @@ export class RegisterPatientDto extends createZodDto(registerPatientSchema) {}
 export class RegisterUserDto extends createZodDto(registerUserSchema) {}
 
 export class SignInWithEmailDto extends createZodDto(signInWithEmailSchema) {}
+export class SignInWithEmailResponse extends createZodDto(
+  signInWithEmailResponseSchema,
+) {}
 
 export class RecoverPasswordDto extends createZodDto(recoverPasswordSchema) {}
 

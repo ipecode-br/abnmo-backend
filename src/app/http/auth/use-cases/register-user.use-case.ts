@@ -21,12 +21,12 @@ import type { InviteUserPayload } from '@/domain/schemas/tokens';
 import { UtilsService } from '@/utils/utils.service';
 
 interface RegisterUserUseCaseInput {
-  response: Response;
   name: string;
   password: string;
-  invite_token: string;
+  inviteToken: string;
   specialty?: SpecialtyCategory | null;
-  registration_id?: string | null;
+  registrationId?: string | null;
+  response: Response;
 }
 
 @Injectable()
@@ -49,12 +49,12 @@ export class RegisterUserUseCase {
     name,
     password,
     specialty,
-    registration_id,
-    invite_token,
+    registrationId,
+    inviteToken,
     response,
   }: RegisterUserUseCaseInput): Promise<void> {
     const token = await this.tokensRepository.findOne({
-      where: { token: invite_token },
+      where: { token: inviteToken },
     });
 
     if (!token) {
@@ -68,7 +68,7 @@ export class RegisterUserUseCase {
       token.type !== AUTH_TOKENS_MAPPING.invite_user ||
       (token.expires_at && token.expires_at < new Date())
     ) {
-      await this.tokensRepository.delete({ token: invite_token });
+      await this.tokensRepository.delete({ token: inviteToken });
       throw new UnauthorizedException('Token de convite inválido ou expirado.');
     }
 
@@ -92,9 +92,7 @@ export class RegisterUserUseCase {
     ]);
 
     if (userWithSameEmail || patientWithSameEmail) {
-      throw new ConflictException(
-        'Este e-mail já está cadastrado em nosso sistema.',
-      );
+      throw new ConflictException('Este e-mail já está cadastrado no sistema.');
     }
 
     const passwordHash = await this.cryptographyService.createHash(password);
@@ -105,10 +103,10 @@ export class RegisterUserUseCase {
       password: passwordHash,
       role,
       specialty,
-      registration_id,
+      registration_id: registrationId,
     });
 
-    await this.tokensRepository.delete({ token: invite_token });
+    await this.tokensRepository.delete({ token: inviteToken });
 
     const { maxAge, token: accessToken } =
       await this.createTokenUseCase.execute({

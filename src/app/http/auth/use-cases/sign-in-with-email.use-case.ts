@@ -9,23 +9,20 @@ import { COOKIES_MAPPING } from '@/domain/cookies';
 import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
-import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
-import type { UserRole } from '@/domain/enums/users';
+import { AUTH_TOKENS_MAPPING, type AuthTokenRole } from '@/domain/enums/tokens';
+import type { RefreshToken } from '@/domain/schemas/tokens';
 import { UtilsService } from '@/utils/utils.service';
 
-import type { SignInWithEmailDto } from '../auth.dtos';
-
 interface SignInWithEmailUseCaseInput {
-  signInWithEmailDto: SignInWithEmailDto;
+  email: string;
+  password: string;
+  keepLoggedIn: boolean;
   response: Response;
 }
 
-type RefreshToken = Pick<
-  Token,
-  'entity_id' | 'email' | 'token' | 'expires_at'
-> & {
-  type: typeof AUTH_TOKENS_MAPPING.refresh_token;
-};
+interface SignInWithEmailUseCaseOutput {
+  accountType: 'patient' | 'user';
+}
 
 @Injectable()
 export class SignInWithEmailUseCase {
@@ -44,37 +41,39 @@ export class SignInWithEmailUseCase {
   ) {}
 
   async execute({
-    signInWithEmailDto,
+    email,
+    password,
+    keepLoggedIn,
     response,
-  }: SignInWithEmailUseCaseInput): Promise<void> {
-    const {
-      email,
-      password,
-      keep_logged_in: keepLoggedIn,
-      account_type: accountType,
-    } = signInWithEmailDto;
+  }: SignInWithEmailUseCaseInput): Promise<SignInWithEmailUseCaseOutput> {
+    let entity: User | Patient | null = null;
+    let role: AuthTokenRole = 'patient';
 
-    const findOptions = {
-      where: { email },
-      select: {
-        id: true,
-        password: true,
-        role: accountType === 'patient' ? undefined : true,
-      },
-    };
+    const findOptions = { where: { email } };
 
-    const entity: {
-      id: string;
-      password: string | null;
-      role?: UserRole;
-    } | null =
-      accountType === 'patient'
-        ? await this.patientsRepository.findOne(findOptions)
-        : await this.usersRepository.findOne(findOptions);
+    const [user, patient] = await Promise.all([
+      this.usersRepository.findOne(findOptions),
+      this.patientsRepository.findOne(findOptions),
+    ]);
+
+    if (user) {
+      entity = user;
+      role = user.role;
+    }
+
+    if (patient) {
+      entity = patient;
+    }
 
     if (!entity || !entity.password) {
       throw new UnauthorizedException(
         'Credenciais inválidas. Por favor, tente novamente.',
+      );
+    }
+
+    if (entity.status === 'inactive') {
+      throw new UnauthorizedException(
+        'Permissão de acesso negada. Sua conta está inativa.',
       );
     }
 
@@ -89,8 +88,6 @@ export class SignInWithEmailUseCase {
       );
     }
 
-    const role = entity.role ?? 'patient';
-
     const { maxAge: accessTokenMaxAge, token: accessToken } =
       await this.createTokenUseCase.execute({
         type: AUTH_TOKENS_MAPPING.access_token,
@@ -104,9 +101,6 @@ export class SignInWithEmailUseCase {
     });
 
     if (keepLoggedIn) {
-      // Delete ALL refresh tokens for this entity before generate a new one
-      await this.tokensRepository.delete({ entity_id: entity.id });
-
       const {
         maxAge: refreshTokenMaxAge,
         token: refreshToken,
@@ -121,7 +115,6 @@ export class SignInWithEmailUseCase {
         expires_at: expiresAt,
         entity_id: entity.id,
         token: refreshToken,
-        email,
       });
 
       this.utilsService.setCookie(response, {
@@ -135,5 +128,7 @@ export class SignInWithEmailUseCase {
       { entityId: entity.id, email, role, keepLoggedIn },
       'Entity signed in with e-mail',
     );
+
+    return { accountType: role === 'patient' ? 'patient' : 'user' };
   }
 }

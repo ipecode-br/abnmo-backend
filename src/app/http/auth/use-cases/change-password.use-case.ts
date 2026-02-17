@@ -10,13 +10,15 @@ import { Repository } from 'typeorm';
 
 import { CryptographyService } from '@/app/cryptography/crypography.service';
 import { Patient } from '@/domain/entities/patient';
+import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 
-import type { AuthUserDto, ChangePasswordDto } from '../auth.dtos';
+import type { AuthUserDto } from '../auth.dtos';
 
 interface ChangePasswordUseCaseInput {
   user: AuthUserDto;
-  changePasswordDto: ChangePasswordDto;
+  password: string;
+  newPassword: string;
 }
 
 @Injectable()
@@ -28,30 +30,22 @@ export class ChangePasswordUseCase {
     private readonly usersRepository: Repository<User>,
     @InjectRepository(Patient)
     private readonly patientsRepository: Repository<Patient>,
+    @InjectRepository(Token)
+    private readonly tokensRepository: Repository<Token>,
     private readonly cryptographyService: CryptographyService,
   ) {}
 
   async execute({
     user,
-    changePasswordDto,
+    password,
+    newPassword,
   }: ChangePasswordUseCaseInput): Promise<void> {
     const { id, role } = user;
-    const { password: currentPassword, new_password: newPassword } =
-      changePasswordDto;
 
-    const findOptions = {
-      where: { id },
-      select: { id: true, email: true, password: true },
-    };
-
-    const entity: {
-      id: string;
-      email: string;
-      password: string | null;
-    } | null =
+    const entity: User | Patient | null =
       role === 'patient'
-        ? await this.patientsRepository.findOne(findOptions)
-        : await this.usersRepository.findOne(findOptions);
+        ? await this.patientsRepository.findOne({ where: { id } })
+        : await this.usersRepository.findOne({ where: { id } });
 
     if (!entity) {
       throw new NotFoundException('Usuário não encontrado.');
@@ -66,7 +60,7 @@ export class ChangePasswordUseCase {
     }
 
     const passwordMatches = await this.cryptographyService.compareHash(
-      currentPassword,
+      password,
       entity.password,
     );
 
@@ -74,23 +68,26 @@ export class ChangePasswordUseCase {
       throw new UnauthorizedException('Senha atual inválida.');
     }
 
-    if (currentPassword === newPassword) {
+    if (password === newPassword) {
       throw new BadRequestException(
         'A nova senha deve ser diferente da senha atual.',
       );
     }
 
-    const password = await this.cryptographyService.createHash(newPassword);
+    const passwordHash = await this.cryptographyService.createHash(newPassword);
 
     if (role === 'patient') {
-      await this.patientsRepository.update({ id }, { password });
+      await this.patientsRepository.update({ id }, { password: passwordHash });
     } else {
-      await this.usersRepository.update({ id }, { password });
+      await this.usersRepository.update({ id }, { password: passwordHash });
     }
 
     this.logger.log(
       { id, email: entity.email, role },
       'Password changed successfully',
     );
+
+    // Delete all tokens for this entity to ensure security after changing password
+    await this.tokensRepository.delete({ entity_id: entity.id });
   }
 }

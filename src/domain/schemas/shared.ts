@@ -8,7 +8,7 @@ import { USER_ROLES } from '../enums/users';
 
 export const nameSchema = z.string().min(3).max(64);
 
-export const emailSchema = z.string().min(3).max(64).email();
+export const emailSchema = z.string().min(1).max(64).email();
 
 export const passwordSchema = z.string().min(8).max(64);
 

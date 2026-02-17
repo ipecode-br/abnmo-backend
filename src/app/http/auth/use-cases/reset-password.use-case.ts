@@ -10,19 +10,18 @@ import { Repository } from 'typeorm';
 
 import { CryptographyService } from '@/app/cryptography/crypography.service';
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
+import { MailService } from '@/app/mail/mail.service';
 import { COOKIES_MAPPING } from '@/domain/cookies';
 import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
-import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
-import type { UserRole } from '@/domain/enums/users';
+import { AUTH_TOKENS_MAPPING, type AuthTokenRole } from '@/domain/enums/tokens';
 import type { ResetPasswordPayload } from '@/domain/schemas/tokens';
 import { UtilsService } from '@/utils/utils.service';
 
-import type { ResetPasswordDto } from '../auth.dtos';
-
 interface ResetPasswordUseCaseInput {
-  resetPasswordDto: ResetPasswordDto;
+  password: string;
+  resetToken: string;
   response: Response;
 }
 
@@ -40,77 +39,80 @@ export class ResetPasswordUseCase {
     private readonly createTokenUseCase: CreateTokenUseCase,
     private readonly cryptographyService: CryptographyService,
     private readonly utilsService: UtilsService,
+    private readonly mailService: MailService,
   ) {}
 
   async execute({
-    resetPasswordDto,
+    password,
+    resetToken,
     response,
   }: ResetPasswordUseCaseInput): Promise<void> {
-    const { reset_token: token } = resetPasswordDto;
-
-    const resetToken = await this.tokensRepository.findOne({
-      where: { token },
+    const token = await this.tokensRepository.findOne({
+      where: { token: resetToken },
     });
 
-    if (!resetToken) {
+    if (!token) {
       throw new NotFoundException(
         'Token de redefinição de senha não encontrado.',
       );
     }
 
     const payload =
-      await this.cryptographyService.verifyToken<ResetPasswordPayload>(token);
+      await this.cryptographyService.verifyToken<ResetPasswordPayload>(
+        token.token,
+      );
 
     if (
       !payload ||
-      resetToken.type !== AUTH_TOKENS_MAPPING.password_reset ||
-      (resetToken.expires_at && resetToken.expires_at < new Date())
+      token.type !== AUTH_TOKENS_MAPPING.password_reset ||
+      (token.expires_at && token.expires_at < new Date())
     ) {
       throw new UnauthorizedException(
         'Token de redefinição de senha inválido ou expirado.',
       );
     }
 
-    const { sub: id, accountType } = payload;
+    const id = payload.sub;
 
-    const findOptions = {
-      where: { id },
-      select: {
-        id: true,
-        email: true,
-        role: accountType === 'patient' ? undefined : true,
-      },
-    };
+    let entity: User | Patient | null = null;
+    let role: AuthTokenRole = 'patient';
 
-    const entity: { id: string; email: string; role?: UserRole } | null =
-      accountType === 'patient'
-        ? await this.patientsRepository.findOne(findOptions)
-        : await this.usersRepository.findOne(findOptions);
+    const [user, patient] = await Promise.all([
+      this.usersRepository.findOne({ where: { id } }),
+      this.patientsRepository.findOne({ where: { id } }),
+    ]);
+
+    if (user) {
+      entity = user;
+      role = user.role;
+    }
+
+    if (patient) {
+      entity = patient;
+    }
 
     if (!entity) {
-      this.logger.warn(
-        { id, accountType },
-        'Reset password failed: Entity not registered',
-      );
+      this.logger.warn({ id }, 'Reset password failed: Entity not registered');
       throw new NotFoundException('Usuário não encontrado.');
     }
 
-    const password = await this.cryptographyService.createHash(
-      resetPasswordDto.password,
-    );
+    const passwordHash = await this.cryptographyService.createHash(password);
 
-    if (accountType === 'patient') {
-      await this.patientsRepository.update(entity.id, { password });
+    if (role === 'patient') {
+      await this.patientsRepository.update(entity.id, {
+        password: passwordHash,
+      });
     } else {
-      await this.usersRepository.update(entity.id, { password });
+      await this.usersRepository.update(entity.id, { password: passwordHash });
     }
 
-    await this.tokensRepository.delete({ token });
+    // Delete all tokens for this entity to ensure security after changing the password
+    await this.tokensRepository.delete({ entity_id: entity.id });
 
     const { maxAge, token: accessToken } =
       await this.createTokenUseCase.execute({
         type: AUTH_TOKENS_MAPPING.access_token,
-        payload: { sub: entity.id, role: entity.role ?? 'patient' },
+        payload: { sub: entity.id, role },
       });
 
     this.utilsService.setCookie(response, {
@@ -120,8 +122,22 @@ export class ResetPasswordUseCase {
     });
 
     this.logger.log(
-      { id: entity.id, email: entity.email, accountType },
+      { id: entity.id, email: entity.email, role },
       'Password reseted successfully',
     );
+
+    await this.mailService.send({
+      to: entity.email,
+      subject: 'Senha de acesso alterada com sucesso',
+      textBody:
+        'Sua senha de acesso ao Sistema Viver Melhor foi alterada com sucesso.',
+      htmlBody: `
+        <p>Olá!</p>
+        </br>
+        <p>A senha de acesso à sua conta no <strong>Sistema Viver Melhor</strong> foi alterada com sucesso.</p>
+        </br>
+        <p>Se você não solicitou esta alteração. Por favor, entre em contato conosco urgentemente.</p>
+      `,
+    });
   }
 }

@@ -35,7 +35,7 @@ export class CreateTokenUseCase {
     const EXPIRY_TIME: TokenExpiryTime = {
       access_token: { value: 8, time: 'h' },
       refresh_token: { value: 30, time: 'd' },
-      password_reset: { value: 4, time: 'h' },
+      password_reset: { value: 2, time: 'h' },
       invite_user: { value: 8, time: 'h' },
     };
 

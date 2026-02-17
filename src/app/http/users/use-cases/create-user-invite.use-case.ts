@@ -111,7 +111,7 @@ export class CreateUserInviteUseCase {
         to: email,
         subject: 'Cadastre sua conta no Sistema Viver Melhor da ABNMO',
         textBody:
-          'Olá! Finalize o cadastro da sua conta para ter acesso ao Sistema Viver Melhor da ABNMO',
+          'Finalize o cadastro da sua conta para ter acesso ao Sistema Viver Melhor da ABNMO.',
         htmlBody: `
           <p>Olá!</p>
           </br>

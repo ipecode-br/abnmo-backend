@@ -3,22 +3,18 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
+import { MailService } from '@/app/mail/mail.service';
 import { COOKIES_MAPPING } from '@/domain/cookies';
 import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
-
-import type { RecoverPasswordDto } from '../auth.dtos';
+import type { PasswordResetToken } from '@/domain/schemas/tokens';
+import { EnvService } from '@/env/env.service';
 
 interface RecoverPasswordUseCaseInput {
-  recoverPasswordDto: RecoverPasswordDto;
+  email: string;
 }
-
-type PasswordResetToken = Pick<
-  Token,
-  'entity_id' | 'email' | 'token' | 'expires_at'
-> & { type: typeof AUTH_TOKENS_MAPPING.password_reset };
 
 @Injectable()
 export class RecoverPasswordUseCase {
@@ -32,23 +28,31 @@ export class RecoverPasswordUseCase {
     @InjectRepository(Token)
     private readonly tokensRepository: Repository<Token>,
     private readonly createTokenUseCase: CreateTokenUseCase,
+    private readonly envService: EnvService,
+    private readonly mailService: MailService,
   ) {}
 
-  async execute({
-    recoverPasswordDto,
-  }: RecoverPasswordUseCaseInput): Promise<void> {
-    const { email, account_type: accountType } = recoverPasswordDto;
+  async execute({ email }: RecoverPasswordUseCaseInput): Promise<void> {
+    let entity: User | Patient | null = null;
 
     const findOptions = { select: { id: true }, where: { email } };
 
-    const entity =
-      accountType === 'patient'
-        ? await this.patientsRepository.findOne(findOptions)
-        : await this.usersRepository.findOne(findOptions);
+    const [user, patient] = await Promise.all([
+      this.usersRepository.findOne(findOptions),
+      this.patientsRepository.findOne(findOptions),
+    ]);
+
+    if (user) {
+      entity = user;
+    }
+
+    if (patient) {
+      entity = patient;
+    }
 
     if (!entity) {
       this.logger.warn(
-        { email, accountType },
+        { email },
         'Attempt to recover password for non-registered email',
       );
       return;
@@ -57,10 +61,10 @@ export class RecoverPasswordUseCase {
     const [{ token, expiresAt }] = await Promise.all([
       this.createTokenUseCase.execute({
         type: COOKIES_MAPPING.password_reset,
-        payload: { sub: entity.id, accountType },
+        payload: { sub: entity.id },
       }),
-      // Delete all tokens for this email before creating a new one
-      this.tokensRepository.delete({ email }),
+      // Delete all tokens for this entity before creating a new one
+      this.tokensRepository.delete({ entity_id: entity.id }),
     ]);
 
     await this.tokensRepository.save<PasswordResetToken>({
@@ -68,14 +72,30 @@ export class RecoverPasswordUseCase {
       expires_at: expiresAt,
       entity_id: entity.id,
       token,
-      email,
     });
 
-    // TODO: send email with password reset URL including reset token
-
     this.logger.log(
-      { entityId: entity.id, email, accountType },
+      { entityId: entity.id, email },
       'Password reset token generated successfully',
     );
+
+    const baseAppUrl = this.envService.get('APP_URL');
+    const resetPasswordUrl = `${baseAppUrl}/conta/nova-senha?token=${token}`;
+
+    await this.mailService.send({
+      to: email,
+      subject: 'Solicitação para redefinição de senha',
+      textBody:
+        'Redefina sua senha de acesso ao Sistema Viver Melhor da ABNMO.',
+      htmlBody: `
+        <p>Olá!</p>
+        </br>
+        <p>Você solicitou a redefinição da senha de acesso ao <strong>Sistema Viver Melhor</strong> da <strong>ABNMO</strong>. Acesse o link abaixo e cadastre uma nova senha de acesso para sua conta.</p>
+        </br>
+        <a href="${resetPasswordUrl}">${resetPasswordUrl}</a>
+        </br>
+        <p>Se você não solicitou este e-mail, basta ignorá-lo que sua conta não sofrerá nenhuma alteração.</p>
+      `,
+    });
   }
 }

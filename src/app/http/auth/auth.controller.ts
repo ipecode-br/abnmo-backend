@@ -17,6 +17,7 @@ import {
   RegisterUserDto,
   ResetPasswordDto,
   SignInWithEmailDto,
+  SignInWithEmailResponse,
 } from './auth.dtos';
 import { ChangePasswordUseCase } from './use-cases/change-password.use-case';
 import { LogoutUseCase } from './use-cases/logout.use-case';
@@ -41,19 +42,32 @@ export class AuthController {
   @Public()
   @Post('login')
   @ApiOperation({ summary: 'Inicia a sessão do usuário ou paciente' })
-  @ApiResponse({ type: BaseResponse })
+  @ApiResponse({ type: SignInWithEmailResponse })
   async login(
     @Body() signInWithEmailDto: SignInWithEmailDto,
     @Res({ passthrough: true }) response: Response,
-  ): Promise<BaseResponse> {
-    await this.signInUseCase.execute({ signInWithEmailDto, response });
+  ): Promise<SignInWithEmailResponse> {
+    const {
+      email,
+      password,
+      keep_logged_in: keepLoggedIn,
+    } = signInWithEmailDto;
+
+    const { accountType } = await this.signInUseCase.execute({
+      email,
+      password,
+      keepLoggedIn,
+      response,
+    });
 
     return {
       success: true,
       message: 'Login realizado com sucesso.',
+      data: { account_type: accountType },
     };
   }
 
+  // TODO: update this controller when register patient use-case is refactored
   @Public()
   @Post('register/patient')
   @ApiOperation({ summary: 'Registra um novo paciente' })
@@ -66,23 +80,38 @@ export class AuthController {
 
     return {
       success: true,
-      message: 'Sua conta foi registrada com sucesso.',
+      message: 'Sua conta foi cadastrada com sucesso.',
     };
   }
 
   @Public()
   @Post('register/user')
-  @ApiOperation({ summary: 'Registro um novo usuário via convite' })
+  @ApiOperation({ summary: 'Registra um novo usuário via convite' })
   @ApiResponse({ type: BaseResponse })
   async registerUser(
     @Body() registerUserDto: RegisterUserDto,
     @Res({ passthrough: true }) response: Response,
   ): Promise<BaseResponse> {
-    await this.registerUserUseCase.execute({ ...registerUserDto, response });
+    const {
+      name,
+      password,
+      specialty,
+      registration_id: registrationId,
+      invite_token: inviteToken,
+    } = registerUserDto;
+
+    await this.registerUserUseCase.execute({
+      name,
+      password,
+      specialty,
+      registrationId,
+      inviteToken,
+      response,
+    });
 
     return {
       success: true,
-      message: 'Sua conta foi registrada com sucesso.',
+      message: 'Sua conta foi cadastrada com sucesso.',
     };
   }
 
@@ -93,7 +122,9 @@ export class AuthController {
   async recoverPassword(
     @Body() recoverPasswordDto: RecoverPasswordDto,
   ): Promise<BaseResponse> {
-    await this.recoverPasswordUseCase.execute({ recoverPasswordDto });
+    const { email } = recoverPasswordDto;
+
+    await this.recoverPasswordUseCase.execute({ email });
 
     return {
       success: true,
@@ -110,7 +141,9 @@ export class AuthController {
     @Body() resetPasswordDto: ResetPasswordDto,
     @Res({ passthrough: true }) response: Response,
   ): Promise<BaseResponse> {
-    await this.resetPasswordUseCase.execute({ resetPasswordDto, response });
+    const { password, reset_token: resetToken } = resetPasswordDto;
+
+    await this.resetPasswordUseCase.execute({ password, resetToken, response });
 
     return {
       success: true,
@@ -128,7 +161,9 @@ export class AuthController {
     @AuthUser() user: AuthUserDto,
     @Body() changePasswordDto: ChangePasswordDto,
   ): Promise<BaseResponse> {
-    await this.changePasswordUseCase.execute({ user, changePasswordDto });
+    const { password, new_password: newPassword } = changePasswordDto;
+
+    await this.changePasswordUseCase.execute({ user, password, newPassword });
 
     return {
       success: true,

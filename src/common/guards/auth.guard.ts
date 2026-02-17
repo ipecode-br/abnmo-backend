@@ -124,10 +124,7 @@ export class AuthGuard implements CanActivate {
       const { token: newAccessToken, maxAge } =
         await this.createTokenUseCase.execute({
           type: COOKIES_MAPPING.access_token,
-          payload: {
-            sub: user.id,
-            accountType: user.role === 'patient' ? 'patient' : 'user',
-          },
+          payload: { sub: user.id, role: user.role },
         });
 
       this.utilsService.setCookie(response, {
