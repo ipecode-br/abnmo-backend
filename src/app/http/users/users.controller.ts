@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -22,6 +23,7 @@ import { DeactivateUserUseCase } from './use-cases/deactivate-user.use-case';
 import { GetUserUseCase } from './use-cases/get-user.use-case';
 import { GetUserInvitesUseCase } from './use-cases/get-user-invites.use-case';
 import { GetUsersUseCase } from './use-cases/get-users.use-case';
+import { UpdateUserUseCase } from './use-cases/update-user.use-case';
 import {
   CreateUserInviteDto,
   GetUserInvitesQuery,
@@ -29,6 +31,7 @@ import {
   GetUserResponse,
   GetUsersQuery,
   GetUsersResponse,
+  UpdateUserDto,
 } from './users.dtos';
 
 @ApiTags('Usuários')
@@ -42,6 +45,7 @@ export class UsersController {
     private readonly getUsersUseCase: GetUsersUseCase,
     private readonly getUserInvitesUseCase: GetUserInvitesUseCase,
     private readonly cancelUserInviteUseCase: CancelUserInviteUseCase,
+    private readonly updateUserUseCase: UpdateUserUseCase,
   ) {}
 
   @Get()
@@ -99,6 +103,31 @@ export class UsersController {
       success: true,
       message: 'Lista de convites retornada com sucesso.',
       data,
+    };
+  }
+
+  @Put(':id')
+  @Roles(['manager', 'nurse', 'specialist'])
+  @ApiOperation({ summary: 'Atualiza os dados do usuário' })
+  @ApiResponse({ type: BaseResponse })
+  async updateUser(
+    @Param('id') id: string,
+    @AuthUser() user: AuthUserDto,
+    @Body() updateUserDto: UpdateUserDto,
+  ): Promise<BaseResponse> {
+    const { name, specialty, registration_id: registrationId } = updateUserDto;
+
+    await this.updateUserUseCase.execute({
+      id,
+      user,
+      name,
+      specialty,
+      registrationId,
+    });
+
+    return {
+      success: true,
+      message: 'Usuário atualizado com sucesso.',
     };
   }
 

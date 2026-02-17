@@ -8,14 +8,16 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { User } from '@/domain/entities/user';
+import type { SpecialtyCategory } from '@/domain/enums/shared';
 
 import type { AuthUserDto } from '../../auth/auth.dtos';
-import type { UpdateUserDto } from '../users.dtos';
 
 interface UpdateUserUseCaseInput {
   id: string;
   user: AuthUserDto;
-  updateUserDto: UpdateUserDto;
+  name: string;
+  specialty: SpecialtyCategory | null;
+  registrationId: string | null;
 }
 
 @Injectable()
@@ -30,7 +32,9 @@ export class UpdateUserUseCase {
   async execute({
     id,
     user,
-    updateUserDto,
+    name,
+    specialty,
+    registrationId,
   }: UpdateUserUseCaseInput): Promise<void> {
     if (user.role !== 'admin' && user.id !== id) {
       this.logger.log(
@@ -48,12 +52,22 @@ export class UpdateUserUseCase {
       throw new NotFoundException('Usuário não encontrado.');
     }
 
-    await this.usersRepository.update(userToUpdate.id, updateUserDto);
+    if (userToUpdate.status === 'inactive') {
+      throw new ForbiddenException(
+        'Você não tem permissão para atualizar um usuário inativo.',
+      );
+    }
+
+    await this.usersRepository.update(userToUpdate.id, {
+      name,
+      specialty: specialty,
+      registration_id: registrationId,
+    });
 
     this.logger.log(
       {
         id,
-        email: updateUserDto.email,
+        email: userToUpdate.email,
         userId: user.id,
         userEmail: user.email,
         userRole: user.role,
