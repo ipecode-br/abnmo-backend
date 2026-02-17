@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Query,
 } from '@nestjs/common';
@@ -14,8 +15,10 @@ import { Roles } from '@/common/decorators/roles.decorator';
 import { BaseResponse } from '@/common/dtos';
 
 import type { AuthUserDto } from '../auth/auth.dtos';
+import { ActivateUserUseCase } from './use-cases/activate-user.use-case';
 import { CancelUserInviteUseCase } from './use-cases/cancel-user-invite.use-case';
 import { CreateUserInviteUseCase } from './use-cases/create-user-invite.use-case';
+import { DeactivateUserUseCase } from './use-cases/deactivate-user.use-case';
 import { GetUserUseCase } from './use-cases/get-user.use-case';
 import { GetUserInvitesUseCase } from './use-cases/get-user-invites.use-case';
 import { GetUsersUseCase } from './use-cases/get-users.use-case';
@@ -32,7 +35,9 @@ import {
 @Controller('users')
 export class UsersController {
   constructor(
+    private readonly activateUserUseCase: ActivateUserUseCase,
     private readonly createUserInviteUseCase: CreateUserInviteUseCase,
+    private readonly deactivateUserUseCase: DeactivateUserUseCase,
     private readonly getUserUseCase: GetUserUseCase,
     private readonly getUsersUseCase: GetUsersUseCase,
     private readonly getUserInvitesUseCase: GetUserInvitesUseCase,
@@ -110,6 +115,38 @@ export class UsersController {
     return {
       success: true,
       message: 'Convite cancelado com sucesso.',
+    };
+  }
+
+  @Patch(':id/deactivate')
+  @Roles(['admin'])
+  @ApiOperation({ summary: 'Inativa o usuário' })
+  @ApiResponse({ type: BaseResponse })
+  async deactivateUser(
+    @Param('id') id: string,
+    @AuthUser() user: AuthUserDto,
+  ): Promise<BaseResponse> {
+    await this.deactivateUserUseCase.execute({ id, user });
+
+    return {
+      success: true,
+      message: 'Usuário inativado com sucesso.',
+    };
+  }
+
+  @Patch(':id/activate')
+  @Roles(['admin'])
+  @ApiOperation({ summary: 'Ativa o usuário' })
+  @ApiResponse({ type: BaseResponse })
+  async activateUser(
+    @Param('id') id: string,
+    @AuthUser() user: AuthUserDto,
+  ): Promise<BaseResponse> {
+    await this.activateUserUseCase.execute({ id, user });
+
+    return {
+      success: true,
+      message: 'Usuário ativado com sucesso.',
     };
   }
 }
