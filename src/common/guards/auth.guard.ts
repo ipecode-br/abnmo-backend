@@ -17,6 +17,7 @@ import { COOKIES_MAPPING } from '@/domain/cookies';
 import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
+import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
 import type {
   AccessTokenPayload,
   RefreshTokenPayload,
@@ -57,31 +58,94 @@ export class AuthGuard implements CanActivate {
 
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const response = context.switchToHttp().getResponse<Response>();
+
     const accessToken = request.signedCookies?.access_token;
+    const refreshToken = request.signedCookies?.refresh_token;
 
-    if (!accessToken) {
-      throw new UnauthorizedException('Token de acesso ausente.');
-    }
+    if (accessToken) {
+      try {
+        const user = await this.getUserFromToken(accessToken);
 
-    try {
-      const user = await this.getUserFromToken(accessToken);
+        if (!user) {
+          throw new UnauthorizedException(
+            'Token de acesso inválido ou expirado.',
+          );
+        }
 
-      if (!user) {
+        request.user = user;
+        return true;
+      } catch (error) {
+        this.utilsService.deleteCookie(response, COOKIES_MAPPING.access_token);
+
+        if (error instanceof UnauthorizedException) {
+          throw error;
+        }
+
         throw new UnauthorizedException(
           'Token de acesso inválido ou expirado.',
         );
       }
+    }
+
+    if (!refreshToken) {
+      throw new UnauthorizedException('Token de atualização ausente.');
+    }
+
+    try {
+      const user = await this.getUserFromToken(refreshToken);
+
+      if (!user) {
+        throw new UnauthorizedException(
+          'Token de atualização inválido ou expirado.',
+        );
+      }
+
+      const storedRefreshToken = await this.tokensRepository.findOne({
+        where: {
+          type: AUTH_TOKENS_MAPPING.refresh_token,
+          token: refreshToken,
+          entity_id: user.id,
+        },
+      });
+
+      if (!storedRefreshToken || !storedRefreshToken.expires_at) {
+        throw new UnauthorizedException('Token de atualização não encontrado.');
+      }
+
+      if (storedRefreshToken.expires_at < new Date()) {
+        await this.tokensRepository.delete({ entity_id: user.id });
+
+        this.utilsService.deleteCookie(response, COOKIES_MAPPING.access_token);
+        this.utilsService.deleteCookie(response, COOKIES_MAPPING.refresh_token);
+
+        throw new UnauthorizedException('Token de atualização expirado.');
+      }
+
+      const { token: newAccessToken, maxAge } =
+        await this.createTokenUseCase.execute({
+          type: COOKIES_MAPPING.access_token,
+          payload: { sub: user.id, role: user.role },
+        });
+
+      this.utilsService.setCookie(response, {
+        name: COOKIES_MAPPING.access_token,
+        value: newAccessToken,
+        maxAge,
+      });
 
       request.user = user;
       return true;
     } catch (error) {
       this.utilsService.deleteCookie(response, COOKIES_MAPPING.access_token);
+      this.utilsService.deleteCookie(response, COOKIES_MAPPING.refresh_token);
 
       if (error instanceof UnauthorizedException) {
         throw error;
       }
 
-      throw new UnauthorizedException('Token de acesso inválido ou expirado.');
+      throw new UnauthorizedException(
+        'Token de atualização inválido ou expirado.',
+      );
     }
   }
 
