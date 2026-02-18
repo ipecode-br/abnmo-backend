@@ -17,6 +17,7 @@ import { AuthController } from './auth.controller';
 import { ChangePasswordUseCase } from './use-cases/change-password.use-case';
 import { LogoutUseCase } from './use-cases/logout.use-case';
 import { RecoverPasswordUseCase } from './use-cases/recover-password.use-case';
+import { RefreshTokenUseCase } from './use-cases/refresh-token.use-case';
 import { RegisterPatientUseCase } from './use-cases/register-patient.use-case';
 import { RegisterUserUseCase } from './use-cases/register-user.use-case';
 import { ResetPasswordUseCase } from './use-cases/reset-password.use-case';
@@ -39,6 +40,7 @@ import { SignInWithEmailUseCase } from './use-cases/sign-in-with-email.use-case'
     RegisterPatientUseCase,
     RegisterUserUseCase,
     ChangePasswordUseCase,
+    RefreshTokenUseCase,
     { provide: APP_GUARD, useClass: AuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
   ],

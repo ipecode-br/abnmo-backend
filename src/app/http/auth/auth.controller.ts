@@ -22,6 +22,7 @@ import {
 import { ChangePasswordUseCase } from './use-cases/change-password.use-case';
 import { LogoutUseCase } from './use-cases/logout.use-case';
 import { RecoverPasswordUseCase } from './use-cases/recover-password.use-case';
+import { RefreshTokenUseCase } from './use-cases/refresh-token.use-case';
 import { RegisterPatientUseCase } from './use-cases/register-patient.use-case';
 import { RegisterUserUseCase } from './use-cases/register-user.use-case';
 import { ResetPasswordUseCase } from './use-cases/reset-password.use-case';
@@ -37,6 +38,7 @@ export class AuthController {
     private readonly registerPatientUseCase: RegisterPatientUseCase,
     private readonly registerUserUseCase: RegisterUserUseCase,
     private readonly changePasswordUseCase: ChangePasswordUseCase,
+    private readonly refreshTokenUseCase: RefreshTokenUseCase,
   ) {}
 
   @Public()
@@ -64,6 +66,22 @@ export class AuthController {
       success: true,
       message: 'Login realizado com sucesso.',
       data: { account_type: accountType },
+    };
+  }
+
+  @Public()
+  @Post('refresh-token')
+  @ApiOperation({ summary: 'Atualiza o token de acesso' })
+  @ApiResponse({ type: BaseResponse })
+  async refreshToken(
+    @Cookies(COOKIES_MAPPING.refresh_token) refreshToken: string,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<BaseResponse> {
+    await this.refreshTokenUseCase.execute({ refreshToken, response });
+
+    return {
+      success: true,
+      message: 'Token atualizado com sucesso.',
     };
   }
 
