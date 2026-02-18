@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository, SelectQueryBuilder } from 'typeorm';
 
@@ -21,10 +21,6 @@ interface GetTotalPatientsWithReferralsByStateUseCaseOutput {
 
 @Injectable()
 export class GetTotalPatientsWithReferralsByStateUseCase {
-  private readonly logger = new Logger(
-    GetTotalPatientsWithReferralsByStateUseCase.name,
-  );
-
   constructor(
     @InjectRepository(Patient)
     private readonly patientsRepository: Repository<Patient>,
@@ -37,8 +33,6 @@ export class GetTotalPatientsWithReferralsByStateUseCase {
     endDate,
     limit,
   }: GetTotalPatientsWithReferralsByStateUseCaseInput = {}): Promise<GetTotalPatientsWithReferralsByStateUseCaseOutput> {
-    const startTime = Date.now();
-
     const dateRange = period
       ? this.utilsService.getDateRangeForPeriod(period)
       : { startDate, endDate };
@@ -86,14 +80,6 @@ export class GetTotalPatientsWithReferralsByStateUseCase {
     ]);
 
     const totalPatients = Number(totalResult?.total || 0);
-
-    const endTime = Date.now();
-    const ms = endTime - startTime;
-
-    this.logger.log(
-      { period, startDate, endDate, limit, ms },
-      'Patients with referrals by state returned successfully',
-    );
 
     return { states, total: totalPatients };
   }

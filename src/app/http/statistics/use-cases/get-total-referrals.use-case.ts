@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   Between,
@@ -27,8 +27,6 @@ interface GetTotalReferralsUseCaseInput {
 
 @Injectable()
 export class GetTotalReferralsUseCase {
-  private readonly logger = new Logger(GetTotalReferralsUseCase.name);
-
   constructor(
     @InjectRepository(Referral)
     private readonly referralsRepository: Repository<Referral>,
@@ -44,8 +42,6 @@ export class GetTotalReferralsUseCase {
     startDate,
     endDate,
   }: GetTotalReferralsUseCaseInput = {}): Promise<number> {
-    const startTime = Date.now();
-
     const where: FindOptionsWhere<Referral> = {};
 
     if (period) {
@@ -81,28 +77,9 @@ export class GetTotalReferralsUseCase {
       where.condition = condition;
     }
 
-    const result = await this.referralsRepository.count({
+    return await this.referralsRepository.count({
       select: { id: true },
       where,
     });
-
-    const endTime = Date.now();
-    const ms = endTime - startTime;
-
-    this.logger.log(
-      {
-        patientId,
-        status,
-        category,
-        condition,
-        period,
-        startDate,
-        endDate,
-        ms,
-      },
-      'Referrals total returned successfully',
-    );
-
-    return result;
   }
 }
