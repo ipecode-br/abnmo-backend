@@ -16,8 +16,12 @@ export async function createNestApp(adapter?: ExpressAdapter) {
   patchNestJsSwagger();
 
   const app = adapter
-    ? await NestFactory.create<NestExpressApplication>(AppModule, adapter)
-    : await NestFactory.create<NestExpressApplication>(AppModule);
+    ? await NestFactory.create<NestExpressApplication>(AppModule, adapter, {
+        logger: false,
+      })
+    : await NestFactory.create<NestExpressApplication>(AppModule, {
+        logger: false,
+      });
 
   app.useGlobalPipes(new GlobalZodValidationPipe());
   app.useGlobalFilters(new HttpExceptionFilter());
