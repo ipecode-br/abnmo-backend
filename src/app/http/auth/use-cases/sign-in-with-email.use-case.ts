@@ -63,6 +63,11 @@ export class SignInWithEmailUseCase {
 
     if (patient) {
       entity = patient;
+
+      // TODO: remove this error when patient dashboard is ready
+      throw new UnauthorizedException(
+        'O sistema ainda não está liberado para pacientes.',
+      );
     }
 
     if (!entity || !entity.password) {
