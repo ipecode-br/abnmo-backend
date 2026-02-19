@@ -1,8 +1,8 @@
 import {
   CanActivate,
   ExecutionContext,
+  ForbiddenException,
   Injectable,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
@@ -34,7 +34,7 @@ export class RolesGuard implements CanActivate {
     const user = request.user;
 
     if (!user) {
-      throw new UnauthorizedException(
+      throw new ForbiddenException(
         'Você não tem permissão para executar esta ação.',
       );
     }
@@ -45,7 +45,7 @@ export class RolesGuard implements CanActivate {
       user.role === 'admin';
 
     if (!isAllowed) {
-      throw new UnauthorizedException(
+      throw new ForbiddenException(
         'Você não tem permissão para executar esta ação.',
       );
     }

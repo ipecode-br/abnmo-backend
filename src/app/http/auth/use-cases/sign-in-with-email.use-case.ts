@@ -1,4 +1,9 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Response } from 'express';
 import { Repository } from 'typeorm';
@@ -77,7 +82,7 @@ export class SignInWithEmailUseCase {
     }
 
     if (entity.status === 'inactive') {
-      throw new UnauthorizedException(
+      throw new ForbiddenException(
         'Permissão de acesso negada. Sua conta está inativa.',
       );
     }
