@@ -54,10 +54,12 @@ export class GetTotalPatientsByFieldUseCase {
     });
 
     const createBaseQuery = (): SelectQueryBuilder<Patient> => {
-      const baseQuery = this.patientsRepository.createQueryBuilder('patient');
+      const baseQuery = this.patientsRepository
+        .createQueryBuilder('patient')
+        .where('patient.status != :status', { status: 'pending' });
 
       if (dateRange.startDate && dateRange.endDate) {
-        baseQuery.where('patient.created_at BETWEEN :start AND :end', {
+        baseQuery.andWhere('patient.created_at BETWEEN :start AND :end', {
           start: dateRange.startDate,
           end: dateRange.endDate,
         });
@@ -75,8 +77,7 @@ export class GetTotalPatientsByFieldUseCase {
       .select(`patient.${field}`, field)
       .addSelect('COUNT(patient.id)', 'total')
       .groupBy(`patient.${field}`)
-      .orderBy('total', order)
-      .limit(limit);
+      .orderBy('total', order);
 
     if (withPercentage) {
       fieldQuery.addSelect(
@@ -90,6 +91,11 @@ export class GetTotalPatientsByFieldUseCase {
       totalQuery.getRawOne<{ total: string }>(),
     ]);
 
-    return { items, total: Number(totalResult?.total || 0) };
+    console.log({ field, totalPatients, totalResult, items });
+
+    return {
+      items: items.slice(0, limit),
+      total: Number(totalResult?.total || 0),
+    };
   }
 }

@@ -41,7 +41,7 @@ export class GetTotalPatientsWithAppointmentsByStateUseCase {
       const baseQuery = this.patientsRepository
         .createQueryBuilder('patient')
         .innerJoin('patient.appointments', 'appointment')
-        .where('appointment.id IS NOT NULL');
+        .where('patient.status != :status', { status: 'pending' });
 
       if (dateRange.startDate && dateRange.endDate) {
         baseQuery.andWhere('appointment.date BETWEEN :start AND :end', {

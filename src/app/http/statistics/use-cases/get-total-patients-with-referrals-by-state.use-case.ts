@@ -41,7 +41,7 @@ export class GetTotalPatientsWithReferralsByStateUseCase {
       const baseQuery = this.patientsRepository
         .createQueryBuilder('patient')
         .innerJoin('patient.referrals', 'referral')
-        .where('referral.id IS NOT NULL');
+        .where('patient.status != :status', { status: 'pending' });
 
       if (dateRange.startDate && dateRange.endDate) {
         baseQuery.andWhere('referral.date BETWEEN :start AND :end', {
