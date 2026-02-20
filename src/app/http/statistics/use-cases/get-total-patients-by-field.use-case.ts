@@ -91,8 +91,6 @@ export class GetTotalPatientsByFieldUseCase {
       totalQuery.getRawOne<{ total: string }>(),
     ]);
 
-    console.log({ field, totalPatients, totalResult, items });
-
     return {
       items: items.slice(0, limit),
       total: Number(totalResult?.total || 0),

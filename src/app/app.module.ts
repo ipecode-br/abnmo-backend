@@ -1,7 +1,8 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from 'nestjs-pino';
 
+import { MaintenanceMiddleware } from '@/common/maintenance.middleware';
 import { envSchema } from '@/env/env';
 import { EnvModule } from '@/env/env.module';
 import { EnvService } from '@/env/env.service';
@@ -58,4 +59,8 @@ import { UsersModule } from './http/users/users.module';
     PatientSupportsModule,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(MaintenanceMiddleware).forRoutes('*');
+  }
+}

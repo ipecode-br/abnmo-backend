@@ -4,6 +4,7 @@ export const envSchema = z.object({
   // Environment
   NODE_ENV: z.enum(['production', 'development', 'homolog', 'test']),
   APP_ENVIRONMENT: z.enum(['lambda', 'local']),
+  MAINTENANCE: z.enum(['true', 'false']).transform((val) => val === 'true'),
 
   // API
   API_BASE_URL: z.string().url().optional(),
