@@ -17,6 +17,7 @@ export const getReferralsResponseSchema = baseResponseSchema.extend({
           condition: true,
           annotation: true,
           professional_name: true,
+          user_id: true,
           created_at: true,
           updated_at: true,
         })

@@ -14,6 +14,7 @@ export const referralSchema = z
     condition: patientConditionSchema,
     annotation: z.string().max(2000).nullable(),
     professional_name: nameSchema.nullable(),
+    user_id: z.string().uuid().nullable(),
     created_by: z.string().uuid(),
     created_at: z.coerce.date(),
     updated_at: z.coerce.date(),

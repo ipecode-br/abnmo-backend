@@ -40,6 +40,9 @@ export class Referral implements ReferralSchema {
   @Column({ type: 'varchar', length: 64, nullable: true })
   professional_name: string | null;
 
+  @Column({ type: 'uuid', nullable: true })
+  user_id: string | null;
+
   @Column('uuid')
   created_by: string;
 

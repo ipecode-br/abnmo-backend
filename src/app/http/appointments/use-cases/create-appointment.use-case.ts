@@ -1,16 +1,17 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
 import { Appointment } from '@/domain/entities/appointment';
 import { Patient } from '@/domain/entities/patient';
+import { User } from '@/domain/entities/user';
 
 import type { AuthUserDto } from '../../auth/auth.dtos';
 import type { CreateAppointmentDto } from '../appointments.dtos';
 
 interface CreateAppointmentUseCaseInput {
-  createAppointmentDto: CreateAppointmentDto;
   user: AuthUserDto;
+  createAppointmentDto: CreateAppointmentDto;
 }
 
 @Injectable()
@@ -22,27 +23,15 @@ export class CreateAppointmentUseCase {
     private readonly appointmentsRepository: Repository<Appointment>,
     @InjectRepository(Patient)
     private readonly patientsRepository: Repository<Patient>,
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
   ) {}
 
   async execute({
     createAppointmentDto,
     user,
   }: CreateAppointmentUseCaseInput): Promise<void> {
-    const { patient_id: patientId, date } = createAppointmentDto;
-
-    const MAX_APPOINTMENT_MONTHS_LIMIT = 3;
-    const appointmentDate = new Date(date);
-    const maxAppointmentDate = new Date();
-
-    maxAppointmentDate.setMonth(
-      maxAppointmentDate.getMonth() + MAX_APPOINTMENT_MONTHS_LIMIT,
-    );
-
-    if (appointmentDate > maxAppointmentDate) {
-      throw new BadRequestException(
-        'A data de atendimento deve estar dentro dos próximos 3 meses.',
-      );
-    }
+    const { patient_id: patientId } = createAppointmentDto;
 
     const patient = await this.patientsRepository.findOne({
       where: { id: patientId },
@@ -50,14 +39,32 @@ export class CreateAppointmentUseCase {
     });
 
     if (!patient) {
-      throw new BadRequestException('Paciente não encontrado.');
+      throw new NotFoundException('Paciente não encontrado.');
     }
 
-    const appointment = this.appointmentsRepository.create({
+    const appointmentPayload: Partial<Appointment> = {
       ...createAppointmentDto,
+      patient_id: patientId,
+      status: 'scheduled',
       created_by: user.id,
-    });
+    };
 
+    if (user.role === 'specialist') {
+      const specialist = await this.usersRepository.findOne({
+        select: { id: true, name: true, specialty: true },
+        where: { id: user.id },
+      });
+
+      if (!specialist || !specialist.specialty) {
+        throw new NotFoundException('Especialista não encontrado.');
+      }
+
+      appointmentPayload.user_id = specialist.id;
+      appointmentPayload.professional_name = specialist.name;
+      appointmentPayload.category = specialist.specialty;
+    }
+
+    const appointment = this.appointmentsRepository.create(appointmentPayload);
     await this.appointmentsRepository.save(appointment);
 
     this.logger.log(

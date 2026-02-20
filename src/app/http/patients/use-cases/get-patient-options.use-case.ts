@@ -26,6 +26,7 @@ export class GetPatientOptionsUseCase {
 
     const patients = await this.patientsRepository.find({
       select: { id: true, name: true, cpf: true },
+      order: { name: 'ASC' },
       where,
     });
 
