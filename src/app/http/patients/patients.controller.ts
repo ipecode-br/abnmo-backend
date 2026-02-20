@@ -43,7 +43,7 @@ export class PatientsController {
   ) {}
 
   @Get()
-  @Roles(['manager', 'nurse'])
+  @Roles(['manager', 'nurse', 'specialist'])
   @ApiOperation({ summary: 'Lista todos os pacientes' })
   @ApiResponse({ type: GetPatientsResponse })
   async getPatients(
@@ -59,7 +59,7 @@ export class PatientsController {
   }
 
   @Get('/options')
-  @Roles(['manager', 'nurse'])
+  @Roles(['manager', 'nurse', 'specialist'])
   @ApiOperation({
     summary: 'Retorna uma lista de opções com todos os pacientes ativos',
   })

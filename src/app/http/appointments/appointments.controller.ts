@@ -54,7 +54,7 @@ export class AppointmentsController {
   }
 
   @Post()
-  @Roles(['nurse', 'manager'])
+  @Roles(['manager', 'nurse', 'specialist'])
   @ApiOperation({ summary: 'Cadastra um novo atendimento' })
   @ApiResponse({ type: BaseResponse })
   async create(
@@ -70,7 +70,7 @@ export class AppointmentsController {
   }
 
   @Put(':id')
-  @Roles(['nurse', 'manager', 'specialist'])
+  @Roles(['manager', 'nurse', 'specialist'])
   @ApiOperation({ summary: 'Atualiza os dados do atendimento' })
   @ApiResponse({ type: BaseResponse })
   public async update(
@@ -90,7 +90,7 @@ export class AppointmentsController {
     };
   }
 
-  @Roles(['nurse', 'manager', 'specialist'])
+  @Roles(['manager', 'nurse'])
   @Patch(':id/cancel')
   @ApiOperation({ summary: 'Cancela o atendimento' })
   @ApiResponse({ type: BaseResponse })

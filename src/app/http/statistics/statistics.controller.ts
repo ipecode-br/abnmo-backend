@@ -40,7 +40,7 @@ import { GetTotalReferralsUseCase } from './use-cases/get-total-referrals.use-ca
 import { GetTotalReferralsByCategoryUseCase } from './use-cases/get-total-referrals-by-category.use-case';
 
 @ApiTags('Estatísticas')
-@Roles(['manager', 'nurse'])
+@Roles(['manager', 'nurse', 'specialist'])
 @Controller('statistics')
 export class StatisticsController {
   constructor(

@@ -91,7 +91,7 @@ export class ReferralsController {
   }
 
   @Patch(':id/cancel')
-  @Roles(['nurse', 'manager'])
+  @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Cancela o encaminhamento' })
   @ApiResponse({ type: BaseResponse })
   async cancel(
