@@ -1,17 +1,28 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { type Repository } from 'typeorm';
+import type { Repository } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
 import { Referral } from '@/domain/entities/referral';
 import { User } from '@/domain/entities/user';
+import type { PatientCondition } from '@/domain/enums/patients';
+import type { SpecialtyCategory } from '@/domain/enums/shared';
 
 import type { AuthUserDto } from '../../auth/auth.dtos';
-import { CreateReferralDto } from '../referrals.dtos';
 
 interface CreateReferralUseCaseInput {
   user: AuthUserDto;
-  createReferralDto: CreateReferralDto;
+  patientId: string;
+  date: Date;
+  condition: PatientCondition;
+  annotation: string | null;
+  professionalName: string | null;
+  category?: SpecialtyCategory;
 }
 
 @Injectable()
@@ -21,18 +32,21 @@ export class CreateReferralUseCase {
   constructor(
     @InjectRepository(Patient)
     private readonly patientsRepository: Repository<Patient>,
-    @InjectRepository(User)
-    private readonly usersRepository: Repository<User>,
     @InjectRepository(Referral)
     private readonly referralsRepository: Repository<Referral>,
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
   ) {}
 
   async execute({
     user,
-    createReferralDto,
+    patientId,
+    date,
+    condition,
+    annotation,
+    category,
+    professionalName,
   }: CreateReferralUseCaseInput): Promise<void> {
-    const { patient_id: patientId } = createReferralDto;
-
     const patient = await this.patientsRepository.findOne({
       where: { id: patientId },
       select: { id: true },
@@ -43,13 +57,23 @@ export class CreateReferralUseCase {
     }
 
     const referralPayload: Partial<Referral> = {
-      ...createReferralDto,
       patient_id: patientId,
+      date,
+      category,
+      condition,
+      professional_name: professionalName,
+      annotation,
       status: 'scheduled',
       created_by: user.id,
     };
 
     if (user.role === 'specialist') {
+      if (category || professionalName) {
+        throw new BadRequestException(
+          'Especialistas não devem informar categoria ou profissional.',
+        );
+      }
+
       const specialist = await this.usersRepository.findOne({
         select: { id: true, name: true, specialty: true },
         where: { id: user.id },
@@ -62,6 +86,12 @@ export class CreateReferralUseCase {
       referralPayload.user_id = specialist.id;
       referralPayload.professional_name = specialist.name;
       referralPayload.category = specialist.specialty;
+    }
+
+    if (!referralPayload.category) {
+      throw new BadRequestException(
+        'A categoria do atendimento é obrigatória.',
+      );
     }
 
     const referral = this.referralsRepository.create(referralPayload);

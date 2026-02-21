@@ -26,9 +26,7 @@ export const createAppointmentSchema = appointmentSchema
     annotation: true,
     professional_name: true,
   })
-  .extend({
-    category: specialtySchema.optional(),
-  })
+  .extend({ category: specialtySchema.optional() })
   .strict();
 
 export const updateAppointmentSchema = appointmentSchema.pick({

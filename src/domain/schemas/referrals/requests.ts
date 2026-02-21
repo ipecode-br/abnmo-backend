@@ -15,16 +15,19 @@ import {
   queryPerPageSchema,
   querySearchSchema,
 } from '../query';
+import { specialtySchema } from '../shared';
 import { referralSchema } from '.';
 
-export const createReferralSchema = referralSchema.pick({
-  patient_id: true,
-  date: true,
-  category: true,
-  condition: true,
-  annotation: true,
-  professional_name: true,
-});
+export const createReferralSchema = referralSchema
+  .pick({
+    patient_id: true,
+    date: true,
+    condition: true,
+    annotation: true,
+    professional_name: true,
+  })
+  .extend({ category: specialtySchema.optional() })
+  .strict();
 
 export const updateReferralSchema = referralSchema.pick({
   date: true,

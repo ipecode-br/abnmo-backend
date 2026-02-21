@@ -61,9 +61,23 @@ export class ReferralsController {
     @AuthUser() user: AuthUserDto,
     @Body() createReferralDto: CreateReferralDto,
   ): Promise<BaseResponse> {
+    const {
+      date,
+      category,
+      annotation,
+      condition,
+      patient_id: patientId,
+      professional_name: professionalName,
+    } = createReferralDto;
+
     await this.createReferralUseCase.execute({
-      createReferralDto,
       user,
+      date,
+      category,
+      annotation,
+      condition,
+      patientId,
+      professionalName,
     });
 
     return { success: true, message: 'Encaminhamento cadastrado com sucesso.' };
