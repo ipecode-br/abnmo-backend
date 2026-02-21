@@ -61,7 +61,24 @@ export class AppointmentsController {
     @AuthUser() user: AuthUserDto,
     @Body() createAppointmentDto: CreateAppointmentDto,
   ): Promise<BaseResponse> {
-    await this.createAppointmentUseCase.execute({ user, createAppointmentDto });
+    const {
+      date,
+      category,
+      annotation,
+      condition,
+      patient_id: patientId,
+      professional_name: professionalName,
+    } = createAppointmentDto;
+
+    await this.createAppointmentUseCase.execute({
+      user,
+      date,
+      category,
+      annotation,
+      condition,
+      patientId,
+      professionalName,
+    });
 
     return {
       success: true,

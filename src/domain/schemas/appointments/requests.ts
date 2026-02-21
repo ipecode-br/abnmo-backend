@@ -15,16 +15,21 @@ import {
   queryPerPageSchema,
   querySearchSchema,
 } from '../query';
+import { specialtySchema } from '../shared';
 import { appointmentSchema } from '.';
 
-export const createAppointmentSchema = appointmentSchema.pick({
-  patient_id: true,
-  date: true,
-  category: true,
-  condition: true,
-  annotation: true,
-  professional_name: true,
-});
+export const createAppointmentSchema = appointmentSchema
+  .pick({
+    patient_id: true,
+    date: true,
+    condition: true,
+    annotation: true,
+    professional_name: true,
+  })
+  .extend({
+    category: specialtySchema.optional(),
+  })
+  .strict();
 
 export const updateAppointmentSchema = appointmentSchema.pick({
   date: true,
