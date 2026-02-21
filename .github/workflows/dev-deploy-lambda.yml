@@ -1,11 +1,11 @@
-name: Deploy Lambda to AWS
+name: Deploy Lambda to AWS (Dev | Homolog)
 
 on:
   push:
     branches:
       - dev
       - homolog
-  workflow_dispatch: # Add manual trigger
+  workflow_dispatch:  # Optional manual trigger
 
 jobs:
   deploy:
@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       id-token: write # Permission to obtain OIDC token
-      contents: read # Permission to checkout
+      contents: read  # Permission to checkout
 
     steps:
       - name: Checkout source
@@ -40,9 +40,6 @@ jobs:
           elif [ "${{ github.ref_name }}" = "homolog" ]; then
             echo "lambda_name=abnmo-svm-lambda-homolog" >> $GITHUB_OUTPUT
             echo "aws_role_arn=${{ secrets.AWS_ROLE_TO_ASSUME_HOMOLOG }}" >> $GITHUB_OUTPUT
-          elif [ "${{ github.ref_name }}" = "main" ]; then
-            echo "lambda_name=abnmo-svm-lambda-production" >> $GITHUB_OUTPUT
-            echo "aws_role_arn=${{ secrets.AWS_ROLE_TO_ASSUME_PROD }}" >> $GITHUB_OUTPUT
           else
             echo "Branch not supported: ${{ github.ref_name }}"
             exit 1
@@ -57,13 +54,13 @@ jobs:
       - name: Upload to Lambda
         run: |
           if [ ! -f lambda.zip ]; then
-            echo "❌ lambda.zip not found!"
+            echo "lambda.zip not found!"
             exit 1
           fi
-          echo "🚀 Deploying to Lambda: ${{ steps.set-lambda-env.outputs.lambda_name }}"
+          echo "Deploying to Lambda: ${{ steps.set-lambda-env.outputs.lambda_name }}"
           aws lambda update-function-code \
             --function-name ${{ steps.set-lambda-env.outputs.lambda_name }} \
             --zip-file fileb://lambda.zip \
             --output text \
             --query 'FunctionName'
-          echo "✅ Lambda deployment completed successfully"
+          echo "Lambda deployment completed successfully"

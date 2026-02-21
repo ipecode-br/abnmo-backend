@@ -12,7 +12,7 @@ async function buildLambda() {
   await fs.ensureDir(outDir);
 
   try {
-    execSync('npm run build:clean', { stdio: 'inherit' });
+    execSync('rm -rf dist dist-lambda lambda.zip', { stdio: 'inherit' });
     execSync('npm run build', { stdio: 'inherit' });
   } catch (error) {
     console.error('❌ Failed TypeScript build:', error);

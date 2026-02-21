@@ -1,0 +1,52 @@
+name: Deploy Lambda to AWS (Production)
+
+on:
+  release:
+    types: [published]  # Runs only when a release is published
+  workflow_dispatch:    # Optional manual trigger
+
+jobs:
+  deploy:
+    name: Build and Deploy Production Lambda
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Permission to obtain OIDC token
+      contents: read  # Permission to checkout
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build and package Lambda
+        run: npx ts-node infra/scripts/build-lambda.ts
+
+      - name: Configure AWS credentials with OIDC (Production)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME_PROD }}
+          aws-region: us-east-1
+
+      - name: Upload to Production Lambda
+        run: |
+          if [ ! -f lambda.zip ]; then
+            echo "lambda.zip not found!"
+            exit 1
+          fi
+
+          echo "Deploying to Production Lambda: abnmo-svm-lambda-production"
+
+          aws lambda update-function-code \
+            --function-name abnmo-svm-lambda-production \
+            --zip-file fileb://lambda.zip \
+            --output text \
+            --query 'FunctionName'
+
+          echo "Production Lambda deployment completed successfully"
