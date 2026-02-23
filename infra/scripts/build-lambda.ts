@@ -23,7 +23,7 @@ async function buildLambda() {
     entryPoints: ['dist-lambda/app/lambda.js'],
     bundle: true,
     platform: 'node',
-    target: 'node20',
+    target: 'node22',
     outfile: path.join(outDir, 'index.js'),
     minify: false,
     treeShaking: false,
