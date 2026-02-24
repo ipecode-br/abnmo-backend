@@ -7,7 +7,7 @@ const outDir = 'dist-lambda';
 const zipFile = 'lambda.zip';
 
 async function buildLambda() {
-  console.log('🚀 Starting Lambda build...');
+  console.log('Starting Lambda build...');
 
   await fs.ensureDir(outDir);
 
@@ -15,12 +15,12 @@ async function buildLambda() {
     execSync('rm -rf dist dist-lambda lambda.zip', { stdio: 'inherit' });
     execSync('npm run build', { stdio: 'inherit' });
   } catch (error) {
-    console.error('❌ Failed TypeScript build:', error);
+    console.error('Failed TypeScript build:', error);
     process.exit(1);
   }
 
   await build({
-    entryPoints: ['dist-lambda/app/lambda.js'],
+    entryPoints: ['dist/app/lambda.js'],
     bundle: true,
     platform: 'node',
     target: 'node22',
@@ -39,15 +39,15 @@ async function buildLambda() {
   try {
     execSync(`cd ${outDir} && zip -r ../${zipFile} .`, { stdio: 'inherit' });
     const { size } = await fs.stat(zipFile);
-    console.log(`✅ Lambda bundle created: ${zipFile}`);
-    console.log(`📦 Size: ${(size / 1024 / 1024).toFixed(2)} MB`);
+    console.log(`Lambda bundle created: ${zipFile}`);
+    console.log(`Size: ${(size / 1024 / 1024).toFixed(2)} MB`);
   } catch (error) {
-    console.error('❌ Failed to zip:', error);
+    console.error('Failed to zip:', error);
     process.exit(1);
   }
 }
 
 buildLambda().catch((err) => {
-  console.error('❌ Build failed:', err);
+  console.error('Build failed:', err);
   process.exit(1);
 });

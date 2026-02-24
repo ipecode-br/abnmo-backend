@@ -1,6 +1,7 @@
 # compiled output
 /dist
 /dist-lambda
+/dist-docker
 /node_modules
 /build
 lambda.zip

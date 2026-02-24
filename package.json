@@ -8,6 +8,8 @@
   "scripts": {
     "build": "nest build",
     "build:lambda": "ts-node infra/scripts/build-lambda.ts",
+    "build:docker": "ts-node infra/scripts/build-docker.ts",
+    "start": "node dist/app/main.js",
     "start:dev": "nest start --watch",
     "dev": "npm run services:up && npm run services:wait:database && npm run db:migrate && npm run start:dev",
     "services:up": "docker compose -f infra/docker/compose-dev.yaml --env-file .env up -d",
@@ -27,12 +29,17 @@
     "lint:eslint:check": "eslint . && tsc --noEmit",
     "lint:prettier:check": "prettier --check .",
     "lint:prettier:fix": "prettier --write . --log-level=warn",
-    "prepare": "husky"
+    "prepare": "husky",
+
+    "docker:dev:build": "docker build -f infra/docker/dev/Dockerfile -t abnmo-api-dev .",
+    "docker:dev:up": "docker compose -f infra/docker/dev/compose.yaml --env-file .env.example up -d",
+    "docker:dev:down": "docker compose -f infra/docker/dev/compose.yaml --env-file .env.example down",
+    "docker:dev:logs": "docker compose -f infra/docker/dev/compose.yaml logs -f api",
+    "docker:dev:rebuild": "npm run docker:dev:down && npm run docker:dev:build && npm run docker:dev:up"
   },
   "dependencies": {
     "@aws-sdk/client-lambda": "^3.806.0",
     "@aws-sdk/client-ses": "3.856.0",
-    "@faker-js/faker": "9.9.0",
     "@nestjs/class-validator": "^0.13.1",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.0",
@@ -56,13 +63,14 @@
     "nestjs-pino": "4.4.0",
     "nestjs-zod": "4.3.1",
     "pino-http": "10.5.0",
-    "pino-pretty": "13.0.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "typeorm": "^0.3.20",
     "zod": "3.25.64"
   },
   "devDependencies": {
+    "pino-pretty": "13.0.0",
+    "@faker-js/faker": "9.9.0",
     "@commitlint/cli": "19.8.1",
     "@commitlint/config-conventional": "19.8.1",
     "@eslint/eslintrc": "^3.2.0",
