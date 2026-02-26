@@ -54,7 +54,7 @@ export class Patient implements PatientSchema {
   @Column({ type: 'enum', enum: PATIENT_RACES, default: 'prefer_not_to_say' })
   race: PatientRace;
 
-  @Column({ type: 'datetime' })
+  @Column({ type: 'date' })
   date_of_birth: Date;
 
   @Column({ type: 'varchar', length: 11 })

@@ -5,7 +5,7 @@ on:
     branches:
       - dev
       - homolog
-  workflow_dispatch:  # Optional manual trigger
+  workflow_dispatch: # Optional manual trigger
 
 jobs:
   deploy:
@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       id-token: write # Permission to obtain OIDC token
-      contents: read  # Permission to checkout
+      contents: read # Permission to checkout
 
     steps:
       - name: Checkout source
