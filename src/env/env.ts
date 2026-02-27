@@ -18,9 +18,6 @@ export const envSchema = z.object({
   COOKIE_SECRET: z.string().min(1),
   JWT_SECRET: z.string().min(1),
 
-  // Flags
-  ENABLE_EMAILS: z.enum(['true', 'false']).transform((val) => val === 'true'),
-
   // Database
   DB_HOST: z.string().min(1),
   DB_PORT: z.coerce.number(),
@@ -29,7 +26,10 @@ export const envSchema = z.object({
   DB_PASSWORD: z.string().min(1),
   DB_SCHEMA: z.string().optional(),
 
-  // AWS
+  // E-mails
+  ENABLE_EMAILS: z.enum(['true', 'false']).transform((val) => val === 'true'),
+  EMAIL_PROVIDER: z.enum(['ses', 'resend']),
+  RESEND_KEY: z.string().min(1),
   AWS_SES_REGION: z.string().min(1),
   AWS_SES_ACCESS_KEY_ID: z.string().min(1),
   AWS_SES_SECRET_ACCESS_KEY: z.string().min(1),
