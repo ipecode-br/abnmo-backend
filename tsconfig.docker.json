@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist-docker",
+    "rootDir": "./"
+  },
+  "include": [
+    "src/**/*",
+    "infra/database/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "dist-lambda",
+    "test",
+    "**/*.spec.ts"
+  ]
+}

@@ -13,7 +13,7 @@ async function buildLambda() {
 
   try {
     execSync('rm -rf dist dist-lambda lambda.zip', { stdio: 'inherit' });
-    execSync('npm run build', { stdio: 'inherit' });
+    execSync('npx nest build', { stdio: 'inherit' });
   } catch (error) {
     console.error('Failed TypeScript build:', error);
     process.exit(1);

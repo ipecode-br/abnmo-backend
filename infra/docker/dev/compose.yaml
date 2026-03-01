@@ -1,11 +1,11 @@
-name: svm_docker_dev
+name: svm_dev
 
 services:
   database:
     image: mysql:8.4
-    container_name: 'svm_mysql_dev'
+    container_name: 'svm_dev_mysql'
     env_file:
-      - ../../../.env.example
+      - ../../../.env.docker
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
       MYSQL_DATABASE: ${DB_DATABASE}
@@ -14,37 +14,33 @@ services:
     ports:
       - '${DB_PORT}:3306'
     volumes:
-      - svm_mysql_data:/var/lib/mysql
+      - svm_dev_mysql_data:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       timeout: 5s
       retries: 10
     networks:
-      - svm-dev-network
+      - svm_dev_network
 
   api:
     build:
       context: ../../..
       dockerfile: infra/docker/dev/Dockerfile
-    container_name: 'svm_api_dev'
+    image: svm-dev-api
+    container_name: 'svm_dev_api'
     ports:
-      - '${API_PORT}:3000'
+      - '${API_PORT}:3333'
     env_file:
-      - ../../../.env.example
-    environment:
-      NODE_ENV: development
-      APP_ENVIRONMENT: local
-      MAINTENANCE: false
-      DB_HOST: database
+      - ../../../.env.docker
     depends_on:
       database:
         condition: service_healthy
     networks:
-      - svm-dev-network
+      - svm_dev_network
 
 networks:
-  svm-dev-network:
+  svm_dev_network:
     driver: bridge
 
 volumes:
-  svm_mysql_data:
+  svm_dev_mysql_data:

@@ -3,7 +3,8 @@ dist
 .git
 .gitignore
 Dockerfile
-infra
+docker-compose*
+tests
 coverage
 *.log
-.env
+.env*

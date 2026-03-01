@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const envSchema = z.object({
   // Environment
   NODE_ENV: z.enum(['production', 'development', 'homolog', 'test']),
-  APP_ENVIRONMENT: z.enum(['lambda', 'local']),
+  APP_ENVIRONMENT: z.enum(['lambda', 'docker', 'local']),
   MAINTENANCE: z.enum(['true', 'false']).transform((val) => val === 'true'),
 
   // API

@@ -29,12 +29,12 @@ import { UsersModule } from './http/users/users.module';
       imports: [EnvModule],
       inject: [EnvService],
       useFactory: (envService: EnvService) => {
-        const isLocal = envService.get('APP_ENVIRONMENT') === 'local';
+        const usePinoPretty = envService.get('APP_ENVIRONMENT') !== 'lambda';
         return {
           pinoHttp: {
             autoLogging: false,
             formatters: { level: (label) => ({ level: label }) },
-            transport: isLocal
+            transport: usePinoPretty
               ? {
                   target: 'pino-pretty',
                   options: {
