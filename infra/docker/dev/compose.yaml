@@ -16,7 +16,7 @@ services:
     volumes:
       - svm_dev_mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost']
       timeout: 5s
       retries: 10
     networks:
