@@ -4,12 +4,12 @@ on:
   push:
     branches:
       - dev
-      - homolog
+      # - homolog // uncomment when homolog environment is deployed
   workflow_dispatch: # Optional manual trigger
 
 jobs:
   deploy:
-    name: Build and Deploy Lambda
+    name: Build and deploy Lambda
     runs-on: ubuntu-latest
     permissions:
       id-token: write # Permission to obtain OIDC token
@@ -22,7 +22,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Install dependencies
         run: npm ci
@@ -51,7 +51,7 @@ jobs:
           role-to-assume: ${{ steps.set-lambda-env.outputs.aws_role_arn }}
           aws-region: us-east-1
 
-      - name: Upload to Lambda
+      - name: Upload Lambda
         run: |
           if [ ! -f lambda.zip ]; then
             echo "lambda.zip not found!"
