@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { testTypeOrmConfig } from '@/config/typeorm.config';
-import { DATABASE_ENTITIES } from '@/domain/entities/database';
 import { EnvModule } from '@/env/env.module';
 import { EnvService } from '@/env/env.service';
 
@@ -25,9 +24,11 @@ import { EnvService } from '@/env/env.service';
           database: env.get('DB_DATABASE'),
           username: env.get('DB_USERNAME'),
           password: env.get('DB_PASSWORD'),
-          entities: DATABASE_ENTITIES,
           migrations: [__dirname + 'infra/database/migrations/**/*.ts'],
+          autoLoadEntities: true,
           synchronize: false,
+          retryAttempts: 3,
+          retryDelay: 3000,
           extra: {
             connectionLimit: 10,
             connectTimeout: 10000,

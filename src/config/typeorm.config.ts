@@ -14,7 +14,7 @@ export const typeOrmConfig = (): TypeOrmModuleOptions => {
     username: config.username,
     password: config.password,
     database: config.database,
-    entities: DATABASE_ENTITIES,
+    autoLoadEntities: true,
     migrations: [__dirname + '/../infra/database/migrations/**/*.ts'],
     synchronize: process.env.NODE_ENV !== 'production',
     logging: process.env.NODE_ENV === 'development',

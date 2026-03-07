@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "./dist-lambda",
+    "outDir": "./dist",
     "rootDir": "./src"
   },
   "include": ["src/**/*"],
@@ -9,6 +9,7 @@
     "node_modules",
     "dist",
     "dist-lambda",
+    "dist-docker",
     "infra/**/*",
     "test/**/*",
     "**/*spec.ts"
