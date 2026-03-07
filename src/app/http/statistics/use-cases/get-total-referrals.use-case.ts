@@ -62,7 +62,7 @@ export class GetTotalReferralsUseCase {
     }
 
     if (patientId) {
-      where.patient_id = patientId;
+      where.patientId = patientId;
     }
 
     if (status) {

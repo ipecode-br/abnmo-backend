@@ -39,21 +39,20 @@ export class GetTotalPatientsWithAppointmentsUseCase {
 
     if (period) {
       const dateRange = this.utilsService.getDateRangeForPeriod(period);
-      where.created_at = Between(dateRange.startDate, dateRange.endDate);
+      where.createdAt = Between(dateRange.startDate, dateRange.endDate);
     }
 
     if (startDate && !endDate) {
-      where.created_at = MoreThanOrEqual(startDate);
+      where.createdAt = MoreThanOrEqual(startDate);
     }
 
     if (endDate && !startDate) {
-      where.created_at = LessThanOrEqual(endDate);
+      where.createdAt = LessThanOrEqual(endDate);
     }
 
     if (startDate && endDate) {
-      where.created_at = Between(startDate, endDate);
+      where.createdAt = Between(startDate, endDate);
     }
-
     return await this.patientsRepository.count({ where });
   }
 }

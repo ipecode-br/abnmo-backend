@@ -10,26 +10,26 @@ import type { UserRole } from '../enums/users';
 export const authTokenSchema = z
   .object({
     id: z.number().int().positive(),
-    entity_id: z.string().uuid().nullable(),
+    entityId: z.string().uuid().nullable(),
     email: z.string().email().nullable(),
     token: z.string().min(1),
     type: z.enum(AUTH_TOKENS),
-    expires_at: z.coerce.date().nullable(),
-    created_at: z.coerce.date(),
+    expiresAt: z.coerce.date().nullable(),
+    createdAt: z.coerce.date(),
   })
   .strict();
 export type AuthToken = z.infer<typeof authTokenSchema>;
 
 export type RefreshToken = Pick<
   AuthToken,
-  'entity_id' | 'token' | 'expires_at'
+  'entityId' | 'token' | 'expiresAt'
 > & {
   type: typeof AUTH_TOKENS_MAPPING.refresh_token;
 };
 
 export type PasswordResetToken = Pick<
   AuthToken,
-  'entity_id' | 'token' | 'expires_at'
+  'entityId' | 'token' | 'expiresAt'
 > & { type: typeof AUTH_TOKENS_MAPPING.password_reset };
 
 export type AccessTokenPayload = { sub: string; role: AuthTokenRole };

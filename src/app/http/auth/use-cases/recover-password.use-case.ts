@@ -64,13 +64,13 @@ export class RecoverPasswordUseCase {
         payload: { sub: entity.id },
       }),
       // Delete all tokens for this entity before creating a new one
-      this.tokensRepository.delete({ entity_id: entity.id }),
+      this.tokensRepository.delete({ entityId: entity.id }),
     ]);
 
     await this.tokensRepository.save<PasswordResetToken>({
       type: AUTH_TOKENS_MAPPING.password_reset,
-      expires_at: expiresAt,
-      entity_id: entity.id,
+      expiresAt: expiresAt,
+      entityId: entity.id,
       token,
     });
 

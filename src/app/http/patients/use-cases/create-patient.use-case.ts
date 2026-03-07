@@ -73,7 +73,7 @@ export class CreatePatientUseCase {
       if (supports && supports.length > 0) {
         const patientSupports = supports.map(({ name, phone, kinship }) =>
           patientSupportsDataSource.create({
-            patient_id: patient.id,
+            patientId: patient.id,
             name,
             phone,
             kinship,

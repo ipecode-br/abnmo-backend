@@ -61,7 +61,7 @@ export class UpdateUserUseCase {
     await this.usersRepository.update(userToUpdate.id, {
       name,
       specialty: specialty,
-      registration_id: registrationId,
+      registrationId: registrationId,
     });
 
     this.logger.log(

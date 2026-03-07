@@ -57,14 +57,14 @@ export class CreateReferralUseCase {
     }
 
     const referralPayload: Partial<Referral> = {
-      patient_id: patientId,
+      patientId: patientId,
       date,
       category,
       condition,
-      professional_name: professionalName,
+      professionalName,
       annotation,
       status: 'scheduled',
-      created_by: user.id,
+      createdBy: user.id,
     };
 
     if (user.role === 'specialist') {
@@ -83,8 +83,8 @@ export class CreateReferralUseCase {
         throw new NotFoundException('Especialista não encontrado.');
       }
 
-      referralPayload.user_id = specialist.id;
-      referralPayload.professional_name = specialist.name;
+      referralPayload.userId = specialist.id;
+      referralPayload.professionalName = specialist.name;
       referralPayload.category = specialist.specialty;
     }
 

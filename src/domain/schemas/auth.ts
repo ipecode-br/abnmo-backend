@@ -30,8 +30,8 @@ export const registerUserSchema = z
     password: passwordSchema,
     role: userRoleSchema,
     specialty: specialtySchema.optional(),
-    registration_id: userRegistrationId.optional(),
-    invite_token: z.string().min(1),
+    registrationId: userRegistrationId.optional(),
+    inviteToken: z.string().min(1),
   })
   .superRefine((data, ctx) => {
     if (data.role === 'specialist') {
@@ -42,10 +42,10 @@ export const registerUserSchema = z
           message: 'Specialty is required when registering a specialist',
         });
       }
-      if (!data.registration_id) {
+      if (!data.registrationId) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          path: ['registration_id'],
+          path: ['registrationId'],
           message:
             'Professional registration is required when registering a specialist',
         });
@@ -56,12 +56,12 @@ export const registerUserSchema = z
 export const signInWithEmailSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
-  keep_logged_in: z.boolean().default(false),
+  keepLoggedIn: z.boolean().default(false),
 });
 
 export const signInWithEmailResponseSchema = baseResponseSchema.extend({
   data: z.object({
-    account_type: z.enum(AUTH_ACCOUNT_TYPES),
+    accountType: z.enum(AUTH_ACCOUNT_TYPES),
   }),
 });
 
@@ -71,10 +71,10 @@ export const recoverPasswordSchema = z.object({
 
 export const resetPasswordSchema = z.object({
   password: passwordSchema,
-  reset_token: z.string().min(1),
+  resetToken: z.string().min(1),
 });
 
 export const changePasswordSchema = z.object({
   password: passwordSchema,
-  new_password: passwordSchema,
+  newPassword: passwordSchema,
 });

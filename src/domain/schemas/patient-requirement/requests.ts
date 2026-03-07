@@ -9,7 +9,7 @@ import { baseQuerySchema } from '../query';
 import { patientRequirementSchema } from '.';
 
 export const createPatientRequirementSchema = patientRequirementSchema.pick({
-  patient_id: true,
+  patientId: true,
   type: true,
   title: true,
   description: true,

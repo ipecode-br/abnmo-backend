@@ -43,7 +43,7 @@ export class Patient implements PatientSchema {
   password: string | null;
 
   @Column({ type: 'varchar', nullable: true })
-  avatar_url: string | null;
+  avatarUrl: string | null;
 
   @Column({ type: 'enum', enum: PATIENT_STATUSES, default: 'pending' })
   status: PatientStatus;
@@ -55,7 +55,7 @@ export class Patient implements PatientSchema {
   race: PatientRace;
 
   @Column({ type: 'date' })
-  date_of_birth: Date;
+  dateOfBirth: Date;
 
   @Column({ type: 'varchar', length: 11 })
   phone: string;
@@ -70,28 +70,28 @@ export class Patient implements PatientSchema {
   city: string;
 
   @Column({ type: 'tinyint', width: 1, default: 0 })
-  has_disability: boolean;
+  hasDisability: boolean;
 
   @Column({ type: 'varchar', length: 500, nullable: true })
-  disability_desc: string | null;
+  disabilityDesc: string | null;
 
   @Column({ type: 'tinyint', width: 1, default: 0 })
-  need_legal_assistance: boolean;
+  needLegalAssistance: boolean;
 
   @Column({ type: 'tinyint', width: 1, default: 0 })
-  take_medication: boolean;
+  takeMedication: boolean;
 
   @Column({ type: 'varchar', length: 500, nullable: true })
-  medication_desc: string | null;
+  medicationDesc: string | null;
 
   @Column({ type: 'enum', enum: PATIENT_NMO_DIAGNOSTICS })
-  nmo_diagnosis: PatientNmoDiagnosis;
+  nmoDiagnosis: PatientNmoDiagnosis;
 
   @CreateDateColumn({ type: 'datetime' })
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'datetime' })
-  updated_at: Date;
+  updatedAt: Date;
 
   @OneToMany(() => PatientSupport, (support) => support.patient)
   supports: PatientSupport[];

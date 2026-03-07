@@ -65,7 +65,7 @@ export class ResetPasswordUseCase {
     if (
       !payload ||
       token.type !== AUTH_TOKENS_MAPPING.password_reset ||
-      (token.expires_at && token.expires_at < new Date())
+      (token.expiresAt && token.expiresAt < new Date())
     ) {
       throw new UnauthorizedException(
         'Token de redefinição de senha inválido ou expirado.',
@@ -107,7 +107,7 @@ export class ResetPasswordUseCase {
     }
 
     // Delete all tokens for this entity to ensure security after changing the password
-    await this.tokensRepository.delete({ entity_id: entity.id });
+    await this.tokensRepository.delete({ entityId: entity.id });
 
     const { maxAge, token: accessToken } =
       await this.createTokenUseCase.execute({

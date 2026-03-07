@@ -14,7 +14,7 @@ export class Token implements AuthToken {
   id: number;
 
   @Column({ type: 'uuid', nullable: true })
-  entity_id: string | null;
+  entityId: string | null;
 
   @Column({ type: 'varchar', nullable: true })
   email: string | null;
@@ -26,8 +26,8 @@ export class Token implements AuthToken {
   type: AuthTokenType;
 
   @CreateDateColumn({ type: 'datetime', nullable: true })
-  expires_at: Date | null;
+  expiresAt: Date | null;
 
   @CreateDateColumn({ type: 'datetime' })
-  created_at: Date;
+  createdAt: Date;
 }

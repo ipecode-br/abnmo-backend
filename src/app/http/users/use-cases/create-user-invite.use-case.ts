@@ -63,7 +63,7 @@ export class CreateUserInviteUseCase {
       throw new ConflictException('Este e-mail já está cadastrado no sistema.');
     }
 
-    const existingTokenExpiryDate = existingInviteUserToken?.expires_at;
+    const existingTokenExpiryDate = existingInviteUserToken?.expiresAt;
 
     if (existingTokenExpiryDate && existingTokenExpiryDate > new Date()) {
       throw new ConflictException(
@@ -86,7 +86,7 @@ export class CreateUserInviteUseCase {
       const newInviteUserToken = tokensRepository.create({
         type: AUTH_TOKENS_MAPPING.invite_user,
         token: inviteUserToken,
-        expires_at: expiresAt,
+        expiresAt: expiresAt,
         email,
       });
 

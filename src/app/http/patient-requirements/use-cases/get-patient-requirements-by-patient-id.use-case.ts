@@ -39,7 +39,7 @@ export class GetPatientRequirementsByPatientIdUseCase {
     const endDate = query.endDate ? new Date(query.endDate) : null;
 
     const where: FindOptionsWhere<PatientRequirement> = {
-      patient_id: patientId,
+      patientId: patientId,
     };
 
     if (status) {
@@ -47,15 +47,15 @@ export class GetPatientRequirementsByPatientIdUseCase {
     }
 
     if (startDate && endDate) {
-      where.created_at = Between(startDate, endDate);
+      where.createdAt = Between(startDate, endDate);
     }
 
     if (startDate && !endDate) {
-      where.created_at = MoreThanOrEqual(startDate);
+      where.createdAt = MoreThanOrEqual(startDate);
     }
 
     if (endDate && !startDate) {
-      where.created_at = LessThanOrEqual(endDate);
+      where.createdAt = LessThanOrEqual(endDate);
     }
 
     const total = await this.patientRequirementsRepository.count({ where });
@@ -67,10 +67,10 @@ export class GetPatientRequirementsByPatientIdUseCase {
         type: true,
         title: true,
         status: true,
-        submitted_at: true,
-        approved_at: true,
-        declined_at: true,
-        created_at: true,
+        submittedAt: true,
+        approvedAt: true,
+        declinedAt: true,
+        createdAt: true,
       },
       skip: (page - 1) * perPage,
       take: perPage,

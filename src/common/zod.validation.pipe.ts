@@ -19,9 +19,10 @@ function hasZodSchema(obj: unknown): obj is { schema: ZodSchema } {
 }
 
 @Injectable()
-export class GlobalZodValidationPipe
-  implements PipeTransform<unknown, unknown>
-{
+export class GlobalZodValidationPipe implements PipeTransform<
+  unknown,
+  unknown
+> {
   transform(value: unknown, metadata: ArgumentMetadata): unknown {
     if (!hasZodSchema(metadata.metatype)) {
       return value;

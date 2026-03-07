@@ -66,8 +66,8 @@ export class AppointmentsController {
       category,
       annotation,
       condition,
-      patient_id: patientId,
-      professional_name: professionalName,
+      patientId,
+      professionalName,
     } = createAppointmentDto;
 
     await this.createAppointmentUseCase.execute({

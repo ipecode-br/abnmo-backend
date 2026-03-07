@@ -49,7 +49,7 @@ export class RefreshTokenUseCase {
       where: { token: refreshToken, type: AUTH_TOKENS_MAPPING.refresh_token },
     });
 
-    if (!token || (token.expires_at && token.expires_at < new Date())) {
+    if (!token || (token.expiresAt && token.expiresAt < new Date())) {
       throw new UnauthorizedException('Token de atualização inválido.');
     }
 

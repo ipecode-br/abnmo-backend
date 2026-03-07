@@ -40,7 +40,7 @@ export class GetUsersUseCase {
 
     const ORDER_BY_MAPPING: Record<UsersOrderBy, keyof User> = {
       name: 'name',
-      date: 'created_at',
+      date: 'createdAt',
       role: 'role',
       status: 'status',
     };
@@ -48,15 +48,15 @@ export class GetUsersUseCase {
     const where: FindOptionsWhere<User> = {};
 
     if (startDate && !endDate) {
-      where.created_at = MoreThanOrEqual(startDate);
+      where.createdAt = MoreThanOrEqual(startDate);
     }
 
     if (endDate && !startDate) {
-      where.created_at = LessThanOrEqual(endDate);
+      where.createdAt = LessThanOrEqual(endDate);
     }
 
     if (startDate && endDate) {
-      where.created_at = Between(startDate, endDate);
+      where.createdAt = Between(startDate, endDate);
     }
 
     if (role) {
@@ -81,13 +81,13 @@ export class GetUsersUseCase {
         id: true,
         name: true,
         email: true,
-        avatar_url: true,
+        avatarUrl: true,
         status: true,
         role: true,
         specialty: true,
-        registration_id: true,
-        updated_at: true,
-        created_at: true,
+        registrationId: true,
+        updatedAt: true,
+        createdAt: true,
       },
       skip: (page - 1) * perPage,
       take: perPage,

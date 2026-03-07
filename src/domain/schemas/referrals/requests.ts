@@ -20,11 +20,11 @@ import { referralSchema } from '.';
 
 export const createReferralSchema = referralSchema
   .pick({
-    patient_id: true,
+    patientId: true,
     date: true,
     condition: true,
     annotation: true,
-    professional_name: true,
+    professionalName: true,
   })
   .extend({ category: specialtySchema.optional() })
   .strict();

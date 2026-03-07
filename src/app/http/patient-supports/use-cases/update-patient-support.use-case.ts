@@ -33,7 +33,7 @@ export class UpdatePatientSupportUseCase {
     updatePatientSupportDto,
   }: UpdatePatientSupportUseCaseInput): Promise<void> {
     const patientSupport = await this.patientSupportsRepository.findOne({
-      select: { id: true, patient_id: true },
+      select: { id: true, patientId: true },
       where: { id },
     });
 
@@ -41,7 +41,7 @@ export class UpdatePatientSupportUseCase {
       throw new NotFoundException('Contato de apoio não encontrado.');
     }
 
-    const patientId = patientSupport.patient_id;
+    const patientId = patientSupport.patientId;
 
     if (user.role === 'patient' && user.id !== patientId) {
       this.logger.log(

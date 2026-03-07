@@ -58,7 +58,7 @@ export class CreatePatientSupportUseCase {
     }
 
     const patientSupport = this.patientSupportsRepository.create({
-      patient_id: patientId,
+      patientId: patientId,
       name,
       kinship,
       phone,

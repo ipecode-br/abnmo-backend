@@ -57,14 +57,14 @@ export class CreateAppointmentUseCase {
     }
 
     const appointmentPayload: Partial<Appointment> = {
-      patient_id: patientId,
+      patientId,
       date,
       category,
       condition,
-      professional_name: professionalName,
+      professionalName,
       annotation,
       status: 'scheduled',
-      created_by: user.id,
+      createdBy: user.id,
     };
 
     if (user.role === 'specialist') {
@@ -83,8 +83,8 @@ export class CreateAppointmentUseCase {
         throw new NotFoundException('Especialista não encontrado.');
       }
 
-      appointmentPayload.user_id = specialist.id;
-      appointmentPayload.professional_name = specialist.name;
+      appointmentPayload.userId = specialist.id;
+      appointmentPayload.professionalName = specialist.name;
       appointmentPayload.category = specialist.specialty;
     }
 

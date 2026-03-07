@@ -14,6 +14,7 @@ export default tseslint.config(
       'infra/database/migrations/**',
       'eslint.config.mjs',
       'prettier.config.mjs',
+      '.bkp/**',
     ],
   },
   eslint.configs.recommended,

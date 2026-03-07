@@ -21,7 +21,6 @@ export const handler: Handler = async (
 
     await app.init();
 
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     cachedHandler = serverlessExpress({ app: expressApp });
   }
 

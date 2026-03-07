@@ -1,5 +1,6 @@
 import { config } from 'dotenv';
 import { DataSource } from 'typeorm';
+import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
 import { DATABASE_ENTITIES } from '@/domain/entities/database';
 
@@ -20,6 +21,7 @@ const dataSource = new DataSource({
   ],
   entities: DATABASE_ENTITIES,
   synchronize: false,
+  namingStrategy: new SnakeNamingStrategy(),
 });
 
 export default dataSource;

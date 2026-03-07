@@ -104,16 +104,16 @@ export class AuthGuard implements CanActivate {
         where: {
           type: AUTH_TOKENS_MAPPING.refresh_token,
           token: refreshToken,
-          entity_id: user.id,
+          entityId: user.id,
         },
       });
 
-      if (!storedRefreshToken || !storedRefreshToken.expires_at) {
+      if (!storedRefreshToken || !storedRefreshToken.expiresAt) {
         throw new UnauthorizedException('Token de atualização não encontrado.');
       }
 
-      if (storedRefreshToken.expires_at < new Date()) {
-        await this.tokensRepository.delete({ entity_id: user.id });
+      if (storedRefreshToken.expiresAt < new Date()) {
+        await this.tokensRepository.delete({ entityId: user.id });
 
         this.utilsService.deleteCookie(response, COOKIES_MAPPING.access_token);
         this.utilsService.deleteCookie(response, COOKIES_MAPPING.refresh_token);

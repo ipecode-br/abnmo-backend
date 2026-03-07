@@ -41,7 +41,7 @@ export class GetUserInvitesUseCase {
 
     const ORDER_BY_MAPPING: Record<UserInvitesOrderBy, keyof Token> = {
       email: 'email',
-      date: 'created_at',
+      date: 'createdAt',
     };
 
     const where: FindOptionsWhere<Token> = {
@@ -49,15 +49,15 @@ export class GetUserInvitesUseCase {
     };
 
     if (startDate && !endDate) {
-      where.created_at = MoreThanOrEqual(startDate);
+      where.createdAt = MoreThanOrEqual(startDate);
     }
 
     if (endDate && !startDate) {
-      where.created_at = LessThanOrEqual(endDate);
+      where.createdAt = LessThanOrEqual(endDate);
     }
 
     if (startDate && endDate) {
-      where.created_at = Between(startDate, endDate);
+      where.createdAt = Between(startDate, endDate);
     }
 
     if (search) {
@@ -73,8 +73,8 @@ export class GetUserInvitesUseCase {
       select: {
         id: true,
         email: true,
-        expires_at: true,
-        created_at: true,
+        expiresAt: true,
+        createdAt: true,
       },
       skip: (page - 1) * perPage,
       take: perPage,

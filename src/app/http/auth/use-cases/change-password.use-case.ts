@@ -88,6 +88,6 @@ export class ChangePasswordUseCase {
     );
 
     // Delete all tokens for this entity to ensure security after changing password
-    await this.tokensRepository.delete({ entity_id: entity.id });
+    await this.tokensRepository.delete({ entityId: entity.id });
   }
 }

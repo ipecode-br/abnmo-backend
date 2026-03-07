@@ -66,8 +66,8 @@ export class ReferralsController {
       category,
       annotation,
       condition,
-      patient_id: patientId,
-      professional_name: professionalName,
+      patientId,
+      professionalName,
     } = createReferralDto;
 
     await this.createReferralUseCase.execute({

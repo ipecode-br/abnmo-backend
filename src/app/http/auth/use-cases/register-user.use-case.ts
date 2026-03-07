@@ -66,7 +66,7 @@ export class RegisterUserUseCase {
     if (
       !email ||
       token.type !== AUTH_TOKENS_MAPPING.invite_user ||
-      (token.expires_at && token.expires_at < new Date())
+      (token.expiresAt && token.expiresAt < new Date())
     ) {
       await this.tokensRepository.delete({ token: inviteToken });
       throw new UnauthorizedException('Token de convite inválido ou expirado.');
@@ -103,7 +103,7 @@ export class RegisterUserUseCase {
       password: passwordHash,
       role,
       specialty,
-      registration_id: registrationId,
+      registrationId: registrationId,
     });
 
     await this.tokensRepository.delete({ token: inviteToken });

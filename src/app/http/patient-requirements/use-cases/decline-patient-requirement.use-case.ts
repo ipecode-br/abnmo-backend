@@ -46,8 +46,8 @@ export class DeclinePatientRequirementUseCase {
 
     await this.patientRequirementsRepository.update(id, {
       status: 'declined',
-      declined_by: user.id,
-      declined_at: new Date(),
+      declinedBy: user.id,
+      declinedAt: new Date(),
     });
 
     this.logger.log(

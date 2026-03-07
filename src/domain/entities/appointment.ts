@@ -23,7 +23,7 @@ export class Appointment implements AppointmentSchema {
   id: string;
 
   @Column('uuid')
-  patient_id: string;
+  patientId: string;
 
   @Column({ type: 'datetime' })
   date: Date;
@@ -41,21 +41,21 @@ export class Appointment implements AppointmentSchema {
   annotation: string | null;
 
   @Column({ type: 'varchar', length: 64, nullable: true })
-  professional_name: string | null;
+  professionalName: string | null;
 
   @Column({ type: 'uuid', nullable: true })
-  user_id: string | null;
+  userId: string | null;
 
   @Column('uuid')
-  created_by: string;
+  createdBy: string;
 
   @CreateDateColumn({ type: 'datetime' })
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'datetime' })
-  updated_at: Date;
+  updatedAt: Date;
 
   @ManyToOne(() => Patient, (patient) => patient.appointments)
-  @JoinColumn({ name: 'patient_id' })
+  @JoinColumn()
   patient: Patient;
 }

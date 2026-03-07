@@ -28,7 +28,7 @@ export class CreatePatientRequirementUseCase {
     createPatientRequirementDto,
     user,
   }: CreatePatientRequirementUseCaseInput): Promise<void> {
-    const { patient_id: patientId } = createPatientRequirementDto;
+    const { patientId } = createPatientRequirementDto;
 
     const patient = await this.patientsRepository.findOne({
       where: { id: patientId },
@@ -41,7 +41,7 @@ export class CreatePatientRequirementUseCase {
 
     const patientRequirement = this.patientRequirementsRepository.create({
       ...createPatientRequirementDto,
-      created_by: user.id,
+      createdBy: user.id,
     });
 
     await this.patientRequirementsRepository.save(patientRequirement);

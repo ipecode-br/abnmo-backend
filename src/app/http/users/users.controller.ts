@@ -115,7 +115,7 @@ export class UsersController {
     @AuthUser() user: AuthUserDto,
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<BaseResponse> {
-    const { name, specialty, registration_id: registrationId } = updateUserDto;
+    const { name, specialty, registrationId } = updateUserDto;
 
     await this.updateUserUseCase.execute({
       id,

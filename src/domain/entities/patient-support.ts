@@ -17,7 +17,7 @@ export class PatientSupport implements PatientSupportSchema {
   id: string;
 
   @Column('uuid')
-  patient_id: string;
+  patientId: string;
 
   @Column({ type: 'varchar', length: 64 })
   name: string;
@@ -29,12 +29,12 @@ export class PatientSupport implements PatientSupportSchema {
   kinship: string;
 
   @CreateDateColumn({ type: 'datetime' })
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'datetime' })
-  updated_at: Date;
+  updatedAt: Date;
 
   @ManyToOne(() => Patient, (patient) => patient.supports)
-  @JoinColumn({ name: 'patient_id' })
+  @JoinColumn()
   patient: Patient;
 }

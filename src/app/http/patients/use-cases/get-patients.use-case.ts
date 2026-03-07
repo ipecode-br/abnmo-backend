@@ -43,7 +43,7 @@ export class GetPatientsUseCase {
       name: 'name',
       email: 'email',
       status: 'status',
-      date: 'created_at',
+      date: 'createdAt',
     };
 
     const where: FindOptionsWhere<Patient> = {
@@ -55,15 +55,15 @@ export class GetPatientsUseCase {
     }
 
     if (startDate && endDate) {
-      where.created_at = Between(startDate, endDate);
+      where.createdAt = Between(startDate, endDate);
     }
 
     if (startDate && !endDate) {
-      where.created_at = MoreThanOrEqual(startDate);
+      where.createdAt = MoreThanOrEqual(startDate);
     }
 
     if (endDate && !startDate) {
-      where.created_at = LessThanOrEqual(endDate);
+      where.createdAt = LessThanOrEqual(endDate);
     }
 
     const total = await this.patientsRepository.count({ where });
@@ -75,9 +75,9 @@ export class GetPatientsUseCase {
         name: true,
         email: true,
         status: true,
-        avatar_url: true,
+        avatarUrl: true,
         phone: true,
-        created_at: true,
+        createdAt: true,
       },
       order: { [ORDER_BY_MAPPING[orderBy]]: order },
       skip: (page - 1) * perPage,

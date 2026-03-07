@@ -23,7 +23,7 @@ export class PatientRequirement implements PatientRequirementSchema {
   id: string;
 
   @Column('uuid')
-  patient_id: string;
+  patientId: string;
 
   @Column({ type: 'enum', enum: PATIENT_REQUIREMENT_TYPES })
   type: PatientRequirementType;
@@ -42,30 +42,30 @@ export class PatientRequirement implements PatientRequirementSchema {
   status: PatientRequirementStatus;
 
   @Column({ type: 'datetime', nullable: true })
-  submitted_at: Date | null;
+  submittedAt: Date | null;
 
   @Column({ type: 'uuid', nullable: true })
-  approved_by: string | null;
+  approvedBy: string | null;
 
   @Column({ type: 'datetime', nullable: true })
-  approved_at: Date | null;
+  approvedAt: Date | null;
 
   @Column({ type: 'uuid', nullable: true })
-  declined_by: string | null;
+  declinedBy: string | null;
 
   @Column({ type: 'datetime', nullable: true })
-  declined_at: Date | null;
+  declinedAt: Date | null;
 
   @Column({ type: 'uuid' })
-  created_by: string;
+  createdBy: string;
 
   @CreateDateColumn({ type: 'datetime' })
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'datetime' })
-  updated_at: Date;
+  updatedAt: Date;
 
   @ManyToOne(() => Patient, (patient) => patient.requirements)
-  @JoinColumn({ name: 'patient_id' })
+  @JoinColumn()
   patient: Patient;
 }

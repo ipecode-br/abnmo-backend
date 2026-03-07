@@ -45,9 +45,9 @@ export class GetPatientRequirementsUseCase {
       patient: 'patient',
       type: 'type',
       status: 'status',
-      approved_at: 'approved_at',
-      submitted_at: 'submitted_at',
-      date: 'created_at',
+      approvedAt: 'approvedAt',
+      submittedAt: 'submittedAt',
+      date: 'createdAt',
     };
 
     const where: FindOptionsWhere<PatientRequirement> = {};
@@ -61,15 +61,15 @@ export class GetPatientRequirementsUseCase {
     }
 
     if (startDate && endDate) {
-      where.created_at = Between(startDate, endDate);
+      where.createdAt = Between(startDate, endDate);
     }
 
     if (startDate && !endDate) {
-      where.created_at = MoreThanOrEqual(startDate);
+      where.createdAt = MoreThanOrEqual(startDate);
     }
 
     if (endDate && !startDate) {
-      where.created_at = LessThanOrEqual(endDate);
+      where.createdAt = LessThanOrEqual(endDate);
     }
 
     const total = await this.patientRequirementsRepository.count({ where });
@@ -82,7 +82,7 @@ export class GetPatientRequirementsUseCase {
 
     const requirements = await this.patientRequirementsRepository.find({
       relations: { patient: true },
-      select: { patient: { id: true, name: true, avatar_url: true } },
+      select: { patient: { id: true, name: true, avatarUrl: true } },
       skip: (page - 1) * perPage,
       take: perPage,
       order,
