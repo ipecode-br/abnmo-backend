@@ -1,18 +1,18 @@
 import { USER_ROLES } from './users';
 
 export const AUTH_TOKENS_MAPPING = {
-  access_token: 'access_token',
-  refresh_token: 'refresh_token',
-  password_reset: 'password_reset',
-  invite_user: 'invite_user',
+  accessToken: 'access_token',
+  refreshToken: 'refresh_token',
+  passwordReset: 'password_reset',
+  inviteUser: 'invite_user',
 } as const;
-export type AuthTokenType = keyof typeof AUTH_TOKENS_MAPPING;
+export type AuthTokenType = (typeof AUTH_TOKENS)[number];
 
 export const AUTH_TOKENS = [
-  AUTH_TOKENS_MAPPING.access_token,
-  AUTH_TOKENS_MAPPING.refresh_token,
-  AUTH_TOKENS_MAPPING.password_reset,
-  AUTH_TOKENS_MAPPING.invite_user,
+  AUTH_TOKENS_MAPPING.accessToken,
+  AUTH_TOKENS_MAPPING.refreshToken,
+  AUTH_TOKENS_MAPPING.passwordReset,
+  AUTH_TOKENS_MAPPING.inviteUser,
 ] as const;
 
 export const AUTH_TOKEN_ROLES = [...USER_ROLES, 'patient'] as const;

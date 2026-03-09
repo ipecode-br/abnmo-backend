@@ -75,7 +75,7 @@ export class CreateUserInviteUseCase {
 
       const [{ token: inviteUserToken, expiresAt }] = await Promise.all([
         this.createTokenUseCase.execute({
-          type: AUTH_TOKENS_MAPPING.invite_user,
+          type: AUTH_TOKENS_MAPPING.inviteUser,
           payload: { role },
         }),
         // Delete all tokens for this email before creating a new one
@@ -83,7 +83,7 @@ export class CreateUserInviteUseCase {
       ]);
 
       const newInviteUserToken = tokensRepository.create({
-        type: AUTH_TOKENS_MAPPING.invite_user,
+        type: AUTH_TOKENS_MAPPING.inviteUser,
         token: inviteUserToken,
         expiresAt: expiresAt,
         email,

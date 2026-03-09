@@ -22,7 +22,7 @@ export class CancelUserInviteUseCase {
 
   async execute({ id, user }: CancelUserInviteUseCaseInput): Promise<void> {
     const token = await this.tokensRepository.findOne({
-      where: { id, type: AUTH_TOKENS_MAPPING.invite_user },
+      where: { id, type: AUTH_TOKENS_MAPPING.inviteUser },
       select: { id: true },
     });
 

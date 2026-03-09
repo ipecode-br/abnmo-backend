@@ -64,7 +64,7 @@ export class ResetPasswordUseCase {
 
     if (
       !payload ||
-      token.type !== AUTH_TOKENS_MAPPING.password_reset ||
+      token.type !== AUTH_TOKENS_MAPPING.passwordReset ||
       (token.expiresAt && token.expiresAt < new Date())
     ) {
       throw new UnauthorizedException(
@@ -111,12 +111,12 @@ export class ResetPasswordUseCase {
 
     const { maxAge, token: accessToken } =
       await this.createTokenUseCase.execute({
-        type: AUTH_TOKENS_MAPPING.access_token,
+        type: AUTH_TOKENS_MAPPING.accessToken,
         payload: { sub: entity.id, role },
       });
 
     this.utilsService.setCookie(response, {
-      name: COOKIES_MAPPING.access_token,
+      name: COOKIES_MAPPING.accessToken,
       value: accessToken,
       maxAge,
     });

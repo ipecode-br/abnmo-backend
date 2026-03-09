@@ -52,7 +52,7 @@ export class GetUserInvitesUseCase {
     };
 
     const where: FindOptionsWhere<Token> = {
-      type: AUTH_TOKENS_MAPPING.invite_user,
+      type: AUTH_TOKENS_MAPPING.inviteUser,
     };
 
     if (startDate && !endDate) {

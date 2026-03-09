@@ -68,7 +68,7 @@ export class RecoverPasswordUseCase {
     ]);
 
     await this.tokensRepository.save<PasswordResetToken>({
-      type: AUTH_TOKENS_MAPPING.password_reset,
+      type: AUTH_TOKENS_MAPPING.passwordReset,
       expiresAt: expiresAt,
       entityId: entity.id,
       token,

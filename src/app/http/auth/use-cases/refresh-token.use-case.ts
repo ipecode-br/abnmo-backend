@@ -46,7 +46,7 @@ export class RefreshTokenUseCase {
     }
 
     const token = await this.tokensRepository.findOne({
-      where: { token: refreshToken, type: AUTH_TOKENS_MAPPING.refresh_token },
+      where: { token: refreshToken, type: AUTH_TOKENS_MAPPING.refreshToken },
     });
 
     if (!token || (token.expiresAt && token.expiresAt < new Date())) {
@@ -55,12 +55,12 @@ export class RefreshTokenUseCase {
 
     const { maxAge: accessTokenMaxAge, token: accessToken } =
       await this.createTokenUseCase.execute({
-        type: AUTH_TOKENS_MAPPING.access_token,
+        type: AUTH_TOKENS_MAPPING.accessToken,
         payload: { sub: payload.sub, role: payload.role },
       });
 
     this.utilsService.setCookie(response, {
-      name: COOKIES_MAPPING.access_token,
+      name: COOKIES_MAPPING.accessToken,
       maxAge: accessTokenMaxAge,
       value: accessToken,
     });

@@ -100,12 +100,12 @@ export class SignInWithEmailUseCase {
 
     const { maxAge: accessTokenMaxAge, token: accessToken } =
       await this.createTokenUseCase.execute({
-        type: AUTH_TOKENS_MAPPING.access_token,
+        type: AUTH_TOKENS_MAPPING.accessToken,
         payload: { sub: entity.id, role },
       });
 
     this.utilsService.setCookie(response, {
-      name: COOKIES_MAPPING.access_token,
+      name: COOKIES_MAPPING.accessToken,
       maxAge: accessTokenMaxAge,
       value: accessToken,
     });
@@ -116,12 +116,12 @@ export class SignInWithEmailUseCase {
         token: refreshToken,
         expiresAt,
       } = await this.createTokenUseCase.execute({
-        type: AUTH_TOKENS_MAPPING.refresh_token,
+        type: AUTH_TOKENS_MAPPING.refreshToken,
         payload: { sub: entity.id, role },
       });
 
       await this.tokensRepository.save<RefreshToken>({
-        type: AUTH_TOKENS_MAPPING.refresh_token,
+        type: AUTH_TOKENS_MAPPING.refreshToken,
         expiresAt: expiresAt,
         entityId: entity.id,
         token: refreshToken,

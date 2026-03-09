@@ -75,7 +75,7 @@ export class AuthGuard implements CanActivate {
         request.user = user;
         return true;
       } catch (error) {
-        this.utilsService.deleteCookie(response, COOKIES_MAPPING.access_token);
+        this.utilsService.deleteCookie(response, COOKIES_MAPPING.accessToken);
 
         if (error instanceof UnauthorizedException) {
           throw error;
@@ -102,7 +102,7 @@ export class AuthGuard implements CanActivate {
 
       const storedRefreshToken = await this.tokensRepository.findOne({
         where: {
-          type: AUTH_TOKENS_MAPPING.refresh_token,
+          type: AUTH_TOKENS_MAPPING.refreshToken,
           token: refreshToken,
           entityId: user.id,
         },
@@ -115,7 +115,7 @@ export class AuthGuard implements CanActivate {
       if (storedRefreshToken.expiresAt < new Date()) {
         await this.tokensRepository.delete({ entityId: user.id });
 
-        this.utilsService.deleteCookie(response, COOKIES_MAPPING.access_token);
+        this.utilsService.deleteCookie(response, COOKIES_MAPPING.accessToken);
         this.utilsService.deleteCookie(response, COOKIES_MAPPING.refresh_token);
 
         throw new UnauthorizedException('Token de atualização expirado.');
@@ -123,12 +123,12 @@ export class AuthGuard implements CanActivate {
 
       const { token: newAccessToken, maxAge } =
         await this.createTokenUseCase.execute({
-          type: COOKIES_MAPPING.access_token,
+          type: COOKIES_MAPPING.accessToken,
           payload: { sub: user.id, role: user.role },
         });
 
       this.utilsService.setCookie(response, {
-        name: COOKIES_MAPPING.access_token,
+        name: COOKIES_MAPPING.accessToken,
         value: newAccessToken,
         maxAge,
       });
@@ -136,7 +136,7 @@ export class AuthGuard implements CanActivate {
       request.user = user;
       return true;
     } catch (error) {
-      this.utilsService.deleteCookie(response, COOKIES_MAPPING.access_token);
+      this.utilsService.deleteCookie(response, COOKIES_MAPPING.accessToken);
       this.utilsService.deleteCookie(response, COOKIES_MAPPING.refresh_token);
 
       if (error instanceof UnauthorizedException) {

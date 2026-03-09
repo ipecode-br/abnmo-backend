@@ -26,7 +26,7 @@ export class LogoutUseCase {
   ) {}
 
   async execute({ response, refreshToken }: LogoutUseCaseInput): Promise<void> {
-    this.utilsService.deleteCookie(response, COOKIES_MAPPING.access_token);
+    this.utilsService.deleteCookie(response, COOKIES_MAPPING.accessToken);
 
     if (!refreshToken) {
       return;

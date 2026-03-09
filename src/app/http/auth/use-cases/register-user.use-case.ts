@@ -65,7 +65,7 @@ export class RegisterUserUseCase {
 
     if (
       !email ||
-      token.type !== AUTH_TOKENS_MAPPING.invite_user ||
+      token.type !== AUTH_TOKENS_MAPPING.inviteUser ||
       (token.expiresAt && token.expiresAt < new Date())
     ) {
       await this.tokensRepository.delete({ token: inviteToken });
@@ -110,12 +110,12 @@ export class RegisterUserUseCase {
 
     const { maxAge, token: accessToken } =
       await this.createTokenUseCase.execute({
-        type: AUTH_TOKENS_MAPPING.access_token,
+        type: AUTH_TOKENS_MAPPING.accessToken,
         payload: { sub: user.id, role: user.role },
       });
 
     this.utilsService.setCookie(response, {
-      name: COOKIES_MAPPING.access_token,
+      name: COOKIES_MAPPING.accessToken,
       value: accessToken,
       maxAge,
     });

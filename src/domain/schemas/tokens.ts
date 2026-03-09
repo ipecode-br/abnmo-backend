@@ -24,13 +24,13 @@ export type RefreshToken = Pick<
   AuthToken,
   'entityId' | 'token' | 'expiresAt'
 > & {
-  type: typeof AUTH_TOKENS_MAPPING.refresh_token;
+  type: typeof AUTH_TOKENS_MAPPING.refreshToken;
 };
 
 export type PasswordResetToken = Pick<
   AuthToken,
   'entityId' | 'token' | 'expiresAt'
-> & { type: typeof AUTH_TOKENS_MAPPING.password_reset };
+> & { type: typeof AUTH_TOKENS_MAPPING.passwordReset };
 
 export type AccessTokenPayload = { sub: string; role: AuthTokenRole };
 export type RefreshTokenPayload = { sub: string; role: AuthTokenRole };
@@ -38,8 +38,8 @@ export type ResetPasswordPayload = { sub: string };
 export type InviteUserPayload = { role: UserRole };
 
 export type AuthTokenPayloads = {
-  [AUTH_TOKENS_MAPPING.access_token]: AccessTokenPayload;
-  [AUTH_TOKENS_MAPPING.refresh_token]: RefreshTokenPayload;
-  [AUTH_TOKENS_MAPPING.password_reset]: ResetPasswordPayload;
-  [AUTH_TOKENS_MAPPING.invite_user]: InviteUserPayload;
+  [AUTH_TOKENS_MAPPING.accessToken]: AccessTokenPayload;
+  [AUTH_TOKENS_MAPPING.refreshToken]: RefreshTokenPayload;
+  [AUTH_TOKENS_MAPPING.passwordReset]: ResetPasswordPayload;
+  [AUTH_TOKENS_MAPPING.inviteUser]: InviteUserPayload;
 };

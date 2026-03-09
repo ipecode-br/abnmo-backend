@@ -1,11 +1,11 @@
 import { AUTH_TOKENS_MAPPING, type AuthTokenType } from './enums/tokens';
 
 export type Cookie = AuthTokenType;
-export type Cookies = Record<Cookie, Cookie>;
+export type Cookies = Record<string, Cookie>;
 
 export const COOKIES_MAPPING: Cookies = {
-  access_token: AUTH_TOKENS_MAPPING.access_token,
-  refresh_token: AUTH_TOKENS_MAPPING.refresh_token,
-  password_reset: AUTH_TOKENS_MAPPING.password_reset,
-  invite_user: AUTH_TOKENS_MAPPING.invite_user,
+  accessToken: AUTH_TOKENS_MAPPING.accessToken,
+  refreshToken: AUTH_TOKENS_MAPPING.refreshToken,
+  passwordReset: AUTH_TOKENS_MAPPING.passwordReset,
+  inviteUser: AUTH_TOKENS_MAPPING.inviteUser,
 } as const;

@@ -57,12 +57,12 @@ export class RegisterPatientUseCase {
     });
 
     const { maxAge, token } = await this.createTokenUseCase.execute({
-      type: AUTH_TOKENS_MAPPING.access_token,
+      type: AUTH_TOKENS_MAPPING.accessToken,
       payload: { sub: patient.id, role: 'patient' },
     });
 
     this.utilsService.setCookie(response, {
-      name: COOKIES_MAPPING.access_token,
+      name: COOKIES_MAPPING.accessToken,
       value: token,
       maxAge,
     });
