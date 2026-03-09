@@ -1,4 +1,5 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
 import { DATABASE_ENTITIES } from '@/domain/entities/database';
 
@@ -18,6 +19,7 @@ export const typeOrmConfig = (): TypeOrmModuleOptions => {
     migrations: [__dirname + '/../infra/database/migrations/**/*.ts'],
     synchronize: process.env.NODE_ENV !== 'production',
     logging: process.env.NODE_ENV === 'development',
+    namingStrategy: new SnakeNamingStrategy(),
     extra: {
       connectionLimit: 10,
       connectTimeout: 10000,
@@ -39,6 +41,7 @@ export const testTypeOrmConfig = (): TypeOrmModuleOptions => {
     entities: DATABASE_ENTITIES,
     synchronize: false, // Disable synchronization for better performance
     logging: false,
+    namingStrategy: new SnakeNamingStrategy(),
     migrations: [], // Don't run migrations in test mode
     extra: {
       connectionLimit: 3, // Reduced connection limit for tests

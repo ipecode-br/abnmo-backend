@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
 import { testTypeOrmConfig } from '@/config/typeorm.config';
 import { EnvModule } from '@/env/env.module';
@@ -11,12 +12,11 @@ import { EnvService } from '@/env/env.service';
       imports: [EnvModule],
       inject: [EnvService],
       useFactory: (env: EnvService) => {
-        // Use test configuration if NODE_ENV is test
-        if (process.env.NODE_ENV === 'test') {
+        if (env.get('NODE_ENV') === 'test') {
           return testTypeOrmConfig();
         }
 
-        // Use regular configuration for development/production
+        // Use regular configuration for all other environments
         return {
           type: 'mysql',
           host: env.get('DB_HOST'),
@@ -25,6 +25,7 @@ import { EnvService } from '@/env/env.service';
           username: env.get('DB_USERNAME'),
           password: env.get('DB_PASSWORD'),
           migrations: [__dirname + 'infra/database/migrations/**/*.ts'],
+          namingStrategy: new SnakeNamingStrategy(),
           autoLoadEntities: true,
           synchronize: false,
           retryAttempts: 3,
