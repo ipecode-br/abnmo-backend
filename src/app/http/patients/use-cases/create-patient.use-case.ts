@@ -1,9 +1,10 @@
-import { ConflictException, Injectable, Logger } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 import { DataSource } from 'typeorm';
 
-import type { AuthUser } from '@/common/types';
+import { Logger } from '@/common/log/logger.decorator';
+import { AppLogger } from '@/common/log/logger.service';
 import type { BrazilianState } from '@/constants/brazilian-states';
 import { Patient } from '@/domain/entities/patient';
 import { PatientSupport } from '@/domain/entities/patient-support';
@@ -20,7 +21,6 @@ interface PatientSupportInput {
 }
 
 interface CreatePatientUseCaseInput {
-  user: AuthUser;
   name: string;
   dateOfBirth: Date;
   cpf: string;
@@ -39,19 +39,18 @@ interface CreatePatientUseCaseInput {
   supports?: PatientSupportInput[];
 }
 
+@Logger()
 @Injectable()
 export class CreatePatientUseCase {
-  private readonly logger = new Logger(CreatePatientUseCase.name);
-
   constructor(
     @InjectRepository(Patient)
     private readonly patientsRepository: Repository<Patient>,
     @InjectDataSource()
     private readonly dataSource: DataSource,
+    private readonly logger: AppLogger,
   ) {}
 
   async execute({
-    user,
     name,
     dateOfBirth,
     cpf,
@@ -69,16 +68,17 @@ export class CreatePatientUseCase {
     nmoDiagnosis,
     supports,
   }: CreatePatientUseCaseInput): Promise<void> {
+    this.logger.setEvent('create_patient');
+
     const patientWithSameEmail = await this.patientsRepository.findOne({
       select: { id: true },
       where: { email },
     });
 
     if (patientWithSameEmail) {
-      this.logger.error(
-        { email, userId: user.id, userEmail: user.email, userRole: user.role },
-        'Create patient failed: Email already registered',
-      );
+      this.logger.error('Create patient failed: Email already registered', {
+        email,
+      });
       throw new ConflictException('O e-mail informado já está registrado.');
     }
 
@@ -88,10 +88,9 @@ export class CreatePatientUseCase {
     });
 
     if (patientWithSameCpf) {
-      this.logger.error(
-        { cpf, userId: user.id, userEmail: user.email, userRole: user.role },
-        'Create patient failed: CPF already registered',
-      );
+      this.logger.error('Create patient failed: CPF already registered', {
+        cpf,
+      });
       throw new ConflictException('O CPF informado já está registrado.');
     }
 
@@ -133,16 +132,10 @@ export class CreatePatientUseCase {
         await patientSupportsDataSource.save(patientSupports);
       }
 
-      this.logger.log(
-        {
-          patientId: patient.id,
-          email,
-          userId: user.id,
-          userEmail: user.email,
-          userRole: user.role,
-        },
-        'Patient created successfully',
-      );
+      this.logger.log('Patient created successfully', {
+        id: patient.id,
+        email,
+      });
     });
   }
 }

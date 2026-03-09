@@ -1,30 +1,31 @@
 import {
   ConflictException,
   Injectable,
-  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
-import type { AuthUser } from '@/common/types';
+import { Logger } from '@/common/log/logger.decorator';
+import { AppLogger } from '@/common/log/logger.service';
 import { Patient } from '@/domain/entities/patient';
 
 interface DeactivatePatientUseCaseInput {
   id: string;
-  user: AuthUser;
 }
 
+@Logger()
 @Injectable()
 export class DeactivatePatientUseCase {
-  private readonly logger = new Logger(DeactivatePatientUseCase.name);
-
   constructor(
     @InjectRepository(Patient)
     private readonly patientsRepository: Repository<Patient>,
+    private readonly logger: AppLogger,
   ) {}
 
-  async execute({ id, user }: DeactivatePatientUseCaseInput): Promise<void> {
+  async execute({ id }: DeactivatePatientUseCaseInput): Promise<void> {
+    this.logger.setEvent('deactivate_patient');
+
     const patient = await this.patientsRepository.findOne({
       select: { id: true, status: true },
       where: { id },
@@ -40,14 +41,6 @@ export class DeactivatePatientUseCase {
 
     await this.patientsRepository.update({ id }, { status: 'inactive' });
 
-    this.logger.log(
-      {
-        patientId: id,
-        userId: user.id,
-        userEmail: user.email,
-        userRole: user.role,
-      },
-      'Patient deactivated successfully',
-    );
+    this.logger.log('Patient deactivated successfully', { id });
   }
 }

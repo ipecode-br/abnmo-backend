@@ -1,9 +1,11 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
 import { MailService } from '@/app/mail/mail.service';
+import { Logger } from '@/common/log/logger.decorator';
+import { AppLogger } from '@/common/log/logger.service';
 import { COOKIES_MAPPING } from '@/domain/cookies';
 import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
@@ -16,10 +18,9 @@ interface RecoverPasswordUseCaseInput {
   email: string;
 }
 
+@Logger()
 @Injectable()
 export class RecoverPasswordUseCase {
-  private readonly logger = new Logger(RecoverPasswordUseCase.name);
-
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
@@ -30,9 +31,12 @@ export class RecoverPasswordUseCase {
     private readonly createTokenUseCase: CreateTokenUseCase,
     private readonly envService: EnvService,
     private readonly mailService: MailService,
+    private readonly logger: AppLogger,
   ) {}
 
   async execute({ email }: RecoverPasswordUseCaseInput): Promise<void> {
+    this.logger.setEvent('recover_password');
+
     let entity: User | Patient | null = null;
 
     const findOptions = { select: { id: true }, where: { email } };
@@ -51,10 +55,9 @@ export class RecoverPasswordUseCase {
     }
 
     if (!entity) {
-      this.logger.warn(
-        { email },
-        'Attempt to recover password for non-registered email',
-      );
+      this.logger.warn('Attempt to recover password for non-registered email', {
+        email,
+      });
       return;
     }
 
@@ -74,10 +77,10 @@ export class RecoverPasswordUseCase {
       token,
     });
 
-    this.logger.log(
-      { entityId: entity.id, email },
-      'Password reset token generated successfully',
-    );
+    this.logger.log('Password reset token generated successfully', {
+      entityId: entity.id,
+      email,
+    });
 
     const baseAppUrl = this.envService.get('APP_URL');
     const resetPasswordUrl = `${baseAppUrl}/conta/nova-senha?token=${token}`;

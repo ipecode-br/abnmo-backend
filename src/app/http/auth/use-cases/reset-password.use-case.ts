@@ -1,6 +1,5 @@
 import {
   Injectable,
-  Logger,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -11,6 +10,8 @@ import { Repository } from 'typeorm';
 import { CryptographyService } from '@/app/cryptography/crypography.service';
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
 import { MailService } from '@/app/mail/mail.service';
+import { Logger } from '@/common/log/logger.decorator';
+import { AppLogger } from '@/common/log/logger.service';
 import { COOKIES_MAPPING } from '@/domain/cookies';
 import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
@@ -25,10 +26,9 @@ interface ResetPasswordUseCaseInput {
   response: Response;
 }
 
+@Logger()
 @Injectable()
 export class ResetPasswordUseCase {
-  private readonly logger = new Logger(ResetPasswordUseCase.name);
-
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
@@ -40,6 +40,7 @@ export class ResetPasswordUseCase {
     private readonly cryptographyService: CryptographyService,
     private readonly utilsService: UtilsService,
     private readonly mailService: MailService,
+    private readonly logger: AppLogger,
   ) {}
 
   async execute({
@@ -47,6 +48,8 @@ export class ResetPasswordUseCase {
     resetToken,
     response,
   }: ResetPasswordUseCaseInput): Promise<void> {
+    this.logger.setEvent('reset_password');
+
     const token = await this.tokensRepository.findOne({
       where: { token: resetToken },
     });
@@ -92,7 +95,7 @@ export class ResetPasswordUseCase {
     }
 
     if (!entity) {
-      this.logger.warn({ id }, 'Reset password failed: Entity not registered');
+      this.logger.warn('Reset password failed: Entity not registered', { id });
       throw new NotFoundException('Usuário não encontrado.');
     }
 
@@ -121,10 +124,11 @@ export class ResetPasswordUseCase {
       maxAge,
     });
 
-    this.logger.log(
-      { id: entity.id, email: entity.email, role },
-      'Password reseted successfully',
-    );
+    this.logger.log('Password reseted successfully', {
+      id: entity.id,
+      email: entity.email,
+      role,
+    });
 
     await this.mailService.send({
       to: entity.email,

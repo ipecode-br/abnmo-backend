@@ -1,12 +1,13 @@
 import {
   ForbiddenException,
   Injectable,
-  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
+import { Logger } from '@/common/log/logger.decorator';
+import { AppLogger } from '@/common/log/logger.service';
 import type { AuthUser } from '@/common/types';
 import { PatientSupport } from '@/domain/entities/patient-support';
 
@@ -15,16 +16,18 @@ interface DeletePatientSupportUseCaseInput {
   user: AuthUser;
 }
 
+@Logger()
 @Injectable()
 export class DeletePatientSupportUseCase {
-  private readonly logger = new Logger(DeletePatientSupportUseCase.name);
-
   constructor(
     @InjectRepository(PatientSupport)
     private readonly patientSupportsRepository: Repository<PatientSupport>,
+    private readonly logger: AppLogger,
   ) {}
 
   async execute({ id, user }: DeletePatientSupportUseCaseInput): Promise<void> {
+    this.logger.setEvent('delete_patient_support');
+
     const patientSupport = await this.patientSupportsRepository.findOne({
       select: { id: true, patientId: true },
       where: { id },
@@ -38,14 +41,8 @@ export class DeletePatientSupportUseCase {
 
     if (user.role === 'patient' && user.id !== patientId) {
       this.logger.log(
-        {
-          id,
-          patientId,
-          userId: user.id,
-          userEmail: user.email,
-          userRole: user.role,
-        },
-        'Remove patient support failed: User does not have permission to remove this patient support',
+        'Delete patient support failed: User does not have permission to remove this patient support',
+        { id, patientId },
       );
       throw new ForbiddenException(
         'Você não tem permissão para remover este contato de apoio.',
@@ -54,15 +51,6 @@ export class DeletePatientSupportUseCase {
 
     await this.patientSupportsRepository.remove(patientSupport);
 
-    this.logger.log(
-      {
-        id,
-        patientId,
-        userId: user.id,
-        userEmail: user.email,
-        userRole: user.role,
-      },
-      'Patient support removed successfully',
-    );
+    this.logger.log('Patient support removed successfully', { id, patientId });
   }
 }

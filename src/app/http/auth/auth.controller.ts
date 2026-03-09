@@ -49,13 +49,9 @@ export class AuthController {
     @Body() signInWithEmailDto: SignInWithEmailDto,
     @Res({ passthrough: true }) response: Response,
   ): Promise<SignInWithEmailResponse> {
-    const { email, password, keepLoggedIn } = signInWithEmailDto;
-
     const { accountType } = await this.signInUseCase.execute({
-      email,
-      password,
-      keepLoggedIn,
       response,
+      ...signInWithEmailDto,
     });
 
     return {
@@ -89,13 +85,9 @@ export class AuthController {
     @Body() registerPatientDto: RegisterPatientDto,
     @Res({ passthrough: true }) response: Response,
   ): Promise<BaseResponse> {
-    const { name, email, password } = registerPatientDto;
-
     await this.registerPatientUseCase.execute({
-      name,
-      email,
-      password,
       response,
+      ...registerPatientDto,
     });
 
     return {
@@ -112,16 +104,9 @@ export class AuthController {
     @Body() registerUserDto: RegisterUserDto,
     @Res({ passthrough: true }) response: Response,
   ): Promise<BaseResponse> {
-    const { name, password, specialty, registrationId, inviteToken } =
-      registerUserDto;
-
     await this.registerUserUseCase.execute({
-      name,
-      password,
-      specialty,
-      registrationId,
-      inviteToken,
       response,
+      ...registerUserDto,
     });
 
     return {
@@ -137,9 +122,7 @@ export class AuthController {
   async recoverPassword(
     @Body() recoverPasswordDto: RecoverPasswordDto,
   ): Promise<BaseResponse> {
-    const { email } = recoverPasswordDto;
-
-    await this.recoverPasswordUseCase.execute({ email });
+    await this.recoverPasswordUseCase.execute(recoverPasswordDto);
 
     return {
       success: true,
@@ -156,9 +139,7 @@ export class AuthController {
     @Body() resetPasswordDto: ResetPasswordDto,
     @Res({ passthrough: true }) response: Response,
   ): Promise<BaseResponse> {
-    const { password, resetToken } = resetPasswordDto;
-
-    await this.resetPasswordUseCase.execute({ password, resetToken, response });
+    await this.resetPasswordUseCase.execute({ response, ...resetPasswordDto });
 
     return {
       success: true,
@@ -176,9 +157,7 @@ export class AuthController {
     @User() user: AuthUser,
     @Body() changePasswordDto: ChangePasswordDto,
   ): Promise<BaseResponse> {
-    const { password, newPassword } = changePasswordDto;
-
-    await this.changePasswordUseCase.execute({ user, password, newPassword });
+    await this.changePasswordUseCase.execute({ user, ...changePasswordDto });
 
     return {
       success: true,

@@ -11,6 +11,7 @@ import type { Repository } from 'typeorm';
 
 import { CryptographyService } from '@/app/cryptography/crypography.service';
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
+import { ContextService } from '@/common/context/context.service';
 import type { AuthUser } from '@/common/types';
 import type { Cookie } from '@/domain/cookies';
 import { COOKIES_MAPPING } from '@/domain/cookies';
@@ -44,6 +45,7 @@ export class AuthGuard implements CanActivate {
     private readonly createTokenUseCase: CreateTokenUseCase,
     private readonly utilsService: UtilsService,
     private readonly reflector: Reflector,
+    private readonly ctx: ContextService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -73,6 +75,8 @@ export class AuthGuard implements CanActivate {
         }
 
         request.user = user;
+        // ensure request context has the authenticated user too
+        this.ctx.setUser(user);
         return true;
       } catch (error) {
         this.utilsService.deleteCookie(response, COOKIES_MAPPING.accessToken);
@@ -134,6 +138,8 @@ export class AuthGuard implements CanActivate {
       });
 
       request.user = user;
+      // context is already running from middleware; keep it in sync
+      this.ctx.setUser(user);
       return true;
     } catch (error) {
       this.utilsService.deleteCookie(response, COOKIES_MAPPING.accessToken);

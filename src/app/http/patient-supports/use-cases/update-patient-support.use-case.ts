@@ -1,12 +1,13 @@
 import {
   ForbiddenException,
   Injectable,
-  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
+import { Logger } from '@/common/log/logger.decorator';
+import { AppLogger } from '@/common/log/logger.service';
 import type { AuthUser } from '@/common/types';
 import { PatientSupport } from '@/domain/entities/patient-support';
 
@@ -18,13 +19,13 @@ interface UpdatePatientSupportUseCaseInput {
   kinship: string;
 }
 
+@Logger()
 @Injectable()
 export class UpdatePatientSupportUseCase {
-  private readonly logger = new Logger(UpdatePatientSupportUseCase.name);
-
   constructor(
     @InjectRepository(PatientSupport)
     private readonly patientSupportsRepository: Repository<PatientSupport>,
+    private readonly logger: AppLogger,
   ) {}
 
   async execute({
@@ -34,6 +35,8 @@ export class UpdatePatientSupportUseCase {
     phone,
     kinship,
   }: UpdatePatientSupportUseCaseInput): Promise<void> {
+    this.logger.setEvent('update_patient_support');
+
     const patientSupport = await this.patientSupportsRepository.findOne({
       select: { id: true, patientId: true },
       where: { id },
@@ -47,14 +50,8 @@ export class UpdatePatientSupportUseCase {
 
     if (user.role === 'patient' && user.id !== patientId) {
       this.logger.log(
-        {
-          id,
-          patientId,
-          userId: user.id,
-          userEmail: user.email,
-          userRole: user.role,
-        },
         'Update patient support failed: User does not have permission to update this patient support',
+        { id, patientId },
       );
       throw new ForbiddenException(
         'Você não tem permissão para atualizar este contato de apoio.',
@@ -63,15 +60,6 @@ export class UpdatePatientSupportUseCase {
 
     await this.patientSupportsRepository.update(id, { name, phone, kinship });
 
-    this.logger.log(
-      {
-        id,
-        patientId,
-        userId: user.id,
-        userEmail: user.email,
-        userRole: user.role,
-      },
-      'Patient support updated successfully',
-    );
+    this.logger.log('Patient support updated successfully', { id, patientId });
   }
 }

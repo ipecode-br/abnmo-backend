@@ -81,12 +81,9 @@ export class UsersController {
   @ApiOperation({ summary: 'Cria convite para registro de usuário' })
   @ApiResponse({ type: BaseResponse })
   async createUserInvite(
-    @User() user: AuthUser,
     @Body() createUserInviteDto: CreateUserInviteDto,
   ): Promise<BaseResponse> {
-    const { email, role } = createUserInviteDto;
-
-    await this.createUserInviteUseCase.execute({ user, email, role });
+    await this.createUserInviteUseCase.execute(createUserInviteDto);
 
     return {
       success: true,
@@ -117,15 +114,7 @@ export class UsersController {
     @User() user: AuthUser,
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<BaseResponse> {
-    const { name, specialty, registrationId } = updateUserDto;
-
-    await this.updateUserUseCase.execute({
-      id,
-      user,
-      name,
-      specialty,
-      registrationId,
-    });
+    await this.updateUserUseCase.execute({ id, user, ...updateUserDto });
 
     return {
       success: true,
@@ -137,11 +126,8 @@ export class UsersController {
   @Roles(['manager'])
   @ApiOperation({ summary: 'Cancela convite de usuário' })
   @ApiResponse({ type: BaseResponse })
-  async cancelUserInvite(
-    @Param('id') id: string,
-    @User() user: AuthUser,
-  ): Promise<BaseResponse> {
-    await this.cancelUserInviteUseCase.execute({ id: parseInt(id, 10), user });
+  async cancelUserInvite(@Param('id') id: string): Promise<BaseResponse> {
+    await this.cancelUserInviteUseCase.execute({ id: parseInt(id, 10) });
 
     return {
       success: true,

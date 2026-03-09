@@ -93,10 +93,9 @@ export class PatientsController {
   @ApiOperation({ summary: 'Cadastra um novo paciente' })
   @ApiResponse({ type: BaseResponse })
   async create(
-    @User() user: AuthUser,
     @Body() createPatientDto: CreatePatientDto,
   ): Promise<BaseResponse> {
-    await this.createPatientUseCase.execute({ user, ...createPatientDto });
+    await this.createPatientUseCase.execute(createPatientDto);
 
     return {
       success: true,
@@ -129,11 +128,8 @@ export class PatientsController {
   @Roles(['manager'])
   @ApiOperation({ summary: 'Inativa o paciente' })
   @ApiResponse({ type: BaseResponse })
-  async deactivatePatient(
-    @Param('id') id: string,
-    @User() user: AuthUser,
-  ): Promise<BaseResponse> {
-    await this.deactivatePatientUseCase.execute({ id, user });
+  async deactivatePatient(@Param('id') id: string): Promise<BaseResponse> {
+    await this.deactivatePatientUseCase.execute({ id });
 
     return {
       success: true,

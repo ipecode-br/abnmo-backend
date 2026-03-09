@@ -1,12 +1,13 @@
 import {
   ConflictException,
   Injectable,
-  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
+import { Logger } from '@/common/log/logger.decorator';
+import { AppLogger } from '@/common/log/logger.service';
 import type { AuthUser } from '@/common/types';
 import { PatientRequirement } from '@/domain/entities/patient-requirement';
 
@@ -15,19 +16,21 @@ interface DeclinePatientRequirementUseCaseInput {
   user: AuthUser;
 }
 
+@Logger()
 @Injectable()
 export class DeclinePatientRequirementUseCase {
-  private readonly logger = new Logger(DeclinePatientRequirementUseCase.name);
-
   constructor(
     @InjectRepository(PatientRequirement)
     private readonly patientRequirementsRepository: Repository<PatientRequirement>,
+    private readonly logger: AppLogger,
   ) {}
 
   async execute({
     id,
     user,
   }: DeclinePatientRequirementUseCaseInput): Promise<void> {
+    this.logger.setEvent('decline_patient_requirement');
+
     const requirement = await this.patientRequirementsRepository.findOne({
       select: { id: true, status: true },
       where: { id },
@@ -49,9 +52,6 @@ export class DeclinePatientRequirementUseCase {
       declinedAt: new Date(),
     });
 
-    this.logger.log(
-      { id, userId: user.id, userEmail: user.email, userRole: user.role },
-      'Patient requirement declined successfully',
-    );
+    this.logger.log('Patient requirement declined successfully', { id });
   }
 }

@@ -1,7 +1,6 @@
 import {
   ConflictException,
   Injectable,
-  Logger,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -11,6 +10,8 @@ import { Repository } from 'typeorm';
 
 import { CryptographyService } from '@/app/cryptography/crypography.service';
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
+import { Logger } from '@/common/log/logger.decorator';
+import { AppLogger } from '@/common/log/logger.service';
 import { COOKIES_MAPPING } from '@/domain/cookies';
 import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
@@ -29,10 +30,9 @@ interface RegisterUserUseCaseInput {
   response: Response;
 }
 
+@Logger()
 @Injectable()
 export class RegisterUserUseCase {
-  private readonly logger = new Logger(RegisterUserUseCase.name);
-
   constructor(
     @InjectRepository(Token)
     private readonly tokensRepository: Repository<Token>,
@@ -43,6 +43,7 @@ export class RegisterUserUseCase {
     private readonly cryptographyService: CryptographyService,
     private readonly createTokenUseCase: CreateTokenUseCase,
     private readonly utilsService: UtilsService,
+    private readonly logger: AppLogger,
   ) {}
 
   async execute({
@@ -53,6 +54,8 @@ export class RegisterUserUseCase {
     inviteToken,
     response,
   }: RegisterUserUseCaseInput): Promise<void> {
+    this.logger.setEvent('register_user');
+
     const token = await this.tokensRepository.findOne({
       where: { token: inviteToken },
     });
@@ -120,9 +123,10 @@ export class RegisterUserUseCase {
       maxAge,
     });
 
-    this.logger.log(
-      { id: user.id, email, role },
-      'User registered successfully',
-    );
+    this.logger.log('User registered successfully', {
+      id: user.id,
+      email,
+      role,
+    });
   }
 }

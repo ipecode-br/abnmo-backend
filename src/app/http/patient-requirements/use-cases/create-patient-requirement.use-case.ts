@@ -1,7 +1,9 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
+import { Logger } from '@/common/log/logger.decorator';
+import { AppLogger } from '@/common/log/logger.service';
 import type { AuthUser } from '@/common/types';
 import { Patient } from '@/domain/entities/patient';
 import { PatientRequirement } from '@/domain/entities/patient-requirement';
@@ -15,15 +17,15 @@ interface CreatePatientRequirementUseCaseInput {
   description: string | null;
 }
 
+@Logger()
 @Injectable()
 export class CreatePatientRequirementUseCase {
-  private readonly logger = new Logger(CreatePatientRequirementUseCase.name);
-
   constructor(
     @InjectRepository(Patient)
     private readonly patientsRepository: Repository<Patient>,
     @InjectRepository(PatientRequirement)
     private readonly patientRequirementsRepository: Repository<PatientRequirement>,
+    private readonly logger: AppLogger,
   ) {}
 
   async execute({
@@ -33,6 +35,8 @@ export class CreatePatientRequirementUseCase {
     title,
     description,
   }: CreatePatientRequirementUseCaseInput): Promise<void> {
+    this.logger.setEvent('create_patient_requirement');
+
     const patient = await this.patientsRepository.findOne({
       where: { id: patientId },
       select: { id: true },
@@ -52,15 +56,9 @@ export class CreatePatientRequirementUseCase {
 
     await this.patientRequirementsRepository.save(patientRequirement);
 
-    this.logger.log(
-      {
-        id: patientRequirement.id,
-        patientId,
-        userId: user.id,
-        userEmail: user.email,
-        userRole: user.role,
-      },
-      'Requirement created successfully',
-    );
+    this.logger.log('Requirement created successfully', {
+      id: patientRequirement.id,
+      patientId,
+    });
   }
 }

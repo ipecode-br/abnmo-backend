@@ -1,12 +1,13 @@
 import {
   ForbiddenException,
   Injectable,
-  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import { Logger } from '@/common/log/logger.decorator';
+import { AppLogger } from '@/common/log/logger.service';
 import type { AuthUser } from '@/common/types';
 import { User } from '@/domain/entities/user';
 import type { SpecialtyCategory } from '@/domain/enums/shared';
@@ -19,13 +20,13 @@ interface UpdateUserUseCaseInput {
   registrationId?: string | null;
 }
 
+@Logger()
 @Injectable()
 export class UpdateUserUseCase {
-  private readonly logger = new Logger(UpdateUserUseCase.name);
-
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    private readonly logger: AppLogger,
   ) {}
 
   async execute({
@@ -35,10 +36,14 @@ export class UpdateUserUseCase {
     specialty,
     registrationId,
   }: UpdateUserUseCaseInput): Promise<void> {
+    this.logger.setEvent('update_user');
+
     if (user.role !== 'admin' && user.id !== id) {
-      this.logger.log(
-        { id, userId: user.id, userEmail: user.email, userRole: user.role },
+      this.logger.warn(
         'Update user failed: User does not have permission to update this user',
+        {
+          id,
+        },
       );
       throw new ForbiddenException(
         'Você não tem permissão para atualizar este usuário.',
@@ -63,15 +68,9 @@ export class UpdateUserUseCase {
       registrationId,
     });
 
-    this.logger.log(
-      {
-        id,
-        email: userToUpdate.email,
-        userId: user.id,
-        userEmail: user.email,
-        userRole: user.role,
-      },
-      'User updated successfully',
-    );
+    this.logger.info('User updated successfully', {
+      id,
+      email: userToUpdate.email,
+    });
   }
 }

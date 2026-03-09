@@ -1,7 +1,6 @@
 import {
   ForbiddenException,
   Injectable,
-  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -10,6 +9,8 @@ import { Repository } from 'typeorm';
 
 import { CryptographyService } from '@/app/cryptography/crypography.service';
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
+import { Logger } from '@/common/log/logger.decorator';
+import { AppLogger } from '@/common/log/logger.service';
 import { COOKIES_MAPPING } from '@/domain/cookies';
 import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
@@ -29,10 +30,9 @@ interface SignInWithEmailUseCaseOutput {
   accountType: 'patient' | 'user';
 }
 
+@Logger()
 @Injectable()
 export class SignInWithEmailUseCase {
-  private readonly logger = new Logger(SignInWithEmailUseCase.name);
-
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
@@ -43,6 +43,7 @@ export class SignInWithEmailUseCase {
     private readonly createTokenUseCase: CreateTokenUseCase,
     private readonly cryptographyService: CryptographyService,
     private readonly utilsService: UtilsService,
+    private readonly logger: AppLogger,
   ) {}
 
   async execute({
@@ -51,6 +52,8 @@ export class SignInWithEmailUseCase {
     keepLoggedIn,
     response,
   }: SignInWithEmailUseCaseInput): Promise<SignInWithEmailUseCaseOutput> {
+    this.logger.setEvent('sign_in');
+
     let entity: User | Patient | null = null;
     let role: AuthTokenRole = 'patient';
 
@@ -68,22 +71,11 @@ export class SignInWithEmailUseCase {
 
     if (patient) {
       entity = patient;
-
-      // TODO: remove this error when patient dashboard is ready
-      throw new UnauthorizedException(
-        'O sistema ainda não está liberado para pacientes.',
-      );
     }
 
     if (!entity || !entity.password) {
       throw new UnauthorizedException(
         'Credenciais inválidas. Por favor, tente novamente.',
-      );
-    }
-
-    if (entity.status === 'inactive') {
-      throw new ForbiddenException(
-        'Permissão de acesso negada. Sua conta está inativa.',
       );
     }
 
@@ -95,6 +87,19 @@ export class SignInWithEmailUseCase {
     if (!passwordMatches) {
       throw new UnauthorizedException(
         'Credenciais inválidas. Por favor, tente novamente.',
+      );
+    }
+
+    if (role === 'patient') {
+      // TODO: remove this error when patient dashboard is ready
+      throw new UnauthorizedException(
+        'O sistema ainda não está liberado para pacientes.',
+      );
+    }
+
+    if (entity.status === 'inactive') {
+      throw new ForbiddenException(
+        'Permissão de acesso negada. Sua conta está inativa.',
       );
     }
 
@@ -134,11 +139,15 @@ export class SignInWithEmailUseCase {
       });
     }
 
-    this.logger.log(
-      { entityId: entity.id, email, role, keepLoggedIn },
-      'Entity signed in with e-mail',
-    );
+    this.logger.log('Entity signed in with e-mail', {
+      id: entity.id,
+      email,
+      role,
+      keepLoggedIn,
+    });
 
-    return { accountType: role === 'patient' ? 'patient' : 'user' };
+    // TODO: return account type based on role when patient dashboard is ready
+    // return { accountType: role === 'patient' ? 'patient' : 'user' };
+    return { accountType: 'user' };
   }
 }

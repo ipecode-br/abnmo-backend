@@ -4,15 +4,16 @@ import {
   ExceptionFilter,
   HttpException,
   HttpStatus,
-  Logger,
 } from '@nestjs/common';
 import { Response } from 'express';
+
+import { AppLogger } from '@/common/log/logger.service';
 
 type ZodValidationErrors = Array<{ field: string; error: string }>;
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
-  private readonly logger = new Logger(HttpExceptionFilter.name);
+  constructor(private readonly logger: AppLogger) {}
 
   catch(exception: unknown, host: ArgumentsHost) {
     const context = host.switchToHttp();
@@ -44,9 +45,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
         }
       }
 
-      this.logger.error(exception.getResponse());
+      this.logger.error('HTTP exception', {
+        exception: exception.getResponse(),
+      });
     } else {
-      this.logger.error(exception);
+      this.logger.error('Unexpected exception', { exception });
     }
 
     if (status === HttpStatus.INTERNAL_SERVER_ERROR) {

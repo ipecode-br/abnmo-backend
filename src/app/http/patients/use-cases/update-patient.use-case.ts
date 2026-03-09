@@ -2,12 +2,13 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
-  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
+import { Logger } from '@/common/log/logger.decorator';
+import { AppLogger } from '@/common/log/logger.service';
 import type { AuthUser } from '@/common/types';
 import type { BrazilianState } from '@/constants/brazilian-states';
 import { Patient } from '@/domain/entities/patient';
@@ -37,13 +38,13 @@ interface UpdatePatientUseCaseInput {
   nmoDiagnosis?: PatientNmoDiagnosis;
 }
 
+@Logger()
 @Injectable()
 export class UpdatePatientUseCase {
-  private readonly logger = new Logger(UpdatePatientUseCase.name);
-
   constructor(
     @InjectRepository(Patient)
     private readonly patientsRepository: Repository<Patient>,
+    private readonly logger: AppLogger,
   ) {}
 
   async execute({
@@ -53,10 +54,12 @@ export class UpdatePatientUseCase {
     email,
     ...props
   }: UpdatePatientUseCaseInput): Promise<void> {
+    this.logger.setEvent('update_patient');
+
     if (user.role === 'patient' && user.id !== id) {
       this.logger.log(
-        { id, userId: user.id, userEmail: user.email, userRole: user.role },
         'Update patient failed: User does not have permission to update this patient',
+        { id },
       );
       throw new ForbiddenException(
         'Você não tem permissão para atualizar este paciente.',
@@ -79,16 +82,10 @@ export class UpdatePatientUseCase {
       });
 
       if (patientWithSameCpf && patientWithSameCpf.id !== id) {
-        this.logger.error(
-          {
-            patientId: id,
-            cpf,
-            userId: user.id,
-            userEmail: user.email,
-            userRole: user.role,
-          },
-          'Update patient failed: CPF already registered',
-        );
+        this.logger.error('Update patient failed: CPF already registered', {
+          id,
+          cpf,
+        });
         throw new ConflictException('O CPF informado já está registrado.');
       }
     }
@@ -100,25 +97,16 @@ export class UpdatePatientUseCase {
       });
 
       if (patientWithSameEmail && patientWithSameEmail.id !== id) {
-        this.logger.error(
-          {
-            id,
-            email,
-            userId: user.id,
-            userEmail: user.email,
-            userRole: user.role,
-          },
-          'Update patient failed: Email already registered',
-        );
+        this.logger.error('Update patient failed: Email already registered', {
+          id,
+          email,
+        });
         throw new ConflictException('O e-mail informado já está registrado.');
       }
     }
 
     await this.patientsRepository.update(id, { cpf, email, ...props });
 
-    this.logger.log(
-      { id, userId: user.id, userEmail: user.email, userRole: user.role },
-      'Patient updated successfully',
-    );
+    this.logger.log('Patient updated successfully', { id });
   }
 }

@@ -1,12 +1,13 @@
 import {
   BadRequestException,
   Injectable,
-  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
+import { Logger } from '@/common/log/logger.decorator';
+import { AppLogger } from '@/common/log/logger.service';
 import type { AuthUser } from '@/common/types';
 import { Appointment } from '@/domain/entities/appointment';
 import { Patient } from '@/domain/entities/patient';
@@ -24,10 +25,9 @@ interface CreateAppointmentUseCaseInput {
   category?: SpecialtyCategory;
 }
 
+@Logger()
 @Injectable()
 export class CreateAppointmentUseCase {
-  private readonly logger = new Logger(CreateAppointmentUseCase.name);
-
   constructor(
     @InjectRepository(Appointment)
     private readonly appointmentsRepository: Repository<Appointment>,
@@ -35,6 +35,7 @@ export class CreateAppointmentUseCase {
     private readonly patientsRepository: Repository<Patient>,
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    private readonly logger: AppLogger,
   ) {}
 
   async execute({
@@ -46,6 +47,8 @@ export class CreateAppointmentUseCase {
     category,
     professionalName,
   }: CreateAppointmentUseCaseInput): Promise<void> {
+    this.logger.setEvent('create_appointment');
+
     const patient = await this.patientsRepository.findOne({
       where: { id: patientId },
       select: { id: true },
@@ -96,15 +99,9 @@ export class CreateAppointmentUseCase {
     const appointment = this.appointmentsRepository.create(appointmentPayload);
     await this.appointmentsRepository.save(appointment);
 
-    this.logger.log(
-      {
-        id: appointment.id,
-        patientId,
-        userId: user.id,
-        userEmail: user.email,
-        userRole: user.role,
-      },
-      'Appointment created successfully',
-    );
+    this.logger.log('Appointment created successfully', {
+      id: appointment.id,
+      patientId,
+    });
   }
 }

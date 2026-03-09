@@ -1,12 +1,13 @@
 import {
   BadRequestException,
   Injectable,
-  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
+import { Logger } from '@/common/log/logger.decorator';
+import { AppLogger } from '@/common/log/logger.service';
 import type { AuthUser } from '@/common/types';
 import { Patient } from '@/domain/entities/patient';
 import { Referral } from '@/domain/entities/referral';
@@ -24,10 +25,9 @@ interface CreateReferralUseCaseInput {
   category?: SpecialtyCategory;
 }
 
+@Logger()
 @Injectable()
 export class CreateReferralUseCase {
-  private readonly logger = new Logger(CreateReferralUseCase.name);
-
   constructor(
     @InjectRepository(Patient)
     private readonly patientsRepository: Repository<Patient>,
@@ -35,6 +35,7 @@ export class CreateReferralUseCase {
     private readonly referralsRepository: Repository<Referral>,
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    private readonly logger: AppLogger,
   ) {}
 
   async execute({
@@ -46,6 +47,8 @@ export class CreateReferralUseCase {
     category,
     professionalName,
   }: CreateReferralUseCaseInput): Promise<void> {
+    this.logger.setEvent('create_referral');
+
     const patient = await this.patientsRepository.findOne({
       where: { id: patientId },
       select: { id: true },
@@ -96,15 +99,9 @@ export class CreateReferralUseCase {
     const referral = this.referralsRepository.create(referralPayload);
     await this.referralsRepository.save(referral);
 
-    this.logger.log(
-      {
-        id: referral.id,
-        patientId,
-        userId: user.id,
-        userEmail: user.email,
-        userRole: user.role,
-      },
-      'Referral created successfully',
-    );
+    this.logger.log('Referral created successfully', {
+      id: referral.id,
+      patientId,
+    });
   }
 }

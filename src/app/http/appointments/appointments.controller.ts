@@ -37,7 +37,7 @@ export class AppointmentsController {
   ) {}
 
   @Get()
-  @Roles(['manager', 'nurse', 'specialist', 'patient'])
+  @Roles(['all'])
   @ApiOperation({ summary: 'Lista todos os atendimentos' })
   @ApiResponse({ type: GetAppointmentsResponse })
   async getAppointments(
@@ -61,23 +61,9 @@ export class AppointmentsController {
     @User() user: AuthUser,
     @Body() createAppointmentDto: CreateAppointmentDto,
   ): Promise<BaseResponse> {
-    const {
-      date,
-      category,
-      annotation,
-      condition,
-      patientId,
-      professionalName,
-    } = createAppointmentDto;
-
     await this.createAppointmentUseCase.execute({
       user,
-      date,
-      category,
-      annotation,
-      condition,
-      patientId,
-      professionalName,
+      ...createAppointmentDto,
     });
 
     return {
@@ -92,12 +78,10 @@ export class AppointmentsController {
   @ApiResponse({ type: BaseResponse })
   public async update(
     @Param('id') id: string,
-    @User() user: AuthUser,
     @Body() updateAppointmentDto: UpdateAppointmentDto,
   ): Promise<BaseResponse> {
     await this.updateAppointmentUseCase.execute({
       id,
-      user,
       ...updateAppointmentDto,
     });
 
@@ -111,11 +95,8 @@ export class AppointmentsController {
   @Patch(':id/cancel')
   @ApiOperation({ summary: 'Cancela o atendimento' })
   @ApiResponse({ type: BaseResponse })
-  async cancel(
-    @Param('id') id: string,
-    @User() user: AuthUser,
-  ): Promise<BaseResponse> {
-    await this.cancelAppointmentUseCase.execute({ id, user });
+  async cancel(@Param('id') id: string): Promise<BaseResponse> {
+    await this.cancelAppointmentUseCase.execute({ id });
 
     return {
       success: true,

@@ -2,6 +2,9 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from 'nestjs-pino';
 
+import { ContextMiddleware } from '@/common/context/context.middleware';
+import { HttpExceptionFilter } from '@/common/http.exception.filter';
+import { LogModule } from '@/common/log/log.module';
 import { MaintenanceMiddleware } from '@/common/maintenance.middleware';
 import { envSchema } from '@/env/env';
 import { EnvModule } from '@/env/env.module';
@@ -48,6 +51,7 @@ import { UsersModule } from './http/users/users.module';
         };
       },
     }),
+    LogModule,
     DatabaseModule,
     AuthModule,
     UsersModule,
@@ -58,9 +62,10 @@ import { UsersModule } from './http/users/users.module';
     PatientRequirementsModule,
     PatientSupportsModule,
   ],
+  providers: [HttpExceptionFilter],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(MaintenanceMiddleware).forRoutes('*');
+    consumer.apply(ContextMiddleware, MaintenanceMiddleware).forRoutes('*');
   }
 }

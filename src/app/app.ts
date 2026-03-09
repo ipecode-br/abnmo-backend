@@ -24,7 +24,7 @@ export async function createNestApp(adapter?: ExpressAdapter) {
       });
 
   app.useGlobalPipes(new GlobalZodValidationPipe());
-  app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalFilters(app.get(HttpExceptionFilter));
 
   const envService = app.get(EnvService);
 

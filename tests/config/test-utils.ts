@@ -71,7 +71,7 @@ export class TestApp {
       const envService = module.get(EnvService);
       app.use(cookieParser(envService.get('COOKIE_SECRET')));
       app.useGlobalPipes(new GlobalZodValidationPipe());
-      app.useGlobalFilters(new HttpExceptionFilter());
+      app.useGlobalFilters(app.get(HttpExceptionFilter));
 
       // Wait for the app to initialize
       await app.init();

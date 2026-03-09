@@ -1,7 +1,6 @@
 import {
   ConflictException,
   Injectable,
-  Logger,
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -9,7 +8,8 @@ import { DataSource, Repository } from 'typeorm';
 
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
 import { MailService } from '@/app/mail/mail.service';
-import type { AuthUser } from '@/common/types';
+import { Logger } from '@/common/log/logger.decorator';
+import { AppLogger } from '@/common/log/logger.service';
 import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
@@ -18,15 +18,13 @@ import type { UserRole } from '@/domain/enums/users';
 import { EnvService } from '@/env/env.service';
 
 interface CreateUserInviteUseCaseInput {
-  user: AuthUser;
   email: string;
   role: UserRole;
 }
 
+@Logger()
 @Injectable()
 export class CreateUserInviteUseCase {
-  private readonly logger = new Logger(CreateUserInviteUseCase.name);
-
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
@@ -38,13 +36,12 @@ export class CreateUserInviteUseCase {
     private readonly envService: EnvService,
     private readonly mailService: MailService,
     private readonly dataSource: DataSource,
+    private readonly logger: AppLogger,
   ) {}
 
-  async execute({
-    user,
-    email,
-    role,
-  }: CreateUserInviteUseCaseInput): Promise<void> {
+  async execute({ email, role }: CreateUserInviteUseCaseInput): Promise<void> {
+    this.logger.setEvent('create_user_invite');
+
     const [existingInviteUserToken, existingUser, existingPatient] =
       await Promise.all([
         this.tokensRepository.findOne({ where: { email } }),
@@ -91,17 +88,11 @@ export class CreateUserInviteUseCase {
 
       await tokensRepository.save(newInviteUserToken);
 
-      this.logger.log(
-        {
-          id: newInviteUserToken.id,
-          email,
-          role,
-          userId: user.id,
-          userEmail: user.email,
-          userRole: user.role,
-        },
-        'Invite user token created successfully',
-      );
+      this.logger.log('Invite user token created successfully', {
+        id: newInviteUserToken.id,
+        email,
+        role,
+      });
 
       const baseAppUrl = this.envService.get('APP_URL');
       const registerUserLink = `${baseAppUrl}/conta/cadastrar?token=${inviteUserToken}`;

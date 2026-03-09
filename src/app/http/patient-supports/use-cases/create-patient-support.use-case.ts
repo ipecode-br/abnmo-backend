@@ -1,12 +1,13 @@
 import {
   ForbiddenException,
   Injectable,
-  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
+import { Logger } from '@/common/log/logger.decorator';
+import { AppLogger } from '@/common/log/logger.service';
 import type { AuthUser } from '@/common/types';
 import { Patient } from '@/domain/entities/patient';
 import { PatientSupport } from '@/domain/entities/patient-support';
@@ -19,15 +20,15 @@ interface CreatePatientSupportUseCaseInput {
   phone: string;
 }
 
+@Logger()
 @Injectable()
 export class CreatePatientSupportUseCase {
-  private readonly logger = new Logger(CreatePatientSupportUseCase.name);
-
   constructor(
     @InjectRepository(Patient)
     private readonly patientsRepository: Repository<Patient>,
     @InjectRepository(PatientSupport)
     private readonly patientSupportsRepository: Repository<PatientSupport>,
+    private readonly logger: AppLogger,
   ) {}
 
   async execute({
@@ -37,10 +38,12 @@ export class CreatePatientSupportUseCase {
     kinship,
     phone,
   }: CreatePatientSupportUseCaseInput): Promise<void> {
+    this.logger.setEvent('create_patient_support');
+
     if (user.id !== patientId && user.role !== 'admin') {
       this.logger.log(
-        { patientId, userId: user.id, userRole: user.role },
         'Create patient support failed: User does not have permission to create patient support for this patient',
+        { patientId },
       );
       throw new ForbiddenException(
         'Você não tem permissão para criar um contato de apoio para este paciente.',
@@ -57,7 +60,7 @@ export class CreatePatientSupportUseCase {
     }
 
     const patientSupport = this.patientSupportsRepository.create({
-      patientId: patientId,
+      patientId,
       name,
       kinship,
       phone,
@@ -65,15 +68,9 @@ export class CreatePatientSupportUseCase {
 
     await this.patientSupportsRepository.save(patientSupport);
 
-    this.logger.log(
-      {
-        id: patientSupport.id,
-        patientId,
-        userId: user.id,
-        userEmail: user.email,
-        userRole: user.role,
-      },
-      'Patient support created successfully',
-    );
+    this.logger.log('Patient support created successfully', {
+      id: patientSupport.id,
+      patientId,
+    });
   }
 }

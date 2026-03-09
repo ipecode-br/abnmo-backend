@@ -37,7 +37,7 @@ export class ReferralsController {
   ) {}
 
   @Get()
-  @Roles(['manager', 'nurse', 'specialist', 'patient'])
+  @Roles(['all'])
   @ApiOperation({ summary: 'Lista todos os encaminhamentos' })
   @ApiResponse({ type: GetReferralsResponse })
   async getReferrals(
@@ -61,24 +61,7 @@ export class ReferralsController {
     @User() user: AuthUser,
     @Body() createReferralDto: CreateReferralDto,
   ): Promise<BaseResponse> {
-    const {
-      date,
-      category,
-      annotation,
-      condition,
-      patientId,
-      professionalName,
-    } = createReferralDto;
-
-    await this.createReferralUseCase.execute({
-      user,
-      date,
-      category,
-      annotation,
-      condition,
-      patientId,
-      professionalName,
-    });
+    await this.createReferralUseCase.execute({ user, ...createReferralDto });
 
     return { success: true, message: 'Encaminhamento cadastrado com sucesso.' };
   }
@@ -89,18 +72,9 @@ export class ReferralsController {
   @ApiResponse({ type: BaseResponse })
   public async update(
     @Param('id') id: string,
-    @User() user: AuthUser,
     @Body() updateReferralDto: UpdateReferralDto,
   ): Promise<BaseResponse> {
-    const { date, condition, annotation } = updateReferralDto;
-
-    await this.updateReferralUseCase.execute({
-      id,
-      user,
-      date,
-      condition,
-      annotation,
-    });
+    await this.updateReferralUseCase.execute({ id, ...updateReferralDto });
 
     return {
       success: true,
@@ -112,11 +86,8 @@ export class ReferralsController {
   @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Cancela o encaminhamento' })
   @ApiResponse({ type: BaseResponse })
-  async cancel(
-    @Param('id') id: string,
-    @User() user: AuthUser,
-  ): Promise<BaseResponse> {
-    await this.cancelReferralUseCase.execute({ id, user });
+  async cancel(@Param('id') id: string): Promise<BaseResponse> {
+    await this.cancelReferralUseCase.execute({ id });
 
     return {
       success: true,

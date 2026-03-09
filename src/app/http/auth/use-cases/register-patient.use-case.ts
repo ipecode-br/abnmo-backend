@@ -1,10 +1,12 @@
-import { ConflictException, Injectable, Logger } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Response } from 'express';
 import { Repository } from 'typeorm';
 
 import { CryptographyService } from '@/app/cryptography/crypography.service';
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
+import { Logger } from '@/common/log/logger.decorator';
+import { AppLogger } from '@/common/log/logger.service';
 import { COOKIES_MAPPING } from '@/domain/cookies';
 import { Patient } from '@/domain/entities/patient';
 import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
@@ -19,16 +21,16 @@ interface RegisterPatientUseCaseInput {
 
 // TODO: add all required fields to register a patient
 
+@Logger()
 @Injectable()
 export class RegisterPatientUseCase {
-  private readonly logger = new Logger(RegisterPatientUseCase.name);
-
   constructor(
     @InjectRepository(Patient)
     private readonly patientsRepository: Repository<Patient>,
     private readonly createTokenUseCase: CreateTokenUseCase,
     private readonly cryptographyService: CryptographyService,
     private readonly utilsService: UtilsService,
+    private readonly logger: AppLogger,
   ) {}
 
   async execute({
@@ -37,6 +39,8 @@ export class RegisterPatientUseCase {
     password,
     response,
   }: RegisterPatientUseCaseInput): Promise<void> {
+    this.logger.setEvent('register_patient');
+
     const patientWithSameEmail = await this.patientsRepository.findOne({
       select: { id: true },
       where: { email },
@@ -67,9 +71,9 @@ export class RegisterPatientUseCase {
       maxAge,
     });
 
-    this.logger.log(
-      { id: patient.id, email },
-      'Patient registered successfully',
-    );
+    this.logger.log('Patient registered successfully', {
+      id: patient.id,
+      email,
+    });
   }
 }

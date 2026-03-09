@@ -1,10 +1,12 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Response } from 'express';
 import { Repository } from 'typeorm';
 
 import { CryptographyService } from '@/app/cryptography/crypography.service';
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
+import { Logger } from '@/common/log/logger.decorator';
+import { AppLogger } from '@/common/log/logger.service';
 import { COOKIES_MAPPING } from '@/domain/cookies';
 import { Token } from '@/domain/entities/token';
 import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
@@ -16,22 +18,24 @@ interface RefreshTokenUseCaseInput {
   response: Response;
 }
 
+@Logger()
 @Injectable()
 export class RefreshTokenUseCase {
-  private readonly logger = new Logger(RefreshTokenUseCase.name);
-
   constructor(
     @InjectRepository(Token)
     private readonly tokensRepository: Repository<Token>,
     private readonly createTokenUseCase: CreateTokenUseCase,
     private readonly cryptographyService: CryptographyService,
     private readonly utilsService: UtilsService,
+    private readonly logger: AppLogger,
   ) {}
 
   async execute({
     refreshToken,
     response,
   }: RefreshTokenUseCaseInput): Promise<void> {
+    this.logger.setEvent('refresh_token');
+
     if (!refreshToken) {
       throw new UnauthorizedException('Token de atualização ausente.');
     }
@@ -65,9 +69,9 @@ export class RefreshTokenUseCase {
       value: accessToken,
     });
 
-    this.logger.log(
-      { id: payload.sub, role: payload.role },
-      'Access token refreshed succesfully',
-    );
+    this.logger.log('Access token refreshed succesfully', {
+      id: payload.sub,
+      role: payload.role,
+    });
   }
 }
