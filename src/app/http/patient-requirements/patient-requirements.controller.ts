@@ -9,11 +9,11 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-import { AuthUser } from '@/common/decorators/auth-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
+import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
+import type { AuthUser } from '@/common/types';
 
-import type { AuthUserDto } from '../auth/auth.dtos';
 import {
   CreatePatientRequirementDto,
   GetPatientRequirementsByPatientIdQuery,
@@ -45,7 +45,7 @@ export class PatientRequirementsController {
   async getPatientRequirements(
     @Query() query: GetPatientRequirementsQuery,
   ): Promise<GetPatientRequirementsResponse> {
-    const data = await this.getPatientRequirementsUseCase.execute({ query });
+    const data = await this.getPatientRequirementsUseCase.execute(query);
 
     return {
       success: true,
@@ -60,12 +60,12 @@ export class PatientRequirementsController {
   })
   @ApiResponse({ type: GetPatientRequirementsByPatientIdResponse })
   async getPatientRequirementsLogged(
-    @AuthUser() user: AuthUserDto,
+    @User() user: AuthUser,
     @Query() query: GetPatientRequirementsByPatientIdQuery,
   ): Promise<GetPatientRequirementsByPatientIdResponse> {
     const data = await this.getPatientRequirementsByPatientIdUseCase.execute({
       patientId: user.id,
-      query,
+      ...query,
     });
 
     return {
@@ -80,12 +80,12 @@ export class PatientRequirementsController {
   @ApiOperation({ summary: 'Cadastra uma nova solicitação' })
   @ApiResponse({ type: BaseResponse })
   async create(
-    @AuthUser() user: AuthUserDto,
+    @User() user: AuthUser,
     @Body() createPatientRequirementDto: CreatePatientRequirementDto,
   ): Promise<BaseResponse> {
     await this.createPatientRequirementUseCase.execute({
       user,
-      createPatientRequirementDto,
+      ...createPatientRequirementDto,
     });
 
     return {
@@ -100,7 +100,7 @@ export class PatientRequirementsController {
   @ApiResponse({ type: BaseResponse })
   async approve(
     @Param('id') id: string,
-    @AuthUser() user: AuthUserDto,
+    @User() user: AuthUser,
   ): Promise<BaseResponse> {
     await this.approvePatientRequirementUseCase.execute({ id, user });
 
@@ -116,7 +116,7 @@ export class PatientRequirementsController {
   @ApiResponse({ type: BaseResponse })
   async decline(
     @Param('id') id: string,
-    @AuthUser() user: AuthUserDto,
+    @User() user: AuthUser,
   ): Promise<BaseResponse> {
     await this.declinePatientRequirementUseCase.execute({ id, user });
 

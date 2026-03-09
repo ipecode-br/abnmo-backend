@@ -7,15 +7,15 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
+import type { AuthUser } from '@/common/types';
 import { PatientSupport } from '@/domain/entities/patient-support';
-
-import type { AuthUserDto } from '../../auth/auth.dtos';
-import type { UpdatePatientSupportDto } from '../patient-supports.dtos';
 
 interface UpdatePatientSupportUseCaseInput {
   id: string;
-  user: AuthUserDto;
-  updatePatientSupportDto: UpdatePatientSupportDto;
+  user: AuthUser;
+  name: string;
+  phone: string;
+  kinship: string;
 }
 
 @Injectable()
@@ -30,7 +30,9 @@ export class UpdatePatientSupportUseCase {
   async execute({
     id,
     user,
-    updatePatientSupportDto,
+    name,
+    phone,
+    kinship,
   }: UpdatePatientSupportUseCaseInput): Promise<void> {
     const patientSupport = await this.patientSupportsRepository.findOne({
       select: { id: true, patientId: true },
@@ -59,7 +61,7 @@ export class UpdatePatientSupportUseCase {
       );
     }
 
-    await this.patientSupportsRepository.update(id, updatePatientSupportDto);
+    await this.patientSupportsRepository.update(id, { name, phone, kinship });
 
     this.logger.log(
       {

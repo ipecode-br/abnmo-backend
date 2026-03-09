@@ -8,13 +8,12 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import type { AuthUser } from '@/common/types';
 import { User } from '@/domain/entities/user';
-
-import type { AuthUserDto } from '../../auth/auth.dtos';
 
 interface ActivateUserUseCaseInput {
   id: string;
-  user: AuthUserDto;
+  user: AuthUser;
 }
 
 @Injectable()

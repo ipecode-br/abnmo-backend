@@ -2,15 +2,17 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
+import type { AuthUser } from '@/common/types';
 import { Patient } from '@/domain/entities/patient';
 import { PatientRequirement } from '@/domain/entities/patient-requirement';
-
-import type { AuthUserDto } from '../../auth/auth.dtos';
-import type { CreatePatientRequirementDto } from '../patient-requirements.dtos';
+import type { PatientRequirementType } from '@/domain/enums/patient-requirements';
 
 interface CreatePatientRequirementUseCaseInput {
-  createPatientRequirementDto: CreatePatientRequirementDto;
-  user: AuthUserDto;
+  user: AuthUser;
+  patientId: string;
+  type: PatientRequirementType;
+  title: string;
+  description: string | null;
 }
 
 @Injectable()
@@ -25,11 +27,12 @@ export class CreatePatientRequirementUseCase {
   ) {}
 
   async execute({
-    createPatientRequirementDto,
     user,
+    patientId,
+    type,
+    title,
+    description,
   }: CreatePatientRequirementUseCaseInput): Promise<void> {
-    const { patientId } = createPatientRequirementDto;
-
     const patient = await this.patientsRepository.findOne({
       where: { id: patientId },
       select: { id: true },
@@ -40,7 +43,10 @@ export class CreatePatientRequirementUseCase {
     }
 
     const patientRequirement = this.patientRequirementsRepository.create({
-      ...createPatientRequirementDto,
+      patientId,
+      type,
+      title,
+      description,
       createdBy: user.id,
     });
 

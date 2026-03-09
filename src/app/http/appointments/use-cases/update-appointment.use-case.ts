@@ -7,15 +7,16 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
+import type { AuthUser } from '@/common/types';
 import { Appointment } from '@/domain/entities/appointment';
-
-import type { AuthUserDto } from '../../auth/auth.dtos';
-import type { UpdateAppointmentDto } from '../appointments.dtos';
+import type { PatientCondition } from '@/domain/enums/patients';
 
 interface UpdateAppointmentUseCaseInput {
   id: string;
-  user: AuthUserDto;
-  updateAppointmentDto: UpdateAppointmentDto;
+  user: AuthUser;
+  date: Date;
+  condition: PatientCondition;
+  annotation: string | null;
 }
 
 @Injectable()
@@ -30,7 +31,9 @@ export class UpdateAppointmentUseCase {
   async execute({
     id,
     user,
-    updateAppointmentDto,
+    date,
+    condition,
+    annotation,
   }: UpdateAppointmentUseCaseInput): Promise<void> {
     const appointment = await this.appointmentsRepository.findOne({
       where: { id },
@@ -46,10 +49,11 @@ export class UpdateAppointmentUseCase {
       );
     }
 
-    await this.appointmentsRepository.update(
-      appointment.id,
-      updateAppointmentDto,
-    );
+    await this.appointmentsRepository.update(appointment.id, {
+      date,
+      condition,
+      annotation,
+    });
 
     this.logger.log(
       { id, userId: user.id, userEmail: user.email, userRole: user.role },

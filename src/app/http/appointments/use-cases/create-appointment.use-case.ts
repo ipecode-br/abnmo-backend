@@ -7,16 +7,15 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
+import type { AuthUser } from '@/common/types';
 import { Appointment } from '@/domain/entities/appointment';
 import { Patient } from '@/domain/entities/patient';
 import { User } from '@/domain/entities/user';
 import type { PatientCondition } from '@/domain/enums/patients';
 import type { SpecialtyCategory } from '@/domain/enums/shared';
 
-import type { AuthUserDto } from '../../auth/auth.dtos';
-
 interface CreateAppointmentUseCaseInput {
-  user: AuthUserDto;
+  user: AuthUser;
   patientId: string;
   date: Date;
   condition: PatientCondition;

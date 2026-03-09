@@ -7,17 +7,16 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import type { AuthUser } from '@/common/types';
 import { User } from '@/domain/entities/user';
 import type { SpecialtyCategory } from '@/domain/enums/shared';
 
-import type { AuthUserDto } from '../../auth/auth.dtos';
-
 interface UpdateUserUseCaseInput {
   id: string;
-  user: AuthUserDto;
+  user: AuthUser;
   name: string;
-  specialty: SpecialtyCategory | null;
-  registrationId: string | null;
+  specialty?: SpecialtyCategory | null;
+  registrationId?: string | null;
 }
 
 @Injectable()
@@ -60,8 +59,8 @@ export class UpdateUserUseCase {
 
     await this.usersRepository.update(userToUpdate.id, {
       name,
-      specialty: specialty,
-      registrationId: registrationId,
+      specialty,
+      registrationId,
     });
 
     this.logger.log(

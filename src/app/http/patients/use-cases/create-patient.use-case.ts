@@ -3,15 +3,40 @@ import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 import { DataSource } from 'typeorm';
 
+import type { AuthUser } from '@/common/types';
+import type { BrazilianState } from '@/constants/brazilian-states';
 import { Patient } from '@/domain/entities/patient';
 import { PatientSupport } from '@/domain/entities/patient-support';
+import type {
+  PatientGender,
+  PatientNmoDiagnosis,
+  PatientRace,
+} from '@/domain/enums/patients';
 
-import type { AuthUserDto } from '../../auth/auth.dtos';
-import type { CreatePatientDto } from '../patients.dtos';
+interface PatientSupportInput {
+  name: string;
+  phone: string;
+  kinship: string;
+}
 
 interface CreatePatientUseCaseInput {
-  user: AuthUserDto;
-  createPatientDto: CreatePatientDto;
+  user: AuthUser;
+  name: string;
+  dateOfBirth: Date;
+  cpf: string;
+  gender: PatientGender;
+  race: PatientRace;
+  state: BrazilianState;
+  city: string;
+  email: string;
+  phone: string;
+  hasDisability: boolean;
+  disabilityDesc: string | null;
+  needLegalAssistance: boolean;
+  takeMedication: boolean;
+  medicationDesc: string | null;
+  nmoDiagnosis: PatientNmoDiagnosis;
+  supports?: PatientSupportInput[];
 }
 
 @Injectable()
@@ -27,10 +52,23 @@ export class CreatePatientUseCase {
 
   async execute({
     user,
-    createPatientDto,
+    name,
+    dateOfBirth,
+    cpf,
+    gender,
+    race,
+    state,
+    city,
+    email,
+    phone,
+    hasDisability,
+    disabilityDesc,
+    needLegalAssistance,
+    takeMedication,
+    medicationDesc,
+    nmoDiagnosis,
+    supports,
   }: CreatePatientUseCaseInput): Promise<void> {
-    const { email, cpf, supports, ...patientData } = createPatientDto;
-
     const patientWithSameEmail = await this.patientsRepository.findOne({
       select: { id: true },
       where: { email },
@@ -62,9 +100,21 @@ export class CreatePatientUseCase {
       const patientSupportsDataSource = manager.getRepository(PatientSupport);
 
       const patient = patientsDataSource.create({
-        ...patientData,
+        name,
         email,
+        dateOfBirth,
         cpf,
+        gender,
+        race,
+        state,
+        city,
+        phone,
+        hasDisability,
+        disabilityDesc,
+        needLegalAssistance,
+        takeMedication,
+        medicationDesc,
+        nmoDiagnosis,
         status: 'active',
       });
 

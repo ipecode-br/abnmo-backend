@@ -7,13 +7,12 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
+import type { AuthUser } from '@/common/types';
 import { Appointment } from '@/domain/entities/appointment';
-
-import type { AuthUserDto } from '../../auth/auth.dtos';
 
 interface CancelAppointmentUseCaseInput {
   id: string;
-  user: AuthUserDto;
+  user: AuthUser;
 }
 
 @Injectable()

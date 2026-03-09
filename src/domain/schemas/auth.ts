@@ -1,7 +1,6 @@
 import { z } from 'zod';
 
 import { AUTH_ACCOUNT_TYPES } from '../enums/auth';
-import { AUTH_TOKEN_ROLES } from '../enums/tokens';
 import { baseResponseSchema } from './base';
 import {
   emailSchema,
@@ -11,12 +10,6 @@ import {
   userRegistrationId,
   userRoleSchema,
 } from './shared';
-
-export const authUserSchema = z.object({
-  id: z.string().uuid(),
-  email: z.string().email(),
-  role: z.enum(AUTH_TOKEN_ROLES),
-});
 
 export const registerPatientSchema = z.object({
   name: nameSchema,

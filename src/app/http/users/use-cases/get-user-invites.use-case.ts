@@ -10,14 +10,19 @@ import {
 } from 'typeorm';
 
 import { Token } from '@/domain/entities/token';
+import type { QueryOrder } from '@/domain/enums/queries';
 import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
 import type { UserInvitesOrderBy } from '@/domain/enums/users';
 import type { UserInviteResponse } from '@/domain/schemas/users/responses';
 
-import type { GetUserInvitesQuery } from '../users.dtos';
-
 interface GetUserInvitesUseCaseInput {
-  query: GetUserInvitesQuery;
+  page: number;
+  perPage: number;
+  search?: string;
+  startDate?: string;
+  endDate?: string;
+  order?: QueryOrder;
+  orderBy?: UserInvitesOrderBy;
 }
 
 interface GetUserInvitesUseCaseOutput {
@@ -33,11 +38,13 @@ export class GetUserInvitesUseCase {
   ) {}
 
   async execute({
-    query,
+    search,
+    page,
+    perPage,
+    ...props
   }: GetUserInvitesUseCaseInput): Promise<GetUserInvitesUseCaseOutput> {
-    const { search, page, perPage } = query;
-    const startDate = query.startDate ? new Date(query.startDate) : null;
-    const endDate = query.endDate ? new Date(query.endDate) : null;
+    const startDate = props.startDate ? new Date(props.startDate) : null;
+    const endDate = props.endDate ? new Date(props.endDate) : null;
 
     const ORDER_BY_MAPPING: Record<UserInvitesOrderBy, keyof Token> = {
       email: 'email',
@@ -66,8 +73,7 @@ export class GetUserInvitesUseCase {
 
     const total = await this.tokensRepository.count({ where });
 
-    const orderBy = ORDER_BY_MAPPING[query.orderBy];
-    const order = { [orderBy]: query.order };
+    const orderBy = ORDER_BY_MAPPING[props.orderBy || 'date'];
 
     const invites = await this.tokensRepository.find({
       select: {
@@ -76,9 +82,9 @@ export class GetUserInvitesUseCase {
         expiresAt: true,
         createdAt: true,
       },
+      order: { [orderBy]: props.order },
       skip: (page - 1) * perPage,
       take: perPage,
-      order,
       where,
     });
 

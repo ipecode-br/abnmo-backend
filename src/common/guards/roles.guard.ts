@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
-import type { AuthUserDto } from '@/app/http/auth/auth.dtos';
+import type { AuthUser } from '@/common/types';
 
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { Roles } from '../decorators/roles.decorator';
@@ -30,7 +30,7 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest<{ user?: AuthUserDto }>();
+    const request = context.switchToHttp().getRequest<{ user?: AuthUser }>();
     const user = request.user;
 
     if (!user) {

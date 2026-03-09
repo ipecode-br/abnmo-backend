@@ -9,18 +9,18 @@ import { DataSource, Repository } from 'typeorm';
 
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
 import { MailService } from '@/app/mail/mail.service';
+import type { AuthUser } from '@/common/types';
 import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
+import type { UserRole } from '@/domain/enums/users';
 import { EnvService } from '@/env/env.service';
 
-import type { AuthUserDto } from '../../auth/auth.dtos';
-import type { CreateUserInviteDto } from '../users.dtos';
-
 interface CreateUserInviteUseCaseInput {
-  user: AuthUserDto;
-  createUserInviteDto: CreateUserInviteDto;
+  user: AuthUser;
+  email: string;
+  role: UserRole;
 }
 
 @Injectable()
@@ -42,10 +42,9 @@ export class CreateUserInviteUseCase {
 
   async execute({
     user,
-    createUserInviteDto,
+    email,
+    role,
   }: CreateUserInviteUseCaseInput): Promise<void> {
-    const { email, role } = createUserInviteDto;
-
     const [existingInviteUserToken, existingUser, existingPatient] =
       await Promise.all([
         this.tokensRepository.findOne({ where: { email } }),

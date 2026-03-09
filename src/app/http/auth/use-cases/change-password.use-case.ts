@@ -9,14 +9,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { CryptographyService } from '@/app/cryptography/crypography.service';
+import type { AuthUser } from '@/common/types';
 import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 
-import type { AuthUserDto } from '../auth.dtos';
-
 interface ChangePasswordUseCaseInput {
-  user: AuthUserDto;
+  user: AuthUser;
   password: string;
   newPassword: string;
 }

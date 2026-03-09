@@ -2,15 +2,15 @@ import { Body, Controller, Post, Res } from '@nestjs/common';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import type { Response } from 'express';
 
-import { AuthUser } from '@/common/decorators/auth-user.decorator';
 import { Cookies } from '@/common/decorators/cookies.decorator';
 import { Public } from '@/common/decorators/public.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
+import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
+import type { AuthUser } from '@/common/types';
 import { COOKIES_MAPPING } from '@/domain/cookies';
 
 import {
-  AuthUserDto,
   ChangePasswordDto,
   RecoverPasswordDto,
   RegisterPatientDto,
@@ -81,7 +81,6 @@ export class AuthController {
     };
   }
 
-  // TODO: update this controller when register patient use-case is refactored
   @Public()
   @Post('register/patient')
   @ApiOperation({ summary: 'Registra um novo paciente' })
@@ -90,7 +89,14 @@ export class AuthController {
     @Body() registerPatientDto: RegisterPatientDto,
     @Res({ passthrough: true }) response: Response,
   ): Promise<BaseResponse> {
-    await this.registerPatientUseCase.execute({ registerPatientDto, response });
+    const { name, email, password } = registerPatientDto;
+
+    await this.registerPatientUseCase.execute({
+      name,
+      email,
+      password,
+      response,
+    });
 
     return {
       success: true,
@@ -167,7 +173,7 @@ export class AuthController {
   })
   @ApiResponse({ type: BaseResponse })
   async changePassword(
-    @AuthUser() user: AuthUserDto,
+    @User() user: AuthUser,
     @Body() changePasswordDto: ChangePasswordDto,
   ): Promise<BaseResponse> {
     const { password, newPassword } = changePasswordDto;

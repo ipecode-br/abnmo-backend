@@ -9,13 +9,16 @@ import {
 } from 'typeorm';
 
 import { PatientRequirement } from '@/domain/entities/patient-requirement';
+import type { PatientRequirementStatus } from '@/domain/enums/patient-requirements';
 import type { PatientRequirementByPatientId } from '@/domain/schemas/patient-requirement/responses';
-
-import type { GetPatientRequirementsByPatientIdQuery } from '../patient-requirements.dtos';
 
 interface GetPatientRequirementsByPatientIdUseCaseInput {
   patientId: string;
-  query: GetPatientRequirementsByPatientIdQuery;
+  page: number;
+  perPage: number;
+  status?: PatientRequirementStatus;
+  startDate?: string;
+  endDate?: string;
 }
 
 interface GetPatientRequirementsByPatientIdUseCaseOutput {
@@ -32,14 +35,16 @@ export class GetPatientRequirementsByPatientIdUseCase {
 
   async execute({
     patientId,
-    query,
+    status,
+    page,
+    perPage,
+    ...props
   }: GetPatientRequirementsByPatientIdUseCaseInput): Promise<GetPatientRequirementsByPatientIdUseCaseOutput> {
-    const { status, page, perPage } = query;
-    const startDate = query.startDate ? new Date(query.startDate) : null;
-    const endDate = query.endDate ? new Date(query.endDate) : null;
+    const startDate = props.startDate ? new Date(props.startDate) : null;
+    const endDate = props.endDate ? new Date(props.endDate) : null;
 
     const where: FindOptionsWhere<PatientRequirement> = {
-      patientId: patientId,
+      patientId,
     };
 
     if (status) {

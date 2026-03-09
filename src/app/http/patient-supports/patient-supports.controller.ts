@@ -1,11 +1,11 @@
 import { Body, Controller, Delete, Param, Post, Put } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-import { AuthUser } from '@/common/decorators/auth-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
+import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
+import type { AuthUser } from '@/common/types';
 
-import type { AuthUserDto } from '../auth/auth.dtos';
 import {
   CreatePatientSupportDto,
   UpdatePatientSupportDto,
@@ -31,7 +31,7 @@ export class PatientSupportsController {
   @ApiResponse({ type: BaseResponse })
   async createPatientSupport(
     @Param('patientId') patientId: string,
-    @AuthUser() user: AuthUserDto,
+    @User() user: AuthUser,
     @Body() createPatientSupportDto: CreatePatientSupportDto,
   ): Promise<BaseResponse> {
     await this.createPatientSupportUseCase.execute({
@@ -52,13 +52,13 @@ export class PatientSupportsController {
   @ApiResponse({ type: BaseResponse })
   async updatePatientSupport(
     @Param('id') id: string,
-    @AuthUser() user: AuthUserDto,
+    @User() user: AuthUser,
     @Body() updatePatientSupportDto: UpdatePatientSupportDto,
   ): Promise<BaseResponse> {
     await this.updatePatientSupportUseCase.execute({
       id,
       user,
-      updatePatientSupportDto,
+      ...updatePatientSupportDto,
     });
 
     return {
@@ -73,7 +73,7 @@ export class PatientSupportsController {
   @ApiResponse({ type: BaseResponse })
   async removePatientSupport(
     @Param('id') id: string,
-    @AuthUser() user: AuthUserDto,
+    @User() user: AuthUser,
   ): Promise<BaseResponse> {
     await this.deletePatientSupportUseCase.execute({ id, user });
 

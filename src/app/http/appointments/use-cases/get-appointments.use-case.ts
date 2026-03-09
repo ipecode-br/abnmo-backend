@@ -9,6 +9,7 @@ import {
   type Repository,
 } from 'typeorm';
 
+import type { AuthUser } from '@/common/types';
 import { Appointment } from '@/domain/entities/appointment';
 import type {
   AppointmentsOrderBy,
@@ -18,10 +19,8 @@ import type { PatientCondition } from '@/domain/enums/patients';
 import type { QueryOrder } from '@/domain/enums/queries';
 import type { SpecialtyCategory } from '@/domain/enums/shared';
 
-import type { AuthUserDto } from '../../auth/auth.dtos';
-
 interface GetAppointmentsUseCaseInput {
-  user: AuthUserDto;
+  user: AuthUser;
   page: number;
   perPage: number;
   patientId?: string;

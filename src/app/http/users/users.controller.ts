@@ -11,11 +11,11 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-import { AuthUser } from '@/common/decorators/auth-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
+import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
+import type { AuthUser } from '@/common/types';
 
-import type { AuthUserDto } from '../auth/auth.dtos';
 import { ActivateUserUseCase } from './use-cases/activate-user.use-case';
 import { CancelUserInviteUseCase } from './use-cases/cancel-user-invite.use-case';
 import { CreateUserInviteUseCase } from './use-cases/create-user-invite.use-case';
@@ -53,7 +53,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Lista todos os usuários' })
   @ApiResponse({ type: GetUsersResponse })
   async getUsers(@Query() query: GetUsersQuery): Promise<GetUsersResponse> {
-    const data = await this.getUsersUseCase.execute({ query });
+    const data = await this.getUsersUseCase.execute(query);
 
     return {
       success: true,
@@ -66,7 +66,7 @@ export class UsersController {
   @Roles(['manager', 'nurse', 'specialist'])
   @ApiOperation({ summary: 'Retorna os dados do usuário autenticado' })
   @ApiResponse({ type: GetUserResponse })
-  async getProfile(@AuthUser() user: AuthUserDto): Promise<GetUserResponse> {
+  async getProfile(@User() user: AuthUser): Promise<GetUserResponse> {
     const { user: data } = await this.getUserUseCase.execute({ id: user.id });
 
     return {
@@ -81,10 +81,12 @@ export class UsersController {
   @ApiOperation({ summary: 'Cria convite para registro de usuário' })
   @ApiResponse({ type: BaseResponse })
   async createUserInvite(
-    @AuthUser() user: AuthUserDto,
+    @User() user: AuthUser,
     @Body() createUserInviteDto: CreateUserInviteDto,
   ): Promise<BaseResponse> {
-    await this.createUserInviteUseCase.execute({ user, createUserInviteDto });
+    const { email, role } = createUserInviteDto;
+
+    await this.createUserInviteUseCase.execute({ user, email, role });
 
     return {
       success: true,
@@ -97,7 +99,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Lista todos os convites de usuário' })
   @ApiResponse({ type: GetUserInvitesResponse })
   async getUserInvites(@Query() query: GetUserInvitesQuery): Promise<any> {
-    const data = await this.getUserInvitesUseCase.execute({ query });
+    const data = await this.getUserInvitesUseCase.execute(query);
 
     return {
       success: true,
@@ -112,7 +114,7 @@ export class UsersController {
   @ApiResponse({ type: BaseResponse })
   async updateUser(
     @Param('id') id: string,
-    @AuthUser() user: AuthUserDto,
+    @User() user: AuthUser,
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<BaseResponse> {
     const { name, specialty, registrationId } = updateUserDto;
@@ -137,7 +139,7 @@ export class UsersController {
   @ApiResponse({ type: BaseResponse })
   async cancelUserInvite(
     @Param('id') id: string,
-    @AuthUser() user: AuthUserDto,
+    @User() user: AuthUser,
   ): Promise<BaseResponse> {
     await this.cancelUserInviteUseCase.execute({ id: parseInt(id, 10), user });
 
@@ -153,7 +155,7 @@ export class UsersController {
   @ApiResponse({ type: BaseResponse })
   async deactivateUser(
     @Param('id') id: string,
-    @AuthUser() user: AuthUserDto,
+    @User() user: AuthUser,
   ): Promise<BaseResponse> {
     await this.deactivateUserUseCase.execute({ id, user });
 
@@ -169,7 +171,7 @@ export class UsersController {
   @ApiResponse({ type: BaseResponse })
   async activateUser(
     @Param('id') id: string,
-    @AuthUser() user: AuthUserDto,
+    @User() user: AuthUser,
   ): Promise<BaseResponse> {
     await this.activateUserUseCase.execute({ id, user });
 

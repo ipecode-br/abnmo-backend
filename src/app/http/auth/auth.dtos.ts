@@ -1,7 +1,6 @@
 import { createZodDto } from 'nestjs-zod';
 
 import {
-  authUserSchema,
   changePasswordSchema,
   recoverPasswordSchema,
   registerPatientSchema,
@@ -10,8 +9,6 @@ import {
   signInWithEmailResponseSchema,
   signInWithEmailSchema,
 } from '@/domain/schemas/auth';
-
-export class AuthUserDto extends createZodDto(authUserSchema) {}
 
 export class RegisterPatientDto extends createZodDto(registerPatientSchema) {}
 

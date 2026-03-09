@@ -10,13 +10,20 @@ import {
 } from 'typeorm';
 
 import { User } from '@/domain/entities/user';
-import type { UsersOrderBy } from '@/domain/enums/users';
+import type { QueryOrder } from '@/domain/enums/queries';
+import type { UserRole, UsersOrderBy, UserStatus } from '@/domain/enums/users';
 import type { UserResponse } from '@/domain/schemas/users/responses';
 
-import type { GetUsersQuery } from '../users.dtos';
-
 interface GetUsersUseCaseInput {
-  query: GetUsersQuery;
+  page: number;
+  perPage: number;
+  search?: string;
+  role?: UserRole;
+  status?: UserStatus;
+  startDate?: string;
+  endDate?: string;
+  order?: QueryOrder;
+  orderBy?: UsersOrderBy;
 }
 
 interface GetUsersUseCaseOutput {
@@ -32,17 +39,21 @@ export class GetUsersUseCase {
   ) {}
 
   async execute({
-    query,
+    search,
+    role,
+    status,
+    page,
+    perPage,
+    ...props
   }: GetUsersUseCaseInput): Promise<GetUsersUseCaseOutput> {
-    const { search, role, status, page, perPage } = query;
-    const startDate = query.startDate ? new Date(query.startDate) : null;
-    const endDate = query.endDate ? new Date(query.endDate) : null;
+    const startDate = props.startDate ? new Date(props.startDate) : null;
+    const endDate = props.endDate ? new Date(props.endDate) : null;
 
     const ORDER_BY_MAPPING: Record<UsersOrderBy, keyof User> = {
       name: 'name',
-      date: 'createdAt',
       role: 'role',
       status: 'status',
+      date: 'createdAt',
     };
 
     const where: FindOptionsWhere<User> = {};
@@ -73,8 +84,7 @@ export class GetUsersUseCase {
 
     const total = await this.usersRepository.count({ where });
 
-    const orderBy = ORDER_BY_MAPPING[query.orderBy];
-    const order = { [orderBy]: query.order };
+    const orderBy = ORDER_BY_MAPPING[props.orderBy || 'name'];
 
     const users = await this.usersRepository.find({
       select: {
@@ -89,9 +99,9 @@ export class GetUsersUseCase {
         updatedAt: true,
         createdAt: true,
       },
+      order: { [orderBy]: props.order },
       skip: (page - 1) * perPage,
       take: perPage,
-      order,
       where,
     });
 

@@ -10,11 +10,11 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-import { AuthUser } from '@/common/decorators/auth-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
+import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
+import type { AuthUser } from '@/common/types';
 
-import type { AuthUserDto } from '../auth/auth.dtos';
 import {
   CreateAppointmentDto,
   GetAppointmentsQuery,
@@ -42,7 +42,7 @@ export class AppointmentsController {
   @ApiResponse({ type: GetAppointmentsResponse })
   async getAppointments(
     @Query() query: GetAppointmentsQuery,
-    @AuthUser() user: AuthUserDto,
+    @User() user: AuthUser,
   ): Promise<GetAppointmentsResponse> {
     const data = await this.getAppointmentsUseCase.execute({ user, ...query });
 
@@ -58,7 +58,7 @@ export class AppointmentsController {
   @ApiOperation({ summary: 'Cadastra um novo atendimento' })
   @ApiResponse({ type: BaseResponse })
   async create(
-    @AuthUser() user: AuthUserDto,
+    @User() user: AuthUser,
     @Body() createAppointmentDto: CreateAppointmentDto,
   ): Promise<BaseResponse> {
     const {
@@ -92,13 +92,13 @@ export class AppointmentsController {
   @ApiResponse({ type: BaseResponse })
   public async update(
     @Param('id') id: string,
-    @AuthUser() user: AuthUserDto,
+    @User() user: AuthUser,
     @Body() updateAppointmentDto: UpdateAppointmentDto,
   ): Promise<BaseResponse> {
     await this.updateAppointmentUseCase.execute({
       id,
       user,
-      updateAppointmentDto,
+      ...updateAppointmentDto,
     });
 
     return {
@@ -113,7 +113,7 @@ export class AppointmentsController {
   @ApiResponse({ type: BaseResponse })
   async cancel(
     @Param('id') id: string,
-    @AuthUser() user: AuthUserDto,
+    @User() user: AuthUser,
   ): Promise<BaseResponse> {
     await this.cancelAppointmentUseCase.execute({ id, user });
 

@@ -11,7 +11,7 @@ import type { Repository } from 'typeorm';
 
 import { CryptographyService } from '@/app/cryptography/crypography.service';
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
-import type { AuthUserDto } from '@/app/http/auth/auth.dtos';
+import type { AuthUser } from '@/common/types';
 import type { Cookie } from '@/domain/cookies';
 import { COOKIES_MAPPING } from '@/domain/cookies';
 import { Patient } from '@/domain/entities/patient';
@@ -28,7 +28,7 @@ import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 
 interface AuthenticatedRequest {
   signedCookies?: Record<Cookie, string>;
-  user?: AuthUserDto;
+  user?: AuthUser;
 }
 
 @Injectable()
@@ -149,7 +149,7 @@ export class AuthGuard implements CanActivate {
     }
   }
 
-  private async getUserFromToken(token: string): Promise<AuthUserDto | null> {
+  private async getUserFromToken(token: string): Promise<AuthUser | null> {
     const payload = await this.cryptographyService.verifyToken<
       AccessTokenPayload | RefreshTokenPayload
     >(token);

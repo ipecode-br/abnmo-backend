@@ -10,10 +10,10 @@ import { Patient } from '@/domain/entities/patient';
 import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
 import { UtilsService } from '@/utils/utils.service';
 
-import type { RegisterPatientDto } from '../auth.dtos';
-
 interface RegisterPatientUseCaseInput {
-  registerPatientDto: RegisterPatientDto;
+  name: string;
+  email: string;
+  password: string;
   response: Response;
 }
 
@@ -32,11 +32,11 @@ export class RegisterPatientUseCase {
   ) {}
 
   async execute({
-    registerPatientDto,
+    name,
+    email,
+    password,
     response,
   }: RegisterPatientUseCaseInput): Promise<void> {
-    const { email, name } = registerPatientDto;
-
     const patientWithSameEmail = await this.patientsRepository.findOne({
       select: { id: true },
       where: { email },
@@ -48,14 +48,12 @@ export class RegisterPatientUseCase {
       );
     }
 
-    const password = await this.cryptographyService.createHash(
-      registerPatientDto.password,
-    );
+    const hashedPassword = await this.cryptographyService.createHash(password);
 
     const patient = await this.patientsRepository.save({
       name,
       email,
-      password,
+      password: hashedPassword,
     });
 
     const { maxAge, token } = await this.createTokenUseCase.execute({

@@ -7,13 +7,12 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
+import type { AuthUser } from '@/common/types';
 import { Patient } from '@/domain/entities/patient';
 import { PatientSupport } from '@/domain/entities/patient-support';
 
-import type { AuthUserDto } from '../../auth/auth.dtos';
-
 interface CreatePatientSupportUseCaseInput {
-  user: AuthUserDto;
+  user: AuthUser;
   patientId: string;
   name: string;
   kinship: string;

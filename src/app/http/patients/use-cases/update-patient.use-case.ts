@@ -8,15 +8,33 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
+import type { AuthUser } from '@/common/types';
+import type { BrazilianState } from '@/constants/brazilian-states';
 import { Patient } from '@/domain/entities/patient';
-
-import type { AuthUserDto } from '../../auth/auth.dtos';
-import type { UpdatePatientDto } from '../patients.dtos';
+import type {
+  PatientGender,
+  PatientNmoDiagnosis,
+  PatientRace,
+} from '@/domain/enums/patients';
 
 interface UpdatePatientUseCaseInput {
   id: string;
-  user: AuthUserDto;
-  updatePatientDto: UpdatePatientDto;
+  user: AuthUser;
+  name?: string;
+  dateOfBirth?: Date;
+  cpf?: string;
+  gender?: PatientGender;
+  race?: PatientRace;
+  state?: BrazilianState;
+  city?: string;
+  email?: string;
+  phone?: string;
+  hasDisability?: boolean;
+  disabilityDesc?: string | null;
+  needLegalAssistance?: boolean;
+  takeMedication?: boolean;
+  medicationDesc?: string | null;
+  nmoDiagnosis?: PatientNmoDiagnosis;
 }
 
 @Injectable()
@@ -31,7 +49,9 @@ export class UpdatePatientUseCase {
   async execute({
     id,
     user,
-    updatePatientDto,
+    cpf,
+    email,
+    ...props
   }: UpdatePatientUseCaseInput): Promise<void> {
     if (user.role === 'patient' && user.id !== id) {
       this.logger.log(
@@ -52,9 +72,9 @@ export class UpdatePatientUseCase {
       throw new NotFoundException('Paciente não encontrado.');
     }
 
-    if (updatePatientDto.cpf !== patient.cpf) {
+    if (cpf && cpf !== patient.cpf) {
       const patientWithSameCpf = await this.patientsRepository.findOne({
-        where: { cpf: updatePatientDto.cpf },
+        where: { cpf },
         select: { id: true },
       });
 
@@ -62,7 +82,7 @@ export class UpdatePatientUseCase {
         this.logger.error(
           {
             patientId: id,
-            cpf: updatePatientDto.cpf,
+            cpf,
             userId: user.id,
             userEmail: user.email,
             userRole: user.role,
@@ -73,9 +93,9 @@ export class UpdatePatientUseCase {
       }
     }
 
-    if (updatePatientDto.email !== patient.email) {
+    if (email && email !== patient.email) {
       const patientWithSameEmail = await this.patientsRepository.findOne({
-        where: { email: updatePatientDto.email },
+        where: { email },
         select: { id: true },
       });
 
@@ -83,7 +103,7 @@ export class UpdatePatientUseCase {
         this.logger.error(
           {
             id,
-            email: updatePatientDto.email,
+            email,
             userId: user.id,
             userEmail: user.email,
             userRole: user.role,
@@ -94,7 +114,7 @@ export class UpdatePatientUseCase {
       }
     }
 
-    await this.patientsRepository.update(id, updatePatientDto);
+    await this.patientsRepository.update(id, { cpf, email, ...props });
 
     this.logger.log(
       { id, userId: user.id, userEmail: user.email, userRole: user.role },

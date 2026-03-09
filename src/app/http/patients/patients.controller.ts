@@ -10,11 +10,11 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-import { AuthUser } from '@/common/decorators/auth-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
+import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
+import type { AuthUser } from '@/common/types';
 
-import type { AuthUserDto } from '../auth/auth.dtos';
 import {
   CreatePatientDto,
   GetPatientOptionsResponse,
@@ -49,7 +49,7 @@ export class PatientsController {
   async getPatients(
     @Query() query: GetPatientsQuery,
   ): Promise<GetPatientsResponse> {
-    const data = await this.getPatientsUseCase.execute({ query });
+    const data = await this.getPatientsUseCase.execute(query);
 
     return {
       success: true,
@@ -93,10 +93,10 @@ export class PatientsController {
   @ApiOperation({ summary: 'Cadastra um novo paciente' })
   @ApiResponse({ type: BaseResponse })
   async create(
-    @AuthUser() user: AuthUserDto,
+    @User() user: AuthUser,
     @Body() createPatientDto: CreatePatientDto,
   ): Promise<BaseResponse> {
-    await this.createPatientUseCase.execute({ user, createPatientDto });
+    await this.createPatientUseCase.execute({ user, ...createPatientDto });
 
     return {
       success: true,
@@ -110,10 +110,14 @@ export class PatientsController {
   @ApiResponse({ type: BaseResponse })
   async update(
     @Param('id') id: string,
-    @AuthUser() user: AuthUserDto,
+    @User() user: AuthUser,
     @Body() updatePatientDto: UpdatePatientDto,
   ): Promise<BaseResponse> {
-    await this.updatePatientUseCase.execute({ id, user, updatePatientDto });
+    await this.updatePatientUseCase.execute({
+      id,
+      user,
+      ...updatePatientDto,
+    });
 
     return {
       success: true,
@@ -127,7 +131,7 @@ export class PatientsController {
   @ApiResponse({ type: BaseResponse })
   async deactivatePatient(
     @Param('id') id: string,
-    @AuthUser() user: AuthUserDto,
+    @User() user: AuthUser,
   ): Promise<BaseResponse> {
     await this.deactivatePatientUseCase.execute({ id, user });
 

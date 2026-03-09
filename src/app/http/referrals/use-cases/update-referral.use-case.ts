@@ -7,15 +7,16 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
+import type { AuthUser } from '@/common/types';
 import { Referral } from '@/domain/entities/referral';
-
-import type { AuthUserDto } from '../../auth/auth.dtos';
-import type { UpdateReferralDto } from '../referrals.dtos';
+import type { PatientCondition } from '@/domain/enums/patients';
 
 interface UpdateReferralUseCaseInput {
   id: string;
-  user: AuthUserDto;
-  updateReferralDto: UpdateReferralDto;
+  user: AuthUser;
+  date: Date;
+  condition: PatientCondition;
+  annotation: string | null;
 }
 
 @Injectable()
@@ -30,7 +31,9 @@ export class UpdateReferralUseCase {
   async execute({
     id,
     user,
-    updateReferralDto,
+    date,
+    condition,
+    annotation,
   }: UpdateReferralUseCaseInput): Promise<void> {
     const referral = await this.referralsRepository.findOne({ where: { id } });
 
@@ -44,7 +47,11 @@ export class UpdateReferralUseCase {
       );
     }
 
-    await this.referralsRepository.update(referral.id, updateReferralDto);
+    await this.referralsRepository.update(referral.id, {
+      date,
+      condition,
+      annotation,
+    });
 
     this.logger.log(
       { id, userId: user.id, userEmail: user.email, userRole: user.role },

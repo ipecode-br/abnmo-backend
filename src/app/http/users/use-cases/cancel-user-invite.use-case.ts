@@ -2,14 +2,13 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import type { AuthUser } from '@/common/types';
 import { Token } from '@/domain/entities/token';
 import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
 
-import type { AuthUserDto } from '../../auth/auth.dtos';
-
 interface CancelUserInviteUseCaseInput {
   id: number;
-  user: AuthUserDto;
+  user: AuthUser;
 }
 
 @Injectable()

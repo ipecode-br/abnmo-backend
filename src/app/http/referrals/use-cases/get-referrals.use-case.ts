@@ -9,6 +9,7 @@ import {
   type Repository,
 } from 'typeorm';
 
+import type { AuthUser } from '@/common/types';
 import { Referral } from '@/domain/entities/referral';
 import type { PatientCondition } from '@/domain/enums/patients';
 import type { QueryOrder } from '@/domain/enums/queries';
@@ -18,10 +19,8 @@ import type {
 } from '@/domain/enums/referrals';
 import type { SpecialtyCategory } from '@/domain/enums/shared';
 
-import type { AuthUserDto } from '../../auth/auth.dtos';
-
 interface GetReferralsUseCaseInput {
-  user: AuthUserDto;
+  user: AuthUser;
   page: number;
   perPage: number;
   patientId?: string;

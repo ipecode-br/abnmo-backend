@@ -333,17 +333,14 @@ describe('Database Assertions', () => {
    ```
 
 2. **Banco não limpo entre testes**
-
    - Use `clearTestDatabase()` se precisar forçar limpeza
    - Verifique se está mudando entre arquivos de teste
 
 3. **Problemas de autenticação**
-
    - Verifique se endpoints de auth estão corretos (`/register`, `/login`)
    - Use `createUserAndLogin()` para autenticação automática
 
 4. **Timeout de conexão**
-
    - Aumente timeout no `jest-e2e.json`
    - Verifique se containers de teste estão rodando
 
@@ -492,17 +489,14 @@ expect(count).toBe(0);
 ### Common Issues
 
 1. **Connection Timeout**
-
    - Increase timeout in Jest config
    - Check database connection parameters
 
 2. **Database Already Exists Error**
-
    - The setup handles this automatically
    - Ensure proper cleanup in `afterAll`
 
 3. **Port Already in Use**
-
    - Tests use the same app instance
    - Only one test database connection per test suite
 
