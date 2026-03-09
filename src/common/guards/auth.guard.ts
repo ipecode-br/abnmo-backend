@@ -116,7 +116,7 @@ export class AuthGuard implements CanActivate {
         await this.tokensRepository.delete({ entityId: user.id });
 
         this.utilsService.deleteCookie(response, COOKIES_MAPPING.accessToken);
-        this.utilsService.deleteCookie(response, COOKIES_MAPPING.refresh_token);
+        this.utilsService.deleteCookie(response, COOKIES_MAPPING.refreshToken);
 
         throw new UnauthorizedException('Token de atualização expirado.');
       }
@@ -137,7 +137,7 @@ export class AuthGuard implements CanActivate {
       return true;
     } catch (error) {
       this.utilsService.deleteCookie(response, COOKIES_MAPPING.accessToken);
-      this.utilsService.deleteCookie(response, COOKIES_MAPPING.refresh_token);
+      this.utilsService.deleteCookie(response, COOKIES_MAPPING.refreshToken);
 
       if (error instanceof UnauthorizedException) {
         throw error;

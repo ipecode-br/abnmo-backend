@@ -128,7 +128,7 @@ export class SignInWithEmailUseCase {
       });
 
       this.utilsService.setCookie(response, {
-        name: COOKIES_MAPPING.refresh_token,
+        name: COOKIES_MAPPING.refreshToken,
         maxAge: refreshTokenMaxAge,
         value: refreshToken,
       });

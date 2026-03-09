@@ -70,7 +70,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Atualiza o token de acesso' })
   @ApiResponse({ type: BaseResponse })
   async refreshToken(
-    @Cookies(COOKIES_MAPPING.refresh_token) refreshToken: string,
+    @Cookies(COOKIES_MAPPING.refreshToken) refreshToken: string,
     @Res({ passthrough: true }) response: Response,
   ): Promise<BaseResponse> {
     await this.refreshTokenUseCase.execute({ refreshToken, response });
@@ -191,7 +191,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Encerra a sessão do usuário ou paciente' })
   @ApiResponse({ type: BaseResponse })
   async logout(
-    @Cookies(COOKIES_MAPPING.refresh_token) refreshToken: string,
+    @Cookies(COOKIES_MAPPING.refreshToken) refreshToken: string,
     @Res({ passthrough: true }) response: Response,
   ): Promise<BaseResponse> {
     await this.logoutUseCase.execute({ response, refreshToken });

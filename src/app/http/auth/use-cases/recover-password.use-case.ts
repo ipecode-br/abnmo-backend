@@ -60,7 +60,7 @@ export class RecoverPasswordUseCase {
 
     const [{ token, expiresAt }] = await Promise.all([
       this.createTokenUseCase.execute({
-        type: COOKIES_MAPPING.password_reset,
+        type: COOKIES_MAPPING.passwordReset,
         payload: { sub: entity.id },
       }),
       // Delete all tokens for this entity before creating a new one

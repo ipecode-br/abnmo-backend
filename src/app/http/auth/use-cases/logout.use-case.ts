@@ -39,7 +39,7 @@ export class LogoutUseCase {
 
     await this.tokensRepository.delete({ token: refreshToken });
 
-    this.utilsService.deleteCookie(response, COOKIES_MAPPING.refresh_token);
+    this.utilsService.deleteCookie(response, COOKIES_MAPPING.refreshToken);
 
     this.logger.log({ id: payload.sub, role: payload.role }, 'User logged out');
   }
