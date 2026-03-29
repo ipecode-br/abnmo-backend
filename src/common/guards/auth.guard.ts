@@ -18,7 +18,7 @@ import { COOKIES_MAPPING } from '@/domain/cookies';
 import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
-import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
+import { AUTH_TOKENS_MAPPING, type AuthTokenRole } from '@/domain/enums/tokens';
 import type {
   AccessTokenPayload,
   RefreshTokenPayload,
@@ -64,7 +64,11 @@ export class AuthGuard implements CanActivate {
 
     if (accessToken) {
       try {
-        const user = await this.getUserFromToken(accessToken);
+        const payload =
+          await this.cryptographyService.verifyToken<AccessTokenPayload>(
+            accessToken,
+          );
+        const user = await this.getEntityFromId(payload.sub, payload.role);
 
         if (!user) {
           throw new UnauthorizedException(
@@ -97,7 +101,21 @@ export class AuthGuard implements CanActivate {
     }
 
     try {
-      const user = await this.getUserFromToken(refreshToken);
+      const payload =
+        await this.cryptographyService.verifyToken<RefreshTokenPayload>(
+          refreshToken,
+        );
+
+      const [user, storedRefreshToken] = await Promise.all([
+        this.getEntityFromId(payload.sub, payload.role),
+        this.tokensRepository.findOne({
+          where: {
+            type: AUTH_TOKENS_MAPPING.refreshToken,
+            token: refreshToken,
+            entityId: payload.sub,
+          },
+        }),
+      ]);
 
       if (!user) {
         throw new UnauthorizedException(
@@ -105,20 +123,12 @@ export class AuthGuard implements CanActivate {
         );
       }
 
-      const storedRefreshToken = await this.tokensRepository.findOne({
-        where: {
-          type: AUTH_TOKENS_MAPPING.refreshToken,
-          token: refreshToken,
-          entityId: user.id,
-        },
-      });
-
       if (!storedRefreshToken || !storedRefreshToken.expiresAt) {
         throw new UnauthorizedException('Token de atualização não encontrado.');
       }
 
       if (storedRefreshToken.expiresAt < new Date()) {
-        await this.tokensRepository.delete({ entityId: user.id });
+        await this.tokensRepository.delete({ entityId: payload.sub });
 
         this.cryptographyService.deleteCookie(
           response,
@@ -168,25 +178,17 @@ export class AuthGuard implements CanActivate {
     }
   }
 
-  private async getUserFromToken(token: string): Promise<AuthUser | null> {
-    const payload = await this.cryptographyService.verifyToken<
-      AccessTokenPayload | RefreshTokenPayload
-    >(token);
-
-    const entityId = payload.sub;
-    const role = payload.role;
-
-    if (!entityId) {
-      return null;
-    }
-
+  private async getEntityFromId(
+    id: string,
+    role: AuthTokenRole,
+  ): Promise<AuthUser | null> {
     if (role === 'patient') {
       const patient = await this.patientsRepository.findOne({
-        select: { id: true, email: true },
-        where: { id: entityId },
+        select: { id: true, email: true, status: true },
+        where: { id },
       });
 
-      if (!patient) {
+      if (!patient || patient.status !== 'active') {
         return null;
       }
 
@@ -194,11 +196,11 @@ export class AuthGuard implements CanActivate {
     }
 
     const user = await this.usersRepository.findOne({
-      select: { id: true, email: true, role: true },
-      where: { id: entityId },
+      select: { id: true, email: true, role: true, status: true },
+      where: { id },
     });
 
-    if (!user) {
+    if (!user || user.status !== 'active') {
       return null;
     }
 

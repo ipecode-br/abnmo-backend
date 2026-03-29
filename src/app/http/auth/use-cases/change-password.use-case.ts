@@ -54,7 +54,9 @@ export class ChangePasswordUseCase {
     }
 
     if (!entity.password) {
-      this.logger.warn('Change password failed: Entity does not have password');
+      this.logger.error(
+        'Change password failed: Entity does not have password',
+      );
       throw new BadRequestException('Usuário não encontrado.');
     }
 

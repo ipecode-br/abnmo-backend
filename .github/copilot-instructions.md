@@ -510,3 +510,7 @@ Remember: Clear writing is clear thinking. If you can't write it simply, you don
 - List secondary changes as bullet points, ordered by importance
 - If multiple files are changed, only commit the files you explicitly staged (never include unrelated changes)
 - Apply the Zinsser brevity principles: remove unnecessary words, use active voice, and write clearly
+
+## Linting and type checking
+
+After every task, run `npm run lint:eslint:check` to verify ESLint and TypeScript pass before presenting results.

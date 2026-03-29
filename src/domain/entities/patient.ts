@@ -42,7 +42,7 @@ export class Patient implements PatientSchema {
   @Column({ type: 'varchar', length: 64, nullable: true })
   password: string | null;
 
-  @Column({ type: 'varchar', nullable: true })
+  @Column({ type: 'varchar', length: 2048, nullable: true })
   avatarUrl: string | null;
 
   @Column({ type: 'enum', enum: PATIENT_STATUSES, default: 'pending' })

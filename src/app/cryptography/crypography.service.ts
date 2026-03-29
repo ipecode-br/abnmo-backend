@@ -37,7 +37,7 @@ export class CryptographyService {
       domain: `.${cookieDomain}`,
       httpOnly: true,
       path: '/',
-      sameSite: 'lax',
+      sameSite: 'strict',
       secure: true,
       signed: true,
     };

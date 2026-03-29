@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -13,6 +14,7 @@ export class Token implements AuthToken {
   @PrimaryGeneratedColumn({ type: 'integer' })
   id: number;
 
+  @Index()
   @Column({ type: 'uuid', nullable: true })
   entityId: string | null;
 
@@ -25,7 +27,7 @@ export class Token implements AuthToken {
   @Column({ type: 'enum', enum: AUTH_TOKENS })
   type: AuthTokenType;
 
-  @CreateDateColumn({ type: 'datetime', nullable: true })
+  @Column({ type: 'datetime', nullable: true })
   expiresAt: Date | null;
 
   @CreateDateColumn({ type: 'datetime' })

@@ -20,6 +20,10 @@ export const typeOrmConfig = (): TypeOrmModuleOptions => {
     synchronize: process.env.NODE_ENV !== 'production',
     logging: process.env.NODE_ENV === 'development',
     namingStrategy: new SnakeNamingStrategy(),
+    ssl:
+      process.env.APP_ENVIRONMENT === 'lambda'
+        ? { rejectUnauthorized: true }
+        : undefined,
     extra: {
       connectionLimit: 10,
       connectTimeout: 10000,
