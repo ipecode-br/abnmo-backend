@@ -13,6 +13,7 @@ import { EnvService } from '@/env/env.service';
 import { DatabaseModule } from './database/database.module';
 import { AppointmentsModule } from './http/appointments/appointments.module';
 import { AuthModule } from './http/auth/auth.module';
+import { NotificationsModule } from './http/notifications/notifications.module';
 import { PatientRequirementsModule } from './http/patient-requirements/patient-requirements.module';
 import { PatientSupportsModule } from './http/patient-supports/patient-supports.module';
 import { PatientsModule } from './http/patients/patients.module';
@@ -61,6 +62,7 @@ import { UsersModule } from './http/users/users.module';
     StatisticsModule,
     PatientRequirementsModule,
     PatientSupportsModule,
+    NotificationsModule,
   ],
   providers: [HttpExceptionFilter],
 })

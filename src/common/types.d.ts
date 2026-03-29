@@ -35,6 +35,11 @@ type PatientsEvent = 'create_patient' | 'deactivate_patient' | 'update_patient';
 
 type ReferralsEvent = 'cancel_referral' | 'create_referral' | 'update_referral';
 
+type NotificationsEvent =
+  | 'create_notification'
+  | 'mark_notification_as_read'
+  | 'mark_all_notifications_as_read';
+
 type UsersEvent =
   | 'activate_user'
   | 'cancel_user_invite'
@@ -45,6 +50,7 @@ type UsersEvent =
 export type ContextEvent =
   | AppointmentsEvent
   | AuthEvent
+  | NotificationsEvent
   | PatientRequirementsEvent
   | PatientSupportsEvent
   | PatientsEvent
