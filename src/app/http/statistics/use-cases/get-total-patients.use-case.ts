@@ -12,7 +12,7 @@ import {
 import { Patient } from '@/domain/entities/patient';
 import type { PatientStatus } from '@/domain/enums/patients';
 import type { QueryPeriod } from '@/domain/enums/queries';
-import { UtilsService } from '@/utils/utils.service';
+import { getDateRangeForPeriod } from '@/utils/get-date-range-for-period';
 
 interface GetTotalPatientsUseCaseInput {
   status?: PatientStatus;
@@ -26,7 +26,6 @@ export class GetTotalPatientsUseCase {
   constructor(
     @InjectRepository(Patient)
     private readonly patientsRepository: Repository<Patient>,
-    private readonly utilsService: UtilsService,
   ) {}
 
   async execute({
@@ -40,7 +39,7 @@ export class GetTotalPatientsUseCase {
     };
 
     if (period) {
-      const dateRange = this.utilsService.getDateRangeForPeriod(period);
+      const dateRange = getDateRangeForPeriod(period);
       where.createdAt = Between(dateRange.startDate, dateRange.endDate);
     }
 

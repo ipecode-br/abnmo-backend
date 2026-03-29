@@ -23,7 +23,6 @@ import type {
   AccessTokenPayload,
   RefreshTokenPayload,
 } from '@/domain/schemas/tokens';
-import { UtilsService } from '@/utils/utils.service';
 
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 
@@ -43,7 +42,6 @@ export class AuthGuard implements CanActivate {
     private readonly tokensRepository: Repository<Token>,
     private readonly cryptographyService: CryptographyService,
     private readonly createTokenUseCase: CreateTokenUseCase,
-    private readonly utilsService: UtilsService,
     private readonly reflector: Reflector,
     private readonly ctx: ContextService,
   ) {}
@@ -79,7 +77,10 @@ export class AuthGuard implements CanActivate {
         this.ctx.setUser(user);
         return true;
       } catch (error) {
-        this.utilsService.deleteCookie(response, COOKIES_MAPPING.accessToken);
+        this.cryptographyService.deleteCookie(
+          response,
+          COOKIES_MAPPING.accessToken,
+        );
 
         if (error instanceof UnauthorizedException) {
           throw error;
@@ -119,8 +120,14 @@ export class AuthGuard implements CanActivate {
       if (storedRefreshToken.expiresAt < new Date()) {
         await this.tokensRepository.delete({ entityId: user.id });
 
-        this.utilsService.deleteCookie(response, COOKIES_MAPPING.accessToken);
-        this.utilsService.deleteCookie(response, COOKIES_MAPPING.refreshToken);
+        this.cryptographyService.deleteCookie(
+          response,
+          COOKIES_MAPPING.accessToken,
+        );
+        this.cryptographyService.deleteCookie(
+          response,
+          COOKIES_MAPPING.refreshToken,
+        );
 
         throw new UnauthorizedException('Token de atualização expirado.');
       }
@@ -131,7 +138,7 @@ export class AuthGuard implements CanActivate {
           payload: { sub: user.id, role: user.role },
         });
 
-      this.utilsService.setCookie(response, {
+      this.cryptographyService.setCookie(response, {
         name: COOKIES_MAPPING.accessToken,
         value: newAccessToken,
         maxAge,
@@ -142,8 +149,14 @@ export class AuthGuard implements CanActivate {
       this.ctx.setUser(user);
       return true;
     } catch (error) {
-      this.utilsService.deleteCookie(response, COOKIES_MAPPING.accessToken);
-      this.utilsService.deleteCookie(response, COOKIES_MAPPING.refreshToken);
+      this.cryptographyService.deleteCookie(
+        response,
+        COOKIES_MAPPING.accessToken,
+      );
+      this.cryptographyService.deleteCookie(
+        response,
+        COOKIES_MAPPING.refreshToken,
+      );
 
       if (error instanceof UnauthorizedException) {
         throw error;

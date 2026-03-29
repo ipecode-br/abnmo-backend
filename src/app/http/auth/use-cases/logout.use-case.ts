@@ -8,7 +8,6 @@ import { Logger } from '@/common/log/logger.decorator';
 import { AppLogger } from '@/common/log/logger.service';
 import { COOKIES_MAPPING } from '@/domain/cookies';
 import { Token } from '@/domain/entities/token';
-import { UtilsService } from '@/utils/utils.service';
 
 interface LogoutUseCaseInput {
   refreshToken?: string;
@@ -22,14 +21,16 @@ export class LogoutUseCase {
     @InjectRepository(Token)
     private readonly tokensRepository: Repository<Token>,
     private readonly cryptographyService: CryptographyService,
-    private readonly utilsService: UtilsService,
     private readonly logger: AppLogger,
   ) {}
 
   async execute({ response, refreshToken }: LogoutUseCaseInput): Promise<void> {
     this.logger.setEvent('logout');
 
-    this.utilsService.deleteCookie(response, COOKIES_MAPPING.accessToken);
+    this.cryptographyService.deleteCookie(
+      response,
+      COOKIES_MAPPING.accessToken,
+    );
 
     if (!refreshToken) {
       return;
@@ -37,7 +38,10 @@ export class LogoutUseCase {
 
     await this.tokensRepository.delete({ token: refreshToken });
 
-    this.utilsService.deleteCookie(response, COOKIES_MAPPING.refreshToken);
+    this.cryptographyService.deleteCookie(
+      response,
+      COOKIES_MAPPING.refreshToken,
+    );
 
     this.logger.log('User logged out');
   }

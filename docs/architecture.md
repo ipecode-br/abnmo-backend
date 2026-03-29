@@ -52,7 +52,7 @@ src/
 │   ├── enums/                     # Constantes e tipos
 │   └── schemas/                   # Schemas Zod
 ├── env/                           # Validação e acesso a variáveis de ambiente
-└── utils/                         # UtilsService (cookies, datas)
+└── utils/                         # Utilitários funcionais (sem DI)
 ```
 
 ## Padrão arquitetural
@@ -121,9 +121,8 @@ Alguns módulos não são features HTTP, mas fornecem serviços internos reutili
 
 | Módulo | Propósito | Como importar |
 |---|---|---|
-| `CryptographyModule` | Hash (bcrypt) e criação/verificação de JWT | Importar explicitamente no módulo que precisar |
+| `CryptographyModule` | Hash (bcrypt), criação/verificação de JWT e manipulação de cookies | Importar explicitamente no módulo que precisar |
 | `MailModule` | Envio de e-mails (SES/Resend) | Importar explicitamente no módulo que precisar |
-| `UtilsModule` | Cookies e cálculo de períodos de data | Importar explicitamente no módulo que precisar |
 | `LogModule` | `AppLogger` e `ContextService` | Global — não precisa importar |
 | `EnvModule` | Acesso tipado a variáveis de ambiente | Importar explicitamente quando necessário |
 

@@ -108,9 +108,8 @@ export class UsersModule {}
 
 | Módulo compartilhado | Quando importar |
 |---|---|
-| `CryptographyModule` | Quando o módulo precisar criar/verificar hashes ou tokens JWT |
+| `CryptographyModule` | Quando o módulo precisar criar/verificar hashes, tokens JWT ou manipular cookies |
 | `MailModule` | Quando o módulo precisar enviar e-mails |
-| `UtilsModule` | Quando o módulo precisar manipular cookies ou calcular períodos de data |
 | `EnvModule` | Quando o módulo precisar de acesso a variáveis de ambiente |
 
 > `LogModule` é global e não precisa ser importado.

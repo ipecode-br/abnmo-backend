@@ -11,7 +11,6 @@ import { COOKIES_MAPPING } from '@/domain/cookies';
 import { Token } from '@/domain/entities/token';
 import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
 import type { RefreshTokenPayload } from '@/domain/schemas/tokens';
-import { UtilsService } from '@/utils/utils.service';
 
 interface RefreshTokenUseCaseInput {
   refreshToken?: string;
@@ -26,7 +25,6 @@ export class RefreshTokenUseCase {
     private readonly tokensRepository: Repository<Token>,
     private readonly createTokenUseCase: CreateTokenUseCase,
     private readonly cryptographyService: CryptographyService,
-    private readonly utilsService: UtilsService,
     private readonly logger: AppLogger,
   ) {}
 
@@ -63,7 +61,7 @@ export class RefreshTokenUseCase {
         payload: { sub: payload.sub, role: payload.role },
       });
 
-    this.utilsService.setCookie(response, {
+    this.cryptographyService.setCookie(response, {
       name: COOKIES_MAPPING.accessToken,
       maxAge: accessTokenMaxAge,
       value: accessToken,

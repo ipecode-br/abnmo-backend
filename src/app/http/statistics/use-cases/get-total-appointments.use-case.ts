@@ -13,7 +13,7 @@ import type { AppointmentStatus } from '@/domain/enums/appointments';
 import type { PatientCondition } from '@/domain/enums/patients';
 import type { QueryPeriod } from '@/domain/enums/queries';
 import type { SpecialtyCategory } from '@/domain/enums/shared';
-import { UtilsService } from '@/utils/utils.service';
+import { getDateRangeForPeriod } from '@/utils/get-date-range-for-period';
 
 interface GetTotalAppointmentsUseCaseInput {
   patientId?: string;
@@ -30,7 +30,6 @@ export class GetTotalAppointmentsUseCase {
   constructor(
     @InjectRepository(Appointment)
     private readonly appointmentsRepository: Repository<Appointment>,
-    private readonly utilsService: UtilsService,
   ) {}
 
   async execute({
@@ -45,7 +44,7 @@ export class GetTotalAppointmentsUseCase {
     const where: FindOptionsWhere<Appointment> = {};
 
     if (period) {
-      const dateRange = this.utilsService.getDateRangeForPeriod(period);
+      const dateRange = getDateRangeForPeriod(period);
       where.date = Between(dateRange.startDate, dateRange.endDate);
     }
 

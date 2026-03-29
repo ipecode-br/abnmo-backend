@@ -18,7 +18,6 @@ import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { AUTH_TOKENS_MAPPING, type AuthTokenRole } from '@/domain/enums/tokens';
 import type { ResetPasswordPayload } from '@/domain/schemas/tokens';
-import { UtilsService } from '@/utils/utils.service';
 
 interface ResetPasswordUseCaseInput {
   password: string;
@@ -38,7 +37,6 @@ export class ResetPasswordUseCase {
     private readonly tokensRepository: Repository<Token>,
     private readonly createTokenUseCase: CreateTokenUseCase,
     private readonly cryptographyService: CryptographyService,
-    private readonly utilsService: UtilsService,
     private readonly mailService: MailService,
     private readonly logger: AppLogger,
   ) {}
@@ -118,7 +116,7 @@ export class ResetPasswordUseCase {
         payload: { sub: entity.id, role },
       });
 
-    this.utilsService.setCookie(response, {
+    this.cryptographyService.setCookie(response, {
       name: COOKIES_MAPPING.accessToken,
       value: accessToken,
       maxAge,

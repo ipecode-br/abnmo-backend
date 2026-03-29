@@ -19,7 +19,6 @@ import { User } from '@/domain/entities/user';
 import type { SpecialtyCategory } from '@/domain/enums/shared';
 import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
 import type { InviteUserPayload } from '@/domain/schemas/tokens';
-import { UtilsService } from '@/utils/utils.service';
 
 interface RegisterUserUseCaseInput {
   name: string;
@@ -42,7 +41,6 @@ export class RegisterUserUseCase {
     private readonly patientsRepository: Repository<Patient>,
     private readonly cryptographyService: CryptographyService,
     private readonly createTokenUseCase: CreateTokenUseCase,
-    private readonly utilsService: UtilsService,
     private readonly logger: AppLogger,
   ) {}
 
@@ -117,7 +115,7 @@ export class RegisterUserUseCase {
         payload: { sub: user.id, role: user.role },
       });
 
-    this.utilsService.setCookie(response, {
+    this.cryptographyService.setCookie(response, {
       name: COOKIES_MAPPING.accessToken,
       value: accessToken,
       maxAge,

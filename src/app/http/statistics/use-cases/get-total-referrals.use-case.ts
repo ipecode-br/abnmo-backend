@@ -13,7 +13,7 @@ import type { PatientCondition } from '@/domain/enums/patients';
 import type { QueryPeriod } from '@/domain/enums/queries';
 import type { ReferralStatus } from '@/domain/enums/referrals';
 import type { SpecialtyCategory } from '@/domain/enums/shared';
-import { UtilsService } from '@/utils/utils.service';
+import { getDateRangeForPeriod } from '@/utils/get-date-range-for-period';
 
 interface GetTotalReferralsUseCaseInput {
   patientId?: string;
@@ -30,7 +30,6 @@ export class GetTotalReferralsUseCase {
   constructor(
     @InjectRepository(Referral)
     private readonly referralsRepository: Repository<Referral>,
-    private readonly utilsService: UtilsService,
   ) {}
 
   async execute({
@@ -45,7 +44,7 @@ export class GetTotalReferralsUseCase {
     const where: FindOptionsWhere<Referral> = {};
 
     if (period) {
-      const dateRange = this.utilsService.getDateRangeForPeriod(period);
+      const dateRange = getDateRangeForPeriod(period);
       where.date = Between(dateRange.startDate, dateRange.endDate);
     }
 

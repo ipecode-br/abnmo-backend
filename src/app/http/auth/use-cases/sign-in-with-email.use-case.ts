@@ -17,7 +17,6 @@ import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { AUTH_TOKENS_MAPPING, type AuthTokenRole } from '@/domain/enums/tokens';
 import type { RefreshToken } from '@/domain/schemas/tokens';
-import { UtilsService } from '@/utils/utils.service';
 
 interface SignInWithEmailUseCaseInput {
   email: string;
@@ -42,7 +41,6 @@ export class SignInWithEmailUseCase {
     private readonly tokensRepository: Repository<Token>,
     private readonly createTokenUseCase: CreateTokenUseCase,
     private readonly cryptographyService: CryptographyService,
-    private readonly utilsService: UtilsService,
     private readonly logger: AppLogger,
   ) {}
 
@@ -109,7 +107,7 @@ export class SignInWithEmailUseCase {
         payload: { sub: entity.id, role },
       });
 
-    this.utilsService.setCookie(response, {
+    this.cryptographyService.setCookie(response, {
       name: COOKIES_MAPPING.accessToken,
       maxAge: accessTokenMaxAge,
       value: accessToken,
@@ -132,7 +130,7 @@ export class SignInWithEmailUseCase {
         token: refreshToken,
       });
 
-      this.utilsService.setCookie(response, {
+      this.cryptographyService.setCookie(response, {
         name: COOKIES_MAPPING.refreshToken,
         maxAge: refreshTokenMaxAge,
         value: refreshToken,

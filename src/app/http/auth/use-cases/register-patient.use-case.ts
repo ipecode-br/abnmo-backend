@@ -10,7 +10,6 @@ import { AppLogger } from '@/common/log/logger.service';
 import { COOKIES_MAPPING } from '@/domain/cookies';
 import { Patient } from '@/domain/entities/patient';
 import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
-import { UtilsService } from '@/utils/utils.service';
 
 interface RegisterPatientUseCaseInput {
   name: string;
@@ -29,7 +28,6 @@ export class RegisterPatientUseCase {
     private readonly patientsRepository: Repository<Patient>,
     private readonly createTokenUseCase: CreateTokenUseCase,
     private readonly cryptographyService: CryptographyService,
-    private readonly utilsService: UtilsService,
     private readonly logger: AppLogger,
   ) {}
 
@@ -65,7 +63,7 @@ export class RegisterPatientUseCase {
       payload: { sub: patient.id, role: 'patient' },
     });
 
-    this.utilsService.setCookie(response, {
+    this.cryptographyService.setCookie(response, {
       name: COOKIES_MAPPING.accessToken,
       value: token,
       maxAge,
