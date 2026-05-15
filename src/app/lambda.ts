@@ -1,16 +1,18 @@
 import 'reflect-metadata';
 
+import type { RequestListener } from 'node:http';
+
 import { ExpressAdapter } from '@nestjs/platform-express';
 import serverlessExpress from '@vendia/serverless-express';
-import { Callback, Context, Handler } from 'aws-lambda';
+import { APIGatewayProxyEvent, Callback, Context } from 'aws-lambda';
 import express from 'express';
 
 import { createNestApp } from './app';
 
-let cachedHandler: Handler;
+let cachedHandler: ReturnType<typeof serverlessExpress>;
 
-export const handler: Handler = async (
-  event,
+export const handler = async (
+  event: APIGatewayProxyEvent,
   context: Context,
   callback: Callback,
 ) => {
@@ -21,9 +23,10 @@ export const handler: Handler = async (
 
     await app.init();
 
-    cachedHandler = serverlessExpress({ app: expressApp });
+    cachedHandler = serverlessExpress({
+      app: expressApp as unknown as RequestListener,
+    });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return cachedHandler(event, context, callback);
 };

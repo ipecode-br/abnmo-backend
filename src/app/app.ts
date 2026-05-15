@@ -1,20 +1,16 @@
 import { NestFactory } from '@nestjs/core';
 import type { ExpressAdapter } from '@nestjs/platform-express';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { DocumentBuilder, OpenAPIObject, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import { Logger } from 'nestjs-pino';
-import { patchNestJsSwagger } from 'nestjs-zod';
+import { cleanupOpenApiDoc } from 'nestjs-zod';
 
-import { HttpExceptionFilter } from '@/common/http.exception.filter';
 import { EnvService } from '@/env/env.service';
 
-import { GlobalZodValidationPipe } from '../common/zod.validation.pipe';
 import { AppModule } from './app.module';
 
 export async function createNestApp(adapter?: ExpressAdapter) {
-  patchNestJsSwagger();
-
   const app = adapter
     ? await NestFactory.create<NestExpressApplication>(AppModule, adapter, {
         logger: false,
@@ -22,9 +18,6 @@ export async function createNestApp(adapter?: ExpressAdapter) {
     : await NestFactory.create<NestExpressApplication>(AppModule, {
         logger: false,
       });
-
-  app.useGlobalPipes(new GlobalZodValidationPipe());
-  app.useGlobalFilters(app.get(HttpExceptionFilter));
 
   const envService = app.get(EnvService);
 
@@ -45,8 +38,14 @@ export async function createNestApp(adapter?: ExpressAdapter) {
     .setVersion('0.0.1')
     .build();
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('/swagger', app, document, {
+  const cleanupSwagger = cleanupOpenApiDoc as unknown as (
+    doc: OpenAPIObject,
+  ) => OpenAPIObject;
+
+  const swaggerDocument = SwaggerModule.createDocument(app, config);
+  const cleanedDocument = cleanupSwagger(swaggerDocument);
+
+  SwaggerModule.setup('/swagger', app, cleanedDocument, {
     swaggerOptions: {
       withCredentials: true,
       persistAuthorization: true,

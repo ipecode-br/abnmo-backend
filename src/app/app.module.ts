@@ -1,11 +1,13 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_FILTER, APP_PIPE } from '@nestjs/core';
 import { LoggerModule } from 'nestjs-pino';
 
 import { ContextMiddleware } from '@/common/context/context.middleware';
 import { HttpExceptionFilter } from '@/common/http.exception.filter';
 import { LogModule } from '@/common/log/log.module';
 import { MaintenanceMiddleware } from '@/common/maintenance.middleware';
+import { GlobalZodValidationPipe } from '@/common/zod.validation.pipe';
 import { envSchema } from '@/env/env';
 import { EnvModule } from '@/env/env.module';
 import { EnvService } from '@/env/env.service';
@@ -62,7 +64,10 @@ import { UsersModule } from './http/users/users.module';
     PatientRequirementsModule,
     PatientSupportsModule,
   ],
-  providers: [HttpExceptionFilter],
+  providers: [
+    { provide: APP_PIPE, useClass: GlobalZodValidationPipe },
+    { provide: APP_FILTER, useClass: HttpExceptionFilter },
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
