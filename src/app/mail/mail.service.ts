@@ -1,18 +1,23 @@
 import { SendEmailCommand, SESClient } from '@aws-sdk/client-ses';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Resend } from 'resend';
 
+import { Log } from '@/common/log/log.decorator';
+import { LogService } from '@/common/log/log.service';
 import { EnvService } from '@/env/env.service';
 
+@Log()
 @Injectable()
 export class MailService {
-  private readonly logger = new Logger(MailService.name);
   private readonly isEnable: boolean;
   private readonly emailProvider: 'ses' | 'resend';
   private readonly sesClient: SESClient;
   private readonly resendClient: Resend;
 
-  constructor(private envService: EnvService) {
+  constructor(
+    private readonly envService: EnvService,
+    private readonly logger: LogService,
+  ) {
     this.isEnable = this.envService.get('ENABLE_EMAILS');
     this.emailProvider = this.envService.get('EMAIL_PROVIDER');
     this.resendClient = new Resend(this.envService.get('RESEND_KEY'));
@@ -38,9 +43,10 @@ export class MailService {
   }) {
     if (!this.isEnable) {
       this.logger.log(
-        { to, subject },
         'Send e-mail skipped ("ENABLE_EMAILS" is set to "false")',
+        { to, subject },
       );
+
       return true;
     }
 
@@ -55,23 +61,27 @@ export class MailService {
         });
 
         if (error) {
-          this.logger.error(
-            { provider: this.emailProvider, to, subject, error },
-            'Send e-mail failed',
-          );
+          this.logger.error('Send e-mail failed', {
+            provider: this.emailProvider,
+            to,
+            subject,
+            error,
+          });
           return false;
         }
 
-        this.logger.log(
-          { provider: this.emailProvider, to, subject, messageId: data.id },
-          'E-mail sent successfully',
-        );
+        this.logger.log('E-mail sent successfully', {
+          provider: this.emailProvider,
+          to,
+          subject,
+          messageId: data.id,
+        });
         return true;
       } catch (error) {
         this.logger.error(
+          'Send e-mail failed',
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           { provider: this.emailProvider, to, subject, error },
-          'Send e-mail failed',
         );
         return false;
       }
@@ -91,22 +101,19 @@ export class MailService {
 
     try {
       const result = await this.sesClient.send(sendCommand);
-      this.logger.log(
-        {
-          provider: this.emailProvider,
-          to,
-          subject,
-          messageId: result.MessageId,
-          attempts: result.$metadata.attempts,
-        },
-        'E-mail sent successfully',
-      );
+      this.logger.log('E-mail sent successfully', {
+        provider: this.emailProvider,
+        to,
+        subject,
+        messageId: result.MessageId,
+        attempts: result.$metadata.attempts,
+      });
       return true;
     } catch (error) {
       this.logger.error(
+        'Send e-mail failed',
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         { provider: this.emailProvider, to, subject, error },
-        'Send e-mail failed',
       );
       return false;
     }
