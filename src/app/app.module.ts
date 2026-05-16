@@ -4,10 +4,10 @@ import { APP_FILTER, APP_PIPE } from '@nestjs/core';
 import { LoggerModule } from 'nestjs-pino';
 
 import { ContextMiddleware } from '@/common/context/context.middleware';
-import { HttpExceptionFilter } from '@/common/http.exception.filter';
+import { HttpExceptionFilter } from '@/common/http-exception.filter';
 import { LogModule } from '@/common/log/log.module';
 import { MaintenanceMiddleware } from '@/common/maintenance.middleware';
-import { GlobalZodValidationPipe } from '@/common/zod.validation.pipe';
+import { ZodValidationPipe } from '@/common/zod-validation.pipe';
 import { envSchema } from '@/env/env';
 import { EnvModule } from '@/env/env.module';
 import { EnvService } from '@/env/env.service';
@@ -21,6 +21,11 @@ import { PatientsModule } from './http/patients/patients.module';
 import { ReferralsModule } from './http/referrals/referrals.module';
 import { StatisticsModule } from './http/statistics/statistics.module';
 import { UsersModule } from './http/users/users.module';
+
+/**
+ * Root application module with global pipes and filters for validation and error handling.
+ * Uses nestjs-zod for Zod-based validation: https://github.com/BenLorantfy/nestjs-zod
+ */
 
 @Module({
   imports: [
@@ -65,7 +70,7 @@ import { UsersModule } from './http/users/users.module';
     PatientSupportsModule,
   ],
   providers: [
-    { provide: APP_PIPE, useClass: GlobalZodValidationPipe },
+    { provide: APP_PIPE, useClass: ZodValidationPipe },
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
   ],
 })

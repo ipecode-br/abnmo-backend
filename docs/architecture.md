@@ -42,9 +42,9 @@ src/
 │   ├── guards/                    # AuthGuard, RolesGuard
 │   ├── log/                       # AppLogger, @Logger, LogModule
 │   ├── dtos.ts                    # BaseResponse
-│   ├── http.exception.filter.ts   # Filtro global de exceções
+│   ├── http-exception.filter.ts   # Filtro global de exceções
 │   ├── types.d.ts                 # AuthUser, ContextEvent
-│   └── zod.validation.pipe.ts     # GlobalZodValidationPipe
+│   └── zod-validation.pipe.ts     # GlobalZodValidationPipe
 ├── config/                        # Configurações TypeORM / database
 ├── constants/                     # Estados brasileiros, regex
 ├── domain/                        # Camada de domínio pura

@@ -5,8 +5,8 @@ import * as mysql from 'mysql2/promise';
 import { DataSource } from 'typeorm';
 
 import { AppModule } from '@/app/app.module';
-import { HttpExceptionFilter } from '@/common/http.exception.filter';
-import { GlobalZodValidationPipe } from '@/common/zod.validation.pipe';
+import { HttpExceptionFilter } from '@/common/http-exception.filter';
+import { ZodValidationPipe } from '@/common/zod-validation.pipe';
 import { EnvService } from '@/env/env.service';
 
 export class TestApp {
@@ -70,7 +70,7 @@ export class TestApp {
       // Configure app with the same middlewares as main app
       const envService = module.get(EnvService);
       app.use(cookieParser(envService.get('COOKIE_SECRET')));
-      app.useGlobalPipes(new GlobalZodValidationPipe());
+      app.useGlobalPipes(new ZodValidationPipe());
       app.useGlobalFilters(app.get(HttpExceptionFilter));
 
       // Wait for the app to initialize
