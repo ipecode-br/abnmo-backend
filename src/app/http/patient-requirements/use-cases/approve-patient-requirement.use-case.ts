@@ -6,8 +6,8 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
-import { Logger } from '@/common/log/logger.decorator';
-import { AppLogger } from '@/common/log/logger.service';
+import { Log } from '@/common/log/log.decorator';
+import { LogService } from '@/common/log/log.service';
 import type { AuthUser } from '@/common/types';
 import { PatientRequirement } from '@/domain/entities/patient-requirement';
 
@@ -16,13 +16,13 @@ interface ApprovePatientRequirementUseCaseInput {
   user: AuthUser;
 }
 
-@Logger()
+@Log()
 @Injectable()
 export class ApprovePatientRequirementUseCase {
   constructor(
     @InjectRepository(PatientRequirement)
     private readonly patientRequirementsRepository: Repository<PatientRequirement>,
-    private readonly logger: AppLogger,
+    private readonly logger: LogService,
   ) {}
 
   async execute({

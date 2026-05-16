@@ -3,8 +3,8 @@ import 'reflect-metadata';
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 
 import type { ContextEvent } from '../types';
-import { LOGGER_EVENT_KEY } from './logger.decorator';
-import { AppLogger } from './logger.service';
+import { LOGGER_EVENT_KEY } from './log.decorator';
+import { LogService } from './log.service';
 
 /**
  * Guard that applies @Logger event context early in the pipeline.
@@ -12,8 +12,8 @@ import { AppLogger } from './logger.service';
  * Runs before pipes to ensure Zod validation errors have context/event set.
  */
 @Injectable()
-export class LoggerGuard implements CanActivate {
-  constructor(private readonly logger: AppLogger) {}
+export class LogGuard implements CanActivate {
+  constructor(private readonly logger: LogService) {}
 
   canActivate(context: ExecutionContext): boolean {
     const handler = context.getHandler();

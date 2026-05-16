@@ -6,8 +6,8 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
-import { Logger } from '@/common/log/logger.decorator';
-import { AppLogger } from '@/common/log/logger.service';
+import { Log } from '@/common/log/log.decorator';
+import { LogService } from '@/common/log/log.service';
 import type { AuthUser } from '@/common/types';
 import { Patient } from '@/domain/entities/patient';
 import { Referral } from '@/domain/entities/referral';
@@ -25,7 +25,7 @@ interface CreateReferralUseCaseInput {
   category?: SpecialtyCategory;
 }
 
-@Logger()
+@Log()
 @Injectable()
 export class CreateReferralUseCase {
   constructor(
@@ -35,7 +35,7 @@ export class CreateReferralUseCase {
     private readonly referralsRepository: Repository<Referral>,
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
-    private readonly logger: AppLogger,
+    private readonly logger: LogService,
   ) {}
 
   async execute({

@@ -9,8 +9,8 @@ import { Repository } from 'typeorm';
 
 import { CryptographyService } from '@/app/cryptography/crypography.service';
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
-import { Logger } from '@/common/log/logger.decorator';
-import { AppLogger } from '@/common/log/logger.service';
+import { Log } from '@/common/log/log.decorator';
+import { LogService } from '@/common/log/log.service';
 import { COOKIES_MAPPING } from '@/domain/cookies';
 import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
@@ -29,8 +29,8 @@ interface SignInWithEmailUseCaseOutput {
   accountType: 'patient' | 'user';
 }
 
-@Logger()
 @Injectable()
+@Log()
 export class SignInWithEmailUseCase {
   constructor(
     @InjectRepository(User)
@@ -41,7 +41,7 @@ export class SignInWithEmailUseCase {
     private readonly tokensRepository: Repository<Token>,
     private readonly createTokenUseCase: CreateTokenUseCase,
     private readonly cryptographyService: CryptographyService,
-    private readonly logger: AppLogger,
+    private readonly logger: LogService,
   ) {}
 
   async execute({
@@ -50,8 +50,6 @@ export class SignInWithEmailUseCase {
     keepLoggedIn,
     response,
   }: SignInWithEmailUseCaseInput): Promise<SignInWithEmailUseCaseOutput> {
-    this.logger.setEvent('sign_in');
-
     let entity: User | Patient | null = null;
     let role: AuthTokenRole = 'patient';
 

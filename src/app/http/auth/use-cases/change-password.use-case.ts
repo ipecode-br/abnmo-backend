@@ -8,8 +8,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { CryptographyService } from '@/app/cryptography/crypography.service';
-import { Logger } from '@/common/log/logger.decorator';
-import { AppLogger } from '@/common/log/logger.service';
+import { Log } from '@/common/log/log.decorator';
+import { LogService } from '@/common/log/log.service';
 import type { AuthUser } from '@/common/types';
 import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
@@ -21,7 +21,7 @@ interface ChangePasswordUseCaseInput {
   newPassword: string;
 }
 
-@Logger()
+@Log()
 @Injectable()
 export class ChangePasswordUseCase {
   constructor(
@@ -32,7 +32,7 @@ export class ChangePasswordUseCase {
     @InjectRepository(Token)
     private readonly tokensRepository: Repository<Token>,
     private readonly cryptographyService: CryptographyService,
-    private readonly logger: AppLogger,
+    private readonly logger: LogService,
   ) {}
 
   async execute({

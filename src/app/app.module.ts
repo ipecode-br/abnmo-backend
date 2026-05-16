@@ -5,8 +5,8 @@ import { LoggerModule } from 'nestjs-pino';
 
 import { ContextMiddleware } from '@/common/context/context.middleware';
 import { HttpExceptionFilter } from '@/common/http-exception.filter';
+import { LogGuard } from '@/common/log/log.guard';
 import { LogModule } from '@/common/log/log.module';
-import { LoggerGuard } from '@/common/log/logger.guard';
 import { MaintenanceMiddleware } from '@/common/maintenance.middleware';
 import { ZodValidationPipe } from '@/common/zod-validation.pipe';
 import { envSchema } from '@/env/env';
@@ -71,7 +71,7 @@ import { UsersModule } from './http/users/users.module';
     PatientSupportsModule,
   ],
   providers: [
-    { provide: APP_GUARD, useClass: LoggerGuard },
+    { provide: APP_GUARD, useClass: LogGuard },
     { provide: APP_PIPE, useClass: ZodValidationPipe },
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
   ],

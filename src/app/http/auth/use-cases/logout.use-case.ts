@@ -4,8 +4,8 @@ import type { Response } from 'express';
 import { Repository } from 'typeorm';
 
 import { CryptographyService } from '@/app/cryptography/crypography.service';
-import { Logger } from '@/common/log/logger.decorator';
-import { AppLogger } from '@/common/log/logger.service';
+import { Log } from '@/common/log/log.decorator';
+import { LogService } from '@/common/log/log.service';
 import { COOKIES_MAPPING } from '@/domain/cookies';
 import { Token } from '@/domain/entities/token';
 
@@ -14,14 +14,14 @@ interface LogoutUseCaseInput {
   response: Response;
 }
 
-@Logger()
+@Log()
 @Injectable()
 export class LogoutUseCase {
   constructor(
     @InjectRepository(Token)
     private readonly tokensRepository: Repository<Token>,
     private readonly cryptographyService: CryptographyService,
-    private readonly logger: AppLogger,
+    private readonly logger: LogService,
   ) {}
 
   async execute({ response, refreshToken }: LogoutUseCaseInput): Promise<void> {

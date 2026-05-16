@@ -6,21 +6,21 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
-import { Logger } from '@/common/log/logger.decorator';
-import { AppLogger } from '@/common/log/logger.service';
+import { Log } from '@/common/log/log.decorator';
+import { LogService } from '@/common/log/log.service';
 import { Patient } from '@/domain/entities/patient';
 
 interface DeactivatePatientUseCaseInput {
   id: string;
 }
 
-@Logger()
+@Log()
 @Injectable()
 export class DeactivatePatientUseCase {
   constructor(
     @InjectRepository(Patient)
     private readonly patientsRepository: Repository<Patient>,
-    private readonly logger: AppLogger,
+    private readonly logger: LogService,
   ) {}
 
   async execute({ id }: DeactivatePatientUseCaseInput): Promise<void> {

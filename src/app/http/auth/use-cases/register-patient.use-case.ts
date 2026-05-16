@@ -5,8 +5,8 @@ import { Repository } from 'typeorm';
 
 import { CryptographyService } from '@/app/cryptography/crypography.service';
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
-import { Logger } from '@/common/log/logger.decorator';
-import { AppLogger } from '@/common/log/logger.service';
+import { Log } from '@/common/log/log.decorator';
+import { LogService } from '@/common/log/log.service';
 import { COOKIES_MAPPING } from '@/domain/cookies';
 import { Patient } from '@/domain/entities/patient';
 import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
@@ -20,7 +20,7 @@ interface RegisterPatientUseCaseInput {
 
 // TODO: add all required fields to register a patient
 
-@Logger()
+@Log()
 @Injectable()
 export class RegisterPatientUseCase {
   constructor(
@@ -28,7 +28,7 @@ export class RegisterPatientUseCase {
     private readonly patientsRepository: Repository<Patient>,
     private readonly createTokenUseCase: CreateTokenUseCase,
     private readonly cryptographyService: CryptographyService,
-    private readonly logger: AppLogger,
+    private readonly logger: LogService,
   ) {}
 
   async execute({

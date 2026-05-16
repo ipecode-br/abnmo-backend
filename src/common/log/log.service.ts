@@ -5,7 +5,7 @@ import { ContextService } from '../context/context.service';
 import type { ContextEvent } from '../types';
 
 @Injectable()
-export class AppLogger {
+export class LogService {
   constructor(
     private readonly pino: PinoLogger,
     private readonly ctx: ContextService,
@@ -21,14 +21,6 @@ export class AppLogger {
 
   resetEvent() {
     this.ctx.resetEvent();
-  }
-
-  private buildPayload(extras: Record<string, any> = {}) {
-    const context = this.ctx.getContext();
-
-    if (context.extras) Object.assign(extras, context.extras);
-
-    return { event: context.event, ...extras, authUser: context.authUser };
   }
 
   info(message: string, extras?: Record<string, any>) {
@@ -57,5 +49,13 @@ export class AppLogger {
    */
   log(message: string, extras?: Record<string, any>) {
     this.info(message, extras);
+  }
+
+  private buildPayload(extras: Record<string, any> = {}) {
+    const context = this.ctx.getContext();
+
+    if (context.extras) Object.assign(extras, context.extras);
+
+    return { event: context.event, ...extras, authUser: context.authUser };
   }
 }

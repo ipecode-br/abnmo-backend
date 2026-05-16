@@ -9,7 +9,7 @@ import { Response } from 'express';
 import { ZodSerializationException, ZodValidationException } from 'nestjs-zod';
 import { ZodError } from 'zod';
 
-import { AppLogger } from '@/common/log/logger.service';
+import { LogService } from '@/common/log/log.service';
 
 type ZodFieldError = { field: string; error: string };
 
@@ -37,7 +37,7 @@ type HttpExceptionResponse = {
  */
 @Catch()
 export class HttpExceptionFilter extends BaseExceptionFilter {
-  constructor(private readonly logger: AppLogger) {
+  constructor(private readonly logger: LogService) {
     super();
   }
 

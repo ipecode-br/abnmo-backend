@@ -7,6 +7,7 @@ import { Public } from '@/common/decorators/public.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
+import { Log } from '@/common/log/log.decorator';
 import type { AuthUser } from '@/common/types';
 import { COOKIES_MAPPING } from '@/domain/cookies';
 
@@ -43,6 +44,7 @@ export class AuthController {
 
   @Public()
   @Post('login')
+  @Log('sign_in')
   @ApiOperation({ summary: 'Inicia a sessão do usuário ou paciente' })
   @ApiResponse({ type: SignInWithEmailResponse })
   async login(

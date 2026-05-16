@@ -8,8 +8,8 @@ import { DataSource, Repository } from 'typeorm';
 
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
 import { MailService } from '@/app/mail/mail.service';
-import { Logger } from '@/common/log/logger.decorator';
-import { AppLogger } from '@/common/log/logger.service';
+import { Log } from '@/common/log/log.decorator';
+import { LogService } from '@/common/log/log.service';
 import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
@@ -22,7 +22,7 @@ interface CreateUserInviteUseCaseInput {
   role: UserRole;
 }
 
-@Logger()
+@Log()
 @Injectable()
 export class CreateUserInviteUseCase {
   constructor(
@@ -36,7 +36,7 @@ export class CreateUserInviteUseCase {
     private readonly envService: EnvService,
     private readonly mailService: MailService,
     private readonly dataSource: DataSource,
-    private readonly logger: AppLogger,
+    private readonly logger: LogService,
   ) {}
 
   async execute({ email, role }: CreateUserInviteUseCaseInput): Promise<void> {

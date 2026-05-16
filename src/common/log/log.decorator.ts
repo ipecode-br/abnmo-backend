@@ -1,16 +1,16 @@
 import 'reflect-metadata';
 
 import type { ContextEvent } from '../types';
-import { AppLogger } from './logger.service';
+import { LogService } from './log.service';
 
 interface WithLogger {
-  logger?: AppLogger;
+  logger?: LogService;
   execute(...args: any[]): any;
 }
 
 export const LOGGER_EVENT_KEY = 'LOGGER_EVENT_KEY';
 
-export function Logger(eventName?: ContextEvent) {
+export function Log(eventName?: ContextEvent) {
   return (
     target: any,
     propertyKey?: string,
@@ -38,7 +38,7 @@ export function Logger(eventName?: ContextEvent) {
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     cls.prototype.execute = function (this: WithLogger, ...args: unknown[]) {
-      if (this.logger instanceof AppLogger) {
+      if (this.logger instanceof LogService) {
         this.logger.setContext(cls.name);
 
         if (eventName) {

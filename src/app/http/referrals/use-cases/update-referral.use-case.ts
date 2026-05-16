@@ -6,8 +6,8 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
-import { Logger } from '@/common/log/logger.decorator';
-import { AppLogger } from '@/common/log/logger.service';
+import { Log } from '@/common/log/log.decorator';
+import { LogService } from '@/common/log/log.service';
 import { Referral } from '@/domain/entities/referral';
 import type { PatientCondition } from '@/domain/enums/patients';
 
@@ -18,13 +18,13 @@ interface UpdateReferralUseCaseInput {
   annotation: string | null;
 }
 
-@Logger()
+@Log()
 @Injectable()
 export class UpdateReferralUseCase {
   constructor(
     @InjectRepository(Referral)
     private readonly referralsRepository: Repository<Referral>,
-    private readonly logger: AppLogger,
+    private readonly logger: LogService,
   ) {}
 
   async execute({

@@ -2,8 +2,8 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { Logger } from '@/common/log/logger.decorator';
-import { AppLogger } from '@/common/log/logger.service';
+import { Log } from '@/common/log/log.decorator';
+import { LogService } from '@/common/log/log.service';
 import { Token } from '@/domain/entities/token';
 import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
 
@@ -11,13 +11,13 @@ interface CancelUserInviteUseCaseInput {
   id: number;
 }
 
-@Logger()
+@Log()
 @Injectable()
 export class CancelUserInviteUseCase {
   constructor(
     @InjectRepository(Token)
     private readonly tokensRepository: Repository<Token>,
-    private readonly logger: AppLogger,
+    private readonly logger: LogService,
   ) {}
 
   async execute({ id }: CancelUserInviteUseCaseInput): Promise<void> {

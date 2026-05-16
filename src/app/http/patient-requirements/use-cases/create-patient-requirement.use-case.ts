@@ -2,8 +2,8 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
-import { Logger } from '@/common/log/logger.decorator';
-import { AppLogger } from '@/common/log/logger.service';
+import { Log } from '@/common/log/log.decorator';
+import { LogService } from '@/common/log/log.service';
 import type { AuthUser } from '@/common/types';
 import { Patient } from '@/domain/entities/patient';
 import { PatientRequirement } from '@/domain/entities/patient-requirement';
@@ -17,7 +17,7 @@ interface CreatePatientRequirementUseCaseInput {
   description: string | null;
 }
 
-@Logger()
+@Log()
 @Injectable()
 export class CreatePatientRequirementUseCase {
   constructor(
@@ -25,7 +25,7 @@ export class CreatePatientRequirementUseCase {
     private readonly patientsRepository: Repository<Patient>,
     @InjectRepository(PatientRequirement)
     private readonly patientRequirementsRepository: Repository<PatientRequirement>,
-    private readonly logger: AppLogger,
+    private readonly logger: LogService,
   ) {}
 
   async execute({

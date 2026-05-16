@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
-import { Logger } from '@/common/log/logger.decorator';
+import { Log } from '@/common/log/log.decorator';
 import { Patient } from '@/domain/entities/patient';
 
 interface GetPatientUseCaseInput {
@@ -13,7 +13,7 @@ interface GetPatientUseCaseOutput {
   patient: Omit<Patient, 'password'>;
 }
 
-@Logger()
+@Log()
 @Injectable()
 export class GetPatientUseCase {
   constructor(

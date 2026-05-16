@@ -6,8 +6,8 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
-import { Logger } from '@/common/log/logger.decorator';
-import { AppLogger } from '@/common/log/logger.service';
+import { Log } from '@/common/log/log.decorator';
+import { LogService } from '@/common/log/log.service';
 import type { AuthUser } from '@/common/types';
 import { Appointment } from '@/domain/entities/appointment';
 import { Patient } from '@/domain/entities/patient';
@@ -25,7 +25,7 @@ interface CreateAppointmentUseCaseInput {
   category?: SpecialtyCategory;
 }
 
-@Logger()
+@Log()
 @Injectable()
 export class CreateAppointmentUseCase {
   constructor(
@@ -35,7 +35,7 @@ export class CreateAppointmentUseCase {
     private readonly patientsRepository: Repository<Patient>,
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
-    private readonly logger: AppLogger,
+    private readonly logger: LogService,
   ) {}
 
   async execute({

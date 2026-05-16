@@ -3,8 +3,8 @@ import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 import { DataSource } from 'typeorm';
 
-import { Logger } from '@/common/log/logger.decorator';
-import { AppLogger } from '@/common/log/logger.service';
+import { Log } from '@/common/log/log.decorator';
+import { LogService } from '@/common/log/log.service';
 import type { BrazilianState } from '@/constants/brazilian-states';
 import { Patient } from '@/domain/entities/patient';
 import { PatientSupport } from '@/domain/entities/patient-support';
@@ -39,7 +39,7 @@ interface CreatePatientUseCaseInput {
   supports?: PatientSupportInput[];
 }
 
-@Logger()
+@Log()
 @Injectable()
 export class CreatePatientUseCase {
   constructor(
@@ -47,7 +47,7 @@ export class CreatePatientUseCase {
     private readonly patientsRepository: Repository<Patient>,
     @InjectDataSource()
     private readonly dataSource: DataSource,
-    private readonly logger: AppLogger,
+    private readonly logger: LogService,
   ) {}
 
   async execute({
