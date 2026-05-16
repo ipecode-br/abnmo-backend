@@ -1,3 +1,6 @@
+import 'reflect-metadata';
+
+import type { ContextEvent } from '../types';
 import { AppLogger } from './logger.service';
 
 interface WithLogger {
@@ -5,14 +8,31 @@ interface WithLogger {
   execute(...args: any[]): any;
 }
 
-export function Logger(): ClassDecorator {
-  return (target: any): any => {
+export const LOGGER_EVENT_KEY = 'LOGGER_EVENT_KEY';
+
+export function Logger(eventName?: ContextEvent) {
+  return (
+    target: any,
+    propertyKey?: string,
+    descriptor?: PropertyDescriptor,
+  ): any => {
+    // Method decorator usage (on controller methods)
+    if (descriptor && propertyKey) {
+      Reflect.defineMetadata(
+        LOGGER_EVENT_KEY,
+        eventName,
+        descriptor.value as object,
+      );
+      return descriptor;
+    }
+
+    // Class decorator usage (on classes / use-cases)
     const cls = target as { name: string; prototype: any };
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    const originalExecute = cls.prototype.execute as (...args: any[]) => any;
+    const execute = cls.prototype.execute as (...args: any[]) => any;
 
-    if (typeof originalExecute !== 'function') {
+    if (typeof execute !== 'function') {
       return target;
     }
 
@@ -20,10 +40,14 @@ export function Logger(): ClassDecorator {
     cls.prototype.execute = function (this: WithLogger, ...args: unknown[]) {
       if (this.logger instanceof AppLogger) {
         this.logger.setContext(cls.name);
+
+        if (eventName) {
+          this.logger.setEvent(eventName);
+        }
       }
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      return originalExecute.apply(this, args);
+      return execute.apply(this, args);
     };
 
     return target;
