@@ -14,8 +14,8 @@ interface LogoutUseCaseInput {
   response: Response;
 }
 
-@Log()
 @Injectable()
+@Log()
 export class LogoutUseCase {
   constructor(
     @InjectRepository(Token)
@@ -25,8 +25,6 @@ export class LogoutUseCase {
   ) {}
 
   async execute({ response, refreshToken }: LogoutUseCaseInput): Promise<void> {
-    this.logger.setEvent('logout');
-
     this.cryptographyService.deleteCookie(
       response,
       COOKIES_MAPPING.accessToken,

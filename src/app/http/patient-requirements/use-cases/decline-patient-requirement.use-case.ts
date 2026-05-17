@@ -16,8 +16,8 @@ interface DeclinePatientRequirementUseCaseInput {
   user: AuthUser;
 }
 
-@Log()
 @Injectable()
+@Log()
 export class DeclinePatientRequirementUseCase {
   constructor(
     @InjectRepository(PatientRequirement)
@@ -29,8 +29,6 @@ export class DeclinePatientRequirementUseCase {
     id,
     user,
   }: DeclinePatientRequirementUseCaseInput): Promise<void> {
-    this.logger.setEvent('decline_patient_requirement');
-
     const requirement = await this.patientRequirementsRepository.findOne({
       select: { id: true, status: true },
       where: { id },

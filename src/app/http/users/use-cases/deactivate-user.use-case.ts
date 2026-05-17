@@ -18,8 +18,8 @@ interface DeactivateUserUseCaseInput {
   user: AuthUser;
 }
 
-@Log()
 @Injectable()
+@Log()
 export class DeactivateUserUseCase {
   constructor(
     @InjectRepository(User)
@@ -30,8 +30,6 @@ export class DeactivateUserUseCase {
   ) {}
 
   async execute({ id, user }: DeactivateUserUseCaseInput): Promise<void> {
-    this.logger.setEvent('update_user');
-
     if (user.role !== 'admin') {
       this.logger.warn(
         'Deactivate user failed: User does not have permission',

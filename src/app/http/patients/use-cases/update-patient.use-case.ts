@@ -38,8 +38,8 @@ interface UpdatePatientUseCaseInput {
   nmoDiagnosis?: PatientNmoDiagnosis;
 }
 
-@Log()
 @Injectable()
+@Log()
 export class UpdatePatientUseCase {
   constructor(
     @InjectRepository(Patient)
@@ -54,8 +54,6 @@ export class UpdatePatientUseCase {
     email,
     ...props
   }: UpdatePatientUseCaseInput): Promise<void> {
-    this.logger.setEvent('update_patient');
-
     if (user.role === 'patient' && user.id !== id) {
       this.logger.log(
         'Update patient failed: User does not have permission to update this patient',

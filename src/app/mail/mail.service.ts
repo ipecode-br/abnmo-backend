@@ -6,8 +6,8 @@ import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import { EnvService } from '@/env/env.service';
 
-@Log()
 @Injectable()
+@Log()
 export class MailService {
   private readonly isEnable: boolean;
   private readonly emailProvider: 'ses' | 'resend';

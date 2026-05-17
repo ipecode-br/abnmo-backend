@@ -13,6 +13,7 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
+import { Log } from '@/common/log/log.decorator';
 import type { AuthUser } from '@/common/types';
 
 import {
@@ -54,6 +55,7 @@ export class ReferralsController {
   }
 
   @Post()
+  @Log('create_referral')
   @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Cadastra um novo encaminhamento' })
   @ApiResponse({ type: BaseResponse })
@@ -67,6 +69,7 @@ export class ReferralsController {
   }
 
   @Put(':id')
+  @Log('update_referral')
   @Roles(['nurse', 'manager', 'specialist'])
   @ApiOperation({ summary: 'Atualiza os dados do encaminhamento' })
   @ApiResponse({ type: BaseResponse })
@@ -83,6 +86,7 @@ export class ReferralsController {
   }
 
   @Patch(':id/cancel')
+  @Log('cancel_referral')
   @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Cancela o encaminhamento' })
   @ApiResponse({ type: BaseResponse })

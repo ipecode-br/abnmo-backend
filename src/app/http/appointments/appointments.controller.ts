@@ -13,6 +13,7 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
+import { Log } from '@/common/log/log.decorator';
 import type { AuthUser } from '@/common/types';
 
 import {
@@ -54,6 +55,7 @@ export class AppointmentsController {
   }
 
   @Post()
+  @Log('create_appointment')
   @Roles(['manager', 'nurse', 'specialist'])
   @ApiOperation({ summary: 'Cadastra um novo atendimento' })
   @ApiResponse({ type: BaseResponse })
@@ -73,6 +75,7 @@ export class AppointmentsController {
   }
 
   @Put(':id')
+  @Log('update_appointment')
   @Roles(['manager', 'nurse', 'specialist'])
   @ApiOperation({ summary: 'Atualiza os dados do atendimento' })
   @ApiResponse({ type: BaseResponse })
@@ -91,8 +94,9 @@ export class AppointmentsController {
     };
   }
 
-  @Roles(['manager', 'nurse'])
   @Patch(':id/cancel')
+  @Log('cancel_appointment')
+  @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Cancela o atendimento' })
   @ApiResponse({ type: BaseResponse })
   async cancel(@Param('id') id: string): Promise<BaseResponse> {

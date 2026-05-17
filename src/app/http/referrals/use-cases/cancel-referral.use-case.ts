@@ -14,8 +14,8 @@ interface CancelReferralUseCaseInput {
   id: string;
 }
 
-@Log()
 @Injectable()
+@Log()
 export class CancelReferralUseCase {
   constructor(
     @InjectRepository(Referral)
@@ -24,8 +24,6 @@ export class CancelReferralUseCase {
   ) {}
 
   async execute({ id }: CancelReferralUseCaseInput): Promise<void> {
-    this.logger.setEvent('cancel_referral');
-
     const referral = await this.referralsRepository.findOne({
       select: { id: true, status: true },
       where: { id },

@@ -20,8 +20,8 @@ interface RegisterPatientUseCaseInput {
 
 // TODO: add all required fields to register a patient
 
-@Log()
 @Injectable()
+@Log()
 export class RegisterPatientUseCase {
   constructor(
     @InjectRepository(Patient)
@@ -37,8 +37,6 @@ export class RegisterPatientUseCase {
     password,
     response,
   }: RegisterPatientUseCaseInput): Promise<void> {
-    this.logger.setEvent('register_patient');
-
     const patientWithSameEmail = await this.patientsRepository.findOne({
       select: { id: true },
       where: { email },

@@ -21,8 +21,8 @@ interface ChangePasswordUseCaseInput {
   newPassword: string;
 }
 
-@Log()
 @Injectable()
+@Log()
 export class ChangePasswordUseCase {
   constructor(
     @InjectRepository(User)
@@ -40,8 +40,6 @@ export class ChangePasswordUseCase {
     password,
     newPassword,
   }: ChangePasswordUseCaseInput): Promise<void> {
-    this.logger.setEvent('change_password');
-
     const { id, role } = user;
 
     const entity: User | Patient | null =

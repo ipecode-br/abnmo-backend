@@ -25,8 +25,8 @@ interface CreateAppointmentUseCaseInput {
   category?: SpecialtyCategory;
 }
 
-@Log()
 @Injectable()
+@Log()
 export class CreateAppointmentUseCase {
   constructor(
     @InjectRepository(Appointment)
@@ -47,8 +47,6 @@ export class CreateAppointmentUseCase {
     category,
     professionalName,
   }: CreateAppointmentUseCaseInput): Promise<void> {
-    this.logger.setEvent('create_appointment');
-
     const patient = await this.patientsRepository.findOne({
       where: { id: patientId },
       select: { id: true },

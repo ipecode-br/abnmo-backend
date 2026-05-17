@@ -17,8 +17,8 @@ interface ActivateUserUseCaseInput {
   user: AuthUser;
 }
 
-@Log()
 @Injectable()
+@Log()
 export class ActivateUserUseCase {
   constructor(
     @InjectRepository(User)
@@ -27,8 +27,6 @@ export class ActivateUserUseCase {
   ) {}
 
   async execute({ id, user }: ActivateUserUseCaseInput): Promise<void> {
-    this.logger.setEvent('activate_user');
-
     if (user.role !== 'admin') {
       this.logger.log('Activate user failed: User does not have permission', {
         id,

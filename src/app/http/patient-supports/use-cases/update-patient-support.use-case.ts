@@ -19,8 +19,8 @@ interface UpdatePatientSupportUseCaseInput {
   kinship: string;
 }
 
-@Log()
 @Injectable()
+@Log()
 export class UpdatePatientSupportUseCase {
   constructor(
     @InjectRepository(PatientSupport)
@@ -35,8 +35,6 @@ export class UpdatePatientSupportUseCase {
     phone,
     kinship,
   }: UpdatePatientSupportUseCaseInput): Promise<void> {
-    this.logger.setEvent('update_patient_support');
-
     const patientSupport = await this.patientSupportsRepository.findOne({
       select: { id: true, patientId: true },
       where: { id },

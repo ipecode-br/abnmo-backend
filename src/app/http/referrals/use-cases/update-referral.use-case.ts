@@ -18,8 +18,8 @@ interface UpdateReferralUseCaseInput {
   annotation: string | null;
 }
 
-@Log()
 @Injectable()
+@Log()
 export class UpdateReferralUseCase {
   constructor(
     @InjectRepository(Referral)
@@ -33,8 +33,6 @@ export class UpdateReferralUseCase {
     condition,
     annotation,
   }: UpdateReferralUseCaseInput): Promise<void> {
-    this.logger.setEvent('update_referral');
-
     const referral = await this.referralsRepository.findOne({ where: { id } });
 
     if (!referral) {

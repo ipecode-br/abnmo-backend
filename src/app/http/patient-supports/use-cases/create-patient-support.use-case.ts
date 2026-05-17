@@ -20,8 +20,8 @@ interface CreatePatientSupportUseCaseInput {
   phone: string;
 }
 
-@Log()
 @Injectable()
+@Log()
 export class CreatePatientSupportUseCase {
   constructor(
     @InjectRepository(Patient)
@@ -38,8 +38,6 @@ export class CreatePatientSupportUseCase {
     kinship,
     phone,
   }: CreatePatientSupportUseCaseInput): Promise<void> {
-    this.logger.setEvent('create_patient_support');
-
     if (user.role === 'patient' && user.id !== patientId) {
       this.logger.warn(
         'Create patient support failed: patient does not have permission to create support for another patient',

@@ -13,6 +13,7 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
+import { Log } from '@/common/log/log.decorator';
 import type { AuthUser } from '@/common/types';
 
 import {
@@ -89,6 +90,7 @@ export class PatientsController {
   }
 
   @Post()
+  @Log('create_patient')
   @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Cadastra um novo paciente' })
   @ApiResponse({ type: BaseResponse })
@@ -104,6 +106,7 @@ export class PatientsController {
   }
 
   @Put(':id')
+  @Log('update_patient')
   @Roles(['manager', 'nurse', 'patient'])
   @ApiOperation({ summary: 'Atualiza os dados do paciente' })
   @ApiResponse({ type: BaseResponse })
@@ -125,6 +128,7 @@ export class PatientsController {
   }
 
   @Patch(':id/deactivate')
+  @Log('deactivate_patient')
   @Roles(['manager'])
   @ApiOperation({ summary: 'Inativa o paciente' })
   @ApiResponse({ type: BaseResponse })

@@ -29,8 +29,8 @@ interface RegisterUserUseCaseInput {
   response: Response;
 }
 
-@Log()
 @Injectable()
+@Log()
 export class RegisterUserUseCase {
   constructor(
     @InjectRepository(Token)
@@ -52,8 +52,6 @@ export class RegisterUserUseCase {
     inviteToken,
     response,
   }: RegisterUserUseCaseInput): Promise<void> {
-    this.logger.setEvent('register_user');
-
     const token = await this.tokensRepository.findOne({
       where: { token: inviteToken },
     });

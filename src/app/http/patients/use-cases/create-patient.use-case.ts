@@ -39,8 +39,8 @@ interface CreatePatientUseCaseInput {
   supports?: PatientSupportInput[];
 }
 
-@Log()
 @Injectable()
+@Log()
 export class CreatePatientUseCase {
   constructor(
     @InjectRepository(Patient)
@@ -68,8 +68,6 @@ export class CreatePatientUseCase {
     nmoDiagnosis,
     supports,
   }: CreatePatientUseCaseInput): Promise<void> {
-    this.logger.setEvent('create_patient');
-
     const patientWithSameEmail = await this.patientsRepository.findOne({
       select: { id: true },
       where: { email },

@@ -17,8 +17,8 @@ interface RefreshTokenUseCaseInput {
   response: Response;
 }
 
-@Log()
 @Injectable()
+@Log()
 export class RefreshTokenUseCase {
   constructor(
     @InjectRepository(Token)
@@ -32,8 +32,6 @@ export class RefreshTokenUseCase {
     refreshToken,
     response,
   }: RefreshTokenUseCaseInput): Promise<void> {
-    this.logger.setEvent('refresh_token');
-
     if (!refreshToken) {
       throw new UnauthorizedException('Token de atualização ausente.');
     }

@@ -18,8 +18,8 @@ interface UpdateAppointmentUseCaseInput {
   annotation: string | null;
 }
 
-@Log()
 @Injectable()
+@Log()
 export class UpdateAppointmentUseCase {
   constructor(
     @InjectRepository(Appointment)
@@ -33,8 +33,6 @@ export class UpdateAppointmentUseCase {
     condition,
     annotation,
   }: UpdateAppointmentUseCaseInput): Promise<void> {
-    this.logger.setEvent('update_appointment');
-
     const appointment = await this.appointmentsRepository.findOne({
       where: { id },
     });

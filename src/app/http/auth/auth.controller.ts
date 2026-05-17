@@ -65,6 +65,7 @@ export class AuthController {
 
   @Public()
   @Post('refresh-token')
+  @Log('refresh_token')
   @ApiOperation({ summary: 'Atualiza o token de acesso' })
   @ApiResponse({ type: BaseResponse })
   async refreshToken(
@@ -81,6 +82,7 @@ export class AuthController {
 
   @Public()
   @Post('register/patient')
+  @Log('register_patient')
   @ApiOperation({ summary: 'Registra um novo paciente' })
   @ApiResponse({ type: BaseResponse })
   async registerPatient(
@@ -100,16 +102,14 @@ export class AuthController {
 
   @Public()
   @Post('register/user')
+  @Log('register_user')
   @ApiOperation({ summary: 'Registra um novo usuário via convite' })
   @ApiResponse({ type: BaseResponse })
   async registerUser(
     @Body() registerUserDto: RegisterUserDto,
     @Res({ passthrough: true }) response: Response,
   ): Promise<BaseResponse> {
-    await this.registerUserUseCase.execute({
-      response,
-      ...registerUserDto,
-    });
+    await this.registerUserUseCase.execute({ response, ...registerUserDto });
 
     return {
       success: true,
@@ -119,6 +119,7 @@ export class AuthController {
 
   @Public()
   @Post('recover-password')
+  @Log('recover_password')
   @ApiOperation({ summary: 'Solicita recuperação de senha' })
   @ApiResponse({ type: BaseResponse })
   async recoverPassword(
@@ -135,6 +136,7 @@ export class AuthController {
 
   @Public()
   @Post('reset-password')
+  @Log('reset_password')
   @ApiOperation({ summary: 'Solicita redefinição de senha' })
   @ApiResponse({ type: BaseResponse })
   async resetPassword(
@@ -149,8 +151,9 @@ export class AuthController {
     };
   }
 
-  @Roles(['all'])
   @Post('change-password')
+  @Log('change_password')
+  @Roles(['all'])
   @ApiOperation({
     summary: 'Altera a senha do usuário ou paciente autenticado',
   })
@@ -167,8 +170,9 @@ export class AuthController {
     };
   }
 
-  @Roles(['all'])
   @Post('logout')
+  @Log('logout')
+  @Roles(['all'])
   @ApiOperation({ summary: 'Encerra a sessão do usuário ou paciente' })
   @ApiResponse({ type: BaseResponse })
   async logout(

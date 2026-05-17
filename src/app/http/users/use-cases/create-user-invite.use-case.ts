@@ -22,8 +22,8 @@ interface CreateUserInviteUseCaseInput {
   role: UserRole;
 }
 
-@Log()
 @Injectable()
+@Log()
 export class CreateUserInviteUseCase {
   constructor(
     @InjectRepository(User)
@@ -40,8 +40,6 @@ export class CreateUserInviteUseCase {
   ) {}
 
   async execute({ email, role }: CreateUserInviteUseCaseInput): Promise<void> {
-    this.logger.setEvent('create_user_invite');
-
     const [existingInviteUserToken, existingUser, existingPatient] =
       await Promise.all([
         this.tokensRepository.findOne({ where: { email } }),

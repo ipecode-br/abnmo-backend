@@ -4,6 +4,7 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
+import { Log } from '@/common/log/log.decorator';
 import type { AuthUser } from '@/common/types';
 
 import {
@@ -24,6 +25,7 @@ export class PatientSupportsController {
   ) {}
 
   @Post(':patientId')
+  @Log('create_patient_support')
   @Roles(['nurse', 'manager', 'patient'])
   @ApiOperation({
     summary: 'Cadastra um novo contato de apoio para o paciente',
@@ -47,6 +49,7 @@ export class PatientSupportsController {
   }
 
   @Put(':id')
+  @Log('update_patient_support')
   @Roles(['nurse', 'manager', 'patient'])
   @ApiOperation({ summary: 'Atualiza os dados do contato de apoio' })
   @ApiResponse({ type: BaseResponse })
@@ -68,6 +71,7 @@ export class PatientSupportsController {
   }
 
   @Delete(':id')
+  @Log('delete_patient_support')
   @Roles(['nurse', 'manager', 'patient'])
   @ApiOperation({ summary: 'Remove o contato de apoio' })
   @ApiResponse({ type: BaseResponse })

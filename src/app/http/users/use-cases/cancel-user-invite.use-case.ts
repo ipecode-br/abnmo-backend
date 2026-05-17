@@ -11,8 +11,8 @@ interface CancelUserInviteUseCaseInput {
   id: number;
 }
 
-@Log()
 @Injectable()
+@Log()
 export class CancelUserInviteUseCase {
   constructor(
     @InjectRepository(Token)
@@ -21,8 +21,6 @@ export class CancelUserInviteUseCase {
   ) {}
 
   async execute({ id }: CancelUserInviteUseCaseInput): Promise<void> {
-    this.logger.setEvent('cancel_user_invite');
-
     const token = await this.tokensRepository.findOne({
       where: { id, type: AUTH_TOKENS_MAPPING.inviteUser },
       select: { id: true },

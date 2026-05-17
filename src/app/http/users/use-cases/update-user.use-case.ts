@@ -20,8 +20,8 @@ interface UpdateUserUseCaseInput {
   registrationId?: string | null;
 }
 
-@Log()
 @Injectable()
+@Log()
 export class UpdateUserUseCase {
   constructor(
     @InjectRepository(User)
@@ -36,8 +36,6 @@ export class UpdateUserUseCase {
     specialty,
     registrationId,
   }: UpdateUserUseCaseInput): Promise<void> {
-    this.logger.setEvent('update_user');
-
     if (user.role !== 'admin' && user.id !== id) {
       this.logger.warn(
         'Update user failed: User does not have permission to update this user',

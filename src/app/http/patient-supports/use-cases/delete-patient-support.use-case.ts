@@ -16,8 +16,8 @@ interface DeletePatientSupportUseCaseInput {
   user: AuthUser;
 }
 
-@Log()
 @Injectable()
+@Log()
 export class DeletePatientSupportUseCase {
   constructor(
     @InjectRepository(PatientSupport)
@@ -26,8 +26,6 @@ export class DeletePatientSupportUseCase {
   ) {}
 
   async execute({ id, user }: DeletePatientSupportUseCaseInput): Promise<void> {
-    this.logger.setEvent('delete_patient_support');
-
     const patientSupport = await this.patientSupportsRepository.findOne({
       select: { id: true, patientId: true },
       where: { id },

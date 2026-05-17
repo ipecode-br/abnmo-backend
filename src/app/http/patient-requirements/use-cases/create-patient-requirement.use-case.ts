@@ -17,8 +17,8 @@ interface CreatePatientRequirementUseCaseInput {
   description: string | null;
 }
 
-@Log()
 @Injectable()
+@Log()
 export class CreatePatientRequirementUseCase {
   constructor(
     @InjectRepository(Patient)
@@ -35,8 +35,6 @@ export class CreatePatientRequirementUseCase {
     title,
     description,
   }: CreatePatientRequirementUseCaseInput): Promise<void> {
-    this.logger.setEvent('create_patient_requirement');
-
     const patient = await this.patientsRepository.findOne({
       where: { id: patientId },
       select: { id: true },

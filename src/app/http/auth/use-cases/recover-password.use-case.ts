@@ -18,8 +18,8 @@ interface RecoverPasswordUseCaseInput {
   email: string;
 }
 
-@Log()
 @Injectable()
+@Log()
 export class RecoverPasswordUseCase {
   constructor(
     @InjectRepository(User)
@@ -35,8 +35,6 @@ export class RecoverPasswordUseCase {
   ) {}
 
   async execute({ email }: RecoverPasswordUseCaseInput): Promise<void> {
-    this.logger.setEvent('recover_password');
-
     let entity: User | Patient | null = null;
 
     const findOptions = { select: { id: true }, where: { email } };

@@ -25,8 +25,8 @@ interface CreateReferralUseCaseInput {
   category?: SpecialtyCategory;
 }
 
-@Log()
 @Injectable()
+@Log()
 export class CreateReferralUseCase {
   constructor(
     @InjectRepository(Patient)
@@ -47,8 +47,6 @@ export class CreateReferralUseCase {
     category,
     professionalName,
   }: CreateReferralUseCaseInput): Promise<void> {
-    this.logger.setEvent('create_referral');
-
     const patient = await this.patientsRepository.findOne({
       where: { id: patientId },
       select: { id: true },

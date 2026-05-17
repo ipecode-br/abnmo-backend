@@ -12,6 +12,7 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
+import { Log } from '@/common/log/log.decorator';
 import type { AuthUser } from '@/common/types';
 
 import {
@@ -76,6 +77,7 @@ export class PatientRequirementsController {
   }
 
   @Post()
+  @Log('create_patient_requirement')
   @Roles(['nurse', 'manager'])
   @ApiOperation({ summary: 'Cadastra uma nova solicitação' })
   @ApiResponse({ type: BaseResponse })
@@ -95,6 +97,7 @@ export class PatientRequirementsController {
   }
 
   @Patch(':id/approve')
+  @Log('approve_patient_requirement')
   @Roles(['nurse', 'manager'])
   @ApiOperation({ summary: 'Aprova a solicitação' })
   @ApiResponse({ type: BaseResponse })
@@ -111,6 +114,7 @@ export class PatientRequirementsController {
   }
 
   @Patch(':id/decline')
+  @Log('decline_patient_requirement')
   @Roles(['nurse', 'manager'])
   @ApiOperation({ summary: 'Recusa a solicitação' })
   @ApiResponse({ type: BaseResponse })

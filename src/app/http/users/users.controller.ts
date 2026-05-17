@@ -14,6 +14,7 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
+import { Log } from '@/common/log/log.decorator';
 import type { AuthUser } from '@/common/types';
 
 import { ActivateUserUseCase } from './use-cases/activate-user.use-case';
@@ -77,6 +78,7 @@ export class UsersController {
   }
 
   @Post('invites')
+  @Log('create_user_invite')
   @Roles(['manager'])
   @ApiOperation({ summary: 'Cria convite para registro de usuário' })
   @ApiResponse({ type: BaseResponse })
@@ -106,6 +108,7 @@ export class UsersController {
   }
 
   @Put(':id')
+  @Log('update_user')
   @Roles(['manager', 'nurse', 'specialist'])
   @ApiOperation({ summary: 'Atualiza os dados do usuário' })
   @ApiResponse({ type: BaseResponse })
@@ -123,6 +126,7 @@ export class UsersController {
   }
 
   @Delete('invites/:id')
+  @Log('cancel_user_invite')
   @Roles(['manager'])
   @ApiOperation({ summary: 'Cancela convite de usuário' })
   @ApiResponse({ type: BaseResponse })
@@ -136,6 +140,7 @@ export class UsersController {
   }
 
   @Patch(':id/deactivate')
+  @Log('deactivate_user')
   @Roles(['admin'])
   @ApiOperation({ summary: 'Inativa o usuário' })
   @ApiResponse({ type: BaseResponse })
@@ -152,6 +157,7 @@ export class UsersController {
   }
 
   @Patch(':id/activate')
+  @Log('activate_user')
   @Roles(['admin'])
   @ApiOperation({ summary: 'Ativa o usuário' })
   @ApiResponse({ type: BaseResponse })

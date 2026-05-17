@@ -14,8 +14,8 @@ interface CancelAppointmentUseCaseInput {
   id: string;
 }
 
-@Log()
 @Injectable()
+@Log()
 export class CancelAppointmentUseCase {
   constructor(
     @InjectRepository(Appointment)
@@ -24,8 +24,6 @@ export class CancelAppointmentUseCase {
   ) {}
 
   async execute({ id }: CancelAppointmentUseCaseInput): Promise<void> {
-    this.logger.setEvent('cancel_appointment');
-
     const appointment = await this.appointmentsRepository.findOne({
       select: { id: true, status: true },
       where: { id },

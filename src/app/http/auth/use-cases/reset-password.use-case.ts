@@ -25,8 +25,8 @@ interface ResetPasswordUseCaseInput {
   response: Response;
 }
 
-@Log()
 @Injectable()
+@Log()
 export class ResetPasswordUseCase {
   constructor(
     @InjectRepository(User)
@@ -46,8 +46,6 @@ export class ResetPasswordUseCase {
     resetToken,
     response,
   }: ResetPasswordUseCaseInput): Promise<void> {
-    this.logger.setEvent('reset_password');
-
     const token = await this.tokensRepository.findOne({
       where: { token: resetToken },
     });
