@@ -20,6 +20,7 @@ export async function createNestApp(adapter?: ExpressAdapter) {
       });
 
   const envService = app.get(EnvService);
+  const enableNestLogs = envService.get('ENABLE_NEST_LOGS');
 
   app.enableCors({
     origin: envService.get('APP_URL'),
@@ -28,7 +29,10 @@ export async function createNestApp(adapter?: ExpressAdapter) {
     credentials: true,
   });
   app.use(cookieParser(envService.get('COOKIE_SECRET')));
-  app.useLogger(app.get(Logger));
+
+  if (enableNestLogs) {
+    app.useLogger(app.get(Logger));
+  }
 
   const config = new DocumentBuilder()
     .setTitle('SVM - Sistema Viver Melhor')
