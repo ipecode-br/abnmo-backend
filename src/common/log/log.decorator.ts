@@ -16,39 +16,35 @@ export function Log(eventName?: ContextEvent) {
     propertyKey?: string,
     descriptor?: PropertyDescriptor,
   ): any => {
-    // Method decorator usage (on controller methods)
+    // Method decorator usage (on Controller methods)
     if (descriptor && propertyKey) {
-      Reflect.defineMetadata(
-        LOGGER_EVENT_KEY,
-        eventName,
-        descriptor.value as object,
-      );
+      const targetForMetadata = descriptor.value as object;
+      Reflect.defineMetadata(LOGGER_EVENT_KEY, eventName, targetForMetadata);
       return descriptor;
     }
 
-    // Class decorator usage (on classes / use-cases)
+    // Class decorator usage (on Classes / UseCases / Services)
     const cls = target as { name: string; prototype: any };
+    const prototype = cls.prototype as Record<string, any>;
+    const methods = Object.getOwnPropertyNames(prototype);
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    const execute = cls.prototype.execute as (...args: any[]) => any;
+    for (const name of methods) {
+      const originalMethod = prototype[name] as (...args: any[]) => any;
 
-    if (typeof execute !== 'function') {
-      return target;
-    }
+      prototype[name] = function (this: WithLogger, ...args: unknown[]) {
+        if (this.logger instanceof LogService) {
+          const context = name === 'execute' ? cls.name : `${cls.name}.${name}`;
+          this.logger.setContext(context);
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    cls.prototype.execute = function (this: WithLogger, ...args: unknown[]) {
-      if (this.logger instanceof LogService) {
-        this.logger.setContext(cls.name);
-
-        if (eventName) {
-          this.logger.setEvent(eventName);
+          if (eventName) {
+            this.logger.setEvent(eventName);
+          }
         }
-      }
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      return execute.apply(this, args);
-    };
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+        return originalMethod.apply(this, args);
+      };
+    }
 
     return target;
   };
