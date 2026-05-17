@@ -129,9 +129,8 @@ export class ResetPasswordUseCase {
     await this.mailService.send({
       to: entity.email,
       subject: 'Senha de acesso alterada com sucesso',
-      textBody:
-        'Sua senha de acesso ao Sistema Viver Melhor foi alterada com sucesso.',
-      htmlBody: `
+      text: 'Sua senha de acesso ao Sistema Viver Melhor foi alterada com sucesso.',
+      html: `
         <p>Olá!</p>
         </br>
         <p>A senha de acesso à sua conta no <strong>Sistema Viver Melhor</strong> foi alterada com sucesso.</p>

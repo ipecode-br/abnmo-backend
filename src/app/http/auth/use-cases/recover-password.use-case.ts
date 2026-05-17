@@ -86,9 +86,8 @@ export class RecoverPasswordUseCase {
     await this.mailService.send({
       to: email,
       subject: 'Solicitação para redefinição de senha',
-      textBody:
-        'Redefina sua senha de acesso ao Sistema Viver Melhor da ABNMO.',
-      htmlBody: `
+      text: 'Redefina sua senha de acesso ao Sistema Viver Melhor da ABNMO.',
+      html: `
         <p>Olá!</p>
         </br>
         <p>Você solicitou a redefinição da senha de acesso ao <strong>Sistema Viver Melhor</strong> da <strong>ABNMO</strong>. Acesse o link abaixo e cadastre uma nova senha de acesso para sua conta.</p>

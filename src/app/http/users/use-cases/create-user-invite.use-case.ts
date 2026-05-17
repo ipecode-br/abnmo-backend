@@ -98,9 +98,8 @@ export class CreateUserInviteUseCase {
       const emailSent = await this.mailService.send({
         to: email,
         subject: 'Cadastre sua conta no Sistema Viver Melhor da ABNMO',
-        textBody:
-          'Finalize o cadastro da sua conta para ter acesso ao Sistema Viver Melhor da ABNMO.',
-        htmlBody: `
+        text: 'Finalize o cadastro da sua conta para ter acesso ao Sistema Viver Melhor da ABNMO.',
+        html: `
           <p>Olá!</p>
           </br>
           <p>Você foi convidado a utilizar o <strong>Sistema Viver Melhor</strong> da <strong>ABNMO</strong>. Para ter acesso, finalize a criação da sua conta.</p>
