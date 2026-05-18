@@ -26,7 +26,7 @@ export const createUserInviteSchema = userSchema.pick({
 export const updateUserSchema = userSchema.pick({
   name: true,
   specialty: true,
-  registration_id: true,
+  registrationId: true,
 });
 
 export const getUsersQuerySchema = baseQuerySchema

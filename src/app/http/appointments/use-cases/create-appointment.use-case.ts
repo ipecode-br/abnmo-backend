@@ -1,22 +1,22 @@
 import {
   BadRequestException,
   Injectable,
-  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
+import { Log } from '@/common/log/log.decorator';
+import { LogService } from '@/common/log/log.service';
+import type { AuthUser } from '@/common/types';
 import { Appointment } from '@/domain/entities/appointment';
 import { Patient } from '@/domain/entities/patient';
 import { User } from '@/domain/entities/user';
 import type { PatientCondition } from '@/domain/enums/patients';
 import type { SpecialtyCategory } from '@/domain/enums/shared';
 
-import type { AuthUserDto } from '../../auth/auth.dtos';
-
 interface CreateAppointmentUseCaseInput {
-  user: AuthUserDto;
+  user: AuthUser;
   patientId: string;
   date: Date;
   condition: PatientCondition;
@@ -26,9 +26,8 @@ interface CreateAppointmentUseCaseInput {
 }
 
 @Injectable()
+@Log()
 export class CreateAppointmentUseCase {
-  private readonly logger = new Logger(CreateAppointmentUseCase.name);
-
   constructor(
     @InjectRepository(Appointment)
     private readonly appointmentsRepository: Repository<Appointment>,
@@ -36,6 +35,7 @@ export class CreateAppointmentUseCase {
     private readonly patientsRepository: Repository<Patient>,
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    private readonly logger: LogService,
   ) {}
 
   async execute({
@@ -57,14 +57,14 @@ export class CreateAppointmentUseCase {
     }
 
     const appointmentPayload: Partial<Appointment> = {
-      patient_id: patientId,
+      patientId,
       date,
       category,
       condition,
-      professional_name: professionalName,
+      professionalName,
       annotation,
       status: 'scheduled',
-      created_by: user.id,
+      createdBy: user.id,
     };
 
     if (user.role === 'specialist') {
@@ -83,8 +83,8 @@ export class CreateAppointmentUseCase {
         throw new NotFoundException('Especialista não encontrado.');
       }
 
-      appointmentPayload.user_id = specialist.id;
-      appointmentPayload.professional_name = specialist.name;
+      appointmentPayload.userId = specialist.id;
+      appointmentPayload.professionalName = specialist.name;
       appointmentPayload.category = specialist.specialty;
     }
 
@@ -97,15 +97,9 @@ export class CreateAppointmentUseCase {
     const appointment = this.appointmentsRepository.create(appointmentPayload);
     await this.appointmentsRepository.save(appointment);
 
-    this.logger.log(
-      {
-        id: appointment.id,
-        patientId,
-        userId: user.id,
-        userEmail: user.email,
-        userRole: user.role,
-      },
-      'Appointment created successfully',
-    );
+    this.logger.log('Appointment created successfully', {
+      id: appointment.id,
+      patientId,
+    });
   }
 }

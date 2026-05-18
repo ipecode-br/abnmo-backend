@@ -14,6 +14,7 @@ export default tseslint.config(
       'infra/database/migrations/**',
       'eslint.config.mjs',
       'prettier.config.mjs',
+      '.bkp/**',
     ],
   },
   eslint.configs.recommended,
@@ -39,9 +40,11 @@ export default tseslint.config(
   {
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-floating-promises': 'warn',
-      '@typescript-eslint/no-unsafe-argument': 'warn',
-      '@typescript-eslint/no-unsafe-call': 'warn',
+      '@typescript-eslint/no-floating-promises': 'error',
+      '@typescript-eslint/no-unsafe-argument': 'error',
+      '@typescript-eslint/no-unsafe-call': 'error',
+      '@typescript-eslint/no-unsafe-member-access': 'error',
+      '@typescript-eslint/no-unsafe-assignment': 'error',
       'prettier/prettier': 'error',
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',

@@ -10,11 +10,12 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-import { AuthUser } from '@/common/decorators/auth-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
+import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
+import { Log } from '@/common/log/log.decorator';
+import type { AuthUser } from '@/common/types';
 
-import type { AuthUserDto } from '../auth/auth.dtos';
 import {
   CreateReferralDto,
   GetReferralsQuery,
@@ -37,12 +38,12 @@ export class ReferralsController {
   ) {}
 
   @Get()
-  @Roles(['manager', 'nurse', 'specialist', 'patient'])
+  @Roles(['all'])
   @ApiOperation({ summary: 'Lista todos os encaminhamentos' })
   @ApiResponse({ type: GetReferralsResponse })
   async getReferrals(
     @Query() query: GetReferralsQuery,
-    @AuthUser() user: AuthUserDto,
+    @User() user: AuthUser,
   ): Promise<GetReferralsResponse> {
     const data = await this.getReferralsUseCase.execute({ user, ...query });
 
@@ -54,49 +55,29 @@ export class ReferralsController {
   }
 
   @Post()
+  @Log('create_referral')
   @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Cadastra um novo encaminhamento' })
   @ApiResponse({ type: BaseResponse })
   async create(
-    @AuthUser() user: AuthUserDto,
+    @User() user: AuthUser,
     @Body() createReferralDto: CreateReferralDto,
   ): Promise<BaseResponse> {
-    const {
-      date,
-      category,
-      annotation,
-      condition,
-      patient_id: patientId,
-      professional_name: professionalName,
-    } = createReferralDto;
-
-    await this.createReferralUseCase.execute({
-      user,
-      date,
-      category,
-      annotation,
-      condition,
-      patientId,
-      professionalName,
-    });
+    await this.createReferralUseCase.execute({ user, ...createReferralDto });
 
     return { success: true, message: 'Encaminhamento cadastrado com sucesso.' };
   }
 
   @Put(':id')
+  @Log('update_referral')
   @Roles(['nurse', 'manager', 'specialist'])
   @ApiOperation({ summary: 'Atualiza os dados do encaminhamento' })
   @ApiResponse({ type: BaseResponse })
   public async update(
     @Param('id') id: string,
-    @AuthUser() user: AuthUserDto,
     @Body() updateReferralDto: UpdateReferralDto,
   ): Promise<BaseResponse> {
-    await this.updateReferralUseCase.execute({
-      id,
-      user,
-      updateReferralDto,
-    });
+    await this.updateReferralUseCase.execute({ id, ...updateReferralDto });
 
     return {
       success: true,
@@ -105,14 +86,12 @@ export class ReferralsController {
   }
 
   @Patch(':id/cancel')
+  @Log('cancel_referral')
   @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Cancela o encaminhamento' })
   @ApiResponse({ type: BaseResponse })
-  async cancel(
-    @Param('id') id: string,
-    @AuthUser() user: AuthUserDto,
-  ): Promise<BaseResponse> {
-    await this.cancelReferralUseCase.execute({ id, user });
+  async cancel(@Param('id') id: string): Promise<BaseResponse> {
+    await this.cancelReferralUseCase.execute({ id });
 
     return {
       success: true,

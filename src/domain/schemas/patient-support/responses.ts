@@ -5,7 +5,7 @@ import { patientSupportSchema } from '.';
 
 export const getPatientSupportsResponseSchema = baseResponseSchema.extend({
   data: z.object({
-    patient_supports: z.array(patientSupportSchema),
+    patientSupports: z.array(patientSupportSchema),
     total: z.number(),
   }),
 });

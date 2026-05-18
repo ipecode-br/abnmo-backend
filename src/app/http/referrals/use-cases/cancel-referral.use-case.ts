@@ -1,31 +1,29 @@
 import {
   BadRequestException,
   Injectable,
-  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
+import { Log } from '@/common/log/log.decorator';
+import { LogService } from '@/common/log/log.service';
 import { Referral } from '@/domain/entities/referral';
-
-import type { AuthUserDto } from '../../auth/auth.dtos';
 
 interface CancelReferralUseCaseInput {
   id: string;
-  user: AuthUserDto;
 }
 
 @Injectable()
+@Log()
 export class CancelReferralUseCase {
-  private readonly logger = new Logger(CancelReferralUseCase.name);
-
   constructor(
     @InjectRepository(Referral)
     private readonly referralsRepository: Repository<Referral>,
+    private readonly logger: LogService,
   ) {}
 
-  async execute({ id, user }: CancelReferralUseCaseInput): Promise<void> {
+  async execute({ id }: CancelReferralUseCaseInput): Promise<void> {
     const referral = await this.referralsRepository.findOne({
       select: { id: true, status: true },
       where: { id },
@@ -41,9 +39,6 @@ export class CancelReferralUseCase {
 
     await this.referralsRepository.update({ id }, { status: 'canceled' });
 
-    this.logger.log(
-      { id, userId: user.id, userEmail: user.email, userRole: user.role },
-      'Referral canceled successfully',
-    );
+    this.logger.log('Referral canceled successfully', { id });
   }
 }

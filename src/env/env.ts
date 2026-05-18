@@ -5,6 +5,9 @@ export const envSchema = z.object({
   NODE_ENV: z.enum(['production', 'development', 'homolog', 'test']),
   APP_ENVIRONMENT: z.enum(['lambda', 'docker', 'local']),
   MAINTENANCE: z.enum(['true', 'false']).transform((val) => val === 'true'),
+  ENABLE_NEST_LOGS: z
+    .enum(['true', 'false'])
+    .transform((val) => val === 'true'),
 
   // API
   API_BASE_URL: z.string().url().optional(),
@@ -27,8 +30,7 @@ export const envSchema = z.object({
   DB_SCHEMA: z.string().optional(),
 
   // E-mails
-  ENABLE_EMAILS: z.enum(['true', 'false']).transform((val) => val === 'true'),
-  EMAIL_PROVIDER: z.enum(['ses', 'resend']),
+  EMAIL_PROVIDER: z.enum(['ses', 'resend', 'none']),
   RESEND_KEY: z.string().min(1),
   AWS_SES_REGION: z.string().min(1),
   AWS_SES_ACCESS_KEY_ID: z.string().min(1),

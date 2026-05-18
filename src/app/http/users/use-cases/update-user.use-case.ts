@@ -1,32 +1,32 @@
 import {
   ForbiddenException,
   Injectable,
-  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import { Log } from '@/common/log/log.decorator';
+import { LogService } from '@/common/log/log.service';
+import type { AuthUser } from '@/common/types';
 import { User } from '@/domain/entities/user';
 import type { SpecialtyCategory } from '@/domain/enums/shared';
 
-import type { AuthUserDto } from '../../auth/auth.dtos';
-
 interface UpdateUserUseCaseInput {
   id: string;
-  user: AuthUserDto;
+  user: AuthUser;
   name: string;
-  specialty: SpecialtyCategory | null;
-  registrationId: string | null;
+  specialty?: SpecialtyCategory | null;
+  registrationId?: string | null;
 }
 
 @Injectable()
+@Log()
 export class UpdateUserUseCase {
-  private readonly logger = new Logger(UpdateUserUseCase.name);
-
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    private readonly logger: LogService,
   ) {}
 
   async execute({
@@ -37,9 +37,11 @@ export class UpdateUserUseCase {
     registrationId,
   }: UpdateUserUseCaseInput): Promise<void> {
     if (user.role !== 'admin' && user.id !== id) {
-      this.logger.log(
-        { id, userId: user.id, userEmail: user.email, userRole: user.role },
+      this.logger.warn(
         'Update user failed: User does not have permission to update this user',
+        {
+          id,
+        },
       );
       throw new ForbiddenException(
         'Você não tem permissão para atualizar este usuário.',
@@ -60,19 +62,13 @@ export class UpdateUserUseCase {
 
     await this.usersRepository.update(userToUpdate.id, {
       name,
-      specialty: specialty,
-      registration_id: registrationId,
+      specialty,
+      registrationId,
     });
 
-    this.logger.log(
-      {
-        id,
-        email: userToUpdate.email,
-        userId: user.id,
-        userEmail: user.email,
-        userRole: user.role,
-      },
-      'User updated successfully',
-    );
+    this.logger.log('User updated successfully', {
+      id,
+      email: userToUpdate.email,
+    });
   }
 }

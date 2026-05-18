@@ -9,13 +9,16 @@ import {
 } from 'typeorm';
 
 import { PatientRequirement } from '@/domain/entities/patient-requirement';
+import type { PatientRequirementStatus } from '@/domain/enums/patient-requirements';
 import type { PatientRequirementByPatientId } from '@/domain/schemas/patient-requirement/responses';
-
-import type { GetPatientRequirementsByPatientIdQuery } from '../patient-requirements.dtos';
 
 interface GetPatientRequirementsByPatientIdUseCaseInput {
   patientId: string;
-  query: GetPatientRequirementsByPatientIdQuery;
+  page: number;
+  perPage: number;
+  status?: PatientRequirementStatus;
+  startDate?: string;
+  endDate?: string;
 }
 
 interface GetPatientRequirementsByPatientIdUseCaseOutput {
@@ -32,14 +35,16 @@ export class GetPatientRequirementsByPatientIdUseCase {
 
   async execute({
     patientId,
-    query,
+    status,
+    page,
+    perPage,
+    ...props
   }: GetPatientRequirementsByPatientIdUseCaseInput): Promise<GetPatientRequirementsByPatientIdUseCaseOutput> {
-    const { status, page, perPage } = query;
-    const startDate = query.startDate ? new Date(query.startDate) : null;
-    const endDate = query.endDate ? new Date(query.endDate) : null;
+    const startDate = props.startDate ? new Date(props.startDate) : null;
+    const endDate = props.endDate ? new Date(props.endDate) : null;
 
     const where: FindOptionsWhere<PatientRequirement> = {
-      patient_id: patientId,
+      patientId,
     };
 
     if (status) {
@@ -47,15 +52,15 @@ export class GetPatientRequirementsByPatientIdUseCase {
     }
 
     if (startDate && endDate) {
-      where.created_at = Between(startDate, endDate);
+      where.createdAt = Between(startDate, endDate);
     }
 
     if (startDate && !endDate) {
-      where.created_at = MoreThanOrEqual(startDate);
+      where.createdAt = MoreThanOrEqual(startDate);
     }
 
     if (endDate && !startDate) {
-      where.created_at = LessThanOrEqual(endDate);
+      where.createdAt = LessThanOrEqual(endDate);
     }
 
     const total = await this.patientRequirementsRepository.count({ where });
@@ -67,10 +72,10 @@ export class GetPatientRequirementsByPatientIdUseCase {
         type: true,
         title: true,
         status: true,
-        submitted_at: true,
-        approved_at: true,
-        declined_at: true,
-        created_at: true,
+        submittedAt: true,
+        approvedAt: true,
+        declinedAt: true,
+        createdAt: true,
       },
       skip: (page - 1) * perPage,
       take: perPage,

@@ -1,39 +1,42 @@
 import {
   ForbiddenException,
   Injectable,
-  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
+import { Log } from '@/common/log/log.decorator';
+import { LogService } from '@/common/log/log.service';
+import type { AuthUser } from '@/common/types';
 import { PatientSupport } from '@/domain/entities/patient-support';
-
-import type { AuthUserDto } from '../../auth/auth.dtos';
-import type { UpdatePatientSupportDto } from '../patient-supports.dtos';
 
 interface UpdatePatientSupportUseCaseInput {
   id: string;
-  user: AuthUserDto;
-  updatePatientSupportDto: UpdatePatientSupportDto;
+  user: AuthUser;
+  name: string;
+  phone: string;
+  kinship: string;
 }
 
 @Injectable()
+@Log()
 export class UpdatePatientSupportUseCase {
-  private readonly logger = new Logger(UpdatePatientSupportUseCase.name);
-
   constructor(
     @InjectRepository(PatientSupport)
     private readonly patientSupportsRepository: Repository<PatientSupport>,
+    private readonly logger: LogService,
   ) {}
 
   async execute({
     id,
     user,
-    updatePatientSupportDto,
+    name,
+    phone,
+    kinship,
   }: UpdatePatientSupportUseCaseInput): Promise<void> {
     const patientSupport = await this.patientSupportsRepository.findOne({
-      select: { id: true, patient_id: true },
+      select: { id: true, patientId: true },
       where: { id },
     });
 
@@ -41,35 +44,20 @@ export class UpdatePatientSupportUseCase {
       throw new NotFoundException('Contato de apoio não encontrado.');
     }
 
-    const patientId = patientSupport.patient_id;
+    const patientId = patientSupport.patientId;
 
     if (user.role === 'patient' && user.id !== patientId) {
       this.logger.log(
-        {
-          id,
-          patientId,
-          userId: user.id,
-          userEmail: user.email,
-          userRole: user.role,
-        },
         'Update patient support failed: User does not have permission to update this patient support',
+        { id, patientId },
       );
       throw new ForbiddenException(
         'Você não tem permissão para atualizar este contato de apoio.',
       );
     }
 
-    await this.patientSupportsRepository.update(id, updatePatientSupportDto);
+    await this.patientSupportsRepository.update(id, { name, phone, kinship });
 
-    this.logger.log(
-      {
-        id,
-        patientId,
-        userId: user.id,
-        userEmail: user.email,
-        userRole: user.role,
-      },
-      'Patient support updated successfully',
-    );
+    this.logger.log('Patient support updated successfully', { id, patientId });
   }
 }

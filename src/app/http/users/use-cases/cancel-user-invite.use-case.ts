@@ -1,29 +1,28 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import { Log } from '@/common/log/log.decorator';
+import { LogService } from '@/common/log/log.service';
 import { Token } from '@/domain/entities/token';
 import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
 
-import type { AuthUserDto } from '../../auth/auth.dtos';
-
 interface CancelUserInviteUseCaseInput {
   id: number;
-  user: AuthUserDto;
 }
 
 @Injectable()
+@Log()
 export class CancelUserInviteUseCase {
-  private readonly logger = new Logger(CancelUserInviteUseCase.name);
-
   constructor(
     @InjectRepository(Token)
     private readonly tokensRepository: Repository<Token>,
+    private readonly logger: LogService,
   ) {}
 
-  async execute({ id, user }: CancelUserInviteUseCaseInput): Promise<void> {
+  async execute({ id }: CancelUserInviteUseCaseInput): Promise<void> {
     const token = await this.tokensRepository.findOne({
-      where: { id, type: AUTH_TOKENS_MAPPING.invite_user },
+      where: { id, type: AUTH_TOKENS_MAPPING.inviteUser },
       select: { id: true },
     });
 
@@ -33,15 +32,9 @@ export class CancelUserInviteUseCase {
 
     await this.tokensRepository.remove(token);
 
-    this.logger.log(
-      {
-        id: token.id,
-        email: token.email,
-        userId: user.id,
-        userEmail: user.email,
-        userRole: user.role,
-      },
-      'Invite user token canceled successfully',
-    );
+    this.logger.log('Invite user token canceled successfully', {
+      id: token.id,
+      email: token.email,
+    });
   }
 }

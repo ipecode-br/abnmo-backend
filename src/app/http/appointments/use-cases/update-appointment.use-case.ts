@@ -1,36 +1,37 @@
 import {
   BadRequestException,
   Injectable,
-  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
+import { Log } from '@/common/log/log.decorator';
+import { LogService } from '@/common/log/log.service';
 import { Appointment } from '@/domain/entities/appointment';
-
-import type { AuthUserDto } from '../../auth/auth.dtos';
-import type { UpdateAppointmentDto } from '../appointments.dtos';
+import type { PatientCondition } from '@/domain/enums/patients';
 
 interface UpdateAppointmentUseCaseInput {
   id: string;
-  user: AuthUserDto;
-  updateAppointmentDto: UpdateAppointmentDto;
+  date: Date;
+  condition: PatientCondition;
+  annotation: string | null;
 }
 
 @Injectable()
+@Log()
 export class UpdateAppointmentUseCase {
-  private readonly logger = new Logger(UpdateAppointmentUseCase.name);
-
   constructor(
     @InjectRepository(Appointment)
     private readonly appointmentsRepository: Repository<Appointment>,
+    private readonly logger: LogService,
   ) {}
 
   async execute({
     id,
-    user,
-    updateAppointmentDto,
+    date,
+    condition,
+    annotation,
   }: UpdateAppointmentUseCaseInput): Promise<void> {
     const appointment = await this.appointmentsRepository.findOne({
       where: { id },
@@ -46,14 +47,12 @@ export class UpdateAppointmentUseCase {
       );
     }
 
-    await this.appointmentsRepository.update(
-      appointment.id,
-      updateAppointmentDto,
-    );
+    await this.appointmentsRepository.update(appointment.id, {
+      date,
+      condition,
+      annotation,
+    });
 
-    this.logger.log(
-      { id, userId: user.id, userEmail: user.email, userRole: user.role },
-      'Appointment updated successfully',
-    );
+    this.logger.log('Appointment updated successfully', { id });
   }
 }

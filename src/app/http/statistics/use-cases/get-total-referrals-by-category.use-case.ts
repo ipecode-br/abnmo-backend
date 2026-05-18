@@ -5,7 +5,7 @@ import type { Repository, SelectQueryBuilder } from 'typeorm';
 import { Referral } from '@/domain/entities/referral';
 import type { QueryPeriod } from '@/domain/enums/queries';
 import type { TotalReferralsByCategory } from '@/domain/schemas/statistics/responses';
-import { UtilsService } from '@/utils/utils.service';
+import { getDateRangeForPeriod } from '@/utils/get-date-range-for-period';
 
 interface GetTotalReferralsByCategoryUseCaseInput {
   patientId?: string;
@@ -25,7 +25,6 @@ export class GetTotalReferralsByCategoryUseCase {
   constructor(
     @InjectRepository(Referral)
     private readonly referralsRepository: Repository<Referral>,
-    private readonly utilsService: UtilsService,
   ) {}
 
   async execute({
@@ -36,7 +35,7 @@ export class GetTotalReferralsByCategoryUseCase {
     limit,
   }: GetTotalReferralsByCategoryUseCaseInput = {}): Promise<GetTotalReferralsByCategoryUseCaseOutput> {
     const dateRange = period
-      ? this.utilsService.getDateRangeForPeriod(period)
+      ? getDateRangeForPeriod(period)
       : { startDate, endDate };
 
     const createBaseQuery = (): SelectQueryBuilder<Referral> => {

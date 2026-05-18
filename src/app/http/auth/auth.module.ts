@@ -10,7 +10,6 @@ import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { EnvModule } from '@/env/env.module';
-import { UtilsModule } from '@/utils/utils.module';
 
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
@@ -28,7 +27,6 @@ import { SignInWithEmailUseCase } from './use-cases/sign-in-with-email.use-case'
     TypeOrmModule.forFeature([Patient, Token, User]),
     CryptographyModule,
     UsersModule,
-    UtilsModule,
     EnvModule,
     MailModule,
   ],

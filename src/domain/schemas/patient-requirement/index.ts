@@ -8,19 +8,19 @@ import {
 export const patientRequirementSchema = z
   .object({
     id: z.string().uuid(),
-    patient_id: z.string().uuid(),
+    patientId: z.string().uuid(),
     type: z.enum(PATIENT_REQUIREMENT_TYPES),
     title: z.string().max(255),
     description: z.string().max(500).nullable(),
     status: z.enum(PATIENT_REQUIREMENT_STATUSES).default('pending'),
-    submitted_at: z.coerce.date().nullable(),
-    approved_by: z.string().uuid().nullable(),
-    approved_at: z.coerce.date().nullable(),
-    declined_by: z.string().uuid().nullable(),
-    declined_at: z.coerce.date().nullable(),
-    created_by: z.string().uuid(),
-    created_at: z.coerce.date(),
-    updated_at: z.coerce.date(),
+    submittedAt: z.coerce.date().nullable(),
+    approvedBy: z.string().uuid().nullable(),
+    approvedAt: z.coerce.date().nullable(),
+    declinedBy: z.string().uuid().nullable(),
+    declinedAt: z.coerce.date().nullable(),
+    createdBy: z.string().uuid(),
+    createdAt: z.coerce.date(),
+    updatedAt: z.coerce.date(),
   })
   .strict();
 export type PatientRequirementSchema = z.infer<typeof patientRequirementSchema>;

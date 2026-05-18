@@ -10,7 +10,7 @@ import { patientSchema } from '.';
 export const createPatientSchema = patientSchema
   .pick({
     name: true,
-    date_of_birth: true,
+    dateOfBirth: true,
     cpf: true,
     gender: true,
     race: true,
@@ -18,12 +18,12 @@ export const createPatientSchema = patientSchema
     city: true,
     email: true,
     phone: true,
-    has_disability: true,
-    disability_desc: true,
-    take_medication: true,
-    medication_desc: true,
-    need_legal_assistance: true,
-    nmo_diagnosis: true,
+    hasDisability: true,
+    disabilityDesc: true,
+    takeMedication: true,
+    medicationDesc: true,
+    needLegalAssistance: true,
+    nmoDiagnosis: true,
   })
   .extend({
     supports: z
@@ -38,11 +38,11 @@ export const createPatientSchema = patientSchema
   })
   .merge(
     patientSchema.pick({
-      has_disability: true,
-      disability_desc: true,
-      need_legal_assistance: true,
-      take_medication: true,
-      medication_desc: true,
+      hasDisability: true,
+      disabilityDesc: true,
+      needLegalAssistance: true,
+      takeMedication: true,
+      medicationDesc: true,
     }),
   );
 

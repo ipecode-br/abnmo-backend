@@ -9,9 +9,9 @@ export const patientResponseSchema = patientSchema.pick({
   name: true,
   email: true,
   status: true,
-  avatar_url: true,
+  avatarUrl: true,
   phone: true,
-  created_at: true,
+  createdAt: true,
 });
 export type PatientResponse = z.infer<typeof patientResponseSchema>;
 

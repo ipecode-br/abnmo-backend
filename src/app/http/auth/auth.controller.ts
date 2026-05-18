@@ -2,15 +2,16 @@ import { Body, Controller, Post, Res } from '@nestjs/common';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import type { Response } from 'express';
 
-import { AuthUser } from '@/common/decorators/auth-user.decorator';
 import { Cookies } from '@/common/decorators/cookies.decorator';
 import { Public } from '@/common/decorators/public.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
+import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
+import { Log } from '@/common/log/log.decorator';
+import type { AuthUser } from '@/common/types';
 import { COOKIES_MAPPING } from '@/domain/cookies';
 
 import {
-  AuthUserDto,
   ChangePasswordDto,
   RecoverPasswordDto,
   RegisterPatientDto,
@@ -43,38 +44,32 @@ export class AuthController {
 
   @Public()
   @Post('login')
+  @Log('sign_in')
   @ApiOperation({ summary: 'Inicia a sessão do usuário ou paciente' })
   @ApiResponse({ type: SignInWithEmailResponse })
   async login(
     @Body() signInWithEmailDto: SignInWithEmailDto,
     @Res({ passthrough: true }) response: Response,
   ): Promise<SignInWithEmailResponse> {
-    const {
-      email,
-      password,
-      keep_logged_in: keepLoggedIn,
-    } = signInWithEmailDto;
-
     const { accountType } = await this.signInUseCase.execute({
-      email,
-      password,
-      keepLoggedIn,
       response,
+      ...signInWithEmailDto,
     });
 
     return {
       success: true,
       message: 'Login realizado com sucesso.',
-      data: { account_type: accountType },
+      data: { accountType },
     };
   }
 
   @Public()
   @Post('refresh-token')
+  @Log('refresh_token')
   @ApiOperation({ summary: 'Atualiza o token de acesso' })
   @ApiResponse({ type: BaseResponse })
   async refreshToken(
-    @Cookies(COOKIES_MAPPING.refresh_token) refreshToken: string,
+    @Cookies(COOKIES_MAPPING.refreshToken) refreshToken: string,
     @Res({ passthrough: true }) response: Response,
   ): Promise<BaseResponse> {
     await this.refreshTokenUseCase.execute({ refreshToken, response });
@@ -85,46 +80,18 @@ export class AuthController {
     };
   }
 
-  // TODO: update this controller when register patient use-case is refactored
   @Public()
   @Post('register/patient')
+  @Log('register_patient')
   @ApiOperation({ summary: 'Registra um novo paciente' })
   @ApiResponse({ type: BaseResponse })
   async registerPatient(
     @Body() registerPatientDto: RegisterPatientDto,
     @Res({ passthrough: true }) response: Response,
   ): Promise<BaseResponse> {
-    await this.registerPatientUseCase.execute({ registerPatientDto, response });
-
-    return {
-      success: true,
-      message: 'Sua conta foi cadastrada com sucesso.',
-    };
-  }
-
-  @Public()
-  @Post('register/user')
-  @ApiOperation({ summary: 'Registra um novo usuário via convite' })
-  @ApiResponse({ type: BaseResponse })
-  async registerUser(
-    @Body() registerUserDto: RegisterUserDto,
-    @Res({ passthrough: true }) response: Response,
-  ): Promise<BaseResponse> {
-    const {
-      name,
-      password,
-      specialty,
-      registration_id: registrationId,
-      invite_token: inviteToken,
-    } = registerUserDto;
-
-    await this.registerUserUseCase.execute({
-      name,
-      password,
-      specialty,
-      registrationId,
-      inviteToken,
+    await this.registerPatientUseCase.execute({
       response,
+      ...registerPatientDto,
     });
 
     return {
@@ -134,15 +101,31 @@ export class AuthController {
   }
 
   @Public()
+  @Post('register/user')
+  @Log('register_user')
+  @ApiOperation({ summary: 'Registra um novo usuário via convite' })
+  @ApiResponse({ type: BaseResponse })
+  async registerUser(
+    @Body() registerUserDto: RegisterUserDto,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<BaseResponse> {
+    await this.registerUserUseCase.execute({ response, ...registerUserDto });
+
+    return {
+      success: true,
+      message: 'Sua conta foi cadastrada com sucesso.',
+    };
+  }
+
+  @Public()
   @Post('recover-password')
+  @Log('recover_password')
   @ApiOperation({ summary: 'Solicita recuperação de senha' })
   @ApiResponse({ type: BaseResponse })
   async recoverPassword(
     @Body() recoverPasswordDto: RecoverPasswordDto,
   ): Promise<BaseResponse> {
-    const { email } = recoverPasswordDto;
-
-    await this.recoverPasswordUseCase.execute({ email });
+    await this.recoverPasswordUseCase.execute(recoverPasswordDto);
 
     return {
       success: true,
@@ -153,15 +136,14 @@ export class AuthController {
 
   @Public()
   @Post('reset-password')
+  @Log('reset_password')
   @ApiOperation({ summary: 'Solicita redefinição de senha' })
   @ApiResponse({ type: BaseResponse })
   async resetPassword(
     @Body() resetPasswordDto: ResetPasswordDto,
     @Res({ passthrough: true }) response: Response,
   ): Promise<BaseResponse> {
-    const { password, reset_token: resetToken } = resetPasswordDto;
-
-    await this.resetPasswordUseCase.execute({ password, resetToken, response });
+    await this.resetPasswordUseCase.execute({ response, ...resetPasswordDto });
 
     return {
       success: true,
@@ -169,19 +151,18 @@ export class AuthController {
     };
   }
 
-  @Roles(['all'])
   @Post('change-password')
+  @Log('change_password')
+  @Roles(['all'])
   @ApiOperation({
     summary: 'Altera a senha do usuário ou paciente autenticado',
   })
   @ApiResponse({ type: BaseResponse })
   async changePassword(
-    @AuthUser() user: AuthUserDto,
+    @User() user: AuthUser,
     @Body() changePasswordDto: ChangePasswordDto,
   ): Promise<BaseResponse> {
-    const { password, new_password: newPassword } = changePasswordDto;
-
-    await this.changePasswordUseCase.execute({ user, password, newPassword });
+    await this.changePasswordUseCase.execute({ user, ...changePasswordDto });
 
     return {
       success: true,
@@ -189,12 +170,13 @@ export class AuthController {
     };
   }
 
-  @Roles(['all'])
   @Post('logout')
+  @Log('logout')
+  @Roles(['all'])
   @ApiOperation({ summary: 'Encerra a sessão do usuário ou paciente' })
   @ApiResponse({ type: BaseResponse })
   async logout(
-    @Cookies(COOKIES_MAPPING.refresh_token) refreshToken: string,
+    @Cookies(COOKIES_MAPPING.refreshToken) refreshToken: string,
     @Res({ passthrough: true }) response: Response,
   ): Promise<BaseResponse> {
     await this.logoutUseCase.execute({ response, refreshToken });

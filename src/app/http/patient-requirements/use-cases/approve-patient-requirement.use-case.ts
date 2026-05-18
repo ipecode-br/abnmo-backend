@@ -1,28 +1,28 @@
 import {
   ConflictException,
   Injectable,
-  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
+import { Log } from '@/common/log/log.decorator';
+import { LogService } from '@/common/log/log.service';
+import type { AuthUser } from '@/common/types';
 import { PatientRequirement } from '@/domain/entities/patient-requirement';
-
-import type { AuthUserDto } from '../../auth/auth.dtos';
 
 interface ApprovePatientRequirementUseCaseInput {
   id: string;
-  user: AuthUserDto;
+  user: AuthUser;
 }
 
 @Injectable()
+@Log()
 export class ApprovePatientRequirementUseCase {
-  private readonly logger = new Logger(ApprovePatientRequirementUseCase.name);
-
   constructor(
     @InjectRepository(PatientRequirement)
     private readonly patientRequirementsRepository: Repository<PatientRequirement>,
+    private readonly logger: LogService,
   ) {}
 
   async execute({
@@ -46,13 +46,10 @@ export class ApprovePatientRequirementUseCase {
 
     await this.patientRequirementsRepository.update(id, {
       status: 'approved',
-      approved_by: user.id,
-      approved_at: new Date(),
+      approvedBy: user.id,
+      approvedAt: new Date(),
     });
 
-    this.logger.log(
-      { id, userId: user.id, userEmail: user.email, userRole: user.role },
-      'Patient requirement approved successfully',
-    );
+    this.logger.log('Patient requirement approved successfully', { id });
   }
 }

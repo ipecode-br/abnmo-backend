@@ -5,7 +5,7 @@ import type { Repository, SelectQueryBuilder } from 'typeorm';
 import { Patient } from '@/domain/entities/patient';
 import type { QueryOrder, QueryPeriod } from '@/domain/enums/queries';
 import type { PatientsStatisticField } from '@/domain/enums/statistics';
-import { UtilsService } from '@/utils/utils.service';
+import { getDateRangeForPeriod } from '@/utils/get-date-range-for-period';
 
 import { GetTotalPatientsUseCase } from './get-total-patients.use-case';
 
@@ -30,7 +30,6 @@ export class GetTotalPatientsByFieldUseCase {
     @InjectRepository(Patient)
     private readonly patientsRepository: Repository<Patient>,
     private readonly getTotalPatientsUseCase: GetTotalPatientsUseCase,
-    private readonly utilsService: UtilsService,
   ) {}
 
   async execute<T>({
@@ -45,7 +44,7 @@ export class GetTotalPatientsByFieldUseCase {
     GetTotalPatientsByFieldUseCaseOutput<T>
   > {
     const dateRange = period
-      ? this.utilsService.getDateRangeForPeriod(period)
+      ? getDateRangeForPeriod(period)
       : { startDate, endDate };
 
     const totalPatients = await this.getTotalPatientsUseCase.execute({

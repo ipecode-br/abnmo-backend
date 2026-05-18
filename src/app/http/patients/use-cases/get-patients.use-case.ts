@@ -11,13 +11,19 @@ import {
 } from 'typeorm';
 
 import { Patient } from '@/domain/entities/patient';
-import type { PatientOrderBy } from '@/domain/enums/patients';
+import type { PatientOrderBy, PatientStatus } from '@/domain/enums/patients';
+import type { QueryOrder } from '@/domain/enums/queries';
 import type { PatientResponse } from '@/domain/schemas/patients/responses';
 
-import type { GetPatientsQuery } from '../patients.dtos';
-
 interface GetPatientsUseCaseInput {
-  query: GetPatientsQuery;
+  page: number;
+  perPage: number;
+  search?: string;
+  order?: QueryOrder;
+  orderBy?: PatientOrderBy;
+  status?: PatientStatus;
+  startDate?: string;
+  endDate?: string;
 }
 
 interface GetPatientsUseCaseOutput {
@@ -33,17 +39,20 @@ export class GetPatientsUseCase {
   ) {}
 
   async execute({
-    query,
+    search,
+    status,
+    page,
+    perPage,
+    ...props
   }: GetPatientsUseCaseInput): Promise<GetPatientsUseCaseOutput> {
-    const { search, order, orderBy, status, page, perPage } = query;
-    const startDate = query.startDate ? new Date(query.startDate) : null;
-    const endDate = query.endDate ? new Date(query.endDate) : null;
+    const startDate = props.startDate ? new Date(props.startDate) : null;
+    const endDate = props.endDate ? new Date(props.endDate) : null;
 
     const ORDER_BY_MAPPING: Record<PatientOrderBy, keyof Patient> = {
       name: 'name',
       email: 'email',
       status: 'status',
-      date: 'created_at',
+      date: 'createdAt',
     };
 
     const where: FindOptionsWhere<Patient> = {
@@ -55,18 +64,20 @@ export class GetPatientsUseCase {
     }
 
     if (startDate && endDate) {
-      where.created_at = Between(startDate, endDate);
+      where.createdAt = Between(startDate, endDate);
     }
 
     if (startDate && !endDate) {
-      where.created_at = MoreThanOrEqual(startDate);
+      where.createdAt = MoreThanOrEqual(startDate);
     }
 
     if (endDate && !startDate) {
-      where.created_at = LessThanOrEqual(endDate);
+      where.createdAt = LessThanOrEqual(endDate);
     }
 
     const total = await this.patientsRepository.count({ where });
+
+    const orderBy = ORDER_BY_MAPPING[props.orderBy || 'name'];
 
     const patients = await this.patientsRepository.find({
       where,
@@ -75,11 +86,11 @@ export class GetPatientsUseCase {
         name: true,
         email: true,
         status: true,
-        avatar_url: true,
+        avatarUrl: true,
         phone: true,
-        created_at: true,
+        createdAt: true,
       },
-      order: { [ORDER_BY_MAPPING[orderBy]]: order },
+      order: { [orderBy]: props.order },
       skip: (page - 1) * perPage,
       take: perPage,
     });

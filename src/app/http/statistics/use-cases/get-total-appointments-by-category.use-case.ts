@@ -5,7 +5,7 @@ import type { Repository, SelectQueryBuilder } from 'typeorm';
 import { Appointment } from '@/domain/entities/appointment';
 import type { QueryPeriod } from '@/domain/enums/queries';
 import type { TotalAppointmentsByCategory } from '@/domain/schemas/statistics/responses';
-import { UtilsService } from '@/utils/utils.service';
+import { getDateRangeForPeriod } from '@/utils/get-date-range-for-period';
 
 interface GetTotalAppointmentsByCategoryUseCaseInput {
   patientId?: string;
@@ -25,7 +25,6 @@ export class GetTotalAppointmentsByCategoryUseCase {
   constructor(
     @InjectRepository(Appointment)
     private readonly appointmentsRepository: Repository<Appointment>,
-    private readonly utilsService: UtilsService,
   ) {}
 
   async execute({
@@ -36,7 +35,7 @@ export class GetTotalAppointmentsByCategoryUseCase {
     limit,
   }: GetTotalAppointmentsByCategoryUseCaseInput = {}): Promise<GetTotalAppointmentsByCategoryUseCaseOutput> {
     const dateRange = period
-      ? this.utilsService.getDateRangeForPeriod(period)
+      ? getDateRangeForPeriod(period)
       : { startDate, endDate };
 
     const createBaseQuery = (): SelectQueryBuilder<Appointment> => {

@@ -1,35 +1,40 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
+import { Log } from '@/common/log/log.decorator';
+import { LogService } from '@/common/log/log.service';
+import type { AuthUser } from '@/common/types';
 import { Patient } from '@/domain/entities/patient';
 import { PatientRequirement } from '@/domain/entities/patient-requirement';
-
-import type { AuthUserDto } from '../../auth/auth.dtos';
-import type { CreatePatientRequirementDto } from '../patient-requirements.dtos';
+import type { PatientRequirementType } from '@/domain/enums/patient-requirements';
 
 interface CreatePatientRequirementUseCaseInput {
-  createPatientRequirementDto: CreatePatientRequirementDto;
-  user: AuthUserDto;
+  user: AuthUser;
+  patientId: string;
+  type: PatientRequirementType;
+  title: string;
+  description: string | null;
 }
 
 @Injectable()
+@Log()
 export class CreatePatientRequirementUseCase {
-  private readonly logger = new Logger(CreatePatientRequirementUseCase.name);
-
   constructor(
     @InjectRepository(Patient)
     private readonly patientsRepository: Repository<Patient>,
     @InjectRepository(PatientRequirement)
     private readonly patientRequirementsRepository: Repository<PatientRequirement>,
+    private readonly logger: LogService,
   ) {}
 
   async execute({
-    createPatientRequirementDto,
     user,
+    patientId,
+    type,
+    title,
+    description,
   }: CreatePatientRequirementUseCaseInput): Promise<void> {
-    const { patient_id: patientId } = createPatientRequirementDto;
-
     const patient = await this.patientsRepository.findOne({
       where: { id: patientId },
       select: { id: true },
@@ -40,21 +45,18 @@ export class CreatePatientRequirementUseCase {
     }
 
     const patientRequirement = this.patientRequirementsRepository.create({
-      ...createPatientRequirementDto,
-      created_by: user.id,
+      patientId,
+      type,
+      title,
+      description,
+      createdBy: user.id,
     });
 
     await this.patientRequirementsRepository.save(patientRequirement);
 
-    this.logger.log(
-      {
-        id: patientRequirement.id,
-        patientId,
-        userId: user.id,
-        userEmail: user.email,
-        userRole: user.role,
-      },
-      'Requirement created successfully',
-    );
+    this.logger.log('Requirement created successfully', {
+      id: patientRequirement.id,
+      patientId,
+    });
   }
 }

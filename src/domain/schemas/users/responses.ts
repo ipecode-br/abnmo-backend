@@ -8,13 +8,13 @@ export const userResponseSchema = userSchema.pick({
   id: true,
   name: true,
   email: true,
-  avatar_url: true,
+  avatarUrl: true,
   status: true,
   role: true,
   specialty: true,
-  registration_id: true,
-  updated_at: true,
-  created_at: true,
+  registrationId: true,
+  updatedAt: true,
+  createdAt: true,
 });
 export type UserResponse = z.infer<typeof userResponseSchema>;
 
@@ -32,8 +32,8 @@ export const getUsersResponseSchema = baseResponseSchema.extend({
 export const userInviteResponseSchema = authTokenSchema.pick({
   id: true,
   email: true,
-  expires_at: true,
-  created_at: true,
+  expiresAt: true,
+  createdAt: true,
 });
 export type UserInviteResponse = z.infer<typeof userInviteResponseSchema>;
 

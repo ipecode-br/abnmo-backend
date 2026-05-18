@@ -2,36 +2,35 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
-  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import { Log } from '@/common/log/log.decorator';
+import { LogService } from '@/common/log/log.service';
+import type { AuthUser } from '@/common/types';
 import { User } from '@/domain/entities/user';
-
-import type { AuthUserDto } from '../../auth/auth.dtos';
 
 interface ActivateUserUseCaseInput {
   id: string;
-  user: AuthUserDto;
+  user: AuthUser;
 }
 
 @Injectable()
+@Log()
 export class ActivateUserUseCase {
-  private readonly logger = new Logger(ActivateUserUseCase.name);
-
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    private readonly logger: LogService,
   ) {}
 
   async execute({ id, user }: ActivateUserUseCaseInput): Promise<void> {
     if (user.role !== 'admin') {
-      this.logger.log(
-        { id, userId: user.id, userEmail: user.email },
-        'Activate user failed: User does not have permission',
-      );
+      this.logger.log('Activate user failed: User does not have permission', {
+        id,
+      });
       throw new ForbiddenException(
         'Você não tem permissão para ativar usuários.',
       );
@@ -52,9 +51,6 @@ export class ActivateUserUseCase {
 
     await this.usersRepository.update({ id }, { status: 'active' });
 
-    this.logger.log(
-      { id, userId: user.id, userEmail: user.email },
-      'User activated successfully',
-    );
+    this.logger.log('User activated successfully', { id });
   }
 }

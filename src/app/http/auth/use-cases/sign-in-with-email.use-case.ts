@@ -1,7 +1,6 @@
 import {
   ForbiddenException,
   Injectable,
-  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -10,13 +9,14 @@ import { Repository } from 'typeorm';
 
 import { CryptographyService } from '@/app/cryptography/crypography.service';
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
+import { Log } from '@/common/log/log.decorator';
+import { LogService } from '@/common/log/log.service';
 import { COOKIES_MAPPING } from '@/domain/cookies';
 import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { AUTH_TOKENS_MAPPING, type AuthTokenRole } from '@/domain/enums/tokens';
 import type { RefreshToken } from '@/domain/schemas/tokens';
-import { UtilsService } from '@/utils/utils.service';
 
 interface SignInWithEmailUseCaseInput {
   email: string;
@@ -30,9 +30,8 @@ interface SignInWithEmailUseCaseOutput {
 }
 
 @Injectable()
+@Log()
 export class SignInWithEmailUseCase {
-  private readonly logger = new Logger(SignInWithEmailUseCase.name);
-
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
@@ -42,7 +41,7 @@ export class SignInWithEmailUseCase {
     private readonly tokensRepository: Repository<Token>,
     private readonly createTokenUseCase: CreateTokenUseCase,
     private readonly cryptographyService: CryptographyService,
-    private readonly utilsService: UtilsService,
+    private readonly logger: LogService,
   ) {}
 
   async execute({
@@ -68,22 +67,11 @@ export class SignInWithEmailUseCase {
 
     if (patient) {
       entity = patient;
-
-      // TODO: remove this error when patient dashboard is ready
-      throw new UnauthorizedException(
-        'O sistema ainda não está liberado para pacientes.',
-      );
     }
 
     if (!entity || !entity.password) {
       throw new UnauthorizedException(
         'Credenciais inválidas. Por favor, tente novamente.',
-      );
-    }
-
-    if (entity.status === 'inactive') {
-      throw new ForbiddenException(
-        'Permissão de acesso negada. Sua conta está inativa.',
       );
     }
 
@@ -98,14 +86,27 @@ export class SignInWithEmailUseCase {
       );
     }
 
+    if (role === 'patient') {
+      // TODO: remove this error when patient dashboard is ready
+      throw new UnauthorizedException(
+        'O sistema ainda não está liberado para pacientes.',
+      );
+    }
+
+    if (entity.status === 'inactive') {
+      throw new ForbiddenException(
+        'Permissão de acesso negada. Sua conta está inativa.',
+      );
+    }
+
     const { maxAge: accessTokenMaxAge, token: accessToken } =
       await this.createTokenUseCase.execute({
-        type: AUTH_TOKENS_MAPPING.access_token,
+        type: AUTH_TOKENS_MAPPING.accessToken,
         payload: { sub: entity.id, role },
       });
 
-    this.utilsService.setCookie(response, {
-      name: COOKIES_MAPPING.access_token,
+    this.cryptographyService.setCookie(response, {
+      name: COOKIES_MAPPING.accessToken,
       maxAge: accessTokenMaxAge,
       value: accessToken,
     });
@@ -116,29 +117,33 @@ export class SignInWithEmailUseCase {
         token: refreshToken,
         expiresAt,
       } = await this.createTokenUseCase.execute({
-        type: AUTH_TOKENS_MAPPING.refresh_token,
+        type: AUTH_TOKENS_MAPPING.refreshToken,
         payload: { sub: entity.id, role },
       });
 
       await this.tokensRepository.save<RefreshToken>({
-        type: AUTH_TOKENS_MAPPING.refresh_token,
-        expires_at: expiresAt,
-        entity_id: entity.id,
+        type: AUTH_TOKENS_MAPPING.refreshToken,
+        expiresAt: expiresAt,
+        entityId: entity.id,
         token: refreshToken,
       });
 
-      this.utilsService.setCookie(response, {
-        name: COOKIES_MAPPING.refresh_token,
+      this.cryptographyService.setCookie(response, {
+        name: COOKIES_MAPPING.refreshToken,
         maxAge: refreshTokenMaxAge,
         value: refreshToken,
       });
     }
 
-    this.logger.log(
-      { entityId: entity.id, email, role, keepLoggedIn },
-      'Entity signed in with e-mail',
-    );
+    this.logger.log('Entity signed in with e-mail', {
+      id: entity.id,
+      email,
+      role,
+      keepLoggedIn,
+    });
 
-    return { accountType: role === 'patient' ? 'patient' : 'user' };
+    // TODO: return account type based on role when patient dashboard is ready
+    // return { accountType: role === 'patient' ? 'patient' : 'user' };
+    return { accountType: 'user' };
   }
 }

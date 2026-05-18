@@ -1,36 +1,37 @@
 import {
   BadRequestException,
   Injectable,
-  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
+import { Log } from '@/common/log/log.decorator';
+import { LogService } from '@/common/log/log.service';
 import { Referral } from '@/domain/entities/referral';
-
-import type { AuthUserDto } from '../../auth/auth.dtos';
-import type { UpdateReferralDto } from '../referrals.dtos';
+import type { PatientCondition } from '@/domain/enums/patients';
 
 interface UpdateReferralUseCaseInput {
   id: string;
-  user: AuthUserDto;
-  updateReferralDto: UpdateReferralDto;
+  date: Date;
+  condition: PatientCondition;
+  annotation: string | null;
 }
 
 @Injectable()
+@Log()
 export class UpdateReferralUseCase {
-  private readonly logger = new Logger(UpdateReferralUseCase.name);
-
   constructor(
     @InjectRepository(Referral)
     private readonly referralsRepository: Repository<Referral>,
+    private readonly logger: LogService,
   ) {}
 
   async execute({
     id,
-    user,
-    updateReferralDto,
+    date,
+    condition,
+    annotation,
   }: UpdateReferralUseCaseInput): Promise<void> {
     const referral = await this.referralsRepository.findOne({ where: { id } });
 
@@ -44,11 +45,12 @@ export class UpdateReferralUseCase {
       );
     }
 
-    await this.referralsRepository.update(referral.id, updateReferralDto);
+    await this.referralsRepository.update(referral.id, {
+      date,
+      condition,
+      annotation,
+    });
 
-    this.logger.log(
-      { id, userId: user.id, userEmail: user.email, userRole: user.role },
-      'Referral updated successfully',
-    );
+    this.logger.log('Referral updated successfully', { id });
   }
 }

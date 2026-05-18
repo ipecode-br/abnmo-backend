@@ -33,7 +33,7 @@ import { GetTotalAppointmentsByCategoryUseCase } from './use-cases/get-total-app
 import { GetTotalPatientsUseCase } from './use-cases/get-total-patients.use-case';
 import { GetTotalPatientsByFieldUseCase } from './use-cases/get-total-patients-by-field.use-case';
 import { GetTotalPatientsWithAppointmentsUseCase } from './use-cases/get-total-patients-with-appointments.use-case';
-import { GetTotalPatientsWithAppointmentsByStateUseCase } from './use-cases/get-total-patients-with-appointments-by-state';
+import { GetTotalPatientsWithAppointmentsByStateUseCase } from './use-cases/get-total-patients-with-appointments-by-state.use-case';
 import { GetTotalPatientsWithReferralsUseCase } from './use-cases/get-total-patients-with-referrals.use-case';
 import { GetTotalPatientsWithReferralsByStateUseCase } from './use-cases/get-total-patients-with-referrals-by-state.use-case';
 import { GetTotalReferralsUseCase } from './use-cases/get-total-referrals.use-case';

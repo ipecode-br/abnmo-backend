@@ -1,22 +1,22 @@
 import {
   BadRequestException,
   Injectable,
-  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
+import { Log } from '@/common/log/log.decorator';
+import { LogService } from '@/common/log/log.service';
+import type { AuthUser } from '@/common/types';
 import { Patient } from '@/domain/entities/patient';
 import { Referral } from '@/domain/entities/referral';
 import { User } from '@/domain/entities/user';
 import type { PatientCondition } from '@/domain/enums/patients';
 import type { SpecialtyCategory } from '@/domain/enums/shared';
 
-import type { AuthUserDto } from '../../auth/auth.dtos';
-
 interface CreateReferralUseCaseInput {
-  user: AuthUserDto;
+  user: AuthUser;
   patientId: string;
   date: Date;
   condition: PatientCondition;
@@ -26,9 +26,8 @@ interface CreateReferralUseCaseInput {
 }
 
 @Injectable()
+@Log()
 export class CreateReferralUseCase {
-  private readonly logger = new Logger(CreateReferralUseCase.name);
-
   constructor(
     @InjectRepository(Patient)
     private readonly patientsRepository: Repository<Patient>,
@@ -36,6 +35,7 @@ export class CreateReferralUseCase {
     private readonly referralsRepository: Repository<Referral>,
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    private readonly logger: LogService,
   ) {}
 
   async execute({
@@ -57,14 +57,14 @@ export class CreateReferralUseCase {
     }
 
     const referralPayload: Partial<Referral> = {
-      patient_id: patientId,
+      patientId: patientId,
       date,
       category,
       condition,
-      professional_name: professionalName,
+      professionalName,
       annotation,
       status: 'scheduled',
-      created_by: user.id,
+      createdBy: user.id,
     };
 
     if (user.role === 'specialist') {
@@ -83,8 +83,8 @@ export class CreateReferralUseCase {
         throw new NotFoundException('Especialista não encontrado.');
       }
 
-      referralPayload.user_id = specialist.id;
-      referralPayload.professional_name = specialist.name;
+      referralPayload.userId = specialist.id;
+      referralPayload.professionalName = specialist.name;
       referralPayload.category = specialist.specialty;
     }
 
@@ -97,15 +97,9 @@ export class CreateReferralUseCase {
     const referral = this.referralsRepository.create(referralPayload);
     await this.referralsRepository.save(referral);
 
-    this.logger.log(
-      {
-        id: referral.id,
-        patientId,
-        userId: user.id,
-        userEmail: user.email,
-        userRole: user.role,
-      },
-      'Referral created successfully',
-    );
+    this.logger.log('Referral created successfully', {
+      id: referral.id,
+      patientId,
+    });
   }
 }

@@ -100,8 +100,8 @@ async function main() {
         email: `${role}@ipecode.com.br`,
         password,
         role,
-        avatar_url: faker.image.avatar(),
-        created_at: faker.date.between({ from: fourMonthsAgo, to: new Date() }),
+        avatarUrl: faker.image.avatar(),
+        createdAt: faker.date.between({ from: fourMonthsAgo, to: new Date() }),
       });
       await usersRepository.save(user);
     }
@@ -115,9 +115,9 @@ async function main() {
         role: 'specialist',
         status: faker.helpers.arrayElement(USER_STATUSES),
         specialty: faker.helpers.arrayElement(SPECIALTY_CATEGORIES),
-        registration_id: faker.vehicle.vrm(),
-        avatar_url: faker.image.avatar(),
-        created_at: faker.date.between({ from: fourMonthsAgo, to: new Date() }),
+        registrationId: faker.vehicle.vrm(),
+        avatarUrl: faker.image.avatar(),
+        createdAt: faker.date.between({ from: fourMonthsAgo, to: new Date() }),
       });
       await usersRepository.save(user);
     }
@@ -127,22 +127,22 @@ async function main() {
       name: faker.person.fullName(),
       email: 'patient@ipecode.com.br',
       password,
-      avatar_url: faker.image.avatar(),
+      avatarUrl: faker.image.avatar(),
       status: 'active',
       gender: faker.helpers.arrayElement(PATIENT_GENDERS),
       race: faker.helpers.arrayElement(PATIENT_RACES),
-      date_of_birth: faker.date.birthdate({ min: 18, max: 80, mode: 'age' }),
+      dateOfBirth: faker.date.birthdate({ min: 18, max: 80, mode: 'age' }),
       phone: faker.string.numeric(11),
       cpf: faker.string.numeric(11),
       state: 'BA',
       city: getRandomCity('BA'),
-      has_disability: true,
-      disability_desc: faker.lorem.sentence(),
-      need_legal_assistance: faker.datatype.boolean(),
-      take_medication: false,
-      medication_desc: null,
-      nmo_diagnosis: faker.helpers.arrayElement(PATIENT_NMO_DIAGNOSTICS),
-      created_at: faker.date.between({ from: fourMonthsAgo, to: new Date() }),
+      hasDisability: true,
+      disabilityDesc: faker.lorem.sentence(),
+      needLegalAssistance: faker.datatype.boolean(),
+      takeMedication: false,
+      medicationDesc: null,
+      nmoDiagnosis: faker.helpers.arrayElement(PATIENT_NMO_DIAGNOSTICS),
+      createdAt: faker.date.between({ from: fourMonthsAgo, to: new Date() }),
     });
     await patientsRepository.save(patient);
 
@@ -164,27 +164,27 @@ async function main() {
         );
       }
 
-      const has_disability = faker.datatype.boolean();
-      const take_medication = faker.datatype.boolean();
+      const hasDisability = faker.datatype.boolean();
+      const takeMedication = faker.datatype.boolean();
       const newPatient = patientsRepository.create({
         name: faker.person.fullName(),
         email: faker.internet.email().toLowerCase(),
         password,
-        avatar_url: faker.image.avatar(),
+        avatarUrl: faker.image.avatar(),
         status: patientStatus,
         gender: faker.helpers.arrayElement(PATIENT_GENDERS),
-        date_of_birth: faker.date.birthdate({ min: 18, max: 80, mode: 'age' }),
+        dateOfBirth: faker.date.birthdate({ min: 18, max: 80, mode: 'age' }),
         phone: faker.string.numeric(11),
         cpf: faker.string.numeric(11),
         state: selectedState,
         city: getRandomCity(selectedState),
-        has_disability,
-        disability_desc: has_disability ? faker.lorem.sentence() : null,
-        need_legal_assistance: faker.datatype.boolean(),
-        take_medication,
-        medication_desc: take_medication ? faker.lorem.sentence() : null,
-        nmo_diagnosis: faker.helpers.arrayElement(PATIENT_NMO_DIAGNOSTICS),
-        created_at: faker.date.between({ from: fourMonthsAgo, to: new Date() }),
+        hasDisability,
+        disabilityDesc: hasDisability ? faker.lorem.sentence() : null,
+        needLegalAssistance: faker.datatype.boolean(),
+        takeMedication,
+        medicationDesc: takeMedication ? faker.lorem.sentence() : null,
+        nmoDiagnosis: faker.helpers.arrayElement(PATIENT_NMO_DIAGNOSTICS),
+        createdAt: faker.date.between({ from: fourMonthsAgo, to: new Date() }),
       });
       await patientsRepository.save(newPatient);
 
@@ -209,15 +209,15 @@ async function main() {
       const appointmentCount = faker.number.int({ min: 0, max: 2 });
       for (let j = 0; j < appointmentCount; j++) {
         const appointment = appointmentsRepository.create({
-          patient_id: newPatient.id,
+          patientId: newPatient.id,
           date: faker.date.between({ from: twoMonthsAgo, to: twoMonthsAhead }),
           status: faker.helpers.arrayElement(APPOINTMENT_STATUSES),
           category: faker.helpers.arrayElement(SPECIALTY_CATEGORIES),
           condition: faker.helpers.arrayElement(PATIENT_CONDITIONS),
           annotation: faker.datatype.boolean() ? faker.lorem.sentence() : null,
-          professional_name: faker.person.fullName(),
-          created_by: faker.string.uuid(),
-          created_at: faker.date.between({
+          professionalName: faker.person.fullName(),
+          createdBy: faker.string.uuid(),
+          createdAt: faker.date.between({
             from: fourMonthsAgo,
             to: new Date(),
           }),
@@ -229,15 +229,15 @@ async function main() {
       const referralCount = faker.number.int({ min: 0, max: 2 });
       for (let j = 0; j < referralCount; j++) {
         const referral = referralsRepository.create({
-          patient_id: newPatient.id,
+          patientId: newPatient.id,
           date: faker.date.between({ from: twoMonthsAgo, to: twoMonthsAhead }),
           status: faker.helpers.arrayElement(REFERRAL_STATUSES),
           category: faker.helpers.arrayElement(SPECIALTY_CATEGORIES),
           condition: faker.helpers.arrayElement(PATIENT_CONDITIONS),
           annotation: faker.datatype.boolean() ? faker.lorem.sentence() : null,
-          professional_name: faker.person.fullName(),
-          created_by: faker.string.uuid(),
-          created_at: faker.date.between({
+          professionalName: faker.person.fullName(),
+          createdBy: faker.string.uuid(),
+          createdAt: faker.date.between({
             from: fourMonthsAgo,
             to: new Date(),
           }),
@@ -250,21 +250,21 @@ async function main() {
       for (let j = 0; j < requirementCount; j++) {
         const status = faker.helpers.arrayElement(PATIENT_REQUIREMENT_STATUSES);
         const patientRequirement = patientRequirementsRepository.create({
-          patient_id: newPatient.id,
+          patientId: newPatient.id,
           type: faker.helpers.arrayElement(PATIENT_REQUIREMENT_TYPES),
           title: faker.lorem.words(3),
           description: faker.lorem.sentence(),
           status,
-          submitted_at:
+          submittedAt:
             status === 'under_review'
               ? faker.date.between({ from: oneMonthAgo, to: new Date() })
               : null,
-          approved_at:
+          approvedAt:
             status === 'approved'
               ? faker.date.between({ from: twoMonthsAgo, to: new Date() })
               : null,
-          created_by: faker.string.uuid(),
-          created_at: faker.date.between({
+          createdBy: faker.string.uuid(),
+          createdAt: faker.date.between({
             from: fourMonthsAgo,
             to: new Date(),
           }),

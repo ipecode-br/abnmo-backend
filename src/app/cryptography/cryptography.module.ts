@@ -9,6 +9,7 @@ import { CreateTokenUseCase } from './use-cases/create-token.use-case';
 
 @Module({
   imports: [
+    EnvModule,
     JwtModule.registerAsync({
       imports: [EnvModule],
       inject: [EnvService],

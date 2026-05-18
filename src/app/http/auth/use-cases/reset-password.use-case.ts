@@ -1,6 +1,5 @@
 import {
   Injectable,
-  Logger,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -11,13 +10,14 @@ import { Repository } from 'typeorm';
 import { CryptographyService } from '@/app/cryptography/crypography.service';
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
 import { MailService } from '@/app/mail/mail.service';
+import { Log } from '@/common/log/log.decorator';
+import { LogService } from '@/common/log/log.service';
 import { COOKIES_MAPPING } from '@/domain/cookies';
 import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { AUTH_TOKENS_MAPPING, type AuthTokenRole } from '@/domain/enums/tokens';
 import type { ResetPasswordPayload } from '@/domain/schemas/tokens';
-import { UtilsService } from '@/utils/utils.service';
 
 interface ResetPasswordUseCaseInput {
   password: string;
@@ -26,9 +26,8 @@ interface ResetPasswordUseCaseInput {
 }
 
 @Injectable()
+@Log()
 export class ResetPasswordUseCase {
-  private readonly logger = new Logger(ResetPasswordUseCase.name);
-
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
@@ -38,8 +37,8 @@ export class ResetPasswordUseCase {
     private readonly tokensRepository: Repository<Token>,
     private readonly createTokenUseCase: CreateTokenUseCase,
     private readonly cryptographyService: CryptographyService,
-    private readonly utilsService: UtilsService,
     private readonly mailService: MailService,
+    private readonly logger: LogService,
   ) {}
 
   async execute({
@@ -64,8 +63,8 @@ export class ResetPasswordUseCase {
 
     if (
       !payload ||
-      token.type !== AUTH_TOKENS_MAPPING.password_reset ||
-      (token.expires_at && token.expires_at < new Date())
+      token.type !== AUTH_TOKENS_MAPPING.passwordReset ||
+      (token.expiresAt && token.expiresAt < new Date())
     ) {
       throw new UnauthorizedException(
         'Token de redefinição de senha inválido ou expirado.',
@@ -92,7 +91,7 @@ export class ResetPasswordUseCase {
     }
 
     if (!entity) {
-      this.logger.warn({ id }, 'Reset password failed: Entity not registered');
+      this.logger.warn('Reset password failed: Entity not registered', { id });
       throw new NotFoundException('Usuário não encontrado.');
     }
 
@@ -107,31 +106,31 @@ export class ResetPasswordUseCase {
     }
 
     // Delete all tokens for this entity to ensure security after changing the password
-    await this.tokensRepository.delete({ entity_id: entity.id });
+    await this.tokensRepository.delete({ entityId: entity.id });
 
     const { maxAge, token: accessToken } =
       await this.createTokenUseCase.execute({
-        type: AUTH_TOKENS_MAPPING.access_token,
+        type: AUTH_TOKENS_MAPPING.accessToken,
         payload: { sub: entity.id, role },
       });
 
-    this.utilsService.setCookie(response, {
-      name: COOKIES_MAPPING.access_token,
+    this.cryptographyService.setCookie(response, {
+      name: COOKIES_MAPPING.accessToken,
       value: accessToken,
       maxAge,
     });
 
-    this.logger.log(
-      { id: entity.id, email: entity.email, role },
-      'Password reseted successfully',
-    );
+    this.logger.log('Password reseted successfully', {
+      id: entity.id,
+      email: entity.email,
+      role,
+    });
 
     await this.mailService.send({
       to: entity.email,
       subject: 'Senha de acesso alterada com sucesso',
-      textBody:
-        'Sua senha de acesso ao Sistema Viver Melhor foi alterada com sucesso.',
-      htmlBody: `
+      text: 'Sua senha de acesso ao Sistema Viver Melhor foi alterada com sucesso.',
+      html: `
         <p>Olá!</p>
         </br>
         <p>A senha de acesso à sua conta no <strong>Sistema Viver Melhor</strong> foi alterada com sucesso.</p>

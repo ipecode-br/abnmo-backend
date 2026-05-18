@@ -10,22 +10,22 @@ export const getAppointmentsResponseSchema = baseResponseSchema.extend({
       appointmentSchema
         .pick({
           id: true,
-          patient_id: true,
+          patientId: true,
           date: true,
           status: true,
           category: true,
           condition: true,
           annotation: true,
-          professional_name: true,
-          user_id: true,
-          created_at: true,
-          updated_at: true,
+          professionalName: true,
+          userId: true,
+          createdAt: true,
+          updatedAt: true,
         })
         .extend({
           patient: patientSchema.pick({
             name: true,
             email: true,
-            avatar_url: true,
+            avatarUrl: true,
           }),
         }),
     ),

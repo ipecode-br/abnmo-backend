@@ -12,7 +12,7 @@ import {
 import { Patient } from '@/domain/entities/patient';
 import type { PatientStatus } from '@/domain/enums/patients';
 import type { QueryPeriod } from '@/domain/enums/queries';
-import { UtilsService } from '@/utils/utils.service';
+import { getDateRangeForPeriod } from '@/utils/get-date-range-for-period';
 
 interface GetTotalPatientsUseCaseInput {
   status?: PatientStatus;
@@ -26,7 +26,6 @@ export class GetTotalPatientsUseCase {
   constructor(
     @InjectRepository(Patient)
     private readonly patientsRepository: Repository<Patient>,
-    private readonly utilsService: UtilsService,
   ) {}
 
   async execute({
@@ -40,22 +39,21 @@ export class GetTotalPatientsUseCase {
     };
 
     if (period) {
-      const dateRange = this.utilsService.getDateRangeForPeriod(period);
-      where.created_at = Between(dateRange.startDate, dateRange.endDate);
+      const dateRange = getDateRangeForPeriod(period);
+      where.createdAt = Between(dateRange.startDate, dateRange.endDate);
     }
 
     if (startDate && !endDate) {
-      where.created_at = MoreThanOrEqual(startDate);
+      where.createdAt = MoreThanOrEqual(startDate);
     }
 
     if (endDate && !startDate) {
-      where.created_at = LessThanOrEqual(endDate);
+      where.createdAt = LessThanOrEqual(endDate);
     }
 
     if (startDate && endDate) {
-      where.created_at = Between(startDate, endDate);
+      where.createdAt = Between(startDate, endDate);
     }
-
     return await this.patientsRepository.count({ select: { id: true }, where });
   }
 }

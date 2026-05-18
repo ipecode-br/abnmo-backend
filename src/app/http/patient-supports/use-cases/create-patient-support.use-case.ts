@@ -1,19 +1,19 @@
 import {
   ForbiddenException,
   Injectable,
-  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
+import { Log } from '@/common/log/log.decorator';
+import { LogService } from '@/common/log/log.service';
+import type { AuthUser } from '@/common/types';
 import { Patient } from '@/domain/entities/patient';
 import { PatientSupport } from '@/domain/entities/patient-support';
 
-import type { AuthUserDto } from '../../auth/auth.dtos';
-
 interface CreatePatientSupportUseCaseInput {
-  user: AuthUserDto;
+  user: AuthUser;
   patientId: string;
   name: string;
   kinship: string;
@@ -21,14 +21,14 @@ interface CreatePatientSupportUseCaseInput {
 }
 
 @Injectable()
+@Log()
 export class CreatePatientSupportUseCase {
-  private readonly logger = new Logger(CreatePatientSupportUseCase.name);
-
   constructor(
     @InjectRepository(Patient)
     private readonly patientsRepository: Repository<Patient>,
     @InjectRepository(PatientSupport)
     private readonly patientSupportsRepository: Repository<PatientSupport>,
+    private readonly logger: LogService,
   ) {}
 
   async execute({
@@ -38,10 +38,10 @@ export class CreatePatientSupportUseCase {
     kinship,
     phone,
   }: CreatePatientSupportUseCaseInput): Promise<void> {
-    if (user.id !== patientId && user.role !== 'admin') {
-      this.logger.log(
-        { patientId, userId: user.id, userRole: user.role },
-        'Create patient support failed: User does not have permission to create patient support for this patient',
+    if (user.role === 'patient' && user.id !== patientId) {
+      this.logger.warn(
+        'Create patient support failed: patient does not have permission to create support for another patient',
+        { patientId },
       );
       throw new ForbiddenException(
         'Você não tem permissão para criar um contato de apoio para este paciente.',
@@ -58,7 +58,7 @@ export class CreatePatientSupportUseCase {
     }
 
     const patientSupport = this.patientSupportsRepository.create({
-      patient_id: patientId,
+      patientId,
       name,
       kinship,
       phone,
@@ -66,15 +66,9 @@ export class CreatePatientSupportUseCase {
 
     await this.patientSupportsRepository.save(patientSupport);
 
-    this.logger.log(
-      {
-        id: patientSupport.id,
-        patientId,
-        userId: user.id,
-        userEmail: user.email,
-        userRole: user.role,
-      },
-      'Patient support created successfully',
-    );
+    this.logger.log('Patient support created successfully', {
+      id: patientSupport.id,
+      patientId,
+    });
   }
 }

@@ -10,11 +10,12 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-import { AuthUser } from '@/common/decorators/auth-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
+import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
+import { Log } from '@/common/log/log.decorator';
+import type { AuthUser } from '@/common/types';
 
-import type { AuthUserDto } from '../auth/auth.dtos';
 import {
   CreateAppointmentDto,
   GetAppointmentsQuery,
@@ -37,12 +38,12 @@ export class AppointmentsController {
   ) {}
 
   @Get()
-  @Roles(['manager', 'nurse', 'specialist', 'patient'])
+  @Roles(['all'])
   @ApiOperation({ summary: 'Lista todos os atendimentos' })
   @ApiResponse({ type: GetAppointmentsResponse })
   async getAppointments(
     @Query() query: GetAppointmentsQuery,
-    @AuthUser() user: AuthUserDto,
+    @User() user: AuthUser,
   ): Promise<GetAppointmentsResponse> {
     const data = await this.getAppointmentsUseCase.execute({ user, ...query });
 
@@ -54,30 +55,17 @@ export class AppointmentsController {
   }
 
   @Post()
+  @Log('create_appointment')
   @Roles(['manager', 'nurse', 'specialist'])
   @ApiOperation({ summary: 'Cadastra um novo atendimento' })
   @ApiResponse({ type: BaseResponse })
   async create(
-    @AuthUser() user: AuthUserDto,
+    @User() user: AuthUser,
     @Body() createAppointmentDto: CreateAppointmentDto,
   ): Promise<BaseResponse> {
-    const {
-      date,
-      category,
-      annotation,
-      condition,
-      patient_id: patientId,
-      professional_name: professionalName,
-    } = createAppointmentDto;
-
     await this.createAppointmentUseCase.execute({
       user,
-      date,
-      category,
-      annotation,
-      condition,
-      patientId,
-      professionalName,
+      ...createAppointmentDto,
     });
 
     return {
@@ -87,18 +75,17 @@ export class AppointmentsController {
   }
 
   @Put(':id')
+  @Log('update_appointment')
   @Roles(['manager', 'nurse', 'specialist'])
   @ApiOperation({ summary: 'Atualiza os dados do atendimento' })
   @ApiResponse({ type: BaseResponse })
   public async update(
     @Param('id') id: string,
-    @AuthUser() user: AuthUserDto,
     @Body() updateAppointmentDto: UpdateAppointmentDto,
   ): Promise<BaseResponse> {
     await this.updateAppointmentUseCase.execute({
       id,
-      user,
-      updateAppointmentDto,
+      ...updateAppointmentDto,
     });
 
     return {
@@ -107,15 +94,13 @@ export class AppointmentsController {
     };
   }
 
-  @Roles(['manager', 'nurse'])
   @Patch(':id/cancel')
+  @Log('cancel_appointment')
+  @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Cancela o atendimento' })
   @ApiResponse({ type: BaseResponse })
-  async cancel(
-    @Param('id') id: string,
-    @AuthUser() user: AuthUserDto,
-  ): Promise<BaseResponse> {
-    await this.cancelAppointmentUseCase.execute({ id, user });
+  async cancel(@Param('id') id: string): Promise<BaseResponse> {
+    await this.cancelAppointmentUseCase.execute({ id });
 
     return {
       success: true,

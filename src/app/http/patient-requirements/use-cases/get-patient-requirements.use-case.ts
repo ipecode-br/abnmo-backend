@@ -10,13 +10,22 @@ import {
 } from 'typeorm';
 
 import { PatientRequirement } from '@/domain/entities/patient-requirement';
-import type { PatientRequirementsOrderBy } from '@/domain/enums/patient-requirements';
+import type {
+  PatientRequirementsOrderBy,
+  PatientRequirementStatus,
+} from '@/domain/enums/patient-requirements';
+import type { QueryOrder } from '@/domain/enums/queries';
 import type { PatientRequirementItem } from '@/domain/schemas/patient-requirement/responses';
 
-import type { GetPatientRequirementsQuery } from '../patient-requirements.dtos';
-
 interface GetPatientRequirementsUseCaseInput {
-  query: GetPatientRequirementsQuery;
+  search?: string;
+  page: number;
+  perPage: number;
+  status?: PatientRequirementStatus;
+  startDate?: string;
+  endDate?: string;
+  order?: QueryOrder;
+  orderBy?: PatientRequirementsOrderBy;
 }
 
 interface GetPatientRequirementsUseCaseOutput {
@@ -32,11 +41,14 @@ export class GetPatientRequirementsUseCase {
   ) {}
 
   async execute({
-    query,
+    search,
+    status,
+    page,
+    perPage,
+    ...props
   }: GetPatientRequirementsUseCaseInput): Promise<GetPatientRequirementsUseCaseOutput> {
-    const { search, status, page, perPage } = query;
-    const startDate = query.startDate ? new Date(query.startDate) : null;
-    const endDate = query.endDate ? new Date(query.endDate) : null;
+    const startDate = props.startDate ? new Date(props.startDate) : null;
+    const endDate = props.endDate ? new Date(props.endDate) : null;
 
     const ORDER_BY_MAPPING: Record<
       PatientRequirementsOrderBy,
@@ -45,9 +57,9 @@ export class GetPatientRequirementsUseCase {
       patient: 'patient',
       type: 'type',
       status: 'status',
-      approved_at: 'approved_at',
-      submitted_at: 'submitted_at',
-      date: 'created_at',
+      approvedAt: 'approvedAt',
+      submittedAt: 'submittedAt',
+      date: 'createdAt',
     };
 
     const where: FindOptionsWhere<PatientRequirement> = {};
@@ -61,28 +73,28 @@ export class GetPatientRequirementsUseCase {
     }
 
     if (startDate && endDate) {
-      where.created_at = Between(startDate, endDate);
+      where.createdAt = Between(startDate, endDate);
     }
 
     if (startDate && !endDate) {
-      where.created_at = MoreThanOrEqual(startDate);
+      where.createdAt = MoreThanOrEqual(startDate);
     }
 
     if (endDate && !startDate) {
-      where.created_at = LessThanOrEqual(endDate);
+      where.createdAt = LessThanOrEqual(endDate);
     }
 
     const total = await this.patientRequirementsRepository.count({ where });
 
-    const orderBy = ORDER_BY_MAPPING[query.orderBy];
+    const orderBy = ORDER_BY_MAPPING[props.orderBy || 'date'];
     const order =
       orderBy === 'patient'
-        ? { patient: { name: query.order } }
-        : { [orderBy]: query.order };
+        ? { patient: { name: props.order } }
+        : { [orderBy]: props.order };
 
     const requirements = await this.patientRequirementsRepository.find({
       relations: { patient: true },
-      select: { patient: { id: true, name: true, avatar_url: true } },
+      select: { patient: { id: true, name: true, avatarUrl: true } },
       skip: (page - 1) * perPage,
       take: perPage,
       order,

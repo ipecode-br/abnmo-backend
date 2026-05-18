@@ -1,46 +1,82 @@
-import { ConflictException, Injectable, Logger } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 import { DataSource } from 'typeorm';
 
+import { Log } from '@/common/log/log.decorator';
+import { LogService } from '@/common/log/log.service';
+import type { BrazilianState } from '@/constants/brazilian-states';
 import { Patient } from '@/domain/entities/patient';
 import { PatientSupport } from '@/domain/entities/patient-support';
+import type {
+  PatientGender,
+  PatientNmoDiagnosis,
+  PatientRace,
+} from '@/domain/enums/patients';
 
-import type { AuthUserDto } from '../../auth/auth.dtos';
-import type { CreatePatientDto } from '../patients.dtos';
+interface PatientSupportInput {
+  name: string;
+  phone: string;
+  kinship: string;
+}
 
 interface CreatePatientUseCaseInput {
-  user: AuthUserDto;
-  createPatientDto: CreatePatientDto;
+  name: string;
+  dateOfBirth: Date;
+  cpf: string;
+  gender: PatientGender;
+  race: PatientRace;
+  state: BrazilianState;
+  city: string;
+  email: string;
+  phone: string;
+  hasDisability: boolean;
+  disabilityDesc: string | null;
+  needLegalAssistance: boolean;
+  takeMedication: boolean;
+  medicationDesc: string | null;
+  nmoDiagnosis: PatientNmoDiagnosis;
+  supports?: PatientSupportInput[];
 }
 
 @Injectable()
+@Log()
 export class CreatePatientUseCase {
-  private readonly logger = new Logger(CreatePatientUseCase.name);
-
   constructor(
     @InjectRepository(Patient)
     private readonly patientsRepository: Repository<Patient>,
     @InjectDataSource()
     private readonly dataSource: DataSource,
+    private readonly logger: LogService,
   ) {}
 
   async execute({
-    user,
-    createPatientDto,
+    name,
+    dateOfBirth,
+    cpf,
+    gender,
+    race,
+    state,
+    city,
+    email,
+    phone,
+    hasDisability,
+    disabilityDesc,
+    needLegalAssistance,
+    takeMedication,
+    medicationDesc,
+    nmoDiagnosis,
+    supports,
   }: CreatePatientUseCaseInput): Promise<void> {
-    const { email, cpf, supports, ...patientData } = createPatientDto;
-
     const patientWithSameEmail = await this.patientsRepository.findOne({
       select: { id: true },
       where: { email },
     });
 
     if (patientWithSameEmail) {
-      this.logger.error(
-        { email, userId: user.id, userEmail: user.email, userRole: user.role },
-        'Create patient failed: Email already registered',
-      );
+      this.logger.error('Create patient failed: Email already registered', {
+        email,
+      });
       throw new ConflictException('O e-mail informado já está registrado.');
     }
 
@@ -50,10 +86,9 @@ export class CreatePatientUseCase {
     });
 
     if (patientWithSameCpf) {
-      this.logger.error(
-        { cpf, userId: user.id, userEmail: user.email, userRole: user.role },
-        'Create patient failed: CPF already registered',
-      );
+      this.logger.error('Create patient failed: CPF already registered', {
+        cpf,
+      });
       throw new ConflictException('O CPF informado já está registrado.');
     }
 
@@ -62,9 +97,21 @@ export class CreatePatientUseCase {
       const patientSupportsDataSource = manager.getRepository(PatientSupport);
 
       const patient = patientsDataSource.create({
-        ...patientData,
+        name,
         email,
+        dateOfBirth,
         cpf,
+        gender,
+        race,
+        state,
+        city,
+        phone,
+        hasDisability,
+        disabilityDesc,
+        needLegalAssistance,
+        takeMedication,
+        medicationDesc,
+        nmoDiagnosis,
         status: 'active',
       });
 
@@ -73,7 +120,7 @@ export class CreatePatientUseCase {
       if (supports && supports.length > 0) {
         const patientSupports = supports.map(({ name, phone, kinship }) =>
           patientSupportsDataSource.create({
-            patient_id: patient.id,
+            patientId: patient.id,
             name,
             phone,
             kinship,
@@ -83,16 +130,10 @@ export class CreatePatientUseCase {
         await patientSupportsDataSource.save(patientSupports);
       }
 
-      this.logger.log(
-        {
-          patientId: patient.id,
-          email,
-          userId: user.id,
-          userEmail: user.email,
-          userRole: user.role,
-        },
-        'Patient created successfully',
-      );
+      this.logger.log('Patient created successfully', {
+        id: patient.id,
+        email,
+      });
     });
   }
 }

@@ -1,13 +1,13 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Response } from 'express';
 import { Repository } from 'typeorm';
 
 import { CryptographyService } from '@/app/cryptography/crypography.service';
+import { Log } from '@/common/log/log.decorator';
+import { LogService } from '@/common/log/log.service';
 import { COOKIES_MAPPING } from '@/domain/cookies';
 import { Token } from '@/domain/entities/token';
-import type { RefreshTokenPayload } from '@/domain/schemas/tokens';
-import { UtilsService } from '@/utils/utils.service';
 
 interface LogoutUseCaseInput {
   refreshToken?: string;
@@ -15,32 +15,32 @@ interface LogoutUseCaseInput {
 }
 
 @Injectable()
+@Log()
 export class LogoutUseCase {
-  private readonly logger = new Logger(LogoutUseCase.name);
-
   constructor(
     @InjectRepository(Token)
     private readonly tokensRepository: Repository<Token>,
     private readonly cryptographyService: CryptographyService,
-    private readonly utilsService: UtilsService,
+    private readonly logger: LogService,
   ) {}
 
   async execute({ response, refreshToken }: LogoutUseCaseInput): Promise<void> {
-    this.utilsService.deleteCookie(response, COOKIES_MAPPING.access_token);
+    this.cryptographyService.deleteCookie(
+      response,
+      COOKIES_MAPPING.accessToken,
+    );
 
     if (!refreshToken) {
       return;
     }
 
-    const payload =
-      await this.cryptographyService.verifyToken<RefreshTokenPayload>(
-        refreshToken,
-      );
-
     await this.tokensRepository.delete({ token: refreshToken });
 
-    this.utilsService.deleteCookie(response, COOKIES_MAPPING.refresh_token);
+    this.cryptographyService.deleteCookie(
+      response,
+      COOKIES_MAPPING.refreshToken,
+    );
 
-    this.logger.log({ id: payload.sub, role: payload.role }, 'User logged out');
+    this.logger.log('User logged out');
   }
 }

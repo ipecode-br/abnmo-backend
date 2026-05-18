@@ -1,9 +1,11 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
 import { MailService } from '@/app/mail/mail.service';
+import { Log } from '@/common/log/log.decorator';
+import { LogService } from '@/common/log/log.service';
 import { COOKIES_MAPPING } from '@/domain/cookies';
 import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
@@ -17,9 +19,8 @@ interface RecoverPasswordUseCaseInput {
 }
 
 @Injectable()
+@Log()
 export class RecoverPasswordUseCase {
-  private readonly logger = new Logger(RecoverPasswordUseCase.name);
-
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
@@ -30,6 +31,7 @@ export class RecoverPasswordUseCase {
     private readonly createTokenUseCase: CreateTokenUseCase,
     private readonly envService: EnvService,
     private readonly mailService: MailService,
+    private readonly logger: LogService,
   ) {}
 
   async execute({ email }: RecoverPasswordUseCaseInput): Promise<void> {
@@ -51,33 +53,32 @@ export class RecoverPasswordUseCase {
     }
 
     if (!entity) {
-      this.logger.warn(
-        { email },
-        'Attempt to recover password for non-registered email',
-      );
+      this.logger.warn('Attempt to recover password for non-registered email', {
+        email,
+      });
       return;
     }
 
     const [{ token, expiresAt }] = await Promise.all([
       this.createTokenUseCase.execute({
-        type: COOKIES_MAPPING.password_reset,
+        type: COOKIES_MAPPING.passwordReset,
         payload: { sub: entity.id },
       }),
       // Delete all tokens for this entity before creating a new one
-      this.tokensRepository.delete({ entity_id: entity.id }),
+      this.tokensRepository.delete({ entityId: entity.id }),
     ]);
 
     await this.tokensRepository.save<PasswordResetToken>({
-      type: AUTH_TOKENS_MAPPING.password_reset,
-      expires_at: expiresAt,
-      entity_id: entity.id,
+      type: AUTH_TOKENS_MAPPING.passwordReset,
+      expiresAt: expiresAt,
+      entityId: entity.id,
       token,
     });
 
-    this.logger.log(
-      { entityId: entity.id, email },
-      'Password reset token generated successfully',
-    );
+    this.logger.log('Password reset token generated successfully', {
+      entityId: entity.id,
+      email,
+    });
 
     const baseAppUrl = this.envService.get('APP_URL');
     const resetPasswordUrl = `${baseAppUrl}/conta/nova-senha?token=${token}`;
@@ -85,9 +86,8 @@ export class RecoverPasswordUseCase {
     await this.mailService.send({
       to: email,
       subject: 'Solicitação para redefinição de senha',
-      textBody:
-        'Redefina sua senha de acesso ao Sistema Viver Melhor da ABNMO.',
-      htmlBody: `
+      text: 'Redefina sua senha de acesso ao Sistema Viver Melhor da ABNMO.',
+      html: `
         <p>Olá!</p>
         </br>
         <p>Você solicitou a redefinição da senha de acesso ao <strong>Sistema Viver Melhor</strong> da <strong>ABNMO</strong>. Acesse o link abaixo e cadastre uma nova senha de acesso para sua conta.</p>

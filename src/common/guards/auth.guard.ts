@@ -11,24 +11,24 @@ import type { Repository } from 'typeorm';
 
 import { CryptographyService } from '@/app/cryptography/crypography.service';
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
-import type { AuthUserDto } from '@/app/http/auth/auth.dtos';
+import { ContextService } from '@/common/context/context.service';
+import type { AuthUser } from '@/common/types';
 import type { Cookie } from '@/domain/cookies';
 import { COOKIES_MAPPING } from '@/domain/cookies';
 import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
-import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
+import { AUTH_TOKENS_MAPPING, type AuthTokenRole } from '@/domain/enums/tokens';
 import type {
   AccessTokenPayload,
   RefreshTokenPayload,
 } from '@/domain/schemas/tokens';
-import { UtilsService } from '@/utils/utils.service';
 
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 
 interface AuthenticatedRequest {
   signedCookies?: Record<Cookie, string>;
-  user?: AuthUserDto;
+  user?: AuthUser;
 }
 
 @Injectable()
@@ -42,8 +42,8 @@ export class AuthGuard implements CanActivate {
     private readonly tokensRepository: Repository<Token>,
     private readonly cryptographyService: CryptographyService,
     private readonly createTokenUseCase: CreateTokenUseCase,
-    private readonly utilsService: UtilsService,
     private readonly reflector: Reflector,
+    private readonly ctx: ContextService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -64,7 +64,11 @@ export class AuthGuard implements CanActivate {
 
     if (accessToken) {
       try {
-        const user = await this.getUserFromToken(accessToken);
+        const payload =
+          await this.cryptographyService.verifyToken<AccessTokenPayload>(
+            accessToken,
+          );
+        const user = await this.getEntityFromId(payload.sub, payload.role);
 
         if (!user) {
           throw new UnauthorizedException(
@@ -73,9 +77,14 @@ export class AuthGuard implements CanActivate {
         }
 
         request.user = user;
+        // ensure request context has the authenticated user too
+        this.ctx.setUser(user);
         return true;
       } catch (error) {
-        this.utilsService.deleteCookie(response, COOKIES_MAPPING.access_token);
+        this.cryptographyService.deleteCookie(
+          response,
+          COOKIES_MAPPING.accessToken,
+        );
 
         if (error instanceof UnauthorizedException) {
           throw error;
@@ -92,7 +101,21 @@ export class AuthGuard implements CanActivate {
     }
 
     try {
-      const user = await this.getUserFromToken(refreshToken);
+      const payload =
+        await this.cryptographyService.verifyToken<RefreshTokenPayload>(
+          refreshToken,
+        );
+
+      const [user, storedRefreshToken] = await Promise.all([
+        this.getEntityFromId(payload.sub, payload.role),
+        this.tokensRepository.findOne({
+          where: {
+            type: AUTH_TOKENS_MAPPING.refreshToken,
+            token: refreshToken,
+            entityId: payload.sub,
+          },
+        }),
+      ]);
 
       if (!user) {
         throw new UnauthorizedException(
@@ -100,44 +123,50 @@ export class AuthGuard implements CanActivate {
         );
       }
 
-      const storedRefreshToken = await this.tokensRepository.findOne({
-        where: {
-          type: AUTH_TOKENS_MAPPING.refresh_token,
-          token: refreshToken,
-          entity_id: user.id,
-        },
-      });
-
-      if (!storedRefreshToken || !storedRefreshToken.expires_at) {
+      if (!storedRefreshToken || !storedRefreshToken.expiresAt) {
         throw new UnauthorizedException('Token de atualização não encontrado.');
       }
 
-      if (storedRefreshToken.expires_at < new Date()) {
-        await this.tokensRepository.delete({ entity_id: user.id });
+      if (storedRefreshToken.expiresAt < new Date()) {
+        await this.tokensRepository.delete({ entityId: payload.sub });
 
-        this.utilsService.deleteCookie(response, COOKIES_MAPPING.access_token);
-        this.utilsService.deleteCookie(response, COOKIES_MAPPING.refresh_token);
+        this.cryptographyService.deleteCookie(
+          response,
+          COOKIES_MAPPING.accessToken,
+        );
+        this.cryptographyService.deleteCookie(
+          response,
+          COOKIES_MAPPING.refreshToken,
+        );
 
         throw new UnauthorizedException('Token de atualização expirado.');
       }
 
       const { token: newAccessToken, maxAge } =
         await this.createTokenUseCase.execute({
-          type: COOKIES_MAPPING.access_token,
+          type: COOKIES_MAPPING.accessToken,
           payload: { sub: user.id, role: user.role },
         });
 
-      this.utilsService.setCookie(response, {
-        name: COOKIES_MAPPING.access_token,
+      this.cryptographyService.setCookie(response, {
+        name: COOKIES_MAPPING.accessToken,
         value: newAccessToken,
         maxAge,
       });
 
       request.user = user;
+      // context is already running from middleware; keep it in sync
+      this.ctx.setUser(user);
       return true;
     } catch (error) {
-      this.utilsService.deleteCookie(response, COOKIES_MAPPING.access_token);
-      this.utilsService.deleteCookie(response, COOKIES_MAPPING.refresh_token);
+      this.cryptographyService.deleteCookie(
+        response,
+        COOKIES_MAPPING.accessToken,
+      );
+      this.cryptographyService.deleteCookie(
+        response,
+        COOKIES_MAPPING.refreshToken,
+      );
 
       if (error instanceof UnauthorizedException) {
         throw error;
@@ -149,25 +178,17 @@ export class AuthGuard implements CanActivate {
     }
   }
 
-  private async getUserFromToken(token: string): Promise<AuthUserDto | null> {
-    const payload = await this.cryptographyService.verifyToken<
-      AccessTokenPayload | RefreshTokenPayload
-    >(token);
-
-    const entityId = payload.sub;
-    const role = payload.role;
-
-    if (!entityId) {
-      return null;
-    }
-
+  private async getEntityFromId(
+    id: string,
+    role: AuthTokenRole,
+  ): Promise<AuthUser | null> {
     if (role === 'patient') {
       const patient = await this.patientsRepository.findOne({
-        select: { id: true, email: true },
-        where: { id: entityId },
+        select: { id: true, email: true, status: true },
+        where: { id },
       });
 
-      if (!patient) {
+      if (!patient || patient.status !== 'active') {
         return null;
       }
 
@@ -175,11 +196,11 @@ export class AuthGuard implements CanActivate {
     }
 
     const user = await this.usersRepository.findOne({
-      select: { id: true, email: true, role: true },
-      where: { id: entityId },
+      select: { id: true, email: true, role: true, status: true },
+      where: { id },
     });
 
-    if (!user) {
+    if (!user || user.status !== 'active') {
       return null;
     }
 

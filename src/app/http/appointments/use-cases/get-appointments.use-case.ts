@@ -9,6 +9,7 @@ import {
   type Repository,
 } from 'typeorm';
 
+import type { AuthUser } from '@/common/types';
 import { Appointment } from '@/domain/entities/appointment';
 import type {
   AppointmentsOrderBy,
@@ -18,10 +19,8 @@ import type { PatientCondition } from '@/domain/enums/patients';
 import type { QueryOrder } from '@/domain/enums/queries';
 import type { SpecialtyCategory } from '@/domain/enums/shared';
 
-import type { AuthUserDto } from '../../auth/auth.dtos';
-
 interface GetAppointmentsUseCaseInput {
-  user: AuthUserDto;
+  user: AuthUser;
   page: number;
   perPage: number;
   patientId?: string;
@@ -69,17 +68,17 @@ export class GetAppointmentsUseCase {
       status: 'status',
       category: 'category',
       condition: 'condition',
-      professional: 'professional_name',
+      professional: 'professionalName',
     };
 
     const where: FindOptionsWhere<Appointment> = {};
 
     if (user.role === 'patient') {
-      where.patient_id = user.id;
+      where.patientId = user.id;
     }
 
     if (patientId) {
-      where.patient_id = patientId;
+      where.patientId = patientId;
     }
 
     if (startDate && !endDate) {
@@ -121,16 +120,16 @@ export class GetAppointmentsUseCase {
     const appointments = await this.appointmentsRepository.find({
       select: {
         id: true,
-        patient_id: true,
+        patientId: true,
         date: true,
         status: true,
         category: true,
         condition: true,
         annotation: true,
-        professional_name: true,
-        created_at: true,
-        updated_at: true,
-        patient: { id: true, name: true, avatar_url: true },
+        professionalName: true,
+        createdAt: true,
+        updatedAt: true,
+        patient: { id: true, name: true, avatarUrl: true },
       },
       relations: { patient: true },
       skip: (page - 1) * perPage,

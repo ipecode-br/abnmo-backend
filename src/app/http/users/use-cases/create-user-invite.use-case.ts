@@ -1,7 +1,6 @@
 import {
   ConflictException,
   Injectable,
-  Logger,
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -9,24 +8,23 @@ import { DataSource, Repository } from 'typeorm';
 
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
 import { MailService } from '@/app/mail/mail.service';
+import { Log } from '@/common/log/log.decorator';
+import { LogService } from '@/common/log/log.service';
 import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
+import type { UserRole } from '@/domain/enums/users';
 import { EnvService } from '@/env/env.service';
 
-import type { AuthUserDto } from '../../auth/auth.dtos';
-import type { CreateUserInviteDto } from '../users.dtos';
-
 interface CreateUserInviteUseCaseInput {
-  user: AuthUserDto;
-  createUserInviteDto: CreateUserInviteDto;
+  email: string;
+  role: UserRole;
 }
 
 @Injectable()
+@Log()
 export class CreateUserInviteUseCase {
-  private readonly logger = new Logger(CreateUserInviteUseCase.name);
-
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
@@ -38,14 +36,10 @@ export class CreateUserInviteUseCase {
     private readonly envService: EnvService,
     private readonly mailService: MailService,
     private readonly dataSource: DataSource,
+    private readonly logger: LogService,
   ) {}
 
-  async execute({
-    user,
-    createUserInviteDto,
-  }: CreateUserInviteUseCaseInput): Promise<void> {
-    const { email, role } = createUserInviteDto;
-
+  async execute({ email, role }: CreateUserInviteUseCaseInput): Promise<void> {
     const [existingInviteUserToken, existingUser, existingPatient] =
       await Promise.all([
         this.tokensRepository.findOne({ where: { email } }),
@@ -63,7 +57,7 @@ export class CreateUserInviteUseCase {
       throw new ConflictException('Este e-mail já está cadastrado no sistema.');
     }
 
-    const existingTokenExpiryDate = existingInviteUserToken?.expires_at;
+    const existingTokenExpiryDate = existingInviteUserToken?.expiresAt;
 
     if (existingTokenExpiryDate && existingTokenExpiryDate > new Date()) {
       throw new ConflictException(
@@ -76,7 +70,7 @@ export class CreateUserInviteUseCase {
 
       const [{ token: inviteUserToken, expiresAt }] = await Promise.all([
         this.createTokenUseCase.execute({
-          type: AUTH_TOKENS_MAPPING.invite_user,
+          type: AUTH_TOKENS_MAPPING.inviteUser,
           payload: { role },
         }),
         // Delete all tokens for this email before creating a new one
@@ -84,25 +78,19 @@ export class CreateUserInviteUseCase {
       ]);
 
       const newInviteUserToken = tokensRepository.create({
-        type: AUTH_TOKENS_MAPPING.invite_user,
+        type: AUTH_TOKENS_MAPPING.inviteUser,
         token: inviteUserToken,
-        expires_at: expiresAt,
+        expiresAt: expiresAt,
         email,
       });
 
       await tokensRepository.save(newInviteUserToken);
 
-      this.logger.log(
-        {
-          id: newInviteUserToken.id,
-          email,
-          role,
-          userId: user.id,
-          userEmail: user.email,
-          userRole: user.role,
-        },
-        'Invite user token created successfully',
-      );
+      this.logger.log('Invite user token created successfully', {
+        id: newInviteUserToken.id,
+        email,
+        role,
+      });
 
       const baseAppUrl = this.envService.get('APP_URL');
       const registerUserLink = `${baseAppUrl}/conta/cadastrar?token=${inviteUserToken}`;
@@ -110,9 +98,8 @@ export class CreateUserInviteUseCase {
       const emailSent = await this.mailService.send({
         to: email,
         subject: 'Cadastre sua conta no Sistema Viver Melhor da ABNMO',
-        textBody:
-          'Finalize o cadastro da sua conta para ter acesso ao Sistema Viver Melhor da ABNMO.',
-        htmlBody: `
+        text: 'Finalize o cadastro da sua conta para ter acesso ao Sistema Viver Melhor da ABNMO.',
+        html: `
           <p>Olá!</p>
           </br>
           <p>Você foi convidado a utilizar o <strong>Sistema Viver Melhor</strong> da <strong>ABNMO</strong>. Para ter acesso, finalize a criação da sua conta.</p>

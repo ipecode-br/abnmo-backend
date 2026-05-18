@@ -18,8 +18,8 @@ export const PATIENT_REQUIREMENTS_ORDER_BY = [
   'status',
   'type',
   'date',
-  'approved_at',
-  'submitted_at',
+  'approvedAt',
+  'submittedAt',
 ] as const;
 export type PatientRequirementsOrderBy =
   (typeof PATIENT_REQUIREMENTS_ORDER_BY)[number];

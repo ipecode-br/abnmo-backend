@@ -30,7 +30,7 @@ export class User implements UserSchema {
   password: string;
 
   @Column({ type: 'varchar', nullable: true })
-  avatar_url: string | null;
+  avatarUrl: string | null;
 
   @Column({ type: 'enum', enum: USER_ROLES })
   role: UserRole;
@@ -39,14 +39,14 @@ export class User implements UserSchema {
   specialty: SpecialtyCategory | null;
 
   @Column({ type: 'varchar', length: 32, nullable: true, unique: true })
-  registration_id: string | null;
+  registrationId: string | null;
 
   @Column({ type: 'enum', enum: USER_STATUSES, default: 'active' })
   status: UserStatus;
 
   @CreateDateColumn({ type: 'datetime' })
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'datetime' })
-  updated_at: Date;
+  updatedAt: Date;
 }
