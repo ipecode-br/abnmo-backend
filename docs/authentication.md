@@ -13,17 +13,17 @@ Dois guards globais são registrados em `AuthModule` como `APP_GUARD` e aplicado
 
 ## Cookies e tokens
 
-| Cookie | Duração | Finalidade |
-|---|---|---|
-| `access_token` | 8 horas | Autenticação principal em cada requisição |
-| `refresh_token` | 30 dias | Renovação silenciosa do `access_token` |
+| Cookie          | Duração | Finalidade                                |
+| --------------- | ------- | ----------------------------------------- |
+| `access_token`  | 8 horas | Autenticação principal em cada requisição |
+| `refresh_token` | 30 dias | Renovação silenciosa do `access_token`    |
 
 Além dos cookies, dois tipos de token são armazenados na tabela `tokens` no banco:
 
-| Tipo | Duração | Finalidade |
-|---|---|---|
-| `password_reset` | 2 horas | Redefinição de senha |
-| `invite_user` | 8 horas | Convite de novo usuário |
+| Tipo             | Duração | Finalidade              |
+| ---------------- | ------- | ----------------------- |
+| `password_reset` | 2 horas | Redefinição de senha    |
+| `invite_user`    | 8 horas | Convite de novo usuário |
 
 ---
 
@@ -46,6 +46,7 @@ Requisição
 ```
 
 O `AuthGuard` também popula o contexto da requisição:
+
 - `request.user` com o `AuthUser` autenticado.
 - `ContextService.setUser(user)` para enriquecer os logs.
 
@@ -142,13 +143,13 @@ async logout(
 
 ## Perfis e permissões
 
-| Perfil | Valor | Descrição |
-|---|---|---|
-| `admin` | `'admin'` | Acesso total, bypass de todos os guards de role |
-| `manager` | `'manager'` | Gestão geral do sistema |
-| `nurse` | `'nurse'` | Operações clínicas |
-| `specialist` | `'specialist'` | Especialistas (médicos, psicólogos, etc.) |
-| `patient` | `'patient'` | Pacientes — acesso restrito aos próprios dados |
+| Perfil       | Valor          | Descrição                                       |
+| ------------ | -------------- | ----------------------------------------------- |
+| `admin`      | `'admin'`      | Acesso total, bypass de todos os guards de role |
+| `manager`    | `'manager'`    | Gestão geral do sistema                         |
+| `nurse`      | `'nurse'`      | Operações clínicas                              |
+| `specialist` | `'specialist'` | Especialistas (médicos, psicólogos, etc.)       |
+| `patient`    | `'patient'`    | Pacientes — acesso restrito aos próprios dados  |
 
 Para a matriz completa de permissões por endpoint, veja [permissões](permissions.md).
 
@@ -166,6 +167,8 @@ if (user.role === 'patient') {
 
 // Usuários só atualizam o próprio perfil (exceto admin)
 if (user.id !== targetId && user.role !== 'admin') {
-  throw new ForbiddenException('Você não tem permissão para atualizar este usuário.');
+  throw new ForbiddenException(
+    'Você não tem permissão para atualizar este usuário.',
+  );
 }
 ```

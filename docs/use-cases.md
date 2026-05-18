@@ -12,7 +12,11 @@ Cada use-case é responsável por **uma única ação** — criar, buscar, atual
 
 ```typescript
 // src/app/http/appointments/use-cases/create-appointment.use-case.ts
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
@@ -149,7 +153,7 @@ import { Between, ILike, type FindOptionsWhere } from 'typeorm';
 const where: FindOptionsWhere<Appointment> = {};
 
 if (user.role === 'patient') {
-  where.patientId = user.id;  // pacientes só veem os próprios dados
+  where.patientId = user.id; // pacientes só veem os próprios dados
 }
 
 if (search) {
@@ -220,7 +224,9 @@ async execute(input: CreateAppointmentUseCaseInput): Promise<void> {
 Exceções NestJS são lançadas diretamente no use-case com mensagens em português (pt-BR) para o usuário. Erros internos são logados em inglês. Veja [tratamento de erros](error-handling.md).
 
 ```typescript
-const appointment = await this.appointmentsRepository.findOne({ where: { id } });
+const appointment = await this.appointmentsRepository.findOne({
+  where: { id },
+});
 
 if (!appointment) {
   throw new NotFoundException('Atendimento não encontrado.');
@@ -236,12 +242,12 @@ if (appointment.status === 'canceled') {
 
 ## Convenções de nomenclatura
 
-| Item | Padrão | Exemplo |
-|---|---|---|
-| Arquivo | `{action}-{feature}.use-case.ts` | `create-appointment.use-case.ts` |
-| Classe | `{Action}{Feature}UseCase` | `CreateAppointmentUseCase` |
-| Interface de input | `{Action}{Feature}UseCaseInput` | `CreateAppointmentUseCaseInput` |
-| Interface de output | `{Action}{Feature}UseCaseOutput` | `GetAppointmentsUseCaseOutput` |
+| Item                | Padrão                           | Exemplo                          |
+| ------------------- | -------------------------------- | -------------------------------- |
+| Arquivo             | `{action}-{feature}.use-case.ts` | `create-appointment.use-case.ts` |
+| Classe              | `{Action}{Feature}UseCase`       | `CreateAppointmentUseCase`       |
+| Interface de input  | `{Action}{Feature}UseCaseInput`  | `CreateAppointmentUseCaseInput`  |
+| Interface de output | `{Action}{Feature}UseCaseOutput` | `GetAppointmentsUseCaseOutput`   |
 
 ---
 

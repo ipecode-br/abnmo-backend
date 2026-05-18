@@ -6,14 +6,14 @@ O ABNMO Backend é uma API SaaS construída com **NestJS** para gerenciar pacien
 
 ## Stack
 
-| Tecnologia | Finalidade |
-|---|---|
-| NestJS + TypeScript | Framework principal |
-| TypeORM + MySQL | Persistência de dados |
-| Zod | Validação de schemas e DTOs |
-| JWT (cookies HTTP-only) | Autenticação |
-| nestjs-pino | Logging estruturado |
-| AWS SES / Resend | Envio de e-mails |
+| Tecnologia              | Finalidade                  |
+| ----------------------- | --------------------------- |
+| NestJS + TypeScript     | Framework principal         |
+| TypeORM + MySQL         | Persistência de dados       |
+| Zod                     | Validação de schemas e DTOs |
+| JWT (cookies HTTP-only) | Autenticação                |
+| nestjs-pino             | Logging estruturado         |
+| AWS SES / Resend        | Envio de e-mails            |
 
 ## Estrutura de pastas
 
@@ -119,11 +119,11 @@ Em caso de exceção em qualquer etapa, o `HttpExceptionFilter` captura e retorn
 
 Alguns módulos não são features HTTP, mas fornecem serviços internos reutilizáveis:
 
-| Módulo | Propósito | Como importar |
-|---|---|---|
+| Módulo               | Propósito                                                          | Como importar                                  |
+| -------------------- | ------------------------------------------------------------------ | ---------------------------------------------- |
 | `CryptographyModule` | Hash (bcrypt), criação/verificação de JWT e manipulação de cookies | Importar explicitamente no módulo que precisar |
-| `MailModule` | Envio de e-mails (SES/Resend) | Importar explicitamente no módulo que precisar |
-| `LogModule` | `AppLogger` e `ContextService` | Global — não precisa importar |
-| `EnvModule` | Acesso tipado a variáveis de ambiente | Importar explicitamente quando necessário |
+| `MailModule`         | Envio de e-mails (SES/Resend)                                      | Importar explicitamente no módulo que precisar |
+| `LogModule`          | `AppLogger` e `ContextService`                                     | Global — não precisa importar                  |
+| `EnvModule`          | Acesso tipado a variáveis de ambiente                              | Importar explicitamente quando necessário      |
 
 > `LogModule` é declarado com `@Global()`, portanto `AppLogger` está disponível em toda a aplicação sem ser importado individualmente.

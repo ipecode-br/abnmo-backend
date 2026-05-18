@@ -106,11 +106,11 @@ import { MailModule } from '@/app/mail/mail.module';
 export class UsersModule {}
 ```
 
-| Módulo compartilhado | Quando importar |
-|---|---|
+| Módulo compartilhado | Quando importar                                                                  |
+| -------------------- | -------------------------------------------------------------------------------- |
 | `CryptographyModule` | Quando o módulo precisar criar/verificar hashes, tokens JWT ou manipular cookies |
-| `MailModule` | Quando o módulo precisar enviar e-mails |
-| `EnvModule` | Quando o módulo precisar de acesso a variáveis de ambiente |
+| `MailModule`         | Quando o módulo precisar enviar e-mails                                          |
+| `EnvModule`          | Quando o módulo precisar de acesso a variáveis de ambiente                       |
 
 > `LogModule` é global e não precisa ser importado.
 
@@ -118,14 +118,14 @@ export class UsersModule {}
 
 ## Convenções de nomenclatura
 
-| Arquivo | Padrão | Exemplo |
-|---|---|---|
-| Módulo | `{feature}.module.ts` | `appointments.module.ts` |
-| Controller | `{feature}.controller.ts` | `appointments.controller.ts` |
-| DTOs | `{feature}.dtos.ts` | `appointments.dtos.ts` |
-| Use-case | `{action}-{feature}.use-case.ts` | `create-appointment.use-case.ts` |
-| Classe do módulo | `{Feature}Module` | `AppointmentsModule` |
-| Classe do controller | `{Feature}Controller` | `AppointmentsController` |
-| Classe do use-case | `{Action}{Feature}UseCase` | `CreateAppointmentUseCase` |
+| Arquivo              | Padrão                           | Exemplo                          |
+| -------------------- | -------------------------------- | -------------------------------- |
+| Módulo               | `{feature}.module.ts`            | `appointments.module.ts`         |
+| Controller           | `{feature}.controller.ts`        | `appointments.controller.ts`     |
+| DTOs                 | `{feature}.dtos.ts`              | `appointments.dtos.ts`           |
+| Use-case             | `{action}-{feature}.use-case.ts` | `create-appointment.use-case.ts` |
+| Classe do módulo     | `{Feature}Module`                | `AppointmentsModule`             |
+| Classe do controller | `{Feature}Controller`            | `AppointmentsController`         |
+| Classe do use-case   | `{Action}{Feature}UseCase`       | `CreateAppointmentUseCase`       |
 
 Todos os arquivos seguem o padrão `kebab-case`.

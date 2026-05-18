@@ -21,10 +21,18 @@ import {
 } from '@/domain/schemas/appointments/requests';
 import { getAppointmentsResponseSchema } from '@/domain/schemas/appointments/responses';
 
-export class GetAppointmentsQuery extends createZodDto(getAppointmentsQuerySchema) {}
-export class GetAppointmentsResponse extends createZodDto(getAppointmentsResponseSchema) {}
-export class CreateAppointmentDto extends createZodDto(createAppointmentSchema) {}
-export class UpdateAppointmentDto extends createZodDto(updateAppointmentSchema) {}
+export class GetAppointmentsQuery extends createZodDto(
+  getAppointmentsQuerySchema,
+) {}
+export class GetAppointmentsResponse extends createZodDto(
+  getAppointmentsResponseSchema,
+) {}
+export class CreateAppointmentDto extends createZodDto(
+  createAppointmentSchema,
+) {}
+export class UpdateAppointmentDto extends createZodDto(
+  updateAppointmentSchema,
+) {}
 ```
 
 O `createZodDto()` cria uma classe com o schema Zod anexado como propriedade estática `.schema`. O `GlobalZodValidationPipe` detecta essa propriedade automaticamente e valida os dados de entrada a cada requisição.
@@ -56,13 +64,13 @@ Não há necessidade de adicionar pipes manualmente nos controllers — a valida
 
 ## Convenção de nomenclatura
 
-| Tipo | Padrão | Exemplo |
-|---|---|---|
-| Criação | `Create{Entity}Dto` | `CreateAppointmentDto` |
-| Atualização | `Update{Entity}Dto` | `UpdateAppointmentDto` |
-| Query de listagem | `Get{Entities}Query` | `GetAppointmentsQuery` |
+| Tipo                 | Padrão                  | Exemplo                   |
+| -------------------- | ----------------------- | ------------------------- |
+| Criação              | `Create{Entity}Dto`     | `CreateAppointmentDto`    |
+| Atualização          | `Update{Entity}Dto`     | `UpdateAppointmentDto`    |
+| Query de listagem    | `Get{Entities}Query`    | `GetAppointmentsQuery`    |
 | Response de listagem | `Get{Entities}Response` | `GetAppointmentsResponse` |
-| Response de detalhe | `Get{Entity}Response` | `GetPatientResponse` |
+| Response de detalhe  | `Get{Entity}Response`   | `GetPatientResponse`      |
 
 ---
 

@@ -12,13 +12,13 @@ O `AppLogger` é o único serviço de log a ser usado na aplicação. Injetável
 
 ### Métodos
 
-| Método | Nível | Uso |
-|---|---|---|
-| `log(message, extras?)` | info | Operações de sucesso |
-| `info(message, extras?)` | info | Alias de `log` |
-| `warn(message, extras?)` | warn | Situações inesperadas mas não críticas |
-| `error(message, extras?)` | error | Erros e exceções |
-| `debug(message, extras?)` | debug | Informações de diagnóstico |
+| Método                    | Nível | Uso                                    |
+| ------------------------- | ----- | -------------------------------------- |
+| `log(message, extras?)`   | info  | Operações de sucesso                   |
+| `info(message, extras?)`  | info  | Alias de `log`                         |
+| `warn(message, extras?)`  | warn  | Situações inesperadas mas não críticas |
+| `error(message, extras?)` | error | Erros e exceções                       |
+| `debug(message, extras?)` | debug | Informações de diagnóstico             |
 
 Todos os métodos aceitam um segundo argumento de metadados extras que são mesclados ao contexto:
 
@@ -87,15 +87,15 @@ async execute(input: CreateAppointmentUseCaseInput): Promise<void> {
 
 Os eventos são tipados como uma union em `src/common/types.d.ts`:
 
-| Domínio | Eventos |
-|---|---|
-| Atendimentos | `create_appointment`, `update_appointment`, `cancel_appointment` |
-| Autenticação | `sign_in`, `logout`, `register_patient`, `register_user`, `recover_password`, `reset_password`, `refresh_token`, `change_password` |
-| Encaminhamentos | `create_referral`, `update_referral`, `cancel_referral` |
-| Pacientes | `create_patient`, `update_patient`, `deactivate_patient` |
-| Requisitos de paciente | `create_patient_requirement`, `approve_patient_requirement`, `decline_patient_requirement` |
-| Contatos de apoio | `create_patient_support`, `update_patient_support`, `delete_patient_support` |
-| Usuários | `create_user_invite`, `cancel_user_invite`, `update_user`, `activate_user`, `deactivate_user` |
+| Domínio                | Eventos                                                                                                                            |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Atendimentos           | `create_appointment`, `update_appointment`, `cancel_appointment`                                                                   |
+| Autenticação           | `sign_in`, `logout`, `register_patient`, `register_user`, `recover_password`, `reset_password`, `refresh_token`, `change_password` |
+| Encaminhamentos        | `create_referral`, `update_referral`, `cancel_referral`                                                                            |
+| Pacientes              | `create_patient`, `update_patient`, `deactivate_patient`                                                                           |
+| Requisitos de paciente | `create_patient_requirement`, `approve_patient_requirement`, `decline_patient_requirement`                                         |
+| Contatos de apoio      | `create_patient_support`, `update_patient_support`, `delete_patient_support`                                                       |
+| Usuários               | `create_user_invite`, `cancel_user_invite`, `update_user`, `activate_user`, `deactivate_user`                                      |
 
 ---
 

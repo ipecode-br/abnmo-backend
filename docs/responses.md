@@ -55,7 +55,9 @@ export const getAppointmentsResponseSchema = baseResponseSchema.extend({
 });
 
 // src/app/http/appointments/appointments.dtos.ts
-export class GetAppointmentsResponse extends createZodDto(getAppointmentsResponseSchema) {}
+export class GetAppointmentsResponse extends createZodDto(
+  getAppointmentsResponseSchema,
+) {}
 ```
 
 No controller:

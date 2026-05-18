@@ -12,7 +12,16 @@ O controller é responsável por receber as requisições HTTP, extrair os parâ
 
 ```typescript
 // src/app/http/appointments/appointments.controller.ts
-import { Body, Controller, Get, Param, Patch, Post, Put, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { Roles } from '@/common/decorators/roles.decorator';
@@ -66,7 +75,10 @@ export class AppointmentsController {
     @User() user: AuthUser,
     @Body() createAppointmentDto: CreateAppointmentDto,
   ): Promise<BaseResponse> {
-    await this.createAppointmentUseCase.execute({ user, ...createAppointmentDto });
+    await this.createAppointmentUseCase.execute({
+      user,
+      ...createAppointmentDto,
+    });
 
     return {
       success: true,
@@ -81,7 +93,11 @@ export class AppointmentsController {
     @User() user: AuthUser,
     @Body() updateAppointmentDto: UpdateAppointmentDto,
   ): Promise<BaseResponse> {
-    await this.updateAppointmentUseCase.execute({ id, user, ...updateAppointmentDto });
+    await this.updateAppointmentUseCase.execute({
+      id,
+      user,
+      ...updateAppointmentDto,
+    });
 
     return { success: true, message: 'Atendimento atualizado com sucesso.' };
   }

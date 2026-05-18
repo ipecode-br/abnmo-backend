@@ -43,14 +43,14 @@ Com erros de validação:
 
 Use as classes de exceção nativas do NestJS. Importe de `@nestjs/common`:
 
-| Exceção | Status HTTP | Quando usar |
-|---|---|---|
-| `NotFoundException` | 404 | Entidade não encontrada pelo ID fornecido |
-| `UnauthorizedException` | 401 | Credenciais inválidas, token expirado ou ausente |
-| `ForbiddenException` | 403 | Permissão insuficiente ou violação de ownership |
-| `BadRequestException` | 400 | Dados inválidos do ponto de vista de regra de negócio |
-| `ConflictException` | 409 | Conflito de dados únicos (e-mail, CPF já cadastrado) |
-| `ServiceUnavailableException` | 503 | Falha em serviço externo (ex: envio de e-mail) |
+| Exceção                       | Status HTTP | Quando usar                                           |
+| ----------------------------- | ----------- | ----------------------------------------------------- |
+| `NotFoundException`           | 404         | Entidade não encontrada pelo ID fornecido             |
+| `UnauthorizedException`       | 401         | Credenciais inválidas, token expirado ou ausente      |
+| `ForbiddenException`          | 403         | Permissão insuficiente ou violação de ownership       |
+| `BadRequestException`         | 400         | Dados inválidos do ponto de vista de regra de negócio |
+| `ConflictException`           | 409         | Conflito de dados únicos (e-mail, CPF já cadastrado)  |
+| `ServiceUnavailableException` | 503         | Falha em serviço externo (ex: envio de e-mail)        |
 
 ---
 

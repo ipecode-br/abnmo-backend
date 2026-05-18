@@ -41,11 +41,11 @@ Each module is self-contained — no cross-module feature dependencies. To acces
 
 **Shared modules** — import explicitly only where needed:
 
-| Module | When to import |
-|---|---|
+| Module               | When to import                                         |
+| -------------------- | ------------------------------------------------------ |
 | `CryptographyModule` | Creating/verifying hashes, JWT tokens, cookie handling |
-| `MailModule` | Sending emails |
-| `EnvModule` | Accessing environment variables |
+| `MailModule`         | Sending emails                                         |
+| `EnvModule`          | Accessing environment variables                        |
 
 > `LogModule` is global — never import it.
 
@@ -62,10 +62,18 @@ import {
 } from '@/domain/schemas/appointments/requests';
 import { getAppointmentsResponseSchema } from '@/domain/schemas/appointments/responses';
 
-export class GetAppointmentsQuery extends createZodDto(getAppointmentsQuerySchema) {}
-export class GetAppointmentsResponse extends createZodDto(getAppointmentsResponseSchema) {}
-export class CreateAppointmentDto extends createZodDto(createAppointmentSchema) {}
-export class UpdateAppointmentDto extends createZodDto(updateAppointmentSchema) {}
+export class GetAppointmentsQuery extends createZodDto(
+  getAppointmentsQuerySchema,
+) {}
+export class GetAppointmentsResponse extends createZodDto(
+  getAppointmentsResponseSchema,
+) {}
+export class CreateAppointmentDto extends createZodDto(
+  createAppointmentSchema,
+) {}
+export class UpdateAppointmentDto extends createZodDto(
+  updateAppointmentSchema,
+) {}
 ```
 
 One file per feature. Never define fields manually — all validation comes from the Zod schema.
@@ -94,7 +102,11 @@ export class AppointmentsController {
     @User() user: AuthUser,
   ): Promise<GetAppointmentsResponse> {
     const data = await this.getAppointmentsUseCase.execute({ user, ...query });
-    return { success: true, message: 'Lista de atendimentos retornada com sucesso.', data };
+    return {
+      success: true,
+      message: 'Lista de atendimentos retornada com sucesso.',
+      data,
+    };
   }
 
   @Post()
@@ -204,7 +216,12 @@ export class Appointment implements AppointmentSchema {
 Use `as const` arrays with derived types — no TypeScript `enum` keyword:
 
 ```typescript
-export const APPOINTMENT_STATUSES = ['scheduled', 'canceled', 'completed', 'no_show'] as const;
+export const APPOINTMENT_STATUSES = [
+  'scheduled',
+  'canceled',
+  'completed',
+  'no_show',
+] as const;
 export type AppointmentStatus = (typeof APPOINTMENT_STATUSES)[number];
 ```
 
@@ -259,7 +276,9 @@ if (user.role === 'patient') {
 }
 
 if (user.id !== targetId && user.role !== 'admin') {
-  throw new ForbiddenException('Você não tem permissão para atualizar este usuário.');
+  throw new ForbiddenException(
+    'Você não tem permissão para atualizar este usuário.',
+  );
 }
 ```
 
@@ -272,7 +291,11 @@ All responses include `success` and `message`. Operations returning data add `da
 return { success: true, message: 'Atendimento cadastrado com sucesso.' };
 
 // With data (list, detail)
-return { success: true, message: 'Lista de atendimentos retornada com sucesso.', data };
+return {
+  success: true,
+  message: 'Lista de atendimentos retornada com sucesso.',
+  data,
+};
 ```
 
 Response messages are always in **Portuguese (pt-BR)**.
@@ -362,23 +385,29 @@ throw new NotFoundException('Paciente não encontrado.');
 throw new ConflictException('Já existe um paciente com este e-mail.');
 
 // Business rule violation
-throw new BadRequestException('A data de atendimento deve estar dentro dos próximos 3 meses.');
+throw new BadRequestException(
+  'A data de atendimento deve estar dentro dos próximos 3 meses.',
+);
 
 // Ownership
-throw new ForbiddenException('Você não tem permissão para atualizar este usuário.');
+throw new ForbiddenException(
+  'Você não tem permissão para atualizar este usuário.',
+);
 
 // External service failure
-throw new ServiceUnavailableException('Não foi possível enviar o e-mail de convite.');
+throw new ServiceUnavailableException(
+  'Não foi possível enviar o e-mail de convite.',
+);
 ```
 
-| Exception | HTTP | When |
-|---|---|---|
-| `NotFoundException` | 404 | Entity not found by provided ID |
-| `UnauthorizedException` | 401 | Invalid credentials, missing/expired token |
-| `ForbiddenException` | 403 | Insufficient permission or ownership violation |
-| `BadRequestException` | 400 | Business rule violation |
-| `ConflictException` | 409 | Unique data conflict (email, CPF already registered) |
-| `ServiceUnavailableException` | 503 | External service failure (email send, etc.) |
+| Exception                     | HTTP | When                                                 |
+| ----------------------------- | ---- | ---------------------------------------------------- |
+| `NotFoundException`           | 404  | Entity not found by provided ID                      |
+| `UnauthorizedException`       | 401  | Invalid credentials, missing/expired token           |
+| `ForbiddenException`          | 403  | Insufficient permission or ownership violation       |
+| `BadRequestException`         | 400  | Business rule violation                              |
+| `ConflictException`           | 409  | Unique data conflict (email, CPF already registered) |
+| `ServiceUnavailableException` | 503  | External service failure (email send, etc.)          |
 
 ### Logging
 
@@ -391,19 +420,25 @@ export class CreateAppointmentUseCase {
   constructor(private readonly logger: AppLogger) {}
 
   async execute(input: CreateAppointmentUseCaseInput): Promise<void> {
-    this.logger.setEvent('create_appointment');  // always first line
+    this.logger.setEvent('create_appointment'); // always first line
 
     // on failure
-    this.logger.error('Create appointment failed: patient not found', { patientId });
+    this.logger.error('Create appointment failed: patient not found', {
+      patientId,
+    });
     throw new NotFoundException('Paciente não encontrado.');
 
     // on success
-    this.logger.log('Appointment created successfully', { patientId, appointmentId });
+    this.logger.log('Appointment created successfully', {
+      patientId,
+      appointmentId,
+    });
   }
 }
 ```
 
 Rules:
+
 - Call `this.logger.setEvent()` as the **first line** of every `execute()`.
 - Log messages in **English**.
 - Log errors before throwing exceptions that represent operational failures.

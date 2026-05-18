@@ -19,8 +19,18 @@ Entities são classes TypeORM que representam tabelas no banco de dados. Cada en
 
 ```typescript
 // src/domain/entities/appointment.ts
-import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
-import { APPOINTMENT_STATUSES, type AppointmentStatus } from '../enums/appointments';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import {
+  APPOINTMENT_STATUSES,
+  type AppointmentStatus,
+} from '../enums/appointments';
 import type { AppointmentSchema } from '../schemas/appointments';
 import { Patient } from './patient';
 
@@ -121,16 +131,16 @@ export type AppointmentsOrderBy = (typeof APPOINTMENTS_ORDER_BY)[number];
 
 ### Enums disponíveis
 
-| Arquivo | Exports Principais |
-|---|---|
-| `appointments.ts` | `APPOINTMENT_STATUSES`, `APPOINTMENTS_ORDER_BY` |
-| `patients.ts` | `PATIENT_STATUSES`, `PATIENT_GENDERS`, `PATIENT_RACES`, `PATIENT_CONDITIONS`, `PATIENT_NMO_DIAGNOSTICS` |
-| `users.ts` | `USER_ROLES`, `USER_STATUSES` |
-| `shared.ts` | `SPECIALTY_CATEGORIES` |
-| `referrals.ts` | `REFERRAL_STATUSES`, `REFERRALS_ORDER_BY` |
-| `patient-requirements.ts` | `PATIENT_REQUIREMENT_TYPES`, `PATIENT_REQUIREMENT_STATUSES` |
-| `tokens.ts` | `AUTH_TOKENS_MAPPING`, `AUTH_TOKEN_ROLES`, `ALLOWED_ROLES` |
-| `queries.ts` | `QUERY_ORDERS`, `QUERY_PERIODS` |
+| Arquivo                   | Exports Principais                                                                                      |
+| ------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `appointments.ts`         | `APPOINTMENT_STATUSES`, `APPOINTMENTS_ORDER_BY`                                                         |
+| `patients.ts`             | `PATIENT_STATUSES`, `PATIENT_GENDERS`, `PATIENT_RACES`, `PATIENT_CONDITIONS`, `PATIENT_NMO_DIAGNOSTICS` |
+| `users.ts`                | `USER_ROLES`, `USER_STATUSES`                                                                           |
+| `shared.ts`               | `SPECIALTY_CATEGORIES`                                                                                  |
+| `referrals.ts`            | `REFERRAL_STATUSES`, `REFERRALS_ORDER_BY`                                                               |
+| `patient-requirements.ts` | `PATIENT_REQUIREMENT_TYPES`, `PATIENT_REQUIREMENT_STATUSES`                                             |
+| `tokens.ts`               | `AUTH_TOKENS_MAPPING`, `AUTH_TOKEN_ROLES`, `ALLOWED_ROLES`                                              |
+| `queries.ts`              | `QUERY_ORDERS`, `QUERY_PERIODS`                                                                         |
 
 ---
 
@@ -164,20 +174,22 @@ Define a estrutura completa da entidade como um objeto Zod estrito:
 // src/domain/schemas/appointments/index.ts
 import { z } from 'zod';
 
-export const appointmentSchema = z.object({
-  id: z.string().uuid(),
-  patientId: z.string().uuid(),
-  date: z.coerce.date(),
-  status: z.enum(APPOINTMENT_STATUSES),
-  category: z.enum(SPECIALTY_CATEGORIES),
-  condition: z.enum(PATIENT_CONDITIONS),
-  annotation: z.string().max(500).nullable(),
-  professionalName: z.string().max(64).nullable(),
-  userId: z.string().uuid().nullable(),
-  createdBy: z.string().uuid(),
-  createdAt: z.coerce.date(),
-  updatedAt: z.coerce.date(),
-}).strict();
+export const appointmentSchema = z
+  .object({
+    id: z.string().uuid(),
+    patientId: z.string().uuid(),
+    date: z.coerce.date(),
+    status: z.enum(APPOINTMENT_STATUSES),
+    category: z.enum(SPECIALTY_CATEGORIES),
+    condition: z.enum(PATIENT_CONDITIONS),
+    annotation: z.string().max(500).nullable(),
+    professionalName: z.string().max(64).nullable(),
+    userId: z.string().uuid().nullable(),
+    createdBy: z.string().uuid(),
+    createdAt: z.coerce.date(),
+    updatedAt: z.coerce.date(),
+  })
+  .strict();
 
 export type AppointmentSchema = z.infer<typeof appointmentSchema>;
 ```
