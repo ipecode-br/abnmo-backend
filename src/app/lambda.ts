@@ -16,6 +16,8 @@ export const handler = async (
   context: Context,
   callback: Callback,
 ) => {
+  context.callbackWaitsForEmptyEventLoop = false;
+
   if (!cachedHandler) {
     const expressApp = express();
     const adapter = new ExpressAdapter(expressApp);
