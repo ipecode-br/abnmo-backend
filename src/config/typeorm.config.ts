@@ -2,63 +2,49 @@ import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
 import { DATABASE_ENTITIES } from '@/domain/entities/database';
+import { EnvService } from '@/env/env.service';
 
-import { databaseConfig } from './database.config';
+export function getTypeOrmConfig(env: EnvService): TypeOrmModuleOptions {
+  const isTestEnv = env.get('NODE_ENV') === 'test';
 
-export const typeOrmConfig = (): TypeOrmModuleOptions => {
-  const config = databaseConfig();
-
-  return {
+  const baseConfig: TypeOrmModuleOptions = {
     type: 'mysql',
-    host: config.host,
-    port: config.port,
-    username: config.username,
-    password: config.password,
-    database: config.database,
-    autoLoadEntities: true,
-    migrations: [__dirname + '/../infra/database/migrations/**/*.ts'],
-    synchronize: process.env.NODE_ENV !== 'production',
-    logging: process.env.NODE_ENV === 'development',
+    host: env.get('DB_HOST'),
+    port: env.get('DB_PORT'),
+    database: env.get('DB_DATABASE'),
+    username: env.get('DB_USERNAME'),
+    password: env.get('DB_PASSWORD'),
+    migrations: [__dirname + '/infra/database/migrations/**/*.ts'],
     namingStrategy: new SnakeNamingStrategy(),
-    ssl:
-      process.env.APP_ENVIRONMENT === 'lambda'
-        ? { rejectUnauthorized: true }
-        : undefined,
-    extra: {
-      connectionLimit: 10,
-      connectTimeout: 10000,
-    },
-  };
-};
-
-// Test-specific configuration
-export const testTypeOrmConfig = (): TypeOrmModuleOptions => {
-  const config = databaseConfig();
-
-  return {
-    type: 'mysql',
-    host: config.host,
-    port: config.port,
-    username: config.username,
-    password: config.password,
-    database: config.schema || config.database, // Use test schema as database name in MySQL
     entities: DATABASE_ENTITIES,
-    synchronize: false, // Disable synchronization for better performance
+    synchronize: false,
+    migrationsRun: false,
     logging: false,
-    namingStrategy: new SnakeNamingStrategy(),
-    migrations: [], // Don't run migrations in test mode
+    dropSchema: false,
+    ssl: false,
+    retryAttempts: 1,
+    retryDelay: 500,
     extra: {
-      connectionLimit: 3, // Reduced connection limit for tests
-      connectTimeout: 5000, // Faster timeout
-      acquireTimeout: 3000, // Faster acquire timeout
-      timeout: 3000, // Query timeout
-      charset: 'utf8mb4_unicode_ci',
-      // MySQL-specific optimizations for tests
-      ssl: false,
+      connectionLimit: 2,
+      connectTimeout: 2000,
+      enableKeepAlive: true,
+      keepAliveInitialDelay: 0,
     },
-    // Additional performance optimizations
-    cache: false, // Disable caching in tests
-    dropSchema: false, // Don't drop schema
-    migrationsRun: false, // Don't run migrations
   };
-};
+
+  if (isTestEnv) {
+    return {
+      ...baseConfig,
+      cache: false,
+      extra: {
+        ...baseConfig.extra,
+        acquireTimeout: 2000,
+        charset: 'utf8mb4_unicode_ci',
+        ssl: false,
+        timeout: 2000,
+      },
+    };
+  }
+
+  return baseConfig;
+}
