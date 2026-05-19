@@ -2,6 +2,7 @@ import 'reflect-metadata';
 
 import type { RequestListener } from 'node:http';
 
+import { INestApplication } from '@nestjs/common';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import serverlessExpress from '@vendia/serverless-express';
 import { APIGatewayProxyEvent, Callback, Context } from 'aws-lambda';
@@ -10,6 +11,10 @@ import express from 'express';
 import { createNestApp } from './app';
 
 let cachedHandler: ReturnType<typeof serverlessExpress>;
+let app: INestApplication;
+
+const expressApp = express();
+const adapter = new ExpressAdapter(expressApp);
 
 export const handler = async (
   event: APIGatewayProxyEvent,
@@ -19,9 +24,7 @@ export const handler = async (
   context.callbackWaitsForEmptyEventLoop = false;
 
   if (!cachedHandler) {
-    const expressApp = express();
-    const adapter = new ExpressAdapter(expressApp);
-    const app = await createNestApp(adapter);
+    app = await createNestApp(adapter);
 
     await app.init();
 
