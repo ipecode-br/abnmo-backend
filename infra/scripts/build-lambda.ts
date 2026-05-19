@@ -25,14 +25,15 @@ async function buildLambda() {
     platform: 'node',
     target: 'node22',
     outfile: path.join(outDir, 'index.js'),
-    minify: false,
-    treeShaking: false,
+    minify: true,
+    treeShaking: true,
     sourcemap: false,
     external: [
       'class-transformer/storage',
       '@nestjs/microservices',
       '@nestjs/websockets/socket-module',
       '@nestjs/microservices/microservices-module',
+      'pino-pretty',
     ],
   });
 
