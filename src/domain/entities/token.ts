@@ -11,8 +11,8 @@ import type { AuthToken } from '../schemas/tokens';
 
 @Entity('tokens')
 export class Token implements AuthToken {
-  @PrimaryGeneratedColumn({ type: 'integer' })
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Index()
   @Column({ type: 'uuid', nullable: true })

@@ -8,7 +8,7 @@ import { Token } from '@/domain/entities/token';
 import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
 
 interface CancelUserInviteUseCaseInput {
-  id: number;
+  id: string;
 }
 
 @Injectable()
