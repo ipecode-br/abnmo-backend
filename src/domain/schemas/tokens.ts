@@ -9,7 +9,7 @@ import type { UserRole } from '../enums/users';
 
 export const authTokenSchema = z
   .object({
-    id: z.number().int().positive(),
+    id: z.string().uuid(),
     entityId: z.string().uuid().nullable(),
     email: z.string().email().nullable(),
     token: z.string().min(1),

@@ -131,7 +131,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Cancela convite de usuário' })
   @ApiResponse({ type: BaseResponse })
   async cancelUserInvite(@Param('id') id: string): Promise<BaseResponse> {
-    await this.cancelUserInviteUseCase.execute({ id: parseInt(id, 10) });
+    await this.cancelUserInviteUseCase.execute({ id });
 
     return {
       success: true,
