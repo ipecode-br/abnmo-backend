@@ -29,7 +29,7 @@ export class User implements UserSchema {
   @Column({ type: 'varchar', length: 64 })
   password: string;
 
-  @Column({ type: 'varchar', nullable: true })
+  @Column({ type: 'varchar', length: 2048, nullable: true })
   avatarUrl: string | null;
 
   @Column({ type: 'enum', enum: USER_ROLES })

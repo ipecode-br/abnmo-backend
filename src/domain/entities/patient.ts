@@ -66,7 +66,7 @@ export class Patient implements PatientSchema {
   @Column({ type: 'enum', enum: BRAZILIAN_STATES })
   state: BrazilianState;
 
-  @Column({ type: 'varchar' })
+  @Column({ type: 'varchar', length: 64 })
   city: string;
 
   @Column({ type: 'tinyint', width: 1, default: 0 })

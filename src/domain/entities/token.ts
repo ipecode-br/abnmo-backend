@@ -18,7 +18,7 @@ export class Token implements AuthToken {
   @Column({ type: 'uuid', nullable: true })
   entityId: string | null;
 
-  @Column({ type: 'varchar', nullable: true })
+  @Column({ type: 'varchar', length: 64, nullable: true })
   email: string | null;
 
   @Column({ type: 'varchar' })
