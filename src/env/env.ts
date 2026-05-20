@@ -4,10 +4,10 @@ export const envSchema = z.object({
   // Environment
   NODE_ENV: z.enum(['production', 'development', 'homolog', 'test']),
   APP_ENVIRONMENT: z.enum(['lambda', 'docker', 'local']),
-  MAINTENANCE: z.enum(['true', 'false']).transform((val) => val === 'true'),
   ENABLE_NEST_LOGS: z
     .enum(['true', 'false'])
     .transform((val) => val === 'true'),
+  MAINTENANCE: z.enum(['true', 'false']).transform((val) => val === 'true'),
 
   // API
   API_BASE_URL: z.string().url().optional(),
@@ -20,6 +20,7 @@ export const envSchema = z.object({
   COOKIE_DOMAIN: z.string().min(1),
   COOKIE_SECRET: z.string().min(1),
   JWT_SECRET: z.string().min(1),
+  HASH_PEPPER: z.string().min(1),
 
   // Database
   DB_HOST: z.string().min(1),
