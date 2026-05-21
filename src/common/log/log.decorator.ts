@@ -29,7 +29,11 @@ export function Log(eventName?: ContextEvent) {
     const methods = Object.getOwnPropertyNames(prototype);
 
     for (const name of methods) {
+      if (name === 'constructor') continue;
+
       const originalMethod = prototype[name] as (...args: any[]) => any;
+
+      if (typeof originalMethod !== 'function') continue;
 
       prototype[name] = function (this: WithLogger, ...args: unknown[]) {
         if (this.logger instanceof LogService) {

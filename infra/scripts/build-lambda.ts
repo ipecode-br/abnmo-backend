@@ -26,6 +26,7 @@ async function buildLambda() {
     target: 'node22',
     outfile: path.join(outDir, 'index.js'),
     minify: true,
+    keepNames: true,
     treeShaking: true,
     sourcemap: false,
     external: [

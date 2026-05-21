@@ -46,7 +46,7 @@ function getRandomCity(state: string): string {
 }
 
 async function main() {
-  const password = await hash('12345678', 10);
+  const password = await hash('12345678', 14);
 
   try {
     await dataSource.initialize();
