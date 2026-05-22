@@ -10,6 +10,7 @@ import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.us
 import { MailService } from '@/app/mail/mail.service';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
+import { buildRegisterUserEmail } from '@/domain/email-templates/register-user-email';
 import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
@@ -93,21 +94,23 @@ export class CreateUserInviteUseCase {
       });
 
       const baseAppUrl = this.envService.get('APP_URL');
-      const registerUserLink = `${baseAppUrl}/conta/cadastrar?token=${inviteUserToken}`;
+      const registerUserUrl = `${baseAppUrl}/conta/cadastrar?token=${inviteUserToken}`;
+
+      const subject = 'Cadastre sua conta no Sistema Viver Melhor da ABNMO';
+      const preheader =
+        'Conclua o cadastro da sua conta para acessar o Sistema Viver Melhor da ABNMO.';
+
+      const registerUserEmail = buildRegisterUserEmail({
+        title: subject,
+        preheader,
+        registerUserUrl,
+      });
 
       const emailSent = await this.mailService.send({
         to: email,
-        subject: 'Cadastre sua conta no Sistema Viver Melhor da ABNMO',
-        text: 'Finalize o cadastro da sua conta para ter acesso ao Sistema Viver Melhor da ABNMO.',
-        html: `
-          <p>Olá!</p>
-          </br>
-          <p>Você foi convidado a utilizar o <strong>Sistema Viver Melhor</strong> da <strong>ABNMO</strong>. Para ter acesso, finalize a criação da sua conta.</p>
-          </br>
-          <p>Acesse o link abaixo e preencha os dados necessários.</p>
-          </br>
-          <a href="${registerUserLink}">${registerUserLink}</a>
-        `,
+        subject,
+        text: preheader,
+        html: registerUserEmail,
       });
 
       if (!emailSent) {

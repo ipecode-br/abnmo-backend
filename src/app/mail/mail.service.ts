@@ -81,12 +81,13 @@ export class MailService {
           messageId: data.id,
         });
         return true;
-      } catch (error) {
-        this.logger.error(
-          'Send e-mail failed',
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-          { provider, to, subject, error },
-        );
+      } catch (error: unknown) {
+        this.logger.error('Send e-mail failed', {
+          provider,
+          to,
+          subject,
+          error,
+        });
         return false;
       }
     }
@@ -113,12 +114,8 @@ export class MailService {
         attempts: result.$metadata.attempts,
       });
       return true;
-    } catch (error) {
-      this.logger.error(
-        'Send e-mail failed',
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        { provider, to, subject, error },
-      );
+    } catch (error: unknown) {
+      this.logger.error('Send e-mail failed', { provider, to, subject, error });
       return false;
     }
   }
