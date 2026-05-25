@@ -7,6 +7,7 @@ import { MailService } from '@/app/mail/mail.service';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import { COOKIES_MAPPING } from '@/domain/cookies';
+import { buildRecoverPasswordEmail } from '@/domain/email-templates/recover-password-email';
 import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
@@ -37,7 +38,7 @@ export class RecoverPasswordUseCase {
   async execute({ email }: RecoverPasswordUseCaseInput): Promise<void> {
     let entity: User | Patient | null = null;
 
-    const findOptions = { select: { id: true }, where: { email } };
+    const findOptions = { select: { id: true, name: true }, where: { email } };
 
     const [user, patient] = await Promise.all([
       this.usersRepository.findOne(findOptions),
@@ -83,19 +84,23 @@ export class RecoverPasswordUseCase {
     const baseAppUrl = this.envService.get('APP_URL');
     const resetPasswordUrl = `${baseAppUrl}/conta/nova-senha?token=${token}`;
 
+    const subject = 'Solicitação para redefinição de senha';
+    const preheader =
+      'Redefina sua senha de acesso ao Sistema Viver Melhor da ABNMO.';
+    const name = entity.name.split(' ')[0];
+
+    const recoverPasswordEmail = buildRecoverPasswordEmail({
+      title: subject,
+      preheader,
+      name,
+      resetPasswordUrl,
+    });
+
     await this.mailService.send({
       to: email,
-      subject: 'Solicitação para redefinição de senha',
-      text: 'Redefina sua senha de acesso ao Sistema Viver Melhor da ABNMO.',
-      html: `
-        <p>Olá!</p>
-        </br>
-        <p>Você solicitou a redefinição da senha de acesso ao <strong>Sistema Viver Melhor</strong> da <strong>ABNMO</strong>. Acesse o link abaixo e cadastre uma nova senha de acesso para sua conta.</p>
-        </br>
-        <a href="${resetPasswordUrl}">${resetPasswordUrl}</a>
-        </br>
-        <p>Se você não solicitou este e-mail, basta ignorá-lo que sua conta não sofrerá nenhuma alteração.</p>
-      `,
+      subject,
+      text: preheader,
+      html: recoverPasswordEmail,
     });
   }
 }

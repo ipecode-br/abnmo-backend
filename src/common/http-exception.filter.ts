@@ -83,11 +83,50 @@ export class HttpExceptionFilter extends BaseExceptionFilter {
         message = responseMessage;
       }
 
-      this.logger.error('HttpException', { status, message });
+      this.logger.error('HttpException', {
+        status,
+        message,
+        stack: exception.stack,
+      });
       return response.status(status).json({ success: false, message });
     }
 
-    this.logger.error('UnexpectedException', { exception });
+    let errorMessage = 'Unknown error';
+    let errorStack: string | undefined;
+    let errorDetails = {};
+
+    if (exception instanceof Error) {
+      errorMessage = exception.message;
+      errorStack = exception.stack;
+      errorDetails = { name: exception.name, cause: exception.cause };
+    }
+
+    if (typeof exception === 'string') {
+      errorMessage = exception;
+    }
+
+    if (exception && typeof exception === 'object') {
+      try {
+        // Attempt to serialize the exception safely
+        errorDetails = JSON.parse(
+          JSON.stringify(exception, (key: string, value: unknown) => {
+            if (typeof value === 'function') return '[Function]';
+            if (typeof value === 'symbol') return '[Symbol]';
+            return value;
+          }),
+        ) as Record<string, unknown>;
+      } catch {
+        errorDetails = { error: 'Unserializable error object' };
+      }
+    }
+
+    this.logger.error('UnexpectedException', {
+      message: errorMessage,
+      stack: errorStack,
+      details: errorDetails,
+      status,
+      context: 'GlobalExceptionFilter',
+    });
 
     return response.status(status).json({ success: false, message });
   }

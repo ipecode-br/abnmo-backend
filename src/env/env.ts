@@ -22,6 +22,11 @@ export const envSchema = z.object({
   JWT_SECRET: z.string().min(1),
   HASH_PEPPER: z.string().min(1),
 
+  // Storage
+  STORAGE_BUCKET_NAME: z.string().min(1),
+  CDN_PUBLIC_URL: z.string().url(),
+  CDN_PRIVATE_URL: z.string().url(),
+
   // Database
   DB_HOST: z.string().min(1),
   DB_PORT: z.coerce.number(),

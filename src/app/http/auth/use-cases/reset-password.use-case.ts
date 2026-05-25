@@ -13,6 +13,7 @@ import { MailService } from '@/app/mail/mail.service';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import { COOKIES_MAPPING } from '@/domain/cookies';
+import { buildResetPasswordEmail } from '@/domain/email-templates/reset-password-email';
 import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
@@ -77,8 +78,14 @@ export class ResetPasswordUseCase {
     let role: AuthTokenRole = 'patient';
 
     const [user, patient] = await Promise.all([
-      this.usersRepository.findOne({ where: { id } }),
-      this.patientsRepository.findOne({ where: { id } }),
+      this.usersRepository.findOne({
+        select: { id: true, email: true, name: true },
+        where: { id },
+      }),
+      this.patientsRepository.findOne({
+        select: { id: true, email: true, name: true },
+        where: { id },
+      }),
     ]);
 
     if (user) {
@@ -126,17 +133,22 @@ export class ResetPasswordUseCase {
       role,
     });
 
+    const subject = 'Senha de acesso alterada com sucesso';
+    const preheader =
+      'Sua senha de acesso ao Sistema Viver Melhor foi alterada com sucesso.';
+    const name = entity.name.split(' ')[0];
+
+    const resetPasswordEmail = buildResetPasswordEmail({
+      title: subject,
+      preheader,
+      name,
+    });
+
     await this.mailService.send({
       to: entity.email,
-      subject: 'Senha de acesso alterada com sucesso',
-      text: 'Sua senha de acesso ao Sistema Viver Melhor foi alterada com sucesso.',
-      html: `
-        <p>Olá!</p>
-        </br>
-        <p>A senha de acesso à sua conta no <strong>Sistema Viver Melhor</strong> foi alterada com sucesso.</p>
-        </br>
-        <p>Se você não solicitou esta alteração. Por favor, entre em contato conosco urgentemente.</p>
-      `,
+      subject,
+      text: preheader,
+      html: resetPasswordEmail,
     });
   }
 }
