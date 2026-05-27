@@ -21,6 +21,31 @@ interface ValidateFileResult {
   message: string;
 }
 
+/**
+ * Validates a file buffer against allowed extensions, size limits, and magic byte signatures.
+ *
+ * @param buffer - The raw file contents as a Buffer
+ * @param maxSize - Maximum allowed file size **in bytes** (e.g. `5 * 1024 * 1024` for 5 MB)
+ * @param fileName - Original file name including extension (e.g. `"document.pdf"`)
+ * @param allowedExtensions - List of permitted extensions without leading dot (e.g. `["jpg", "png", "pdf"]`)
+ *
+ * @returns A {@link ValidateFileResult} with:
+ * - `extension` — the detected extension from `fileName`
+ * - `isValid` — `true` only if the extension, size, and magic bytes all pass
+ * - `message` — a human-readable result description (in Portuguese)
+ *
+ * @example
+ * const result = validateFile({
+ *   buffer: fileBuffer,
+ *   maxSize: 5 * 1024 * 1024, // 5 MB
+ *   fileName: 'photo.jpg',
+ *   allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
+ * });
+ *
+ * if (!result.isValid) {
+ *   throw new Error(result.message);
+ * }
+ */
 export function validateFile({
   buffer,
   maxSize,
