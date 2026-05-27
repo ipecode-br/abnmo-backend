@@ -22,10 +22,17 @@ export const envSchema = z.object({
   JWT_SECRET: z.string().min(1),
   HASH_PEPPER: z.string().min(1),
 
+  // AWS
+  AWS_REGION: z.string().optional().default(''),
+  AWS_ACCESS_KEY_ID: z.string().optional().default(''),
+  AWS_SECRET_ACCESS_KEY: z.string().optional().default(''),
+
   // Storage
   STORAGE_BUCKET_NAME: z.string().min(1),
   CDN_PUBLIC_URL: z.string().url(),
   CDN_PRIVATE_URL: z.string().url(),
+  CDN_PUBLIC_KEY_ID: z.string().min(1),
+  CDN_PRIVATE_KEY: z.string().min(1),
 
   // Database
   DB_HOST: z.string().min(1),

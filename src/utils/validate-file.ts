@@ -1,3 +1,5 @@
+import { MIME_TYPES } from '@/constants/mime-types';
+
 import { formatSize } from './formatters/format-size';
 import { getFileExtension } from './get-file-extension';
 
@@ -16,8 +18,9 @@ interface ValidateFileProps {
 }
 
 interface ValidateFileResult {
-  extension: string;
   isValid: boolean;
+  extension: string;
+  mimeType: string;
   message: string;
 }
 
@@ -30,8 +33,9 @@ interface ValidateFileResult {
  * @param allowedExtensions - List of permitted extensions without leading dot (e.g. `["jpg", "png", "pdf"]`)
  *
  * @returns A {@link ValidateFileResult} with:
- * - `extension` — the detected extension from `fileName`
  * - `isValid` — `true` only if the extension, size, and magic bytes all pass
+ * - `extension` — the detected extension from `fileName`
+ * - `mimeType` — the detected mimeType from `extension`
  * - `message` — a human-readable result description (in Portuguese)
  *
  * @example
@@ -53,19 +57,20 @@ export function validateFile({
   allowedExtensions,
 }: ValidateFileProps): ValidateFileResult {
   const extension = getFileExtension(fileName);
+  const mimeType = MIME_TYPES[extension];
+
+  const baseResult = { isValid: false, extension, mimeType };
 
   if (!allowedExtensions.includes(extension)) {
     return {
-      extension,
-      isValid: false,
+      ...baseResult,
       message: `Formato de arquivo não permitido. Use: ${allowedExtensions.join(', ')}.`,
     };
   }
 
   if (buffer.length > maxSize) {
     return {
-      extension,
-      isValid: false,
+      ...baseResult,
       message: `Arquivo não pode ser maior que ${formatSize(maxSize)}.`,
     };
   }
@@ -74,8 +79,7 @@ export function validateFile({
 
   if (!expectedSignatures) {
     return {
-      extension,
-      isValid: false,
+      ...baseResult,
       message: `Arquivo inválido. Por favor, envie um arquivo válido nos formatos: ${allowedExtensions.join(', ')}.`,
     };
   }
@@ -86,11 +90,14 @@ export function validateFile({
 
   if (!isValidSignature) {
     return {
-      extension,
-      isValid: false,
+      ...baseResult,
       message: `Arquivo inválido. Por favor, envie um arquivo válido nos formatos: ${allowedExtensions.join(', ')}.`,
     };
   }
 
-  return { extension, isValid: true, message: 'O arquivo enviado é válido.' };
+  return {
+    ...baseResult,
+    isValid: true,
+    message: 'O arquivo enviado é válido.',
+  };
 }

@@ -1,3 +1,5 @@
+import { createHmac } from 'node:crypto';
+
 import { faker } from '@faker-js/faker';
 import { hash } from 'bcryptjs';
 import * as fs from 'fs';
@@ -46,7 +48,11 @@ function getRandomCity(state: string): string {
 }
 
 async function main() {
-  const password = await hash('12345678', 14);
+  const pepper = process.env.HASH_PEPPER;
+  const passwordWithPepper = createHmac('sha256', pepper || '')
+    .update('12345678')
+    .digest('base64');
+  const password = await hash(passwordWithPepper, 14);
 
   try {
     await dataSource.initialize();
