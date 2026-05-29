@@ -7,7 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import type { Response } from 'express';
 import { Repository } from 'typeorm';
 
-import { CryptographyService } from '@/app/cryptography/crypography.service';
+import { CryptographyService } from '@/app/cryptography/cryptography.service';
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
 import { MailService } from '@/app/mail/mail.service';
 import { Log } from '@/common/log/log.decorator';

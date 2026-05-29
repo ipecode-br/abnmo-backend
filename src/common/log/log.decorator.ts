@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 
-import type { ContextEvent } from '../types';
+import type { Event } from '../types';
 import { LogService } from './log.service';
 
 interface WithLogger {
@@ -10,7 +10,7 @@ interface WithLogger {
 
 export const LOGGER_EVENT_KEY = 'LOGGER_EVENT_KEY';
 
-export function Log(eventName?: ContextEvent) {
+export function Log(eventName?: Event) {
   return (
     target: any,
     propertyKey?: string,

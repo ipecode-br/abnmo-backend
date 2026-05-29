@@ -58,7 +58,6 @@ export class CryptographyService {
   ): void {
     response.cookie(name, value, {
       ...this.cookieBaseConfig(),
-      maxAge: 1000 * 60 * 60 * 12,
       ...options,
     });
   }

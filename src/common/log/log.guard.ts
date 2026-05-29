@@ -2,7 +2,7 @@ import 'reflect-metadata';
 
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 
-import type { ContextEvent } from '../types';
+import type { Event } from '../types';
 import { LOGGER_EVENT_KEY } from './log.decorator';
 import { LogService } from './log.service';
 
@@ -20,7 +20,7 @@ export class LogGuard implements CanActivate {
     const targetClass = context.getClass();
 
     const eventName = Reflect.getMetadata(LOGGER_EVENT_KEY, handler) as
-      | ContextEvent
+      | Event
       | undefined;
 
     if (eventName) {

@@ -42,7 +42,7 @@ type UsersEvent =
   | 'deactivate_user'
   | 'update_user';
 
-export type ContextEvent =
+export type Event =
   | AppointmentsEvent
   | AuthEvent
   | PatientRequirementsEvent

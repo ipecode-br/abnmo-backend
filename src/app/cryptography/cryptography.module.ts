@@ -4,7 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { EnvModule } from '@/env/env.module';
 import { EnvService } from '@/env/env.service';
 
-import { CryptographyService } from './crypography.service';
+import { CryptographyService } from './cryptography.service';
 import { CreateTokenUseCase } from './use-cases/create-token.use-case';
 
 @Module({

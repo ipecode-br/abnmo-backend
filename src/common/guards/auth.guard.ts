@@ -9,7 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import type { Response } from 'express';
 import type { Repository } from 'typeorm';
 
-import { CryptographyService } from '@/app/cryptography/crypography.service';
+import { CryptographyService } from '@/app/cryptography/cryptography.service';
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
 import { ContextService } from '@/common/context/context.service';
 import type { AuthUser } from '@/common/types';
@@ -40,12 +40,13 @@ export class AuthGuard implements CanActivate {
     private readonly patientsRepository: Repository<Patient>,
     @InjectRepository(Token)
     private readonly tokensRepository: Repository<Token>,
-    private readonly cryptographyService: CryptographyService,
+    private readonly contextService: ContextService,
     private readonly createTokenUseCase: CreateTokenUseCase,
+    private readonly cryptographyService: CryptographyService,
     private readonly reflector: Reflector,
-    private readonly ctx: ContextService,
   ) {}
 
+  // TODO: improve the unauthorized exception handling
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
@@ -78,7 +79,7 @@ export class AuthGuard implements CanActivate {
 
         request.user = user;
         // ensure request context has the authenticated user too
-        this.ctx.setUser(user);
+        this.contextService.setUser(user);
         return true;
       } catch (error) {
         this.cryptographyService.deleteCookie(
@@ -156,7 +157,7 @@ export class AuthGuard implements CanActivate {
 
       request.user = user;
       // context is already running from middleware; keep it in sync
-      this.ctx.setUser(user);
+      this.contextService.setUser(user);
       return true;
     } catch (error) {
       this.cryptographyService.deleteCookie(
