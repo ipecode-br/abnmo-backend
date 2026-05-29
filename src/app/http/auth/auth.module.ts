@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { CryptographyModule } from '@/app/cryptography/cryptography.module';
 import { MailModule } from '@/app/mail/mail.module';
+import { StorageModule } from '@/app/storage/storage.module';
 import { AuthGuard } from '@/common/guards/auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import { Patient } from '@/domain/entities/patient';
@@ -14,6 +15,7 @@ import { EnvModule } from '@/env/env.module';
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
 import { ChangePasswordUseCase } from './use-cases/change-password.use-case';
+import { GenerateAuthTokensUseCase } from './use-cases/generate-auth-tokens-use-case';
 import { LogoutUseCase } from './use-cases/logout.use-case';
 import { RecoverPasswordUseCase } from './use-cases/recover-password.use-case';
 import { RefreshTokenUseCase } from './use-cases/refresh-token.use-case';
@@ -26,19 +28,21 @@ import { SignInWithEmailUseCase } from './use-cases/sign-in-with-email.use-case'
   imports: [
     TypeOrmModule.forFeature([Patient, Token, User]),
     CryptographyModule,
-    UsersModule,
     EnvModule,
     MailModule,
+    StorageModule,
+    UsersModule,
   ],
   providers: [
-    SignInWithEmailUseCase,
+    ChangePasswordUseCase,
+    GenerateAuthTokensUseCase,
     LogoutUseCase,
     RecoverPasswordUseCase,
-    ResetPasswordUseCase,
+    RefreshTokenUseCase,
     RegisterPatientUseCase,
     RegisterUserUseCase,
-    ChangePasswordUseCase,
-    RefreshTokenUseCase,
+    ResetPasswordUseCase,
+    SignInWithEmailUseCase,
     { provide: APP_GUARD, useClass: AuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
   ],
