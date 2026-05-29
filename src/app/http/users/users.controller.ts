@@ -8,12 +8,17 @@ import {
   Post,
   Put,
   Query,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Express } from 'express';
 
 import { Roles } from '@/common/decorators/roles.decorator';
 import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
+import { FileValidationPipe } from '@/common/file-validation.pipe';
 import { Log } from '@/common/log/log.decorator';
 import type { AuthUser } from '@/common/types';
 
@@ -25,6 +30,7 @@ import { GetUserUseCase } from './use-cases/get-user.use-case';
 import { GetUserInvitesUseCase } from './use-cases/get-user-invites.use-case';
 import { GetUsersUseCase } from './use-cases/get-users.use-case';
 import { UpdateUserUseCase } from './use-cases/update-user.use-case';
+import { UploadUserAvatarUseCase } from './use-cases/upload-user-avatar.use-case';
 import {
   CreateUserInviteDto,
   GetUserInvitesQuery,
@@ -40,13 +46,14 @@ import {
 export class UsersController {
   constructor(
     private readonly activateUserUseCase: ActivateUserUseCase,
+    private readonly cancelUserInviteUseCase: CancelUserInviteUseCase,
     private readonly createUserInviteUseCase: CreateUserInviteUseCase,
     private readonly deactivateUserUseCase: DeactivateUserUseCase,
+    private readonly getUserInvitesUseCase: GetUserInvitesUseCase,
     private readonly getUserUseCase: GetUserUseCase,
     private readonly getUsersUseCase: GetUsersUseCase,
-    private readonly getUserInvitesUseCase: GetUserInvitesUseCase,
-    private readonly cancelUserInviteUseCase: CancelUserInviteUseCase,
     private readonly updateUserUseCase: UpdateUserUseCase,
+    private readonly uploadUserAvatarUseCase: UploadUserAvatarUseCase,
   ) {}
 
   @Get()
@@ -77,36 +84,6 @@ export class UsersController {
     };
   }
 
-  @Post('invites')
-  @Log('create_user_invite')
-  @Roles(['manager'])
-  @ApiOperation({ summary: 'Cria convite para registro de usuário' })
-  @ApiResponse({ type: BaseResponse })
-  async createUserInvite(
-    @Body() createUserInviteDto: CreateUserInviteDto,
-  ): Promise<BaseResponse> {
-    await this.createUserInviteUseCase.execute(createUserInviteDto);
-
-    return {
-      success: true,
-      message: 'Convite do usuário enviado com sucesso.',
-    };
-  }
-
-  @Get('invites')
-  @Roles(['manager'])
-  @ApiOperation({ summary: 'Lista todos os convites de usuário' })
-  @ApiResponse({ type: GetUserInvitesResponse })
-  async getUserInvites(@Query() query: GetUserInvitesQuery): Promise<any> {
-    const data = await this.getUserInvitesUseCase.execute(query);
-
-    return {
-      success: true,
-      message: 'Lista de convites retornada com sucesso.',
-      data,
-    };
-  }
-
   @Put(':id')
   @Log('update_user')
   @Roles(['manager', 'nurse', 'specialist'])
@@ -125,17 +102,32 @@ export class UsersController {
     };
   }
 
-  @Delete('invites/:id')
-  @Log('cancel_user_invite')
-  @Roles(['manager'])
-  @ApiOperation({ summary: 'Cancela convite de usuário' })
+  @Post('upload-avatar')
+  @Log('update_user')
+  @Roles(['manager', 'nurse', 'specialist'])
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({ summary: 'Faz upload do avatar do usuário' })
   @ApiResponse({ type: BaseResponse })
-  async cancelUserInvite(@Param('id') id: string): Promise<BaseResponse> {
-    await this.cancelUserInviteUseCase.execute({ id });
+  async uploadAvatar(
+    @User() user: AuthUser,
+    @UploadedFile(
+      new FileValidationPipe({
+        maxSize: 500 * 1024, // 500kb
+        allowedMimeTypes: ['image/jpeg', 'image/jpeg', 'image/png'],
+      }),
+    )
+    file: Express.Multer.File,
+  ): Promise<BaseResponse> {
+    await this.uploadUserAvatarUseCase.execute({
+      user,
+      buffer: file.buffer,
+      originalName: file.originalname,
+      mimeType: file.mimetype,
+    });
 
     return {
       success: true,
-      message: 'Convite cancelado com sucesso.',
+      message: 'Avatar atualizado com sucesso.',
     };
   }
 
@@ -170,6 +162,50 @@ export class UsersController {
     return {
       success: true,
       message: 'Usuário ativado com sucesso.',
+    };
+  }
+
+  @Get('invites')
+  @Roles(['manager'])
+  @ApiOperation({ summary: 'Lista todos os convites de usuário' })
+  @ApiResponse({ type: GetUserInvitesResponse })
+  async getUserInvites(@Query() query: GetUserInvitesQuery): Promise<any> {
+    const data = await this.getUserInvitesUseCase.execute(query);
+
+    return {
+      success: true,
+      message: 'Lista de convites retornada com sucesso.',
+      data,
+    };
+  }
+
+  @Post('invites')
+  @Log('create_user_invite')
+  @Roles(['manager'])
+  @ApiOperation({ summary: 'Cria convite para registro de usuário' })
+  @ApiResponse({ type: BaseResponse })
+  async createUserInvite(
+    @Body() createUserInviteDto: CreateUserInviteDto,
+  ): Promise<BaseResponse> {
+    await this.createUserInviteUseCase.execute(createUserInviteDto);
+
+    return {
+      success: true,
+      message: 'Convite do usuário enviado com sucesso.',
+    };
+  }
+
+  @Delete('invites/:id')
+  @Log('cancel_user_invite')
+  @Roles(['manager'])
+  @ApiOperation({ summary: 'Cancela convite de usuário' })
+  @ApiResponse({ type: BaseResponse })
+  async cancelUserInvite(@Param('id') id: string): Promise<BaseResponse> {
+    await this.cancelUserInviteUseCase.execute({ id });
+
+    return {
+      success: true,
+      message: 'Convite cancelado com sucesso.',
     };
   }
 }

@@ -5,7 +5,6 @@ import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import { EnvService } from '@/env/env.service';
 import { formatSize } from '@/utils/formatters/format-size';
-import { normalizeString } from '@/utils/normalize-string';
 
 interface UploadFileUseCaseInput {
   visibility: 'public' | 'private';
@@ -39,15 +38,7 @@ export class UploadFileUseCase {
     this.cdnPrivateUrl = this.envService.get('CDN_PRIVATE_URL');
 
     // Initialize S3 client - use default AWS credentials chain
-    // this.s3Client = new S3Client({});
-
-    this.s3Client = new S3Client({
-      region: this.envService.get('AWS_REGION'),
-      credentials: {
-        accessKeyId: this.envService.get('AWS_ACCESS_KEY_ID'),
-        secretAccessKey: this.envService.get('AWS_SECRET_ACCESS_KEY'),
-      },
-    });
+    this.s3Client = new S3Client({});
   }
 
   async execute({
@@ -61,8 +52,7 @@ export class UploadFileUseCase {
       this.validateFolder(folder);
     }
 
-    const newFileName = this.generateFileName(fileName);
-    const filePath = folder ? `${folder}/${newFileName}` : `/${newFileName}`;
+    const filePath = folder ? `${folder}/${fileName}` : `/${fileName}`;
     const s3Key = `${visibility}${filePath}`;
 
     const uploadCommand = new PutObjectCommand({
@@ -81,7 +71,7 @@ export class UploadFileUseCase {
 
     this.logger.log('File uploaded', { url, s3Key, size });
 
-    return { url, s3Key, fileName: newFileName, size };
+    return { url, s3Key, fileName, size };
   }
 
   private validateFolder(folder: string) {
@@ -94,14 +84,5 @@ export class UploadFileUseCase {
     ) {
       throw new BadRequestException('Caminho de pasta inválido.');
     }
-  }
-
-  private generateFileName(fileName: string): string {
-    const parts = fileName.split('.');
-    const extension = parts.pop();
-    const normalizedFileName = normalizeString(parts.join());
-    const truncatedName = normalizedFileName.substring(0, 40);
-    const timestamp = Date.now();
-    return `${truncatedName}_${timestamp}.${extension}`;
   }
 }

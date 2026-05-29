@@ -20,18 +20,13 @@ export class DeleteFileUseCase {
   }
 
   async execute(s3Key: string): Promise<void> {
-    try {
-      const deleteCommand = new DeleteObjectCommand({
-        Bucket: this.bucketName,
-        Key: s3Key,
-      });
+    const deleteCommand = new DeleteObjectCommand({
+      Bucket: this.bucketName,
+      Key: s3Key,
+    });
 
-      await this.s3Client.send(deleteCommand);
+    await this.s3Client.send(deleteCommand);
 
-      this.logger.log('File deleted', { s3Key });
-    } catch (error: unknown) {
-      this.logger.error('File deletion failed', { s3Key, error });
-      throw error;
-    }
+    this.logger.log('File deleted', { s3Key });
   }
 }
