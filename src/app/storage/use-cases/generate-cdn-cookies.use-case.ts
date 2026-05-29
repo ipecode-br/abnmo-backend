@@ -1,19 +1,22 @@
 import { getSignedCookies } from '@aws-sdk/cloudfront-signer';
 import { Injectable } from '@nestjs/common';
+import { Response } from 'express';
 
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import { AuthUser } from '@/common/types';
 import { EnvService } from '@/env/env.service';
+import { setCookie } from '@/utils/cookies';
 
-interface GenerateSignedCookiesUseCaseInput {
+interface GenerateCdnCookiesUseCaseInput {
   user: AuthUser;
   expiresAt: Date;
+  response: Response;
 }
 
 @Injectable()
 @Log()
-export class GenerateSignedCookiesUseCase {
+export class GenerateCdnCookiesUseCase {
   private readonly cdnPrivateUrl: string;
   private readonly cdnPublicKeyId: string;
   private readonly cdnPrivateKey: string;
@@ -30,10 +33,7 @@ export class GenerateSignedCookiesUseCase {
     ).toString('utf-8');
   }
 
-  execute({
-    user,
-    expiresAt,
-  }: GenerateSignedCookiesUseCaseInput): Array<[string, string]> {
+  execute({ user, response, expiresAt }: GenerateCdnCookiesUseCaseInput): void {
     const { id, role } = user;
     const allowedPaths: string[] = [];
 
@@ -66,8 +66,17 @@ export class GenerateSignedCookiesUseCase {
       policy,
     });
 
-    this.logger.log('CDN signed cookies generated', { user, allowedPaths });
+    const cookies = Object.entries(signedCookies) as Array<[string, string]>;
 
-    return Object.entries(signedCookies) as Array<[string, string]>;
+    for (const [name, value] of cookies) {
+      setCookie(response, {
+        name,
+        value,
+        sameSite: 'none',
+        expires: expiresAt,
+      });
+    }
+
+    this.logger.log('CDN cookies generated', { user, allowedPaths });
   }
 }
