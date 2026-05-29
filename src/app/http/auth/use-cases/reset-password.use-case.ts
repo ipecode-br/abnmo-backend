@@ -8,17 +8,17 @@ import type { Response } from 'express';
 import { Repository } from 'typeorm';
 
 import { CryptographyService } from '@/app/cryptography/cryptography.service';
-import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
 import { MailService } from '@/app/mail/mail.service';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
-import { COOKIES_MAPPING } from '@/domain/cookies';
 import { buildResetPasswordEmail } from '@/domain/email-templates/reset-password-email';
 import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { AUTH_TOKENS_MAPPING, type AuthTokenRole } from '@/domain/enums/tokens';
 import type { ResetPasswordPayload } from '@/domain/schemas/tokens';
+
+import { GenerateAuthTokensUseCase } from './generate-auth-tokens-use-case';
 
 interface ResetPasswordUseCaseInput {
   password: string;
@@ -36,8 +36,8 @@ export class ResetPasswordUseCase {
     private readonly patientsRepository: Repository<Patient>,
     @InjectRepository(Token)
     private readonly tokensRepository: Repository<Token>,
-    private readonly createTokenUseCase: CreateTokenUseCase,
     private readonly cryptographyService: CryptographyService,
+    private readonly generateAuthTokensUseCase: GenerateAuthTokensUseCase,
     private readonly mailService: MailService,
     private readonly logger: LogService,
   ) {}
@@ -115,19 +115,12 @@ export class ResetPasswordUseCase {
     // Delete all tokens for this entity to ensure security after changing the password
     await this.tokensRepository.delete({ entityId: entity.id });
 
-    const { maxAge, token: accessToken } =
-      await this.createTokenUseCase.execute({
-        type: AUTH_TOKENS_MAPPING.accessToken,
-        payload: { sub: entity.id, role },
-      });
-
-    this.cryptographyService.setCookie(response, {
-      name: COOKIES_MAPPING.accessToken,
-      value: accessToken,
-      maxAge,
+    await this.generateAuthTokensUseCase.execute({
+      user: { id: entity.id, email: entity.email, role },
+      response,
     });
 
-    this.logger.log('Password reseted successfully', {
+    this.logger.log('Password reseted', {
       id: entity.id,
       email: entity.email,
       role,

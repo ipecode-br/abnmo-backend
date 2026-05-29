@@ -10,7 +10,7 @@ import type { Response } from 'express';
 import type { Repository } from 'typeorm';
 
 import { CryptographyService } from '@/app/cryptography/cryptography.service';
-import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
+import { GenerateAuthTokensUseCase } from '@/app/http/auth/use-cases/generate-auth-tokens-use-case';
 import { ContextService } from '@/common/context/context.service';
 import type { AuthUser } from '@/common/types';
 import type { Cookie } from '@/domain/cookies';
@@ -41,12 +41,11 @@ export class AuthGuard implements CanActivate {
     @InjectRepository(Token)
     private readonly tokensRepository: Repository<Token>,
     private readonly contextService: ContextService,
-    private readonly createTokenUseCase: CreateTokenUseCase,
     private readonly cryptographyService: CryptographyService,
+    private readonly generateAuthTokensUseCase: GenerateAuthTokensUseCase,
     private readonly reflector: Reflector,
   ) {}
 
-  // TODO: improve the unauthorized exception handling
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
@@ -63,18 +62,19 @@ export class AuthGuard implements CanActivate {
     const accessToken = request.signedCookies?.access_token;
     const refreshToken = request.signedCookies?.refresh_token;
 
+    const accessTokenMessage = 'Token de acesso inválido ou expirado.';
+    const refreshTokenMessage = 'Token de atualização inválido ou expirado.';
+
     if (accessToken) {
       try {
         const payload =
           await this.cryptographyService.verifyToken<AccessTokenPayload>(
             accessToken,
           );
-        const user = await this.getEntityFromId(payload.sub, payload.role);
+        const user = await this.getEntityById(payload.sub, payload.role);
 
         if (!user) {
-          throw new UnauthorizedException(
-            'Token de acesso inválido ou expirado.',
-          );
+          throw new UnauthorizedException(accessTokenMessage);
         }
 
         request.user = user;
@@ -82,23 +82,20 @@ export class AuthGuard implements CanActivate {
         this.contextService.setUser(user);
         return true;
       } catch (error) {
-        this.cryptographyService.deleteCookie(
-          response,
-          COOKIES_MAPPING.accessToken,
-        );
+        this.clearCookies(response);
 
         if (error instanceof UnauthorizedException) {
           throw error;
         }
 
-        throw new UnauthorizedException(
-          'Token de acesso inválido ou expirado.',
-        );
+        throw new UnauthorizedException(accessTokenMessage);
       }
     }
 
     if (!refreshToken) {
-      throw new UnauthorizedException('Token de atualização ausente.');
+      throw new UnauthorizedException(
+        'Você não tem permissão para acessar este recurso.',
+      );
     }
 
     try {
@@ -108,7 +105,7 @@ export class AuthGuard implements CanActivate {
         );
 
       const [user, storedRefreshToken] = await Promise.all([
-        this.getEntityFromId(payload.sub, payload.role),
+        this.getEntityById(payload.sub, payload.role),
         this.tokensRepository.findOne({
           where: {
             type: AUTH_TOKENS_MAPPING.refreshToken,
@@ -118,41 +115,18 @@ export class AuthGuard implements CanActivate {
         }),
       ]);
 
-      if (!user) {
-        throw new UnauthorizedException(
-          'Token de atualização inválido ou expirado.',
-        );
-      }
-
-      if (!storedRefreshToken || !storedRefreshToken.expiresAt) {
-        throw new UnauthorizedException('Token de atualização não encontrado.');
+      if (!user || !storedRefreshToken || !storedRefreshToken.expiresAt) {
+        throw new UnauthorizedException(refreshTokenMessage);
       }
 
       if (storedRefreshToken.expiresAt < new Date()) {
         await this.tokensRepository.delete({ entityId: payload.sub });
-
-        this.cryptographyService.deleteCookie(
-          response,
-          COOKIES_MAPPING.accessToken,
-        );
-        this.cryptographyService.deleteCookie(
-          response,
-          COOKIES_MAPPING.refreshToken,
-        );
-
-        throw new UnauthorizedException('Token de atualização expirado.');
+        throw new UnauthorizedException(refreshTokenMessage);
       }
 
-      const { token: newAccessToken, maxAge } =
-        await this.createTokenUseCase.execute({
-          type: COOKIES_MAPPING.accessToken,
-          payload: { sub: user.id, role: user.role },
-        });
-
-      this.cryptographyService.setCookie(response, {
-        name: COOKIES_MAPPING.accessToken,
-        value: newAccessToken,
-        maxAge,
+      await this.generateAuthTokensUseCase.execute({
+        user: { id: user.id, email: user.email, role: user.role },
+        response,
       });
 
       request.user = user;
@@ -160,26 +134,17 @@ export class AuthGuard implements CanActivate {
       this.contextService.setUser(user);
       return true;
     } catch (error) {
-      this.cryptographyService.deleteCookie(
-        response,
-        COOKIES_MAPPING.accessToken,
-      );
-      this.cryptographyService.deleteCookie(
-        response,
-        COOKIES_MAPPING.refreshToken,
-      );
+      this.clearCookies(response);
 
       if (error instanceof UnauthorizedException) {
         throw error;
       }
 
-      throw new UnauthorizedException(
-        'Token de atualização inválido ou expirado.',
-      );
+      throw new UnauthorizedException(refreshTokenMessage);
     }
   }
 
-  private async getEntityFromId(
+  private async getEntityById(
     id: string,
     role: AuthTokenRole,
   ): Promise<AuthUser | null> {
@@ -206,5 +171,16 @@ export class AuthGuard implements CanActivate {
     }
 
     return { id: user.id, email: user.email, role: user.role };
+  }
+
+  private clearCookies(response: Response) {
+    this.cryptographyService.deleteCookie(
+      response,
+      COOKIES_MAPPING.accessToken,
+    );
+    this.cryptographyService.deleteCookie(
+      response,
+      COOKIES_MAPPING.refreshToken,
+    );
   }
 }

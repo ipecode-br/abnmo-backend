@@ -81,7 +81,7 @@ export class ChangePasswordUseCase {
       await this.usersRepository.update({ id }, { password: passwordHash });
     }
 
-    this.logger.log('Password changed successfully');
+    this.logger.log('Password changed');
 
     // Delete all tokens for this entity to ensure security after changing password
     await this.tokensRepository.delete({ entityId: entity.id });

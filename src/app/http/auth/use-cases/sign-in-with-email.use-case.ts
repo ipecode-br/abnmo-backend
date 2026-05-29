@@ -7,7 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import type { Response } from 'express';
 import { Repository } from 'typeorm';
 
-import { CryptographyService } from '@/app/cryptography/crypography.service';
+import { CryptographyService } from '@/app/cryptography/cryptography.service';
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
@@ -17,6 +17,8 @@ import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { AUTH_TOKENS_MAPPING, type AuthTokenRole } from '@/domain/enums/tokens';
 import type { RefreshToken } from '@/domain/schemas/tokens';
+
+import { GenerateAuthTokensUseCase } from './generate-auth-tokens-use-case';
 
 interface SignInWithEmailUseCaseInput {
   email: string;
@@ -41,6 +43,7 @@ export class SignInWithEmailUseCase {
     private readonly tokensRepository: Repository<Token>,
     private readonly createTokenUseCase: CreateTokenUseCase,
     private readonly cryptographyService: CryptographyService,
+    private readonly generateAuthTokensUseCase: GenerateAuthTokensUseCase,
     private readonly logger: LogService,
   ) {}
 
@@ -53,11 +56,15 @@ export class SignInWithEmailUseCase {
     let entity: User | Patient | null = null;
     let role: AuthTokenRole = 'patient';
 
-    const findOptions = { where: { email } };
-
     const [user, patient] = await Promise.all([
-      this.usersRepository.findOne(findOptions),
-      this.patientsRepository.findOne(findOptions),
+      this.usersRepository.findOne({
+        select: { id: true, password: true, role: true, status: true },
+        where: { email },
+      }),
+      this.patientsRepository.findOne({
+        select: { id: true, password: true, status: true },
+        where: { email },
+      }),
     ]);
 
     if (user) {
@@ -99,16 +106,9 @@ export class SignInWithEmailUseCase {
       );
     }
 
-    const { maxAge: accessTokenMaxAge, token: accessToken } =
-      await this.createTokenUseCase.execute({
-        type: AUTH_TOKENS_MAPPING.accessToken,
-        payload: { sub: entity.id, role },
-      });
-
-    this.cryptographyService.setCookie(response, {
-      name: COOKIES_MAPPING.accessToken,
-      maxAge: accessTokenMaxAge,
-      value: accessToken,
+    await this.generateAuthTokensUseCase.execute({
+      user: { id: entity.id, email: entity.email, role },
+      response,
     });
 
     if (keepLoggedIn) {
@@ -135,7 +135,7 @@ export class SignInWithEmailUseCase {
       });
     }
 
-    this.logger.log('Entity signed in with e-mail', {
+    this.logger.log('Signed in with e-mail', {
       id: entity.id,
       email,
       role,
