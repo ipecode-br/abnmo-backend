@@ -5,6 +5,7 @@ const COOKIES_BASE_CONFIG: CookieOptions = {
   path: '/',
   sameSite: 'lax',
   secure: true,
+  signed: true,
 };
 
 interface SetCookieOptions extends CookieOptions {

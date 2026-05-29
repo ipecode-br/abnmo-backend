@@ -17,6 +17,8 @@ import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { AUTH_TOKENS_MAPPING, type AuthTokenRole } from '@/domain/enums/tokens';
 import type { RefreshToken } from '@/domain/schemas/tokens';
+import { EnvService } from '@/env/env.service';
+import { setCookie } from '@/utils/cookies';
 
 import { GenerateAuthTokensUseCase } from './generate-auth-tokens-use-case';
 
@@ -34,6 +36,8 @@ interface SignInWithEmailUseCaseOutput {
 @Injectable()
 @Log()
 export class SignInWithEmailUseCase {
+  private readonly cookieDomain: string;
+
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
@@ -44,8 +48,11 @@ export class SignInWithEmailUseCase {
     private readonly createTokenUseCase: CreateTokenUseCase,
     private readonly cryptographyService: CryptographyService,
     private readonly generateAuthTokensUseCase: GenerateAuthTokensUseCase,
+    private readonly envService: EnvService,
     private readonly logger: LogService,
-  ) {}
+  ) {
+    this.cookieDomain = this.envService.get('COOKIE_DOMAIN');
+  }
 
   async execute({
     email,
@@ -112,11 +119,7 @@ export class SignInWithEmailUseCase {
     });
 
     if (keepLoggedIn) {
-      const {
-        maxAge: refreshTokenMaxAge,
-        token: refreshToken,
-        expiresAt,
-      } = await this.createTokenUseCase.execute({
+      const { token, expiresAt } = await this.createTokenUseCase.execute({
         type: AUTH_TOKENS_MAPPING.refreshToken,
         payload: { sub: entity.id, role },
       });
@@ -125,13 +128,15 @@ export class SignInWithEmailUseCase {
         type: AUTH_TOKENS_MAPPING.refreshToken,
         expiresAt: expiresAt,
         entityId: entity.id,
-        token: refreshToken,
+        token,
       });
 
-      this.cryptographyService.setCookie(response, {
+      setCookie(response, {
         name: COOKIES_MAPPING.refreshToken,
-        maxAge: refreshTokenMaxAge,
-        value: refreshToken,
+        domain: `.${this.cookieDomain}`,
+        sameSite: 'strict',
+        expires: expiresAt,
+        value: token,
       });
     }
 

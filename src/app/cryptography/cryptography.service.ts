@@ -3,14 +3,8 @@ import { createHmac } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { compare, hash } from 'bcryptjs';
-import { type CookieOptions, type Response } from 'express';
 
 import { EnvService } from '@/env/env.service';
-
-type SetCookieOptions = CookieOptions & {
-  name: string;
-  value: string;
-};
 
 @Injectable()
 export class CryptographyService {
@@ -38,38 +32,5 @@ export class CryptographyService {
 
   async verifyToken<Payload extends object>(token: string): Promise<Payload> {
     return this.jwtService.verifyAsync<Payload>(token);
-  }
-
-  private cookieBaseConfig(): CookieOptions {
-    const cookieDomain = this.envService.get('COOKIE_DOMAIN');
-    return {
-      domain: `.${cookieDomain}`,
-      httpOnly: true,
-      path: '/',
-      sameSite: 'strict',
-      secure: true,
-      signed: true,
-    };
-  }
-
-  setCookie(
-    response: Response,
-    { name, value, ...options }: SetCookieOptions,
-  ): void {
-    response.cookie(name, value, {
-      ...this.cookieBaseConfig(),
-      ...options,
-    });
-  }
-
-  deleteCookie(
-    response: Response,
-    name: string,
-    options?: CookieOptions,
-  ): void {
-    response.clearCookie(name, {
-      ...this.cookieBaseConfig(),
-      ...options,
-    });
   }
 }

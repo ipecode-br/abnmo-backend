@@ -4,12 +4,9 @@ import type { Response } from 'express';
 import { Repository } from 'typeorm';
 
 import { CryptographyService } from '@/app/cryptography/cryptography.service';
-import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
-import { COOKIES_MAPPING } from '@/domain/cookies';
 import { Patient } from '@/domain/entities/patient';
-import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
 
 interface RegisterPatientUseCaseInput {
   name: string;
@@ -18,7 +15,7 @@ interface RegisterPatientUseCaseInput {
   response: Response;
 }
 
-// TODO: add all required fields to register a patient
+// TODO: review this endpoint
 
 @Injectable()
 @Log()
@@ -26,7 +23,6 @@ export class RegisterPatientUseCase {
   constructor(
     @InjectRepository(Patient)
     private readonly patientsRepository: Repository<Patient>,
-    private readonly createTokenUseCase: CreateTokenUseCase,
     private readonly cryptographyService: CryptographyService,
     private readonly logger: LogService,
   ) {}
@@ -35,7 +31,6 @@ export class RegisterPatientUseCase {
     name,
     email,
     password,
-    response,
   }: RegisterPatientUseCaseInput): Promise<void> {
     const patientWithSameEmail = await this.patientsRepository.findOne({
       select: { id: true },
@@ -56,20 +51,6 @@ export class RegisterPatientUseCase {
       password: hashedPassword,
     });
 
-    const { maxAge, token } = await this.createTokenUseCase.execute({
-      type: AUTH_TOKENS_MAPPING.accessToken,
-      payload: { sub: patient.id, role: 'patient' },
-    });
-
-    this.cryptographyService.setCookie(response, {
-      name: COOKIES_MAPPING.accessToken,
-      value: token,
-      maxAge,
-    });
-
-    this.logger.log('Patient registered successfully', {
-      id: patient.id,
-      email,
-    });
+    this.logger.log('Patient registered', { id: patient.id, email });
   }
 }

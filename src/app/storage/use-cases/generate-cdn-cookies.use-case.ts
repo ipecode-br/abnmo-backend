@@ -74,6 +74,7 @@ export class GenerateCdnCookiesUseCase {
         value,
         sameSite: 'none',
         expires: expiresAt,
+        signed: false,
       });
     }
 

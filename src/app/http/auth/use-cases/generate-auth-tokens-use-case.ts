@@ -43,7 +43,6 @@ export class GenerateAuthTokensUseCase {
       sameSite: 'strict',
       expires: expiresAt,
       value: token,
-      signed: true,
     });
 
     this.generateCdnCookiesUseCase.execute({ user, expiresAt, response });

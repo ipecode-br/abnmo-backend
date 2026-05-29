@@ -23,6 +23,8 @@ import type {
   AccessTokenPayload,
   RefreshTokenPayload,
 } from '@/domain/schemas/tokens';
+import { EnvService } from '@/env/env.service';
+import { deleteCookie } from '@/utils/cookies';
 
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 
@@ -33,6 +35,8 @@ interface AuthenticatedRequest {
 
 @Injectable()
 export class AuthGuard implements CanActivate {
+  private readonly cookieDomain: string;
+
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
@@ -43,8 +47,11 @@ export class AuthGuard implements CanActivate {
     private readonly contextService: ContextService,
     private readonly cryptographyService: CryptographyService,
     private readonly generateAuthTokensUseCase: GenerateAuthTokensUseCase,
+    private readonly envService: EnvService,
     private readonly reflector: Reflector,
-  ) {}
+  ) {
+    this.cookieDomain = this.envService.get('COOKIE_DOMAIN');
+  }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
@@ -174,13 +181,14 @@ export class AuthGuard implements CanActivate {
   }
 
   private clearCookies(response: Response) {
-    this.cryptographyService.deleteCookie(
-      response,
-      COOKIES_MAPPING.accessToken,
-    );
-    this.cryptographyService.deleteCookie(
-      response,
-      COOKIES_MAPPING.refreshToken,
-    );
+    deleteCookie(response, COOKIES_MAPPING.accessToken, {
+      domain: `.${this.cookieDomain}`,
+      sameSite: 'strict',
+    });
+
+    deleteCookie(response, COOKIES_MAPPING.refreshToken, {
+      domain: `.${this.cookieDomain}`,
+      sameSite: 'strict',
+    });
   }
 }
