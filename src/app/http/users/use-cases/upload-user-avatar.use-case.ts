@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -35,9 +39,18 @@ export class UploadUserAvatarUseCase {
     originalName,
     mimeType,
   }: UploadUserAvatarUseCaseInput): Promise<void> {
+    const userToUpdate = await this.usersRepository.findOne({
+      select: { id: true, avatarUrl: true },
+      where: { id: user.id },
+    });
+
+    if (!userToUpdate) {
+      throw new NotFoundException('Usuário não encontrado.');
+    }
+
     const fileName = generateFileName({ originalName, replace: 'avatar' });
 
-    const uploadedFile = await this.uploadFileUseCase.execute({
+    const file = await this.uploadFileUseCase.execute({
       folder: STORAGE_FOLDERS.users.avatars,
       visibility: 'private',
       buffer: buffer,
@@ -45,17 +58,24 @@ export class UploadUserAvatarUseCase {
       mimeType,
     });
 
-    const result = await this.usersRepository.update(user.id, {
-      avatarUrl: uploadedFile.url,
+    const updateResult = await this.usersRepository.update(user.id, {
+      avatarUrl: file.url,
     });
 
-    if (!result.affected) {
-      await this.deleteFileUseCase.execute(uploadedFile.s3Key);
+    if (!updateResult.affected) {
+      await this.deleteFileUseCase.execute(file.s3Key);
       throw new InternalServerErrorException(
         'Não foi possível atualizar seu avatar.',
       );
     }
 
-    this.logger.log('User avatar updated', { s3Key: uploadedFile.s3Key });
+    const previousAvatarUrl = userToUpdate.avatarUrl;
+
+    if (previousAvatarUrl) {
+      const previousS3Key = new URL(previousAvatarUrl).pathname.substring(1);
+      await this.deleteFileUseCase.execute(previousS3Key);
+    }
+
+    this.logger.log('User avatar updated', { s3Key: file.s3Key });
   }
 }
