@@ -5,6 +5,7 @@ import { Response } from 'express';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import { AuthUser } from '@/common/types';
+import { STORAGE_FOLDERS } from '@/config/storage';
 import { EnvService } from '@/env/env.service';
 import { setCookie } from '@/utils/cookies';
 
@@ -37,16 +38,24 @@ export class GenerateCdnCookiesUseCase {
     const { id, role } = user;
     const allowedPaths: string[] = [];
 
-    if (role === 'admin' || role === 'manager') {
+    const sharedPaths = [
+      `${STORAGE_FOLDERS.users.avatars}/*`,
+      `${STORAGE_FOLDERS.patients.avatars}/*`,
+    ];
+
+    if (role === 'admin') {
       allowedPaths.push('/*');
     }
 
-    if (role === 'nurse') {
-      allowedPaths.push('/patients/*');
+    if (role === 'manager' || role === 'nurse' || role === 'specialist') {
+      for (const path of sharedPaths) {
+        allowedPaths.push(path);
+      }
     }
 
     if (role === 'patient') {
-      allowedPaths.push(`/patients/${id}/*`);
+      allowedPaths.push(`${STORAGE_FOLDERS.patients.avatars}/*`);
+      allowedPaths.push(`${STORAGE_FOLDERS.patients.documents(id)}/*`);
     }
 
     const policy = JSON.stringify({
