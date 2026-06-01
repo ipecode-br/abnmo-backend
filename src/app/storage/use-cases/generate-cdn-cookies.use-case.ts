@@ -18,6 +18,7 @@ interface GenerateCdnCookiesUseCaseInput {
 @Injectable()
 @Log()
 export class GenerateCdnCookiesUseCase {
+  private readonly cookieDomain: string;
   private readonly cdnPrivateUrl: string;
   private readonly cdnPublicKeyId: string;
   private readonly cdnPrivateKey: string;
@@ -26,6 +27,7 @@ export class GenerateCdnCookiesUseCase {
     private readonly envService: EnvService,
     private readonly logger: LogService,
   ) {
+    this.cookieDomain = this.envService.get('COOKIE_DOMAIN');
     this.cdnPrivateUrl = this.envService.get('CDN_PRIVATE_URL');
     this.cdnPublicKeyId = this.envService.get('CDN_PUBLIC_KEY_ID');
     this.cdnPrivateKey = Buffer.from(
@@ -79,11 +81,11 @@ export class GenerateCdnCookiesUseCase {
 
     for (const [name, value] of cookies) {
       setCookie(response, {
-        name,
-        value,
-        sameSite: 'none',
+        domain: `.${this.cookieDomain}`,
         expires: expiresAt,
+        name,
         signed: false,
+        value,
       });
     }
 

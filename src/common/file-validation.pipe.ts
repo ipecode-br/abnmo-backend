@@ -14,6 +14,10 @@ export class FileValidationPipe implements PipeTransform {
   transform(file: Express.Multer.File) {
     const { allowedMimeTypes, maxSize } = this.options;
 
+    if (!file) {
+      throw new BadRequestException('Nenhum arquivo enviado.');
+    }
+
     if (!allowedMimeTypes.includes(file.mimetype)) {
       const formattedAllowedTypes = allowedMimeTypes
         .map((mimeType) => {

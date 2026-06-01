@@ -42,10 +42,7 @@ export class LogoutUseCase {
     ];
 
     for (const cookie of cdnCookies) {
-      deleteCookie(response, cookie, {
-        sameSite: 'none',
-        signed: false,
-      });
+      deleteCookie(response, cookie, { domain: `.${this.cookieDomain}` });
     }
 
     if (!refreshToken) {
