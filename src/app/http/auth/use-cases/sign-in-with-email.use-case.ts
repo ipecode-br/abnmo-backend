@@ -7,7 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import type { Response } from 'express';
 import { Repository } from 'typeorm';
 
-import { CryptographyService } from '@/app/cryptography/crypography.service';
+import { CryptographyService } from '@/app/cryptography/cryptography.service';
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
@@ -17,6 +17,10 @@ import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { AUTH_TOKENS_MAPPING, type AuthTokenRole } from '@/domain/enums/tokens';
 import type { RefreshToken } from '@/domain/schemas/tokens';
+import { EnvService } from '@/env/env.service';
+import { setCookie } from '@/utils/cookies';
+
+import { GenerateAuthTokensUseCase } from './generate-auth-tokens-use-case';
 
 interface SignInWithEmailUseCaseInput {
   email: string;
@@ -32,6 +36,8 @@ interface SignInWithEmailUseCaseOutput {
 @Injectable()
 @Log()
 export class SignInWithEmailUseCase {
+  private readonly cookieDomain: string;
+
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
@@ -41,8 +47,12 @@ export class SignInWithEmailUseCase {
     private readonly tokensRepository: Repository<Token>,
     private readonly createTokenUseCase: CreateTokenUseCase,
     private readonly cryptographyService: CryptographyService,
+    private readonly generateAuthTokensUseCase: GenerateAuthTokensUseCase,
+    private readonly envService: EnvService,
     private readonly logger: LogService,
-  ) {}
+  ) {
+    this.cookieDomain = this.envService.get('COOKIE_DOMAIN');
+  }
 
   async execute({
     email,
@@ -53,11 +63,15 @@ export class SignInWithEmailUseCase {
     let entity: User | Patient | null = null;
     let role: AuthTokenRole = 'patient';
 
-    const findOptions = { where: { email } };
-
     const [user, patient] = await Promise.all([
-      this.usersRepository.findOne(findOptions),
-      this.patientsRepository.findOne(findOptions),
+      this.usersRepository.findOne({
+        select: { id: true, password: true, role: true, status: true },
+        where: { email },
+      }),
+      this.patientsRepository.findOne({
+        select: { id: true, password: true, status: true },
+        where: { email },
+      }),
     ]);
 
     if (user) {
@@ -99,24 +113,13 @@ export class SignInWithEmailUseCase {
       );
     }
 
-    const { maxAge: accessTokenMaxAge, token: accessToken } =
-      await this.createTokenUseCase.execute({
-        type: AUTH_TOKENS_MAPPING.accessToken,
-        payload: { sub: entity.id, role },
-      });
-
-    this.cryptographyService.setCookie(response, {
-      name: COOKIES_MAPPING.accessToken,
-      maxAge: accessTokenMaxAge,
-      value: accessToken,
+    await this.generateAuthTokensUseCase.execute({
+      user: { id: entity.id, email: entity.email, role },
+      response,
     });
 
     if (keepLoggedIn) {
-      const {
-        maxAge: refreshTokenMaxAge,
-        token: refreshToken,
-        expiresAt,
-      } = await this.createTokenUseCase.execute({
+      const { token, expiresAt } = await this.createTokenUseCase.execute({
         type: AUTH_TOKENS_MAPPING.refreshToken,
         payload: { sub: entity.id, role },
       });
@@ -125,17 +128,19 @@ export class SignInWithEmailUseCase {
         type: AUTH_TOKENS_MAPPING.refreshToken,
         expiresAt: expiresAt,
         entityId: entity.id,
-        token: refreshToken,
+        token,
       });
 
-      this.cryptographyService.setCookie(response, {
+      setCookie(response, {
         name: COOKIES_MAPPING.refreshToken,
-        maxAge: refreshTokenMaxAge,
-        value: refreshToken,
+        domain: `.${this.cookieDomain}`,
+        sameSite: 'strict',
+        expires: expiresAt,
+        value: token,
       });
     }
 
-    this.logger.log('Entity signed in with e-mail', {
+    this.logger.log('Signed in with e-mail', {
       id: entity.id,
       email,
       role,

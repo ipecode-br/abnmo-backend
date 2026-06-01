@@ -7,7 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { CryptographyService } from '@/app/cryptography/crypography.service';
+import { CryptographyService } from '@/app/cryptography/cryptography.service';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import type { AuthUser } from '@/common/types';
@@ -81,7 +81,7 @@ export class ChangePasswordUseCase {
       await this.usersRepository.update({ id }, { password: passwordHash });
     }
 
-    this.logger.log('Password changed successfully');
+    this.logger.log('Password changed');
 
     // Delete all tokens for this entity to ensure security after changing password
     await this.tokensRepository.delete({ entityId: entity.id });

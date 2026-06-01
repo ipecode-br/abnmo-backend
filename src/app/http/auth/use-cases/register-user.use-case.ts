@@ -8,17 +8,17 @@ import { InjectRepository } from '@nestjs/typeorm';
 import type { Response } from 'express';
 import { Repository } from 'typeorm';
 
-import { CryptographyService } from '@/app/cryptography/crypography.service';
-import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
+import { CryptographyService } from '@/app/cryptography/cryptography.service';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
-import { COOKIES_MAPPING } from '@/domain/cookies';
 import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import type { SpecialtyCategory } from '@/domain/enums/shared';
 import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
 import type { InviteUserPayload } from '@/domain/schemas/tokens';
+
+import { GenerateAuthTokensUseCase } from './generate-auth-tokens-use-case';
 
 interface RegisterUserUseCaseInput {
   name: string;
@@ -40,7 +40,7 @@ export class RegisterUserUseCase {
     @InjectRepository(Patient)
     private readonly patientsRepository: Repository<Patient>,
     private readonly cryptographyService: CryptographyService,
-    private readonly createTokenUseCase: CreateTokenUseCase,
+    private readonly generateAuthTokensUseCase: GenerateAuthTokensUseCase,
     private readonly logger: LogService,
   ) {}
 
@@ -61,12 +61,9 @@ export class RegisterUserUseCase {
     }
 
     const email = token.email;
+    const isExpired = token.expiresAt && token.expiresAt < new Date();
 
-    if (
-      !email ||
-      token.type !== AUTH_TOKENS_MAPPING.inviteUser ||
-      (token.expiresAt && token.expiresAt < new Date())
-    ) {
+    if (!email || token.type !== AUTH_TOKENS_MAPPING.inviteUser || isExpired) {
       await this.tokensRepository.delete({ token: inviteToken });
       throw new UnauthorizedException('Token de convite inválido ou expirado.');
     }
@@ -102,27 +99,16 @@ export class RegisterUserUseCase {
       password: passwordHash,
       role,
       specialty,
-      registrationId: registrationId,
+      registrationId,
     });
 
     await this.tokensRepository.delete({ token: inviteToken });
 
-    const { maxAge, token: accessToken } =
-      await this.createTokenUseCase.execute({
-        type: AUTH_TOKENS_MAPPING.accessToken,
-        payload: { sub: user.id, role: user.role },
-      });
-
-    this.cryptographyService.setCookie(response, {
-      name: COOKIES_MAPPING.accessToken,
-      value: accessToken,
-      maxAge,
+    await this.generateAuthTokensUseCase.execute({
+      user: { id: user.id, email, role },
+      response,
     });
 
-    this.logger.log('User registered successfully', {
-      id: user.id,
-      email,
-      role,
-    });
+    this.logger.log('User registered', { id: user.id, email, role });
   }
 }

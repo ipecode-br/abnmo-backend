@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { CryptographyModule } from '@/app/cryptography/cryptography.module';
 import { MailModule } from '@/app/mail/mail.module';
+import { StorageModule } from '@/app/storage/storage.module';
 import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
@@ -16,6 +17,7 @@ import { GetUserUseCase } from './use-cases/get-user.use-case';
 import { GetUserInvitesUseCase } from './use-cases/get-user-invites.use-case';
 import { GetUsersUseCase } from './use-cases/get-users.use-case';
 import { UpdateUserUseCase } from './use-cases/update-user.use-case';
+import { UploadUserAvatarUseCase } from './use-cases/upload-user-avatar.use-case';
 import { UsersController } from './users.controller';
 
 @Module({
@@ -24,16 +26,18 @@ import { UsersController } from './users.controller';
     CryptographyModule,
     EnvModule,
     MailModule,
+    StorageModule,
   ],
   providers: [
     ActivateUserUseCase,
     CancelUserInviteUseCase,
     CreateUserInviteUseCase,
     DeactivateUserUseCase,
+    GetUserInvitesUseCase,
     GetUserUseCase,
     GetUsersUseCase,
-    GetUserInvitesUseCase,
     UpdateUserUseCase,
+    UploadUserAvatarUseCase,
   ],
   controllers: [UsersController],
 })
