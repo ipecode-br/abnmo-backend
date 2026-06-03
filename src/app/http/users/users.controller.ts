@@ -14,6 +14,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Express } from 'express';
+import { ZodResponse } from 'nestjs-zod';
 
 import { Roles } from '@/common/decorators/roles.decorator';
 import { User } from '@/common/decorators/user.decorator';
@@ -74,9 +75,9 @@ export class UsersController {
   @Get('me')
   @Roles(['manager', 'nurse', 'specialist'])
   @ApiOperation({ summary: 'Retorna os dados do usuário autenticado' })
-  @ApiResponse({ type: GetUserResponse })
+  @ZodResponse({ type: GetUserResponse, status: 200 })
   async getProfile(@User() user: AuthUser): Promise<GetUserResponse> {
-    const { user: data } = await this.getUserUseCase.execute({ id: user.id });
+    const data = await this.getUserUseCase.execute({ id: user.id });
 
     return {
       success: true,

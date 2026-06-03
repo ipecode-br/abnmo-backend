@@ -12,7 +12,6 @@ import {
 import { User } from '@/domain/entities/user';
 import type { QueryOrder } from '@/domain/enums/queries';
 import type { UserRole, UsersOrderBy, UserStatus } from '@/domain/enums/users';
-import type { UserResponse } from '@/domain/schemas/users/responses';
 
 interface GetUsersUseCaseInput {
   page: number;
@@ -27,7 +26,7 @@ interface GetUsersUseCaseInput {
 }
 
 interface GetUsersUseCaseOutput {
-  users: UserResponse[];
+  users: User[];
   total: number;
 }
 
