@@ -21,6 +21,7 @@ import { BaseResponse } from '@/common/dtos';
 import { FileValidationPipe } from '@/common/file-validation.pipe';
 import { Log } from '@/common/log/log.decorator';
 import type { AuthUser } from '@/common/types';
+import { MIME_TYPES } from '@/constants/mime-types';
 
 import { ActivateUserUseCase } from './use-cases/activate-user.use-case';
 import { CancelUserInviteUseCase } from './use-cases/cancel-user-invite.use-case';
@@ -113,7 +114,7 @@ export class UsersController {
     @UploadedFile(
       new FileValidationPipe({
         maxSize: 500 * 1024, // 500kb
-        allowedMimeTypes: ['image/jpeg', 'image/jpeg', 'image/png'],
+        allowedMimeTypes: [MIME_TYPES.jpg, MIME_TYPES.jpeg, MIME_TYPES.png],
       }),
     )
     file: Express.Multer.File,

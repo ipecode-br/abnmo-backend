@@ -42,6 +42,8 @@ type UsersEvent =
   | 'deactivate_user'
   | 'update_user';
 
+type CatalogingEvent = 'start_cataloging' | 'complete_cataloging';
+
 export type Event =
   | AppointmentsEvent
   | AuthEvent
@@ -49,4 +51,5 @@ export type Event =
   | PatientSupportsEvent
   | PatientsEvent
   | ReferralsEvent
-  | UsersEvent;
+  | UsersEvent
+  | CatalogingEvent;
