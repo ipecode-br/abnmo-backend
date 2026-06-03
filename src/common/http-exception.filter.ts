@@ -48,12 +48,24 @@ export class HttpExceptionFilter extends BaseExceptionFilter {
     let message = 'Um erro inesperado ocorreu.';
 
     if (exception instanceof ZodSerializationException) {
+      status = exception.getStatus();
       const zodError = exception.getZodError();
-      if (zodError instanceof ZodError) {
-        this.logger.error('ZodSerializationException', {
-          error: zodError.message,
-        });
+      let fields: ZodFieldError[] | undefined;
+
+      if (zodError instanceof ZodError && zodError.issues.length > 0) {
+        fields = zodError.issues.map((issue) => ({
+          field: issue.path.join('.') || 'root',
+          error: issue.message,
+        }));
       }
+
+      this.logger.error('ZodSerializationException', {
+        status,
+        message,
+        fields,
+        stack: exception.stack,
+      });
+      return response.status(status).json({ success: false, message });
     }
 
     if (exception instanceof ZodValidationException) {
@@ -125,7 +137,6 @@ export class HttpExceptionFilter extends BaseExceptionFilter {
       stack: errorStack,
       details: errorDetails,
       status,
-      context: 'GlobalExceptionFilter',
     });
 
     return response.status(status).json({ success: false, message });

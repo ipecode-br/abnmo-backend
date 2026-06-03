@@ -1,7 +1,8 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_FILTER, APP_GUARD, APP_PIPE } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { LoggerModule } from 'nestjs-pino';
+import { ZodSerializerInterceptor } from 'nestjs-zod';
 
 import { ContextMiddleware } from '@/common/context/context.middleware';
 import { HttpExceptionFilter } from '@/common/http-exception.filter';
@@ -78,6 +79,7 @@ import { StorageModule } from './storage/storage.module';
     { provide: APP_GUARD, useClass: LogGuard },
     { provide: APP_PIPE, useClass: ZodValidationPipe },
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
+    { provide: APP_INTERCEPTOR, useClass: ZodSerializerInterceptor },
   ],
 })
 export class AppModule implements NestModule {

@@ -6,8 +6,9 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Express } from 'express';
+import { ZodResponse } from 'nestjs-zod';
 
 import { Public } from '@/common/decorators/public.decorator';
 import { BaseResponse } from '@/common/dtos';
@@ -27,7 +28,7 @@ export class CatalogingController {
   @Log('start_cataloging')
   @UseInterceptors(FileInterceptor('medicalReport'))
   @ApiOperation({ summary: 'Inicia o formulário de catalogação' })
-  @ApiResponse({ type: BaseResponse })
+  @ZodResponse({ type: BaseResponse, status: 201 })
   async createCataloging(
     @Body() body: CreateCatalogingDto,
     @UploadedFile(
@@ -45,11 +46,11 @@ export class CatalogingController {
   ): Promise<BaseResponse> {
     console.log({ body, medicalReport });
 
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 50));
 
     return {
       success: true,
-      message: 'Formulário enviado com sucesso!',
+      message: 'Catalogação iniciada com sucesso.',
     };
   }
 }
