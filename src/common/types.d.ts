@@ -43,6 +43,7 @@ type UsersEvent =
   | 'update_user';
 
 type CatalogingEvent = 'start_cataloging' | 'complete_cataloging';
+type StatusEvent = 'get_status';
 
 export type Event =
   | AppointmentsEvent
@@ -52,4 +53,5 @@ export type Event =
   | PatientsEvent
   | ReferralsEvent
   | UsersEvent
-  | CatalogingEvent;
+  | CatalogingEvent
+  | StatusEvent;
