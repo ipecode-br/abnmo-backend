@@ -16,21 +16,21 @@ import { FileValidationPipe } from '@/common/file-validation.pipe';
 import { Log } from '@/common/log/log.decorator';
 import { MIME_TYPES } from '@/constants/mime-types';
 
-import { CreateCatalogingDto } from './cataloging.dtos';
+import { InitSurveyDto } from './survey.dtos';
 
 @Public()
 @ApiTags('Catalogação')
-@Controller('cataloging')
-export class CatalogingController {
+@Controller('survey')
+export class SurveyController {
   constructor() {}
 
   @Post()
-  @Log('start_cataloging')
+  @Log('init_survey')
   @UseInterceptors(FileInterceptor('medicalReport'))
   @ApiOperation({ summary: 'Inicia o formulário de catalogação' })
   @ZodResponse({ type: BaseResponse, status: 201 })
-  async createCataloging(
-    @Body() body: CreateCatalogingDto,
+  async initSurvey(
+    @Body() body: InitSurveyDto,
     @UploadedFile(
       new FileValidationPipe({
         maxSize: 4 * 1024 * 1024, // 4mb

@@ -42,10 +42,11 @@ type UsersEvent =
   | 'deactivate_user'
   | 'update_user';
 
-type CatalogingEvent = 'start_cataloging' | 'complete_cataloging';
+type SurveyEvent = 'init_survey' | 'complete_survey';
+
 type StatusEvent = 'get_status';
 
-export type Event =
+export type LogEvent =
   | AppointmentsEvent
   | AuthEvent
   | PatientRequirementsEvent
@@ -53,5 +54,5 @@ export type Event =
   | PatientsEvent
   | ReferralsEvent
   | UsersEvent
-  | CatalogingEvent
+  | SurveyEvent
   | StatusEvent;

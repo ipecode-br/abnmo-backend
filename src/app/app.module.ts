@@ -17,13 +17,13 @@ import { EnvService } from '@/env/env.service';
 import { DatabaseModule } from './database/database.module';
 import { AppointmentsModule } from './http/appointments/appointments.module';
 import { AuthModule } from './http/auth/auth.module';
-import { CatalogingModule } from './http/cataloging/cataloging.module';
 import { PatientRequirementsModule } from './http/patient-requirements/patient-requirements.module';
 import { PatientSupportsModule } from './http/patient-supports/patient-supports.module';
 import { PatientsModule } from './http/patients/patients.module';
 import { ReferralsModule } from './http/referrals/referrals.module';
 import { StatisticsModule } from './http/statistics/statistics.module';
 import { StatusModule } from './http/status/status.module';
+import { SurveyModule } from './http/survey/survey.module';
 import { UsersModule } from './http/users/users.module';
 import { StorageModule } from './storage/storage.module';
 
@@ -65,7 +65,7 @@ import { StorageModule } from './storage/storage.module';
     }),
     LogModule,
     DatabaseModule,
-    CatalogingModule,
+    SurveyModule,
     AuthModule,
     UsersModule,
     PatientsModule,

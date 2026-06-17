@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PinoLogger } from 'nestjs-pino';
 
 import { ContextService } from '../context/context.service';
-import type { Event } from '../types';
+import type { LogEvent } from '../types';
 
 @Injectable()
 export class LogService {
@@ -15,7 +15,7 @@ export class LogService {
     this.ctx.addContext({ context: name });
   }
 
-  setEvent(event: Event) {
+  setEvent(event: LogEvent) {
     this.ctx.setEvent(event);
   }
 
