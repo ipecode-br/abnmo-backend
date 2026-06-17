@@ -42,6 +42,8 @@ type UsersEvent =
   | 'deactivate_user'
   | 'update_user';
 
+type StatusEvent = 'get_status';
+
 export type Event =
   | AppointmentsEvent
   | AuthEvent
@@ -49,4 +51,5 @@ export type Event =
   | PatientSupportsEvent
   | PatientsEvent
   | ReferralsEvent
+  | StatusEvent
   | UsersEvent;
