@@ -21,6 +21,7 @@ import { PatientSupportsModule } from './http/patient-supports/patient-supports.
 import { PatientsModule } from './http/patients/patients.module';
 import { ReferralsModule } from './http/referrals/referrals.module';
 import { StatisticsModule } from './http/statistics/statistics.module';
+import { StatusModule } from './http/status/status.module';
 import { UsersModule } from './http/users/users.module';
 import { StorageModule } from './storage/storage.module';
 
@@ -71,6 +72,7 @@ import { StorageModule } from './storage/storage.module';
     PatientRequirementsModule,
     PatientSupportsModule,
     StorageModule,
+    StatusModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: LogGuard },
