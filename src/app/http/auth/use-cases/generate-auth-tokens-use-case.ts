@@ -38,10 +38,11 @@ export class GenerateAuthTokensUseCase {
     });
 
     setCookie(response, {
-      name: COOKIES_MAPPING.accessToken,
       domain: `.${this.cookieDomain}`,
-      sameSite: 'strict',
       expires: expiresAt,
+      name: COOKIES_MAPPING.accessToken,
+      sameSite: 'strict',
+      secure: this.envService.get('APP_ENVIRONMENT') === 'lambda',
       value: token,
     });
 

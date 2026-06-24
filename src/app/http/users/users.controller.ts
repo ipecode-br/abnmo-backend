@@ -12,10 +12,11 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Express } from 'express';
 import { ZodResponse } from 'nestjs-zod';
 
+import { RequireFeature } from '@/common/decorators/require-feature.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
@@ -43,6 +44,8 @@ import {
   UpdateUserDto,
 } from './users.dtos';
 
+// TODO: replace with @Roles(["user"])
+@Roles(['admin'])
 @ApiTags('Usuários')
 @Controller('users')
 export class UsersController {
@@ -59,9 +62,9 @@ export class UsersController {
   ) {}
 
   @Get()
-  @Roles(['manager'])
+  @RequireFeature('read:user:others')
   @ApiOperation({ summary: 'Lista todos os usuários' })
-  @ApiResponse({ type: GetUsersResponse })
+  @ZodResponse({ type: GetUsersResponse, status: 200 })
   async getUsers(@Query() query: GetUsersQuery): Promise<GetUsersResponse> {
     const data = await this.getUsersUseCase.execute(query);
 
@@ -73,7 +76,7 @@ export class UsersController {
   }
 
   @Get('me')
-  @Roles(['manager', 'nurse', 'specialist'])
+  @RequireFeature('read:user')
   @ApiOperation({ summary: 'Retorna os dados do usuário autenticado' })
   @ZodResponse({ type: GetUserResponse, status: 200 })
   async getProfile(@User() user: AuthUser): Promise<GetUserResponse> {
@@ -88,9 +91,9 @@ export class UsersController {
 
   @Put(':id')
   @Log('update_user')
-  @Roles(['manager', 'nurse', 'specialist'])
+  @RequireFeature('update:user')
   @ApiOperation({ summary: 'Atualiza os dados do usuário' })
-  @ApiResponse({ type: BaseResponse })
+  @ZodResponse({ type: BaseResponse, status: 204 })
   async updateUser(
     @Param('id') id: string,
     @User() user: AuthUser,
@@ -106,10 +109,10 @@ export class UsersController {
 
   @Post('upload-avatar')
   @Log('update_user')
-  @Roles(['manager', 'nurse', 'specialist'])
+  @RequireFeature('update:user')
   @UseInterceptors(FileInterceptor('file'))
   @ApiOperation({ summary: 'Faz upload do avatar do usuário' })
-  @ApiResponse({ type: BaseResponse })
+  @ZodResponse({ type: BaseResponse, status: 201 })
   async uploadAvatar(
     @User() user: AuthUser,
     @UploadedFile(
@@ -135,9 +138,9 @@ export class UsersController {
 
   @Patch(':id/deactivate')
   @Log('deactivate_user')
-  @Roles(['admin'])
+  @RequireFeature('deactivate:user')
   @ApiOperation({ summary: 'Inativa o usuário' })
-  @ApiResponse({ type: BaseResponse })
+  @ZodResponse({ type: BaseResponse, status: 204 })
   async deactivateUser(
     @Param('id') id: string,
     @User() user: AuthUser,
@@ -152,9 +155,9 @@ export class UsersController {
 
   @Patch(':id/activate')
   @Log('activate_user')
-  @Roles(['admin'])
+  @RequireFeature('activate:user')
   @ApiOperation({ summary: 'Ativa o usuário' })
-  @ApiResponse({ type: BaseResponse })
+  @ZodResponse({ type: BaseResponse, status: 204 })
   async activateUser(
     @Param('id') id: string,
     @User() user: AuthUser,
@@ -168,9 +171,9 @@ export class UsersController {
   }
 
   @Get('invites')
-  @Roles(['manager'])
+  @RequireFeature('read:user_invite')
   @ApiOperation({ summary: 'Lista todos os convites de usuário' })
-  @ApiResponse({ type: GetUserInvitesResponse })
+  @ZodResponse({ type: GetUserInvitesResponse, status: 200 })
   async getUserInvites(@Query() query: GetUserInvitesQuery): Promise<any> {
     const data = await this.getUserInvitesUseCase.execute(query);
 
@@ -183,9 +186,9 @@ export class UsersController {
 
   @Post('invites')
   @Log('create_user_invite')
-  @Roles(['manager'])
+  @RequireFeature('create:user_invite')
   @ApiOperation({ summary: 'Cria convite para registro de usuário' })
-  @ApiResponse({ type: BaseResponse })
+  @ZodResponse({ type: BaseResponse, status: 201 })
   async createUserInvite(
     @Body() createUserInviteDto: CreateUserInviteDto,
   ): Promise<BaseResponse> {
@@ -199,9 +202,9 @@ export class UsersController {
 
   @Delete('invites/:id')
   @Log('cancel_user_invite')
-  @Roles(['manager'])
+  @RequireFeature('delete:user_invite')
   @ApiOperation({ summary: 'Cancela convite de usuário' })
-  @ApiResponse({ type: BaseResponse })
+  @ZodResponse({ type: BaseResponse, status: 204 })
   async cancelUserInvite(@Param('id') id: string): Promise<BaseResponse> {
     await this.cancelUserInviteUseCase.execute({ id });
 

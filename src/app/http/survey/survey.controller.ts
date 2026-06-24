@@ -24,7 +24,7 @@ import { InitSurveyDto } from './survey.dtos';
 export class SurveyController {
   constructor() {}
 
-  @Post()
+  @Post('/init')
   @Log('init_survey')
   @UseInterceptors(FileInterceptor('medicalReport'))
   @ApiOperation({ summary: 'Inicia o formulário de catalogação' })
