@@ -28,6 +28,7 @@ import { GetAppointmentsUseCase } from './use-cases/get-appointments.use-case';
 import { UpdateAppointmentUseCase } from './use-cases/update-appointment.use-case';
 
 @ApiTags('Atendimentos')
+@Roles(['all'])
 @Controller('appointments')
 export class AppointmentsController {
   constructor(
@@ -38,7 +39,6 @@ export class AppointmentsController {
   ) {}
 
   @Get()
-  @Roles(['all'])
   @ApiOperation({ summary: 'Lista todos os atendimentos' })
   @ApiResponse({ type: GetAppointmentsResponse })
   async getAppointments(
@@ -56,7 +56,6 @@ export class AppointmentsController {
 
   @Post()
   @Log('create_appointment')
-  @Roles(['manager', 'nurse', 'specialist'])
   @ApiOperation({ summary: 'Cadastra um novo atendimento' })
   @ApiResponse({ type: BaseResponse })
   async create(
@@ -76,7 +75,6 @@ export class AppointmentsController {
 
   @Put(':id')
   @Log('update_appointment')
-  @Roles(['manager', 'nurse', 'specialist'])
   @ApiOperation({ summary: 'Atualiza os dados do atendimento' })
   @ApiResponse({ type: BaseResponse })
   public async update(
@@ -96,7 +94,6 @@ export class AppointmentsController {
 
   @Patch(':id/cancel')
   @Log('cancel_appointment')
-  @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Cancela o atendimento' })
   @ApiResponse({ type: BaseResponse })
   async cancel(@Param('id') id: string): Promise<BaseResponse> {

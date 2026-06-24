@@ -5,14 +5,14 @@ import { Response } from 'express';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import { STORAGE_FOLDERS } from '@/config/storage';
-import { AuthTokenRole } from '@/domain/enums/tokens';
+import { UserRole } from '@/domain/enums/users';
 import { EnvService } from '@/env/env.service';
 import { setCookie } from '@/utils/cookies';
 
 interface GenerateCdnCookiesUseCaseInput {
   expiresAt: Date;
   response: Response;
-  user: { id: string; email: string; role: AuthTokenRole };
+  user: { id: string; email: string; role: UserRole };
 }
 
 @Injectable()
@@ -49,7 +49,7 @@ export class GenerateCdnCookiesUseCase {
       allowedPaths.push('/*');
     }
 
-    if (role === 'manager' || role === 'nurse' || role === 'specialist') {
+    if (role === 'member' || role === 'specialist') {
       for (const path of sharedPaths) {
         allowedPaths.push(path);
       }

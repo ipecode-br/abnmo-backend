@@ -29,6 +29,7 @@ import { GetPatientRequirementsUseCase } from './use-cases/get-patient-requireme
 import { GetPatientRequirementsByPatientIdUseCase } from './use-cases/get-patient-requirements-by-patient-id.use-case';
 
 @ApiTags('Pendências do paciente')
+@Roles(['member', 'specialist'])
 @Controller('patient-requirements')
 export class PatientRequirementsController {
   constructor(
@@ -40,7 +41,6 @@ export class PatientRequirementsController {
   ) {}
 
   @Get()
-  @Roles(['nurse', 'manager'])
   @ApiOperation({ summary: 'Lista todas as solicitações' })
   @ApiResponse({ type: GetPatientRequirementsResponse })
   async getPatientRequirements(
@@ -78,7 +78,6 @@ export class PatientRequirementsController {
 
   @Post()
   @Log('create_patient_requirement')
-  @Roles(['nurse', 'manager'])
   @ApiOperation({ summary: 'Cadastra uma nova solicitação' })
   @ApiResponse({ type: BaseResponse })
   async create(
@@ -98,7 +97,6 @@ export class PatientRequirementsController {
 
   @Patch(':id/approve')
   @Log('approve_patient_requirement')
-  @Roles(['nurse', 'manager'])
   @ApiOperation({ summary: 'Aprova a solicitação' })
   @ApiResponse({ type: BaseResponse })
   async approve(
@@ -115,7 +113,6 @@ export class PatientRequirementsController {
 
   @Patch(':id/decline')
   @Log('decline_patient_requirement')
-  @Roles(['nurse', 'manager'])
   @ApiOperation({ summary: 'Recusa a solicitação' })
   @ApiResponse({ type: BaseResponse })
   async decline(

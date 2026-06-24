@@ -198,7 +198,12 @@ export class AuthGuard implements CanActivate {
       return null;
     }
 
-    return { id: user.id, email: user.email, role: user.role, features: [] };
+    return {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      features: user.features,
+    };
   }
 
   private clearCookies(response: Response) {

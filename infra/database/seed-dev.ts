@@ -27,7 +27,7 @@ import {
 } from '@/domain/enums/patients';
 import { REFERRAL_STATUSES } from '@/domain/enums/referrals';
 import { SPECIALTY_CATEGORIES } from '@/domain/enums/shared';
-import { USER_ROLES, USER_STATUSES } from '@/domain/enums/users';
+import { USER_FEATURES, USER_ROLES, USER_STATUSES } from '@/domain/enums/users';
 
 import dataSource from './data.source';
 
@@ -99,26 +99,28 @@ async function main() {
     const twoMonthsAhead = new Date();
     twoMonthsAhead.setMonth(twoMonthsAhead.getMonth() + 2);
 
-    console.log('👤 Creating users...');
+    console.log('👤 Creating members...');
     for (const role of USER_ROLES) {
       const user = usersRepository.create({
         name: faker.person.fullName(),
         email: `${role}@ipecode.com.br`,
         password,
         role,
+        features: faker.helpers.arrayElements(USER_FEATURES),
         avatarUrl: faker.image.avatar(),
         createdAt: faker.date.between({ from: fourMonthsAgo, to: new Date() }),
       });
       await usersRepository.save(user);
     }
 
-    const totalOfUsers = 10;
-    for (let i = 0; i < totalOfUsers; i++) {
+    const totalOfSpecialists = 5;
+    for (let i = 0; i < totalOfSpecialists; i++) {
       const user = usersRepository.create({
         name: faker.person.fullName(),
         email: faker.internet.email().toLowerCase(),
         password,
         role: 'specialist',
+        features: faker.helpers.arrayElements(USER_FEATURES),
         status: faker.helpers.arrayElement(USER_STATUSES),
         specialty: faker.helpers.arrayElement(SPECIALTY_CATEGORIES),
         registrationId: faker.vehicle.vrm(),
@@ -127,7 +129,7 @@ async function main() {
       });
       await usersRepository.save(user);
     }
-    console.log('👤 Users created successfully...');
+    console.log('👤 Members created successfully...');
 
     const patient = patientsRepository.create({
       name: faker.person.fullName(),

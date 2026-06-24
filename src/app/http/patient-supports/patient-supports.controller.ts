@@ -16,6 +16,7 @@ import { DeletePatientSupportUseCase } from './use-cases/delete-patient-support.
 import { UpdatePatientSupportUseCase } from './use-cases/update-patient-support.use-case';
 
 @ApiTags('Rede de apoio')
+@Roles(['member', 'patient'])
 @Controller('patient-supports')
 export class PatientSupportsController {
   constructor(
@@ -26,7 +27,6 @@ export class PatientSupportsController {
 
   @Post(':patientId')
   @Log('create_patient_support')
-  @Roles(['nurse', 'manager', 'patient'])
   @ApiOperation({
     summary: 'Cadastra um novo contato de apoio para o paciente',
   })
@@ -50,7 +50,6 @@ export class PatientSupportsController {
 
   @Put(':id')
   @Log('update_patient_support')
-  @Roles(['nurse', 'manager', 'patient'])
   @ApiOperation({ summary: 'Atualiza os dados do contato de apoio' })
   @ApiResponse({ type: BaseResponse })
   async updatePatientSupport(
@@ -72,7 +71,6 @@ export class PatientSupportsController {
 
   @Delete(':id')
   @Log('delete_patient_support')
-  @Roles(['nurse', 'manager', 'patient'])
   @ApiOperation({ summary: 'Remove o contato de apoio' })
   @ApiResponse({ type: BaseResponse })
   async removePatientSupport(

@@ -32,6 +32,7 @@ import { GetPatientsUseCase } from './use-cases/get-patients.use-case';
 import { UpdatePatientUseCase } from './use-cases/update-patient.use-case';
 
 @ApiTags('Pacientes')
+@Roles(['all'])
 @Controller('patients')
 export class PatientsController {
   constructor(
@@ -44,7 +45,6 @@ export class PatientsController {
   ) {}
 
   @Get()
-  @Roles(['manager', 'nurse', 'specialist'])
   @ApiOperation({ summary: 'Lista todos os pacientes' })
   @ApiResponse({ type: GetPatientsResponse })
   async getPatients(
@@ -60,7 +60,6 @@ export class PatientsController {
   }
 
   @Get('/options')
-  @Roles(['manager', 'nurse', 'specialist'])
   @ApiOperation({
     summary: 'Retorna uma lista de opções com todos os pacientes ativos',
   })
@@ -76,7 +75,6 @@ export class PatientsController {
   }
 
   @Get(':id')
-  @Roles(['manager', 'nurse', 'specialist'])
   @ApiOperation({ summary: 'Retorna os dados do paciente' })
   @ApiResponse({ type: GetPatientResponse })
   async getPatientById(@Param('id') id: string): Promise<GetPatientResponse> {
@@ -91,7 +89,6 @@ export class PatientsController {
 
   @Post()
   @Log('create_patient')
-  @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Cadastra um novo paciente' })
   @ApiResponse({ type: BaseResponse })
   async create(
@@ -107,7 +104,6 @@ export class PatientsController {
 
   @Put(':id')
   @Log('update_patient')
-  @Roles(['manager', 'nurse', 'patient'])
   @ApiOperation({ summary: 'Atualiza os dados do paciente' })
   @ApiResponse({ type: BaseResponse })
   async update(
@@ -129,7 +125,6 @@ export class PatientsController {
 
   @Patch(':id/deactivate')
   @Log('deactivate_patient')
-  @Roles(['manager'])
   @ApiOperation({ summary: 'Inativa o paciente' })
   @ApiResponse({ type: BaseResponse })
   async deactivatePatient(@Param('id') id: string): Promise<BaseResponse> {

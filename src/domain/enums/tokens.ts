@@ -15,7 +15,7 @@ export const AUTH_TOKENS = [
   AUTH_TOKENS_MAPPING.inviteUser,
 ] as const;
 
-export const AUTH_TOKEN_ROLES = [...USER_ROLES, 'patient'] as const;
+export const AUTH_TOKEN_ROLES = [...USER_ROLES] as const;
 export type AuthTokenRole = (typeof AUTH_TOKEN_ROLES)[number];
 
 export const ALLOWED_ROLES = ['all', ...AUTH_TOKEN_ROLES] as const;

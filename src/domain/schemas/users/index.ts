@@ -1,25 +1,22 @@
 import { z } from 'zod';
 
-import { USER_FEATURES, USER_STATUSES } from '@/domain/enums/users';
+import { USER_FEATURES, USER_ROLES, USER_STATUSES } from '@/domain/enums/users';
 
 import { baseEntitySchema } from '../base';
 import {
-  avatarSchema,
   emailSchema,
   nameSchema,
-  passwordSchema,
   specialtySchema,
   userRegistrationId,
-  userRoleSchema,
 } from '../shared';
 
 export const userSchema = baseEntitySchema
   .extend({
     name: nameSchema,
     email: emailSchema,
-    password: passwordSchema,
-    avatarUrl: avatarSchema.nullable(),
-    role: userRoleSchema,
+    password: z.string().min(8).max(64),
+    avatarUrl: z.string().url().nullable(),
+    role: z.enum(USER_ROLES),
     features: z.array(z.enum(USER_FEATURES)).default([]),
     status: z.enum(USER_STATUSES).default('active'),
     specialty: specialtySchema.nullable(),

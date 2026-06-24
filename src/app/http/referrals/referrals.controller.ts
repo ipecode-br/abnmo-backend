@@ -28,6 +28,7 @@ import { GetReferralsUseCase } from './use-cases/get-referrals.use-case';
 import { UpdateReferralUseCase } from './use-cases/update-referral.use-case';
 
 @ApiTags('Encaminhamentos')
+@Roles(['all'])
 @Controller('referrals')
 export class ReferralsController {
   constructor(
@@ -38,7 +39,6 @@ export class ReferralsController {
   ) {}
 
   @Get()
-  @Roles(['all'])
   @ApiOperation({ summary: 'Lista todos os encaminhamentos' })
   @ApiResponse({ type: GetReferralsResponse })
   async getReferrals(
@@ -56,7 +56,6 @@ export class ReferralsController {
 
   @Post()
   @Log('create_referral')
-  @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Cadastra um novo encaminhamento' })
   @ApiResponse({ type: BaseResponse })
   async create(
@@ -70,7 +69,6 @@ export class ReferralsController {
 
   @Put(':id')
   @Log('update_referral')
-  @Roles(['nurse', 'manager', 'specialist'])
   @ApiOperation({ summary: 'Atualiza os dados do encaminhamento' })
   @ApiResponse({ type: BaseResponse })
   public async update(
@@ -87,7 +85,6 @@ export class ReferralsController {
 
   @Patch(':id/cancel')
   @Log('cancel_referral')
-  @Roles(['manager', 'nurse'])
   @ApiOperation({ summary: 'Cancela o encaminhamento' })
   @ApiResponse({ type: BaseResponse })
   async cancel(@Param('id') id: string): Promise<BaseResponse> {

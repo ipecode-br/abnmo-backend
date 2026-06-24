@@ -44,9 +44,8 @@ import {
   UpdateUserDto,
 } from './users.dtos';
 
-// TODO: replace with @Roles(["user"])
-@Roles(['admin'])
 @ApiTags('Usuários')
+@Roles(['admin'])
 @Controller('users')
 export class UsersController {
   constructor(
@@ -76,6 +75,7 @@ export class UsersController {
   }
 
   @Get('me')
+  @Roles(['member', 'specialist'])
   @RequireFeature('read:user')
   @ApiOperation({ summary: 'Retorna os dados do usuário autenticado' })
   @ZodResponse({ type: GetUserResponse, status: 200 })
