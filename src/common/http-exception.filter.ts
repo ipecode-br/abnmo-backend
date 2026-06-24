@@ -63,6 +63,7 @@ export class HttpExceptionFilter extends BaseExceptionFilter {
         status,
         message,
         fields,
+        cause: exception.cause,
         stack: exception.stack,
       });
       return response.status(status).json({ success: false, message });
@@ -82,7 +83,12 @@ export class HttpExceptionFilter extends BaseExceptionFilter {
         }));
       }
 
-      this.logger.error('ZodValidationException', { status, message, fields });
+      this.logger.error('ZodValidationException', {
+        status,
+        message,
+        fields,
+        cause: exception.cause,
+      });
       return response.status(status).json({ success: false, message, fields });
     }
 
@@ -98,6 +104,7 @@ export class HttpExceptionFilter extends BaseExceptionFilter {
       this.logger.error('HttpException', {
         status,
         message,
+        cause: exception.cause,
         stack: exception.stack,
       });
       return response.status(status).json({ success: false, message });

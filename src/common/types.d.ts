@@ -1,9 +1,18 @@
 import type { AuthTokenRole } from '@/domain/enums/tokens';
 
+import { Feature } from './authorization/features';
+
 export type AuthUser = {
   id: string;
   email: string;
   role: AuthTokenRole;
+};
+
+export type RequestUser = {
+  id: string;
+  email: string;
+  role: AuthTokenRole;
+  features: Feature[];
 };
 
 type AppointmentsEvent =

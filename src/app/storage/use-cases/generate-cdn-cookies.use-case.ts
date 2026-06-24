@@ -84,6 +84,7 @@ export class GenerateCdnCookiesUseCase {
         domain: `.${this.cookieDomain}`,
         expires: expiresAt,
         name,
+        secure: this.envService.get('APP_ENVIRONMENT') === 'lambda',
         signed: false,
         value,
       });

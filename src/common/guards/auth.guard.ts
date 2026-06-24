@@ -81,7 +81,9 @@ export class AuthGuard implements CanActivate {
         const user = await this.getEntityById(payload.sub, payload.role);
 
         if (!user) {
-          throw new UnauthorizedException(accessTokenMessage);
+          throw new UnauthorizedException(accessTokenMessage, {
+            cause: 'User not found',
+          });
         }
 
         request.user = user;
@@ -101,7 +103,8 @@ export class AuthGuard implements CanActivate {
 
     if (!refreshToken) {
       throw new UnauthorizedException(
-        'Você não tem permissão para acessar este recurso.',
+        'Você não tem permissão para executar esta ação.',
+        { cause: 'Unauthenticated user' },
       );
     }
 

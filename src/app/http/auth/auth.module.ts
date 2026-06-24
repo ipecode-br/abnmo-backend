@@ -6,6 +6,7 @@ import { CryptographyModule } from '@/app/cryptography/cryptography.module';
 import { MailModule } from '@/app/mail/mail.module';
 import { StorageModule } from '@/app/storage/storage.module';
 import { AuthGuard } from '@/common/guards/auth.guard';
+import { FeatureGuard } from '@/common/guards/feature.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
@@ -45,6 +46,7 @@ import { SignInWithEmailUseCase } from './use-cases/sign-in-with-email.use-case'
     SignInWithEmailUseCase,
     { provide: APP_GUARD, useClass: AuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
+    { provide: APP_GUARD, useClass: FeatureGuard },
   ],
   controllers: [AuthController],
 })
