@@ -8,12 +8,12 @@ import type { Repository } from 'typeorm';
 
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
-import type { AuthUser } from '@/common/types';
+import type { RequestUser } from '@/common/types';
 import { PatientRequirement } from '@/domain/entities/patient-requirement';
 
 interface ApprovePatientRequirementUseCaseInput {
   id: string;
-  user: AuthUser;
+  user: RequestUser;
 }
 
 @Injectable()

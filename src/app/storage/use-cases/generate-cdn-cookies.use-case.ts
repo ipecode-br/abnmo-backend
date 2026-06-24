@@ -4,15 +4,15 @@ import { Response } from 'express';
 
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
-import { AuthUser } from '@/common/types';
 import { STORAGE_FOLDERS } from '@/config/storage';
+import { AuthTokenRole } from '@/domain/enums/tokens';
 import { EnvService } from '@/env/env.service';
 import { setCookie } from '@/utils/cookies';
 
 interface GenerateCdnCookiesUseCaseInput {
-  user: AuthUser;
   expiresAt: Date;
   response: Response;
+  user: { id: string; email: string; role: AuthTokenRole };
 }
 
 @Injectable()
@@ -36,8 +36,8 @@ export class GenerateCdnCookiesUseCase {
     ).toString('utf-8');
   }
 
-  execute({ user, response, expiresAt }: GenerateCdnCookiesUseCaseInput): void {
-    const { id, role } = user;
+  execute({ user, expiresAt, response }: GenerateCdnCookiesUseCaseInput): void {
+    const { role } = user;
     const allowedPaths: string[] = [];
 
     const sharedPaths = [
@@ -57,7 +57,7 @@ export class GenerateCdnCookiesUseCase {
 
     if (role === 'patient') {
       allowedPaths.push(`${STORAGE_FOLDERS.patients.avatars}/*`);
-      allowedPaths.push(`${STORAGE_FOLDERS.patients.documents(id)}/*`);
+      allowedPaths.push(`${STORAGE_FOLDERS.patients.documents(user.id)}/*`);
     }
 
     const policy = JSON.stringify({

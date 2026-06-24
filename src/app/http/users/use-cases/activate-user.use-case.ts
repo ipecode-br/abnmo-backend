@@ -9,12 +9,12 @@ import { Repository } from 'typeorm';
 
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
-import type { AuthUser } from '@/common/types';
+import type { RequestUser } from '@/common/types';
 import { User } from '@/domain/entities/user';
 
 interface ActivateUserUseCaseInput {
   id: string;
-  user: AuthUser;
+  user: RequestUser;
 }
 
 @Injectable()

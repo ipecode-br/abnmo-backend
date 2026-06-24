@@ -14,7 +14,7 @@ import { Roles } from '@/common/decorators/roles.decorator';
 import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
 import { Log } from '@/common/log/log.decorator';
-import type { AuthUser } from '@/common/types';
+import type { RequestUser } from '@/common/types';
 
 import {
   CreatePatientDto,
@@ -112,7 +112,7 @@ export class PatientsController {
   @ApiResponse({ type: BaseResponse })
   async update(
     @Param('id') id: string,
-    @User() user: AuthUser,
+    @User() user: RequestUser,
     @Body() updatePatientDto: UpdatePatientDto,
   ): Promise<BaseResponse> {
     await this.updatePatientUseCase.execute({

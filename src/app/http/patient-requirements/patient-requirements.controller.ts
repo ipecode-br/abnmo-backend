@@ -13,7 +13,7 @@ import { Roles } from '@/common/decorators/roles.decorator';
 import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
 import { Log } from '@/common/log/log.decorator';
-import type { AuthUser } from '@/common/types';
+import type { RequestUser } from '@/common/types';
 
 import {
   CreatePatientRequirementDto,
@@ -61,7 +61,7 @@ export class PatientRequirementsController {
   })
   @ApiResponse({ type: GetPatientRequirementsByPatientIdResponse })
   async getPatientRequirementsLogged(
-    @User() user: AuthUser,
+    @User() user: RequestUser,
     @Query() query: GetPatientRequirementsByPatientIdQuery,
   ): Promise<GetPatientRequirementsByPatientIdResponse> {
     const data = await this.getPatientRequirementsByPatientIdUseCase.execute({
@@ -82,7 +82,7 @@ export class PatientRequirementsController {
   @ApiOperation({ summary: 'Cadastra uma nova solicitação' })
   @ApiResponse({ type: BaseResponse })
   async create(
-    @User() user: AuthUser,
+    @User() user: RequestUser,
     @Body() createPatientRequirementDto: CreatePatientRequirementDto,
   ): Promise<BaseResponse> {
     await this.createPatientRequirementUseCase.execute({
@@ -103,7 +103,7 @@ export class PatientRequirementsController {
   @ApiResponse({ type: BaseResponse })
   async approve(
     @Param('id') id: string,
-    @User() user: AuthUser,
+    @User() user: RequestUser,
   ): Promise<BaseResponse> {
     await this.approvePatientRequirementUseCase.execute({ id, user });
 
@@ -120,7 +120,7 @@ export class PatientRequirementsController {
   @ApiResponse({ type: BaseResponse })
   async decline(
     @Param('id') id: string,
-    @User() user: AuthUser,
+    @User() user: RequestUser,
   ): Promise<BaseResponse> {
     await this.declinePatientRequirementUseCase.execute({ id, user });
 

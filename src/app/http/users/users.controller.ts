@@ -22,7 +22,7 @@ import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
 import { FileValidationPipe } from '@/common/file-validation.pipe';
 import { Log } from '@/common/log/log.decorator';
-import type { AuthUser } from '@/common/types';
+import type { RequestUser } from '@/common/types';
 import { MIME_TYPES } from '@/constants/mime-types';
 
 import { ActivateUserUseCase } from './use-cases/activate-user.use-case';
@@ -79,7 +79,7 @@ export class UsersController {
   @RequireFeature('read:user')
   @ApiOperation({ summary: 'Retorna os dados do usuário autenticado' })
   @ZodResponse({ type: GetUserResponse, status: 200 })
-  async getProfile(@User() user: AuthUser): Promise<GetUserResponse> {
+  async getProfile(@User() user: RequestUser): Promise<GetUserResponse> {
     const data = await this.getUserUseCase.execute({ id: user.id });
 
     return {
@@ -96,7 +96,7 @@ export class UsersController {
   @ZodResponse({ type: BaseResponse, status: 204 })
   async updateUser(
     @Param('id') id: string,
-    @User() user: AuthUser,
+    @User() user: RequestUser,
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<BaseResponse> {
     await this.updateUserUseCase.execute({ id, user, ...updateUserDto });
@@ -114,7 +114,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Faz upload do avatar do usuário' })
   @ZodResponse({ type: BaseResponse, status: 201 })
   async uploadAvatar(
-    @User() user: AuthUser,
+    @User() user: RequestUser,
     @UploadedFile(
       new FileValidationPipe({
         maxSize: 500 * 1024, // 500kb
@@ -143,7 +143,7 @@ export class UsersController {
   @ZodResponse({ type: BaseResponse, status: 204 })
   async deactivateUser(
     @Param('id') id: string,
-    @User() user: AuthUser,
+    @User() user: RequestUser,
   ): Promise<BaseResponse> {
     await this.deactivateUserUseCase.execute({ id, user });
 
@@ -160,7 +160,7 @@ export class UsersController {
   @ZodResponse({ type: BaseResponse, status: 204 })
   async activateUser(
     @Param('id') id: string,
-    @User() user: AuthUser,
+    @User() user: RequestUser,
   ): Promise<BaseResponse> {
     await this.activateUserUseCase.execute({ id, user });
 

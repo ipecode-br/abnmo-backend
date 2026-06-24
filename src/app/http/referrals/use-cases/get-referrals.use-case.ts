@@ -9,7 +9,7 @@ import {
   type Repository,
 } from 'typeorm';
 
-import type { AuthUser } from '@/common/types';
+import type { RequestUser } from '@/common/types';
 import { Referral } from '@/domain/entities/referral';
 import type { PatientCondition } from '@/domain/enums/patients';
 import type { QueryOrder } from '@/domain/enums/queries';
@@ -20,7 +20,7 @@ import type {
 import type { SpecialtyCategory } from '@/domain/enums/shared';
 
 interface GetReferralsUseCaseInput {
-  user: AuthUser;
+  user: RequestUser;
   page: number;
   perPage: number;
   patientId?: string;

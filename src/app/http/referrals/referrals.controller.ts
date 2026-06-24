@@ -14,7 +14,7 @@ import { Roles } from '@/common/decorators/roles.decorator';
 import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
 import { Log } from '@/common/log/log.decorator';
-import type { AuthUser } from '@/common/types';
+import type { RequestUser } from '@/common/types';
 
 import {
   CreateReferralDto,
@@ -43,7 +43,7 @@ export class ReferralsController {
   @ApiResponse({ type: GetReferralsResponse })
   async getReferrals(
     @Query() query: GetReferralsQuery,
-    @User() user: AuthUser,
+    @User() user: RequestUser,
   ): Promise<GetReferralsResponse> {
     const data = await this.getReferralsUseCase.execute({ user, ...query });
 
@@ -60,7 +60,7 @@ export class ReferralsController {
   @ApiOperation({ summary: 'Cadastra um novo encaminhamento' })
   @ApiResponse({ type: BaseResponse })
   async create(
-    @User() user: AuthUser,
+    @User() user: RequestUser,
     @Body() createReferralDto: CreateReferralDto,
   ): Promise<BaseResponse> {
     await this.createReferralUseCase.execute({ user, ...createReferralDto });

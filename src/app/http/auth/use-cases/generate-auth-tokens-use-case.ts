@@ -4,14 +4,13 @@ import type { Response } from 'express';
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
 import { GenerateCdnCookiesUseCase } from '@/app/storage/use-cases/generate-cdn-cookies.use-case';
 import { Log } from '@/common/log/log.decorator';
-import { AuthUser } from '@/common/types';
 import { COOKIES_MAPPING } from '@/domain/cookies';
-import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
+import { AUTH_TOKENS_MAPPING, AuthTokenRole } from '@/domain/enums/tokens';
 import { EnvService } from '@/env/env.service';
 import { setCookie } from '@/utils/cookies';
 
 interface GenerateAuthTokensUseCaseInput {
-  user: AuthUser;
+  user: { id: string; email: string; role: AuthTokenRole };
   response: Response;
 }
 

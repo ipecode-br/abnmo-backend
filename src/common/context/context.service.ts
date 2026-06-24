@@ -2,11 +2,11 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 
 import { Injectable } from '@nestjs/common';
 
-import type { AuthUser, LogEvent } from '../types';
+import type { ContextEvent, ContextUser } from '../types';
 
 interface Context {
-  authUser?: AuthUser;
-  event?: LogEvent;
+  user?: ContextUser;
+  event?: ContextEvent;
   extras?: Record<string, any>;
 }
 
@@ -27,32 +27,25 @@ export class ContextService {
     return this.asyncLocalStorage.getStore() ?? {};
   }
 
-  setUser(authUser: AuthUser): void {
+  setUser(user: ContextUser): void {
     const ctx = this.getContext();
-    if (ctx) {
-      ctx.authUser = authUser;
-    }
+    ctx.user = user;
   }
 
-  setEvent(event: LogEvent) {
+  setEvent(event: ContextEvent) {
     const ctx = this.getContext();
-    if (ctx) {
-      ctx.event = event;
-    }
+    ctx.event = event;
   }
 
   resetEvent() {
     const ctx = this.getContext();
-    if (ctx) {
-      delete ctx.event;
-    }
+    delete ctx.event;
   }
 
   addContext(data: Record<string, any>) {
     const ctx = this.getContext();
-    if (!ctx.extras) {
-      ctx.extras = {};
-    }
+    ctx.extras = {};
+
     Object.assign(ctx.extras, data);
   }
 }

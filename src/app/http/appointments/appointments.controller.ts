@@ -14,7 +14,7 @@ import { Roles } from '@/common/decorators/roles.decorator';
 import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
 import { Log } from '@/common/log/log.decorator';
-import type { AuthUser } from '@/common/types';
+import type { RequestUser } from '@/common/types';
 
 import {
   CreateAppointmentDto,
@@ -43,7 +43,7 @@ export class AppointmentsController {
   @ApiResponse({ type: GetAppointmentsResponse })
   async getAppointments(
     @Query() query: GetAppointmentsQuery,
-    @User() user: AuthUser,
+    @User() user: RequestUser,
   ): Promise<GetAppointmentsResponse> {
     const data = await this.getAppointmentsUseCase.execute({ user, ...query });
 
@@ -60,7 +60,7 @@ export class AppointmentsController {
   @ApiOperation({ summary: 'Cadastra um novo atendimento' })
   @ApiResponse({ type: BaseResponse })
   async create(
-    @User() user: AuthUser,
+    @User() user: RequestUser,
     @Body() createAppointmentDto: CreateAppointmentDto,
   ): Promise<BaseResponse> {
     await this.createAppointmentUseCase.execute({

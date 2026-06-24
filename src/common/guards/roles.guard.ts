@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
-import type { AuthUser } from '@/common/types';
+import type { RequestUser } from '@/common/types';
 
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { Roles } from '../decorators/roles.decorator';
@@ -26,23 +26,15 @@ export class RolesGuard implements CanActivate {
     ]);
 
     // Skip validation for public routes
-    if (isPublic) {
-      return true;
-    }
+    if (isPublic) return true;
 
-    const request = context.switchToHttp().getRequest<{ user?: AuthUser }>();
+    const request = context.switchToHttp().getRequest<{ user: RequestUser }>();
     const user = request.user;
 
-    if (!user) {
-      throw new ForbiddenException(
-        'Você não tem permissão para executar esta ação.',
-      );
-    }
-
     const isAllowed =
-      roles.includes(user.role) ||
+      user.role === 'admin' ||
       roles.includes('all') ||
-      user.role === 'admin';
+      roles.includes(user.role);
 
     if (!isAllowed) {
       throw new ForbiddenException(

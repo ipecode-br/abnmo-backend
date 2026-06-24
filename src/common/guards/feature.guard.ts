@@ -1,9 +1,4 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  ForbiddenException,
-  Injectable,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
 import type { RequestUser } from '@/common/types';
@@ -26,16 +21,8 @@ export class FeatureGuard implements CanActivate {
     // Skip validation for public routes
     if (isPublic) return true;
 
-    const request = context.switchToHttp().getRequest<{ user?: RequestUser }>();
-    const user = request.user;
+    const request = context.switchToHttp().getRequest<{ user: RequestUser }>();
 
-    if (!user) {
-      throw new ForbiddenException(
-        'Você não tem permissão para executar esta ação.',
-        { cause: 'User not found' },
-      );
-    }
-
-    return can(user, feature);
+    return can(request.user, feature);
   }
 }

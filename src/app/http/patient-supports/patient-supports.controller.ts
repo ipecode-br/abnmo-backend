@@ -5,7 +5,7 @@ import { Roles } from '@/common/decorators/roles.decorator';
 import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
 import { Log } from '@/common/log/log.decorator';
-import type { AuthUser } from '@/common/types';
+import type { RequestUser } from '@/common/types';
 
 import {
   CreatePatientSupportDto,
@@ -33,7 +33,7 @@ export class PatientSupportsController {
   @ApiResponse({ type: BaseResponse })
   async createPatientSupport(
     @Param('patientId') patientId: string,
-    @User() user: AuthUser,
+    @User() user: RequestUser,
     @Body() createPatientSupportDto: CreatePatientSupportDto,
   ): Promise<BaseResponse> {
     await this.createPatientSupportUseCase.execute({
@@ -55,7 +55,7 @@ export class PatientSupportsController {
   @ApiResponse({ type: BaseResponse })
   async updatePatientSupport(
     @Param('id') id: string,
-    @User() user: AuthUser,
+    @User() user: RequestUser,
     @Body() updatePatientSupportDto: UpdatePatientSupportDto,
   ): Promise<BaseResponse> {
     await this.updatePatientSupportUseCase.execute({
@@ -77,7 +77,7 @@ export class PatientSupportsController {
   @ApiResponse({ type: BaseResponse })
   async removePatientSupport(
     @Param('id') id: string,
-    @User() user: AuthUser,
+    @User() user: RequestUser,
   ): Promise<BaseResponse> {
     await this.deletePatientSupportUseCase.execute({ id, user });
 

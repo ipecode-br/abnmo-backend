@@ -12,7 +12,7 @@ import type { Repository } from 'typeorm';
 import { CryptographyService } from '@/app/cryptography/cryptography.service';
 import { GenerateAuthTokensUseCase } from '@/app/http/auth/use-cases/generate-auth-tokens-use-case';
 import { ContextService } from '@/common/context/context.service';
-import type { AuthUser } from '@/common/types';
+import type { RequestUser } from '@/common/types';
 import type { Cookie } from '@/domain/cookies';
 import { COOKIES_MAPPING } from '@/domain/cookies';
 import { Patient } from '@/domain/entities/patient';
@@ -30,7 +30,7 @@ import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 
 interface AuthenticatedRequest {
   signedCookies?: Record<Cookie, string>;
-  user?: AuthUser;
+  user?: RequestUser;
 }
 
 @Injectable()
@@ -59,9 +59,8 @@ export class AuthGuard implements CanActivate {
       context.getClass(),
     ]);
 
-    if (isPublic) {
-      return true;
-    }
+    // Skip validation for public routes
+    if (isPublic) return true;
 
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const response = context.switchToHttp().getResponse<Response>();
@@ -86,9 +85,13 @@ export class AuthGuard implements CanActivate {
           });
         }
 
+        this.contextService.setUser({
+          id: user.id,
+          email: user.email,
+          role: user.role,
+        });
+
         request.user = user;
-        // ensure request context has the authenticated user too
-        this.contextService.setUser(user);
         return true;
       } catch (error) {
         this.clearCookies(response);
@@ -139,9 +142,13 @@ export class AuthGuard implements CanActivate {
         response,
       });
 
+      this.contextService.setUser({
+        id: user.id,
+        email: user.email,
+        role: user.role,
+      });
+
       request.user = user;
-      // context is already running from middleware; keep it in sync
-      this.contextService.setUser(user);
       return true;
     } catch (error) {
       this.clearCookies(response);
@@ -157,7 +164,7 @@ export class AuthGuard implements CanActivate {
   private async getEntityById(
     id: string,
     role: AuthTokenRole,
-  ): Promise<AuthUser | null> {
+  ): Promise<RequestUser | null> {
     if (role === 'patient') {
       const patient = await this.patientsRepository.findOne({
         select: { id: true, email: true, status: true },
@@ -168,11 +175,22 @@ export class AuthGuard implements CanActivate {
         return null;
       }
 
-      return { id: patient.id, email: patient.email, role: 'patient' };
+      return {
+        id: patient.id,
+        email: patient.email,
+        role: 'patient',
+        features: [],
+      };
     }
 
     const user = await this.usersRepository.findOne({
-      select: { id: true, email: true, role: true, status: true },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        features: true,
+        status: true,
+      },
       where: { id },
     });
 
@@ -180,7 +198,7 @@ export class AuthGuard implements CanActivate {
       return null;
     }
 
-    return { id: user.id, email: user.email, role: user.role };
+    return { id: user.id, email: user.email, role: user.role, features: [] };
   }
 
   private clearCookies(response: Response) {

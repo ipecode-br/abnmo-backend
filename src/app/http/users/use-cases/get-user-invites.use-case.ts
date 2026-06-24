@@ -75,7 +75,7 @@ export class GetUserInvitesUseCase {
 
     const orderBy = ORDER_BY_MAPPING[props.orderBy || 'date'];
 
-    const invites = await this.tokensRepository.find({
+    const result = await this.tokensRepository.find({
       select: {
         id: true,
         email: true,
@@ -87,6 +87,13 @@ export class GetUserInvitesUseCase {
       take: perPage,
       where,
     });
+
+    const invites = result.map((invite) => ({
+      id: invite.id,
+      email: invite.email,
+      expiresAt: invite.expiresAt,
+      createdAt: invite.createdAt,
+    }));
 
     return { invites, total };
   }

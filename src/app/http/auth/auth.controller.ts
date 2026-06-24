@@ -8,7 +8,7 @@ import { Roles } from '@/common/decorators/roles.decorator';
 import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
 import { Log } from '@/common/log/log.decorator';
-import type { AuthUser } from '@/common/types';
+import type { RequestUser } from '@/common/types';
 import { COOKIES_MAPPING } from '@/domain/cookies';
 
 import {
@@ -159,7 +159,7 @@ export class AuthController {
   })
   @ApiResponse({ type: BaseResponse })
   async changePassword(
-    @User() user: AuthUser,
+    @User() user: RequestUser,
     @Body() changePasswordDto: ChangePasswordDto,
   ): Promise<BaseResponse> {
     await this.changePasswordUseCase.execute({ user, ...changePasswordDto });

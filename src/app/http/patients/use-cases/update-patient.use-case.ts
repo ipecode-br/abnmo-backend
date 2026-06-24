@@ -9,7 +9,7 @@ import type { Repository } from 'typeorm';
 
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
-import type { AuthUser } from '@/common/types';
+import type { RequestUser } from '@/common/types';
 import type { BrazilianState } from '@/constants/brazilian-states';
 import { Patient } from '@/domain/entities/patient';
 import type {
@@ -20,7 +20,7 @@ import type {
 
 interface UpdatePatientUseCaseInput {
   id: string;
-  user: AuthUser;
+  user: RequestUser;
   name?: string;
   dateOfBirth?: Date;
   cpf?: string;

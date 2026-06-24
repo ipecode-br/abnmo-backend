@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PinoLogger } from 'nestjs-pino';
 
 import { ContextService } from '../context/context.service';
-import type { LogEvent } from '../types';
+import type { ContextEvent } from '../types';
 
 @Injectable()
 export class LogService {
@@ -15,7 +15,7 @@ export class LogService {
     this.ctx.addContext({ context: name });
   }
 
-  setEvent(event: LogEvent) {
+  setEvent(event: ContextEvent) {
     this.ctx.setEvent(event);
   }
 
@@ -44,9 +44,7 @@ export class LogService {
     }
   }
 
-  /**
-   * Generic alias matching Nest's `logger.log` signature.
-   */
+  // Generic alias matching Nest's `logger.log` signature.
   log(message: string, extras?: Record<string, any>) {
     this.info(message, extras);
   }
@@ -56,6 +54,6 @@ export class LogService {
 
     if (context.extras) Object.assign(extras, context.extras);
 
-    return { event: context.event, ...extras, authUser: context.authUser };
+    return { event: context.event, ...extras, user: context.user };
   }
 }

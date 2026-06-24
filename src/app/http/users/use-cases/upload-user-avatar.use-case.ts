@@ -10,13 +10,13 @@ import { DeleteFileUseCase } from '@/app/storage/use-cases/delete-file.use-case'
 import { UploadFileUseCase } from '@/app/storage/use-cases/upload-file.use-case';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
-import type { AuthUser } from '@/common/types';
+import type { RequestUser } from '@/common/types';
 import { STORAGE_FOLDERS } from '@/config/storage';
 import { User } from '@/domain/entities/user';
 import { generateFileName } from '@/utils/generate-file-name';
 
 interface UploadUserAvatarUseCaseInput {
-  user: AuthUser;
+  user: RequestUser;
   buffer: Buffer;
   originalName: string;
   mimeType: string;

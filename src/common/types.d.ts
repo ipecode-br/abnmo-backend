@@ -2,17 +2,17 @@ import type { AuthTokenRole } from '@/domain/enums/tokens';
 
 import { Feature } from './authorization/features';
 
-export type AuthUser = {
-  id: string;
-  email: string;
-  role: AuthTokenRole;
-};
-
 export type RequestUser = {
   id: string;
   email: string;
   role: AuthTokenRole;
   features: Feature[];
+};
+
+export type ContextUser = {
+  id: string;
+  email: string;
+  role: AuthTokenRole;
 };
 
 type AppointmentsEvent =
@@ -55,7 +55,7 @@ type SurveyEvent = 'init_survey' | 'complete_survey';
 
 type StatusEvent = 'get_status';
 
-export type LogEvent =
+export type ContextEvent =
   | AppointmentsEvent
   | AuthEvent
   | PatientRequirementsEvent

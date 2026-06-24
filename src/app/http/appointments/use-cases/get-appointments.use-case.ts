@@ -9,7 +9,7 @@ import {
   type Repository,
 } from 'typeorm';
 
-import type { AuthUser } from '@/common/types';
+import type { RequestUser } from '@/common/types';
 import { Appointment } from '@/domain/entities/appointment';
 import type {
   AppointmentsOrderBy,
@@ -20,7 +20,7 @@ import type { QueryOrder } from '@/domain/enums/queries';
 import type { SpecialtyCategory } from '@/domain/enums/shared';
 
 interface GetAppointmentsUseCaseInput {
-  user: AuthUser;
+  user: RequestUser;
   page: number;
   perPage: number;
   patientId?: string;

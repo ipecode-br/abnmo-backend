@@ -10,13 +10,13 @@ import { Repository } from 'typeorm';
 import { CryptographyService } from '@/app/cryptography/cryptography.service';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
-import type { AuthUser } from '@/common/types';
+import type { RequestUser } from '@/common/types';
 import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 
 interface ChangePasswordUseCaseInput {
-  user: AuthUser;
+  user: RequestUser;
   password: string;
   newPassword: string;
 }
