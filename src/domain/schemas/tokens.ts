@@ -1,10 +1,6 @@
 import { z } from 'zod';
 
-import {
-  AUTH_TOKENS,
-  type AUTH_TOKENS_MAPPING,
-  type AuthTokenRole,
-} from '../enums/tokens';
+import { AUTH_TOKENS, type AUTH_TOKENS_MAPPING } from '../enums/tokens';
 import type { UserRole } from '../enums/users';
 
 export const authTokenSchema = z
@@ -32,8 +28,8 @@ export type PasswordResetToken = Pick<
   'entityId' | 'token' | 'expiresAt'
 > & { type: typeof AUTH_TOKENS_MAPPING.passwordReset };
 
-export type AccessTokenPayload = { sub: string; role: AuthTokenRole };
-export type RefreshTokenPayload = { sub: string; role: AuthTokenRole };
+export type AccessTokenPayload = { sub: string; role: UserRole };
+export type RefreshTokenPayload = { sub: string; role: UserRole };
 export type ResetPasswordPayload = { sub: string };
 export type InviteUserPayload = { role: UserRole };
 

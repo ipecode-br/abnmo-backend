@@ -15,7 +15,8 @@ import { COOKIES_MAPPING } from '@/domain/cookies';
 import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
-import { AUTH_TOKENS_MAPPING, type AuthTokenRole } from '@/domain/enums/tokens';
+import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
+import { UserRole } from '@/domain/enums/users';
 import type { RefreshToken } from '@/domain/schemas/tokens';
 import { EnvService } from '@/env/env.service';
 import { setCookie } from '@/utils/cookies';
@@ -61,7 +62,7 @@ export class SignInWithEmailUseCase {
     response,
   }: SignInWithEmailUseCaseInput): Promise<SignInWithEmailUseCaseOutput> {
     let entity: User | Patient | null = null;
-    let role: AuthTokenRole = 'patient';
+    let role: UserRole = 'patient';
 
     const [user, patient] = await Promise.all([
       this.usersRepository.findOne({

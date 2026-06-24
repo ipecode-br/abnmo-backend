@@ -15,7 +15,8 @@ import { buildResetPasswordEmail } from '@/domain/email-templates/reset-password
 import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
-import { AUTH_TOKENS_MAPPING, type AuthTokenRole } from '@/domain/enums/tokens';
+import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
+import { UserRole } from '@/domain/enums/users';
 import type { ResetPasswordPayload } from '@/domain/schemas/tokens';
 
 import { GenerateAuthTokensUseCase } from './generate-auth-tokens-use-case';
@@ -75,7 +76,7 @@ export class ResetPasswordUseCase {
     const id = payload.sub;
 
     let entity: User | Patient | null = null;
-    let role: AuthTokenRole = 'patient';
+    let role: UserRole = 'patient';
 
     const [user, patient] = await Promise.all([
       this.usersRepository.findOne({

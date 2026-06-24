@@ -18,7 +18,8 @@ import { COOKIES_MAPPING } from '@/domain/cookies';
 import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
-import { AUTH_TOKENS_MAPPING, type AuthTokenRole } from '@/domain/enums/tokens';
+import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
+import { UserRole } from '@/domain/enums/users';
 import type {
   AccessTokenPayload,
   RefreshTokenPayload,
@@ -163,7 +164,7 @@ export class AuthGuard implements CanActivate {
 
   private async getEntityById(
     id: string,
-    role: AuthTokenRole,
+    role: UserRole,
   ): Promise<RequestUser | null> {
     if (role === 'patient') {
       const patient = await this.patientsRepository.findOne({

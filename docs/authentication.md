@@ -61,7 +61,7 @@ O tipo do usuário autenticado disponível em toda a aplicação:
 type AuthUser = {
   id: string;
   email: string;
-  role: AuthTokenRole; // 'admin' | 'manager' | 'nurse' | 'specialist' | 'patient'
+  role: UserRolse; // 'admin' | 'member' 'specialist' | 'patient'
 };
 ```
 

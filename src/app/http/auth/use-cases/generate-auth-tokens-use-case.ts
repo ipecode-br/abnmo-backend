@@ -5,12 +5,13 @@ import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.us
 import { GenerateCdnCookiesUseCase } from '@/app/storage/use-cases/generate-cdn-cookies.use-case';
 import { Log } from '@/common/log/log.decorator';
 import { COOKIES_MAPPING } from '@/domain/cookies';
-import { AUTH_TOKENS_MAPPING, AuthTokenRole } from '@/domain/enums/tokens';
+import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
+import { UserRole } from '@/domain/enums/users';
 import { EnvService } from '@/env/env.service';
 import { setCookie } from '@/utils/cookies';
 
 interface GenerateAuthTokensUseCaseInput {
-  user: { id: string; email: string; role: AuthTokenRole };
+  user: { id: string; email: string; role: UserRole };
   response: Response;
 }
 
