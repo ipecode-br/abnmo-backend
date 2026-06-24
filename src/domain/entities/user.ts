@@ -1,13 +1,10 @@
 import { Column, Entity } from 'typeorm';
 
-import {
-  Feature,
-  SPECIALTY_CATEGORIES,
-  type SpecialtyCategory,
-} from '../enums/shared';
+import { SPECIALTY_CATEGORIES, type SpecialtyCategory } from '../enums/shared';
 import {
   USER_ROLES,
   USER_STATUSES,
+  type UserFeature,
   type UserRole,
   type UserStatus,
 } from '../enums/users';
@@ -33,7 +30,7 @@ export class User extends BaseEntity implements UserSchema {
   role: UserRole;
 
   @Column({ type: 'json' })
-  features: Feature[] = [];
+  features: UserFeature[] = [];
 
   @Column({ type: 'enum', enum: USER_STATUSES, default: 'active' })
   status: UserStatus;

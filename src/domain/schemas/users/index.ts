@@ -1,7 +1,6 @@
 import { z } from 'zod';
 
-import { FEATURES } from '@/domain/enums/shared';
-import { USER_STATUSES } from '@/domain/enums/users';
+import { USER_FEATURES, USER_STATUSES } from '@/domain/enums/users';
 
 import { baseEntitySchema } from '../base';
 import {
@@ -21,7 +20,7 @@ export const userSchema = baseEntitySchema
     password: passwordSchema,
     avatarUrl: avatarSchema.nullable(),
     role: userRoleSchema,
-    features: z.array(z.enum(FEATURES)).default([]),
+    features: z.array(z.enum(USER_FEATURES)).default([]),
     status: z.enum(USER_STATUSES).default('active'),
     specialty: specialtySchema.nullable(),
     registrationId: userRegistrationId.nullable(),

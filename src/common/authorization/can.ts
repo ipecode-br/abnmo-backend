@@ -4,9 +4,13 @@ import {
 } from '@nestjs/common';
 
 import { RequestUser } from '@/common/types';
-import { Feature, FEATURES } from '@/domain/enums/shared';
+import { USER_FEATURES, UserFeature } from '@/domain/enums/users';
 
-export function can(user: RequestUser, feature: Feature, compareToId?: string) {
+export function can(
+  user: RequestUser,
+  feature: UserFeature,
+  compareToId?: string,
+) {
   const errorMessage = 'Você não tem permissão para executar esta ação.';
 
   if (!user) {
@@ -24,7 +28,7 @@ export function can(user: RequestUser, feature: Feature, compareToId?: string) {
 
   // Runtime guard: feature should always be valid here,
   // but guards against bad database data or misconfigured decorators
-  if (!feature || !FEATURES.includes(feature)) {
+  if (!feature || !USER_FEATURES.includes(feature)) {
     throw new ForbiddenException(errorMessage, {
       cause: `Feature "${feature}" not found`,
     });

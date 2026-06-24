@@ -1,5 +1,5 @@
 import { Reflector } from '@nestjs/core';
 
-import { Feature } from '@/domain/enums/shared';
+import { UserFeature } from '@/domain/enums/users';
 
-export const RequireFeature = Reflector.createDecorator<Feature>();
+export const RequireFeature = Reflector.createDecorator<UserFeature>();
