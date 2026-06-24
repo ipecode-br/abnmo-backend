@@ -12,6 +12,7 @@ import {
 import { User } from '@/domain/entities/user';
 import type { QueryOrder } from '@/domain/enums/queries';
 import type { UserRole, UsersOrderBy, UserStatus } from '@/domain/enums/users';
+import { UserResponse } from '@/domain/schemas/users/responses';
 
 interface GetUsersUseCaseInput {
   page: number;
@@ -26,7 +27,7 @@ interface GetUsersUseCaseInput {
 }
 
 interface GetUsersUseCaseOutput {
-  users: User[];
+  users: UserResponse[];
   total: number;
 }
 
@@ -85,14 +86,15 @@ export class GetUsersUseCase {
 
     const orderBy = ORDER_BY_MAPPING[props.orderBy || 'name'];
 
-    const users = await this.usersRepository.find({
+    const result = await this.usersRepository.find({
       select: {
         id: true,
         name: true,
         email: true,
         avatarUrl: true,
-        status: true,
         role: true,
+        features: true,
+        status: true,
         specialty: true,
         registrationId: true,
         updatedAt: true,
@@ -103,6 +105,20 @@ export class GetUsersUseCase {
       take: perPage,
       where,
     });
+
+    const users = result.map((user) => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      avatarUrl: user.avatarUrl,
+      role: user.role,
+      features: user.features,
+      status: user.status,
+      specialty: user.specialty,
+      registrationId: user.registrationId,
+      updatedAt: user.updatedAt,
+      createdAt: user.createdAt,
+    }));
 
     return { users, total };
   }

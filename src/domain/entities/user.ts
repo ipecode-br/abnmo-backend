@@ -1,12 +1,10 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Column, Entity } from 'typeorm';
 
-import { SPECIALTY_CATEGORIES, type SpecialtyCategory } from '../enums/shared';
+import {
+  Feature,
+  SPECIALTY_CATEGORIES,
+  type SpecialtyCategory,
+} from '../enums/shared';
 import {
   USER_ROLES,
   USER_STATUSES,
@@ -14,16 +12,15 @@ import {
   type UserStatus,
 } from '../enums/users';
 import type { UserSchema } from '../schemas/users';
+import { BaseEntity } from './base';
 
 @Entity('users')
-export class User implements UserSchema {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
+export class User extends BaseEntity implements UserSchema {
   @Column({ type: 'varchar', length: 64 })
   name: string;
 
-  @Column({ type: 'varchar', length: 64, unique: true })
+  // Maximum email length is 254 characters.
+  @Column({ type: 'varchar', length: 254, unique: true })
   email: string;
 
   @Column({ type: 'varchar', length: 64 })
@@ -35,18 +32,15 @@ export class User implements UserSchema {
   @Column({ type: 'enum', enum: USER_ROLES })
   role: UserRole;
 
+  @Column({ type: 'json' })
+  features: Feature[] = [];
+
+  @Column({ type: 'enum', enum: USER_STATUSES, default: 'active' })
+  status: UserStatus;
+
   @Column({ type: 'enum', enum: SPECIALTY_CATEGORIES, nullable: true })
   specialty: SpecialtyCategory | null;
 
   @Column({ type: 'varchar', length: 32, nullable: true, unique: true })
   registrationId: string | null;
-
-  @Column({ type: 'enum', enum: USER_STATUSES, default: 'active' })
-  status: UserStatus;
-
-  @CreateDateColumn({ type: 'datetime' })
-  createdAt: Date;
-
-  @UpdateDateColumn({ type: 'datetime' })
-  updatedAt: Date;
 }

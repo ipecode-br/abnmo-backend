@@ -17,7 +17,6 @@ export class SetLengthToPatientTokenAndUser1779320628308 implements MigrationInt
         await queryRunner.query(`ALTER TABLE \`users\` ADD \`avatar_url\` varchar(2048) NULL`);
     }
 
-    public async down() {
-    }
+    public async down() {}
 
 }

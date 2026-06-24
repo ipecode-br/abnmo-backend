@@ -1,7 +1,9 @@
 import { z } from 'zod';
 
+import { FEATURES } from '@/domain/enums/shared';
 import { USER_STATUSES } from '@/domain/enums/users';
 
+import { baseEntitySchema } from '../base';
 import {
   avatarSchema,
   emailSchema,
@@ -12,19 +14,17 @@ import {
   userRoleSchema,
 } from '../shared';
 
-export const userSchema = z
-  .object({
-    id: z.string().uuid(),
+export const userSchema = baseEntitySchema
+  .extend({
     name: nameSchema,
     email: emailSchema,
     password: passwordSchema,
     avatarUrl: avatarSchema.nullable(),
     role: userRoleSchema,
+    features: z.array(z.enum(FEATURES)).default([]),
+    status: z.enum(USER_STATUSES).default('active'),
     specialty: specialtySchema.nullable(),
     registrationId: userRegistrationId.nullable(),
-    status: z.enum(USER_STATUSES).default('active'),
-    createdAt: z.coerce.date(),
-    updatedAt: z.coerce.date(),
   })
   .strict();
 export type UserSchema = z.infer<typeof userSchema>;
