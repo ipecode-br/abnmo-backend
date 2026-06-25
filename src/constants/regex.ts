@@ -18,3 +18,6 @@ export const NON_SPECIAL_CHAR_REGEX = /^[a-zA-ZÀ-ÿ\s'-]{1,50}$/;
 */
 export const PASSWORD_REGEX =
   /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\W)(?!.*\s).*$/;
+
+// Pattern: DD/MM/YYYY
+export const DATE_REGEX = /^\d{2}\/\d{2}\/\d{4}$/;
