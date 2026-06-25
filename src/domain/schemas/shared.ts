@@ -19,10 +19,24 @@ export const userRegistrationId = z.string().max(32);
 
 export const avatarSchema = z.string().url();
 
+export const cpfSchema = z
+  .string()
+  .length(8)
+  .regex(ONLY_NUMBERS_REGEX, 'Only numbers are accepted');
+
+export const susIdSchema = z
+  .string()
+  .regex(ONLY_NUMBERS_REGEX, 'Only numbers are accepted');
+
 export const phoneSchema = z
   .string()
   .min(10)
   .max(11)
+  .regex(ONLY_NUMBERS_REGEX, 'Only numbers are accepted');
+
+export const cepSchema = z
+  .string()
+  .length(8)
   .regex(ONLY_NUMBERS_REGEX, 'Only numbers are accepted');
 
 export const patientConditionSchema = z.enum(PATIENT_CONDITIONS);
