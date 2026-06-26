@@ -15,6 +15,7 @@ export const initSurveySchema = surveySubmissionSchema.pick({
 });
 
 export const completeSurveySchema = z.object({
+  token: z.string().uuid(),
   aboutYou: aboutYouSurveySchema,
   family: familySurveySchema,
   journey: journeySurveySchema,

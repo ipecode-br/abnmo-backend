@@ -19,10 +19,7 @@ export const aboutYouSurveySchema = surveySchema
     hasLivedElsewhere: true,
     livedElsewhereDescription: true,
   })
-  .extend({
-    cpf: cpfSchema,
-    susId: susIdSchema,
-  })
+  .extend({ cpf: cpfSchema, susId: susIdSchema.nullable() })
   .superRefine((data, ctx) => {
     if (
       !validateDate(data.dateOfBirth, { startYear: DATE_OF_BIRTH_START_YEAR })

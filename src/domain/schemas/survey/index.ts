@@ -33,6 +33,7 @@ import {
   SICKNESS_BENEFIT_STATUSES,
   SPECIALTIES_BEFORE_DIAGNOSIS,
   STUDY_INTERRUPTION_SITUATIONS,
+  SURVEY_STATUSES,
   SURVEY_SUBMISSION_STATUSES,
   TIME_UNITS,
   TRANSPORT_MODES,
@@ -55,7 +56,9 @@ export const surveySubmissionSchema = baseEntitySchema
   .strict();
 
 export const surveySchema = baseEntitySchema.extend({
+  // Base
   userId: z.string().uuid(),
+  status: z.enum(SURVEY_STATUSES).default('pending_signature'),
   // About
   dateOfBirth: z.coerce.date(),
   gender: z.enum(GENDERS),
@@ -163,3 +166,6 @@ export const surveySchema = baseEntitySchema.extend({
   dreams: z.string().max(800),
   additionalInfo: z.string().max(800),
 });
+
+export type SurveySubmissionSchema = z.infer<typeof surveySubmissionSchema>;
+export type SurveySchema = z.infer<typeof surveySchema>;

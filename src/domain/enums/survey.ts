@@ -4,8 +4,11 @@ export const SURVEY_SUBMISSION_STATUSES = [
   'approved',
   'completed',
 ] as const;
-export type surveySubmissionStatus =
+export type SurveySubmissionStatus =
   (typeof SURVEY_SUBMISSION_STATUSES)[number];
+
+export const SURVEY_STATUSES = ['pending_signature', 'completed'] as const;
+export type SubmissionStatus = (typeof SURVEY_STATUSES)[number];
 
 export const GENDERS = [
   'male_cis',

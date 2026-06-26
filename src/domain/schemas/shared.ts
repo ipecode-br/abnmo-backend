@@ -21,7 +21,7 @@ export const avatarSchema = z.string().url();
 
 export const cpfSchema = z
   .string()
-  .length(8)
+  .length(11)
   .regex(ONLY_NUMBERS_REGEX, 'Only numbers are accepted');
 
 export const susIdSchema = z

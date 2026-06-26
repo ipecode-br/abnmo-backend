@@ -4,9 +4,11 @@ import { USER_FEATURES, USER_ROLES, USER_STATUSES } from '@/domain/enums/users';
 
 import { baseEntitySchema } from '../base';
 import {
+  cpfSchema,
   emailSchema,
   nameSchema,
   specialtySchema,
+  susIdSchema,
   userRegistrationId,
 } from '../shared';
 
@@ -21,6 +23,8 @@ export const userSchema = baseEntitySchema
     status: z.enum(USER_STATUSES).default('active'),
     specialty: specialtySchema.nullable(),
     registrationId: userRegistrationId.nullable(),
+    cpf: cpfSchema.nullable(),
+    susId: susIdSchema.nullable(),
   })
   .strict();
 export type UserSchema = z.infer<typeof userSchema>;

@@ -16,13 +16,18 @@ import { FileValidationPipe } from '@/common/file-validation.pipe';
 import { Log } from '@/common/log/log.decorator';
 import { MIME_TYPES } from '@/constants/mime-types';
 
-import { InitSurveyDto } from './survey.dtos';
+import { CompleteSurveyBody, InitSurveyBody } from './survey.dtos';
+import { CompleteSurveyUseCase } from './use-cases/complete-survey.use-case';
+import { InitSurveyUseCase } from './use-cases/init-survey.use-case';
 
 @Public()
 @ApiTags('Catalogação')
-@Controller('survey')
+@Controller('surveys')
 export class SurveyController {
-  constructor() {}
+  constructor(
+    private readonly initSurveyUseCase: InitSurveyUseCase,
+    private readonly completeSurveyUseCase: CompleteSurveyUseCase,
+  ) {}
 
   @Post('/init')
   @Log('init_survey')
@@ -30,7 +35,7 @@ export class SurveyController {
   @ApiOperation({ summary: 'Inicia o formulário de catalogação' })
   @ZodResponse({ type: BaseResponse, status: 201 })
   async initSurvey(
-    @Body() body: InitSurveyDto,
+    @Body() body: InitSurveyBody,
     @UploadedFile(
       new FileValidationPipe({
         maxSize: 4 * 1024 * 1024, // 4mb
@@ -44,13 +49,29 @@ export class SurveyController {
     )
     medicalReport: Express.Multer.File,
   ): Promise<BaseResponse> {
-    console.log({ body, medicalReport });
+    // TODO: handle medicalReport upload
+    void medicalReport;
 
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await this.initSurveyUseCase.execute(body);
 
     return {
       success: true,
       message: 'Catalogação iniciada com sucesso.',
+    };
+  }
+
+  @Post('/complete')
+  @Log('complete_survey')
+  @ApiOperation({ summary: 'Finaliza o formulário de catalogação' })
+  @ZodResponse({ type: BaseResponse, status: 201 })
+  async completeSurvey(
+    @Body() body: CompleteSurveyBody,
+  ): Promise<BaseResponse> {
+    await this.completeSurveyUseCase.execute(body);
+
+    return {
+      success: true,
+      message: 'Catalogação enviada com sucesso.',
     };
   }
 }

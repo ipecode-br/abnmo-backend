@@ -1,4 +1,4 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, OneToOne } from 'typeorm';
 
 import { SPECIALTY_CATEGORIES, type SpecialtyCategory } from '../enums/shared';
 import {
@@ -10,6 +10,7 @@ import {
 } from '../enums/users';
 import type { UserSchema } from '../schemas/users';
 import { BaseEntity } from './base';
+import { Survey } from './survey';
 
 @Entity('users')
 export class User extends BaseEntity implements UserSchema {
@@ -40,4 +41,13 @@ export class User extends BaseEntity implements UserSchema {
 
   @Column({ type: 'varchar', length: 32, nullable: true, unique: true })
   registrationId: string | null;
+
+  @Column({ type: 'varchar', length: 11, nullable: true, unique: true })
+  cpf: string | null;
+
+  @Column({ type: 'varchar', length: 15, nullable: true })
+  susId: string | null;
+
+  @OneToOne(() => Survey, (survey) => survey.user)
+  survey: Survey | null;
 }

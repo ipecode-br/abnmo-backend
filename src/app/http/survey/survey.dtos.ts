@@ -1,5 +1,10 @@
 import { createZodDto } from 'nestjs-zod';
 
-import { initSurveySchema } from '@/domain/schemas/survey/requests';
+import {
+  completeSurveySchema,
+  initSurveySchema,
+} from '@/domain/schemas/survey/requests';
 
-export class InitSurveyDto extends createZodDto(initSurveySchema) {}
+export class InitSurveyBody extends createZodDto(initSurveySchema) {}
+
+export class CompleteSurveyBody extends createZodDto(completeSurveySchema) {}
