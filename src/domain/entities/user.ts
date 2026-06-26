@@ -8,6 +8,7 @@ import {
   type UserRole,
   type UserStatus,
 } from '../enums/users';
+import type { SupportContact } from '../schemas/shared';
 import type { UserSchema } from '../schemas/users';
 import { BaseEntity } from './base';
 import { Survey } from './survey';
@@ -47,6 +48,9 @@ export class User extends BaseEntity implements UserSchema {
 
   @Column({ type: 'varchar', length: 15, nullable: true })
   susId: string | null;
+
+  @Column({ type: 'json', nullable: true })
+  supportContacts: SupportContact[] | null;
 
   @OneToOne(() => Survey, (survey) => survey.user)
   survey: Survey | null;

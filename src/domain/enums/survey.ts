@@ -10,6 +10,8 @@ export type SurveySubmissionStatus =
 export const SURVEY_STATUSES = ['pending_signature', 'completed'] as const;
 export type SubmissionStatus = (typeof SURVEY_STATUSES)[number];
 
+// About
+
 export const GENDERS = [
   'male_cis',
   'female_cis',
@@ -39,6 +41,8 @@ export const MARITAL_STATUSES = [
   'widowed',
 ] as const;
 export type MaritalStatus = (typeof MARITAL_STATUSES)[number];
+
+// Family
 
 export const CHILDREN_SCHOOL_SUPPORT_SITUATIONS = [
   'no_school_age_children',
@@ -87,6 +91,21 @@ export const TRANSPORT_MODES = [
   'public_transport',
 ] as const;
 export type TransportMode = (typeof TRANSPORT_MODES)[number];
+
+export const KINSHIP_TYPES = [
+  'grandparent',
+  'spouse',
+  'children',
+  'sibling',
+  'parent',
+  'cousin',
+  'nephew_niece',
+  'uncle_aunt',
+  'other',
+] as const;
+export type KinshipType = (typeof KINSHIP_TYPES)[number];
+
+// Journey
 
 export const EDUCATION_LEVELS = [
   'no_literacy',

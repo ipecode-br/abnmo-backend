@@ -103,6 +103,7 @@ export class CompleteSurveyUseCase {
         password,
         role: 'patient',
         susId,
+        supportContacts: input.supportContacts,
       });
       await userDataSource.save(user);
 

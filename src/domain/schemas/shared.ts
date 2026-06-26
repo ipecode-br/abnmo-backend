@@ -4,6 +4,7 @@ import { ONLY_NUMBERS_REGEX } from '@/constants/regex';
 
 import { PATIENT_CONDITIONS } from '../enums/patients';
 import { SPECIALTY_CATEGORIES } from '../enums/shared';
+import { KINSHIP_TYPES } from '../enums/survey';
 import { USER_ROLES } from '../enums/users';
 
 export const nameSchema = z.string().min(3).max(64);
@@ -42,3 +43,10 @@ export const cepSchema = z
 export const patientConditionSchema = z.enum(PATIENT_CONDITIONS);
 
 export const specialtySchema = z.enum(SPECIALTY_CATEGORIES);
+
+export const supportContactSchema = z.object({
+  name: nameSchema,
+  kinship: z.enum(KINSHIP_TYPES),
+  phone: phoneSchema,
+});
+export type SupportContact = z.infer<typeof supportContactSchema>;

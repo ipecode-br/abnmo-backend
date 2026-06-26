@@ -8,6 +8,7 @@ import {
   emailSchema,
   nameSchema,
   specialtySchema,
+  supportContactSchema,
   susIdSchema,
   userRegistrationId,
 } from '../shared';
@@ -25,6 +26,7 @@ export const userSchema = baseEntitySchema
     registrationId: userRegistrationId.nullable(),
     cpf: cpfSchema.nullable(),
     susId: susIdSchema.nullable(),
+    supportContacts: z.array(supportContactSchema).nullable(),
   })
   .strict();
 export type UserSchema = z.infer<typeof userSchema>;

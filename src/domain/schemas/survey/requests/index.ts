@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { supportContactSchema } from '../../shared';
 import { surveySubmissionSchema } from '..';
 import { aboutYouSurveySchema } from './about-you';
 import { dailyLifeSurveySchema } from './daily-life';
@@ -22,4 +23,5 @@ export const completeSurveySchema = z.object({
   diagnosis: diagnosisSurveySchema,
   followUp: followUpSurveySchema,
   dailyLife: dailyLifeSurveySchema,
+  supportContacts: z.array(supportContactSchema).min(1),
 });
