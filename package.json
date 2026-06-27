@@ -16,7 +16,7 @@
     "services:wait:database": "ts-node ./infra/scripts/wait-for-database.ts",
     "db:generate": "ts-node ./infra/scripts/generate-migration.ts",
     "db:migrate": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js -d ./infra/database/data.source.ts migration:run",
-    "db:seed-dev": "ts-node -r tsconfig-paths/register infra/database/seed-dev.ts",
+    "db:seed-dev": "ts-node -r tsconfig-paths/register infra/scripts/seed-dev/index.ts",
     "test:prepare": "docker compose -f infra/docker/compose-test.yaml --env-file .env.test up -d && NODE_ENV=test npm run services:wait:database && NODE_ENV=test npm run db:migrate",
     "test:e2e": "NODE_ENV=test jest --config ./tests/config/jest-e2e.json --runInBand --detectOpenHandles",
     "test:e2e:watch": "NODE_ENV=test jest --config ./tests/config/jest-e2e.json --runInBand --detectOpenHandles --watch",

@@ -89,7 +89,7 @@ export class Survey extends BaseEntity implements SurveySchema {
   @Column({ type: 'enum', enum: SURVEY_STATUSES, default: 'pending_signature' })
   status: SubmissionStatus;
 
-  // Abbout
+  // About
 
   @Column({ type: 'date' })
   dateOfBirth: Date;
