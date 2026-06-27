@@ -1,4 +1,4 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 
 import {
   SURVEY_SUBMISSION_STATUSES,
@@ -6,6 +6,7 @@ import {
 } from '../enums/survey';
 import type { SurveySubmissionSchema } from '../schemas/survey';
 import { BaseEntity } from './base';
+import { User } from './user';
 
 @Entity('survey_submissions')
 export class SurveySubmission
@@ -30,5 +31,9 @@ export class SurveySubmission
   status: SurveySubmissionStatus;
 
   @Column({ type: 'uuid', nullable: true })
-  approvedBy: string | null;
+  approvedById: string | null;
+
+  @ManyToOne(() => User, { onDelete: 'SET NULL' })
+  @JoinColumn()
+  approvedBy: User | null;
 }

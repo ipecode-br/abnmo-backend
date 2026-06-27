@@ -1,4 +1,4 @@
-import { Column, Entity, OneToOne } from 'typeorm';
+import { Column, Entity, OneToMany, OneToOne } from 'typeorm';
 
 import { SPECIALTY_CATEGORIES, type SpecialtyCategory } from '../enums/shared';
 import {
@@ -12,6 +12,7 @@ import type { SupportContact } from '../schemas/shared';
 import type { UserSchema } from '../schemas/users';
 import { BaseEntity } from './base';
 import { Survey } from './survey';
+import { SurveySubmission } from './survey-submission';
 
 @Entity('users')
 export class User extends BaseEntity implements UserSchema {
@@ -54,4 +55,7 @@ export class User extends BaseEntity implements UserSchema {
 
   @OneToOne(() => Survey, (survey) => survey.user)
   survey: Survey | null;
+
+  @OneToMany(() => SurveySubmission, (submission) => submission.approvedBy)
+  surveySubmissionsApproved: SurveySubmission[];
 }

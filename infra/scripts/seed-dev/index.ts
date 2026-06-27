@@ -119,7 +119,7 @@ async function main() {
         surveySubmissionRepository,
         {
           status: surveyStatus === 'completed' ? 'completed' : 'approved',
-          approvedBy: ADMIN_USER.id,
+          approvedById: ADMIN_USER.id,
         },
       );
       await surveySubmissionRepository.save(submission);

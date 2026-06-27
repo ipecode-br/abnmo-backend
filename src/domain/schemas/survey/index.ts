@@ -51,9 +51,10 @@ export const surveySubmissionSchema = baseEntitySchema
     email: emailSchema,
     phone: phoneSchema,
     status: z.enum(SURVEY_SUBMISSION_STATUSES).default('pending'),
-    approvedBy: z.string().uuid().nullable(),
+    approvedById: z.string().uuid().nullable(),
   })
   .strict();
+export type SurveySubmissionSchema = z.infer<typeof surveySubmissionSchema>;
 
 export const surveySchema = baseEntitySchema.extend({
   // Base
@@ -166,6 +167,4 @@ export const surveySchema = baseEntitySchema.extend({
   dreams: z.string().max(800),
   additionalInfo: z.string().max(800),
 });
-
-export type SurveySubmissionSchema = z.infer<typeof surveySubmissionSchema>;
 export type SurveySchema = z.infer<typeof surveySchema>;
