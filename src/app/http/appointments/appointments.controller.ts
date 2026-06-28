@@ -8,7 +8,8 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ZodResponse } from 'nestjs-zod';
 
 import { Roles } from '@/common/decorators/roles.decorator';
 import { User } from '@/common/decorators/user.decorator';
@@ -40,7 +41,7 @@ export class AppointmentsController {
 
   @Get()
   @ApiOperation({ summary: 'Lista todos os atendimentos' })
-  @ApiResponse({ type: GetAppointmentsResponse })
+  @ZodResponse({ type: GetAppointmentsResponse, status: 200 })
   async getAppointments(
     @Query() query: GetAppointmentsQuery,
     @User() user: RequestUser,
@@ -57,7 +58,7 @@ export class AppointmentsController {
   @Post()
   @Log('create_appointment')
   @ApiOperation({ summary: 'Cadastra um novo atendimento' })
-  @ApiResponse({ type: BaseResponse })
+  @ZodResponse({ type: BaseResponse, status: 201 })
   async create(
     @User() user: RequestUser,
     @Body() createAppointmentDto: CreateAppointmentDto,
@@ -76,7 +77,7 @@ export class AppointmentsController {
   @Put(':id')
   @Log('update_appointment')
   @ApiOperation({ summary: 'Atualiza os dados do atendimento' })
-  @ApiResponse({ type: BaseResponse })
+  @ZodResponse({ type: BaseResponse, status: 204 })
   public async update(
     @Param('id') id: string,
     @Body() updateAppointmentDto: UpdateAppointmentDto,
@@ -95,7 +96,7 @@ export class AppointmentsController {
   @Patch(':id/cancel')
   @Log('cancel_appointment')
   @ApiOperation({ summary: 'Cancela o atendimento' })
-  @ApiResponse({ type: BaseResponse })
+  @ZodResponse({ type: BaseResponse, status: 204 })
   async cancel(@Param('id') id: string): Promise<BaseResponse> {
     await this.cancelAppointmentUseCase.execute({ id });
 

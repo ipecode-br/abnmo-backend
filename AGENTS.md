@@ -34,6 +34,22 @@ NestJS + TypeORM + MySQL + Zod API.
 - Portuguese (pt-BR) user messages, English log messages
 - Format: `{ success: boolean, message: string, data?: ... }`
 
+### Response validation
+
+- All controller methods **must** use `@ZodResponse({ type: ResponseDto, status: N })` from `nestjs-zod`
+- Never use `@ApiResponse` directly — it lacks runtime serialization and does not prevent data leakage
+- `@ZodResponse` validates the response body against the DTO schema via the global `ZodSerializerInterceptor`
+- Every `@ZodResponse` **must** include an explicit `status` code:
+
+| HTTP  | When                                                                                                                         |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `200` | Endpoint that returns resource data (GET list/detail, action that returns data)                                              |
+| `201` | POST that creates a resource (`register/user`, `create-appointment`, `create-referral`, etc.)                                |
+| `204` | PUT / PATCH / DELETE that modifies or removes a resource without returning data (`update`, `deactivate`, `cancel`, `logout`) |
+
+- Do **not** inject `@Res()` response objects manually — use NestJS return values + HTTP exceptions
+- **Exception**: `GET /status` uses `@ApiResponse` + `@Res()` (not `@ZodResponse`) because it needs dynamic HTTP status — 200 when OK, 503 when services are down; it validates the response manually via `getStatusResponseSchema.parse()`
+
 ## Database
 
 - **synchronize: false** — migrations only

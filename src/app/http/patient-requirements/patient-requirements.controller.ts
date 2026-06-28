@@ -7,7 +7,8 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ZodResponse } from 'nestjs-zod';
 
 import { Roles } from '@/common/decorators/roles.decorator';
 import { User } from '@/common/decorators/user.decorator';
@@ -42,7 +43,7 @@ export class PatientRequirementsController {
 
   @Get()
   @ApiOperation({ summary: 'Lista todas as solicitações' })
-  @ApiResponse({ type: GetPatientRequirementsResponse })
+  @ZodResponse({ type: GetPatientRequirementsResponse, status: 200 })
   async getPatientRequirements(
     @Query() query: GetPatientRequirementsQuery,
   ): Promise<GetPatientRequirementsResponse> {
@@ -59,7 +60,7 @@ export class PatientRequirementsController {
   @ApiOperation({
     summary: 'Lista todas as solicitações do paciente autenticado',
   })
-  @ApiResponse({ type: GetPatientRequirementsByPatientIdResponse })
+  @ZodResponse({ type: GetPatientRequirementsByPatientIdResponse, status: 200 })
   async getPatientRequirementsLogged(
     @User() user: RequestUser,
     @Query() query: GetPatientRequirementsByPatientIdQuery,
@@ -79,7 +80,7 @@ export class PatientRequirementsController {
   @Post()
   @Log('create_patient_requirement')
   @ApiOperation({ summary: 'Cadastra uma nova solicitação' })
-  @ApiResponse({ type: BaseResponse })
+  @ZodResponse({ type: BaseResponse, status: 201 })
   async create(
     @User() user: RequestUser,
     @Body() createPatientRequirementDto: CreatePatientRequirementDto,
@@ -98,7 +99,7 @@ export class PatientRequirementsController {
   @Patch(':id/approve')
   @Log('approve_patient_requirement')
   @ApiOperation({ summary: 'Aprova a solicitação' })
-  @ApiResponse({ type: BaseResponse })
+  @ZodResponse({ type: BaseResponse, status: 204 })
   async approve(
     @Param('id') id: string,
     @User() user: RequestUser,
@@ -114,7 +115,7 @@ export class PatientRequirementsController {
   @Patch(':id/decline')
   @Log('decline_patient_requirement')
   @ApiOperation({ summary: 'Recusa a solicitação' })
-  @ApiResponse({ type: BaseResponse })
+  @ZodResponse({ type: BaseResponse, status: 204 })
   async decline(
     @Param('id') id: string,
     @User() user: RequestUser,

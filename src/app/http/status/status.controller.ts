@@ -4,6 +4,7 @@ import { Response } from 'express';
 
 import { Public } from '@/common/decorators/public.decorator';
 import { Log } from '@/common/log/log.decorator';
+import { getStatusResponseSchema } from '@/domain/schemas/status/responses';
 
 import { GetStatusResponse } from './status.dtos';
 import { GetStatusUseCase } from './use-cases/get-status.use-case';
@@ -17,7 +18,7 @@ export class StatusController {
   @Get('status')
   @Log('get_status')
   @ApiOperation({ summary: 'Verifica o status do sistema e do banco de dados' })
-  @ApiResponse({ type: GetStatusResponse })
+  @ApiResponse({ type: GetStatusResponse, status: 200 })
   async getStatus(@Res() res: Response): Promise<void> {
     const result = await this.getStatusUseCase.execute();
 
@@ -26,6 +27,8 @@ export class StatusController {
       return;
     }
 
-    res.json(result);
+    const parsedResult = getStatusResponseSchema.parse(result);
+
+    res.json(parsedResult);
   }
 }

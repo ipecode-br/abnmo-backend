@@ -8,7 +8,8 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ZodResponse } from 'nestjs-zod';
 
 import { Roles } from '@/common/decorators/roles.decorator';
 import { User } from '@/common/decorators/user.decorator';
@@ -40,7 +41,7 @@ export class ReferralsController {
 
   @Get()
   @ApiOperation({ summary: 'Lista todos os encaminhamentos' })
-  @ApiResponse({ type: GetReferralsResponse })
+  @ZodResponse({ type: GetReferralsResponse, status: 200 })
   async getReferrals(
     @Query() query: GetReferralsQuery,
     @User() user: RequestUser,
@@ -57,7 +58,7 @@ export class ReferralsController {
   @Post()
   @Log('create_referral')
   @ApiOperation({ summary: 'Cadastra um novo encaminhamento' })
-  @ApiResponse({ type: BaseResponse })
+  @ZodResponse({ type: BaseResponse, status: 201 })
   async create(
     @User() user: RequestUser,
     @Body() createReferralDto: CreateReferralDto,
@@ -70,7 +71,7 @@ export class ReferralsController {
   @Put(':id')
   @Log('update_referral')
   @ApiOperation({ summary: 'Atualiza os dados do encaminhamento' })
-  @ApiResponse({ type: BaseResponse })
+  @ZodResponse({ type: BaseResponse, status: 204 })
   public async update(
     @Param('id') id: string,
     @Body() updateReferralDto: UpdateReferralDto,
@@ -86,7 +87,7 @@ export class ReferralsController {
   @Patch(':id/cancel')
   @Log('cancel_referral')
   @ApiOperation({ summary: 'Cancela o encaminhamento' })
-  @ApiResponse({ type: BaseResponse })
+  @ZodResponse({ type: BaseResponse, status: 204 })
   async cancel(@Param('id') id: string): Promise<BaseResponse> {
     await this.cancelReferralUseCase.execute({ id });
 

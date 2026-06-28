@@ -44,7 +44,7 @@ export class AuthController {
   @Public()
   @Log('sign_in')
   @ApiOperation({ summary: 'Inicia a sessão do usuário ou paciente' })
-  @ZodResponse({ type: SignInWithEmailResponse, status: 201 })
+  @ZodResponse({ type: SignInWithEmailResponse, status: 200 })
   async login(
     @Body() body: SignInWithEmailBody,
     @Res({ passthrough: true }) response: Response,
@@ -96,7 +96,7 @@ export class AuthController {
   @Public()
   @Log('recover_password')
   @ApiOperation({ summary: 'Solicita recuperação de senha' })
-  @ZodResponse({ type: BaseResponse, status: 201 })
+  @ZodResponse({ type: BaseResponse, status: 200 })
   async recoverPassword(
     @Body() body: RecoverPasswordBody,
   ): Promise<BaseResponse> {
@@ -113,7 +113,7 @@ export class AuthController {
   @Public()
   @Log('reset_password')
   @ApiOperation({ summary: 'Solicita redefinição de senha' })
-  @ZodResponse({ type: BaseResponse, status: 201 })
+  @ZodResponse({ type: BaseResponse, status: 200 })
   async resetPassword(
     @Body() body: ResetPasswordBody,
     @Res({ passthrough: true }) response: Response,
@@ -132,7 +132,7 @@ export class AuthController {
   @ApiOperation({
     summary: 'Altera a senha do usuário ou paciente autenticado',
   })
-  @ZodResponse({ type: BaseResponse })
+  @ZodResponse({ type: BaseResponse, status: 204 })
   async changePassword(
     @User() user: RequestUser,
     @Body() body: ChangePasswordBody,
@@ -149,7 +149,7 @@ export class AuthController {
   @Roles(['all'])
   @Log('logout')
   @ApiOperation({ summary: 'Encerra a sessão do usuário ou paciente' })
-  @ZodResponse({ type: BaseResponse })
+  @ZodResponse({ type: BaseResponse, status: 204 })
   async logout(
     @Cookies(COOKIES_MAPPING.refreshToken) refreshToken: string,
     @Res({ passthrough: true }) response: Response,

@@ -45,7 +45,7 @@ export class PatientsController {
   @Get()
   @RequireFeature('read:patient:others')
   @ApiOperation({ summary: 'Lista todos os pacientes' })
-  @ZodResponse({ type: GetPatientsResponse })
+  @ZodResponse({ type: GetPatientsResponse, status: 200 })
   async getPatients(
     @Query() query: GetPatientsQuery,
   ): Promise<GetPatientsResponse> {
@@ -63,7 +63,7 @@ export class PatientsController {
   @ApiOperation({
     summary: 'Retorna uma lista de opções com todos os pacientes ativos',
   })
-  @ZodResponse({ type: GetPatientOptionsResponse })
+  @ZodResponse({ type: GetPatientOptionsResponse, status: 200 })
   async getPatientOptions(): Promise<GetPatientOptionsResponse> {
     const data = await this.getPatientOptionsUseCase.execute();
 
@@ -77,7 +77,7 @@ export class PatientsController {
   @Get(':id')
   @RequireFeature('read:patient')
   @ApiOperation({ summary: 'Retorna os dados do paciente' })
-  @ZodResponse({ type: GetPatientResponse })
+  @ZodResponse({ type: GetPatientResponse, status: 200 })
   async getPatientById(@Param('id') id: string): Promise<GetPatientResponse> {
     const data = await this.getPatientUseCase.execute({ id });
 
@@ -92,7 +92,7 @@ export class PatientsController {
   @Log('update_patient')
   @RequireFeature('update:patient:others')
   @ApiOperation({ summary: 'Atualiza os dados do paciente' })
-  @ZodResponse({ type: BaseResponse })
+  @ZodResponse({ type: BaseResponse, status: 204 })
   async update(
     @Param('id') id: string,
     @User() user: RequestUser,
@@ -110,7 +110,7 @@ export class PatientsController {
   @Log('deactivate_patient')
   @RequireFeature('deactivate:patient')
   @ApiOperation({ summary: 'Inativa o paciente' })
-  @ZodResponse({ type: BaseResponse })
+  @ZodResponse({ type: BaseResponse, status: 204 })
   async deactivatePatient(
     @Param('id') id: string,
     @User() user: RequestUser,
