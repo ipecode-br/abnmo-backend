@@ -16,11 +16,11 @@ import { Survey } from '@/domain/entities/survey';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
 import { User } from '@/domain/entities/user';
 
-import { CompleteSurveyBody } from '../surveys.dtos';
+import { CreateSurveyBody } from '../surveys.dtos';
 
 @Injectable()
 @Log()
-export class CompleteSurveyUseCase {
+export class CreateSurveyUseCase {
   constructor(
     @InjectDataSource()
     private readonly dataSource: DataSource,
@@ -32,7 +32,7 @@ export class CompleteSurveyUseCase {
     private readonly logger: LogService,
   ) {}
 
-  async execute(input: CompleteSurveyBody): Promise<void> {
+  async execute(input: CreateSurveyBody): Promise<void> {
     const submission = await this.surveySubmissionsRepository.findOne({
       where: { id: input.token },
     });

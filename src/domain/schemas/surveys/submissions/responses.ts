@@ -1,8 +1,7 @@
 import { z } from 'zod';
 
-import { baseResponseSchema } from '@/domain/schemas/base';
-
-import { userSchema } from '../users';
+import { baseResponseSchema } from '../../base';
+import { userSchema } from '../../users';
 import { surveySubmissionSchema } from '.';
 
 export const surveySubmissionResponseSchema = surveySubmissionSchema

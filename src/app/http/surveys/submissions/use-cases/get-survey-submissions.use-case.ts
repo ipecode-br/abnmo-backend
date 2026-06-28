@@ -14,8 +14,8 @@ import { QueryOrder } from '@/domain/enums/queries';
 import type {
   SurveySubmissionOrderBy,
   SurveySubmissionStatus,
-} from '@/domain/enums/surveys';
-import { SurveySubmissionResponse } from '@/domain/schemas/surveys/responses';
+} from '@/domain/enums/survey-submissions';
+import { SurveySubmissionResponse } from '@/domain/schemas/surveys/submissions/responses';
 
 interface GetSurveySubmissionsUseCaseInput {
   page: number;
@@ -68,7 +68,6 @@ export class GetSurveySubmissionsUseCase {
 
     if (search) {
       where.name = ILike(`%${search}%`);
-      where.email = ILike(`%${search}%`);
     }
 
     if (startDate && endDate) {

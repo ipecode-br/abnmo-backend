@@ -7,7 +7,7 @@ import { LogService } from '@/common/log/log.service';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
 import { User } from '@/domain/entities/user';
 
-interface InitSurveyUseCaseInput {
+interface CreateSurveySubmissionUseCaseInput {
   name: string;
   email: string;
   phone: string;
@@ -15,7 +15,7 @@ interface InitSurveyUseCaseInput {
 
 @Injectable()
 @Log()
-export class InitSurveyUseCase {
+export class CreateSurveySubmissionUseCase {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
@@ -24,7 +24,11 @@ export class InitSurveyUseCase {
     private readonly logger: LogService,
   ) {}
 
-  async execute({ name, email, phone }: InitSurveyUseCaseInput): Promise<void> {
+  async execute({
+    name,
+    email,
+    phone,
+  }: CreateSurveySubmissionUseCaseInput): Promise<void> {
     const findOptions = { select: { id: true }, where: { email } };
 
     const [userWithSameEmail, submissionWithSameEmail] = await Promise.all([

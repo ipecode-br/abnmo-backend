@@ -34,7 +34,6 @@ import {
   SPECIALTIES_BEFORE_DIAGNOSIS,
   STUDY_INTERRUPTION_SITUATIONS,
   SURVEY_STATUSES,
-  SURVEY_SUBMISSION_STATUSES,
   TIME_UNITS,
   TRANSPORT_MODES,
   TREATMENT_LOCATIONS,
@@ -43,18 +42,7 @@ import {
 } from '@/domain/enums/surveys';
 
 import { baseEntitySchema } from '../base';
-import { cepSchema, emailSchema, nameSchema, phoneSchema } from '../shared';
-
-export const surveySubmissionSchema = baseEntitySchema
-  .extend({
-    name: nameSchema,
-    email: emailSchema,
-    phone: phoneSchema,
-    status: z.enum(SURVEY_SUBMISSION_STATUSES).default('pending'),
-    approvedById: z.string().uuid().nullable(),
-  })
-  .strict();
-export type SurveySubmissionSchema = z.infer<typeof surveySubmissionSchema>;
+import { cepSchema } from '../shared';
 
 export const surveySchema = baseEntitySchema.extend({
   // Base

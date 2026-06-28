@@ -1,7 +1,6 @@
 import { z } from 'zod';
 
 import { supportContactSchema } from '../../shared';
-import { surveySubmissionSchema } from '..';
 import { aboutYouSurveySchema } from './about-you';
 import { dailyLifeSurveySchema } from './daily-life';
 import { diagnosisSurveySchema } from './diagnosis';
@@ -9,13 +8,7 @@ import { familySurveySchema } from './family';
 import { followUpSurveySchema } from './follow-up';
 import { journeySurveySchema } from './journey';
 
-export const initSurveySchema = surveySubmissionSchema.pick({
-  name: true,
-  email: true,
-  phone: true,
-});
-
-export const completeSurveySchema = z.object({
+export const createSurveySchema = z.object({
   token: z.string().uuid(),
   aboutYou: aboutYouSurveySchema,
   family: familySurveySchema,

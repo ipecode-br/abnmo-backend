@@ -12,6 +12,7 @@ import type {
   FollowUpSpecialty,
   InformationSource,
   SpecialtyBeforeDiagnosis,
+  SurveyStatus,
   TransportMode,
   VisualAssistiveTechnology,
 } from '../enums/surveys';
@@ -68,7 +69,6 @@ import {
   type SicknessBenefitStatus,
   STUDY_INTERRUPTION_SITUATIONS,
   type StudyInterruptionSituation,
-  type SubmissionStatus,
   SURVEY_STATUSES,
   TIME_UNITS,
   type TimeUnits,
@@ -87,7 +87,7 @@ export class Survey extends BaseEntity implements SurveySchema {
   userId: string;
 
   @Column({ type: 'enum', enum: SURVEY_STATUSES, default: 'pending_signature' })
-  status: SubmissionStatus;
+  status: SurveyStatus;
 
   // About
 
