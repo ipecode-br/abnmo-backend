@@ -1,16 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  Between,
-  type FindOptionsWhere,
-  IsNull,
-  LessThanOrEqual,
-  MoreThanOrEqual,
-  Not,
-  type Repository,
-} from 'typeorm';
+import { type Repository } from 'typeorm';
 
-import { Patient } from '@/domain/entities/patient';
+import { Referral } from '@/domain/entities/referral';
 import type { QueryPeriod } from '@/domain/enums/queries';
 import { getDateRangeForPeriod } from '@/utils/get-date-range-for-period';
 
@@ -23,8 +15,8 @@ interface GetTotalPatientsWithReferralsUseCaseInput {
 @Injectable()
 export class GetTotalPatientsWithReferralsUseCase {
   constructor(
-    @InjectRepository(Patient)
-    private readonly patientsRepository: Repository<Patient>,
+    @InjectRepository(Referral)
+    private readonly referralsRepository: Repository<Referral>,
   ) {}
 
   async execute({
@@ -32,26 +24,34 @@ export class GetTotalPatientsWithReferralsUseCase {
     startDate,
     endDate,
   }: GetTotalPatientsWithReferralsUseCaseInput = {}): Promise<number> {
-    const where: FindOptionsWhere<Patient> = {
-      referrals: { id: Not(IsNull()) },
-    };
+    const query = this.referralsRepository.createQueryBuilder('r');
 
     if (period) {
       const dateRange = getDateRangeForPeriod(period);
-      where.createdAt = Between(dateRange.startDate, dateRange.endDate);
+      query.andWhere('r.createdAt BETWEEN :start AND :end', {
+        start: dateRange.startDate,
+        end: dateRange.endDate,
+      });
     }
 
     if (startDate && !endDate) {
-      where.createdAt = MoreThanOrEqual(startDate);
+      query.andWhere('r.createdAt >= :startDate', { startDate });
     }
 
     if (endDate && !startDate) {
-      where.createdAt = LessThanOrEqual(endDate);
+      query.andWhere('r.createdAt <= :endDate', { endDate });
     }
 
     if (startDate && endDate) {
-      where.createdAt = Between(startDate, endDate);
+      query.andWhere('r.createdAt BETWEEN :start AND :end', {
+        start: startDate,
+        end: endDate,
+      });
     }
-    return await this.patientsRepository.count({ where });
+
+    query.select('COUNT(DISTINCT r.patientId)', 'count');
+
+    const result = await query.getRawOne<{ count: string }>();
+    return Number(result?.count ?? 0);
   }
 }

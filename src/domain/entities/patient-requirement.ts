@@ -15,7 +15,7 @@ import {
   type PatientRequirementType,
 } from '../enums/patient-requirements';
 import type { PatientRequirementSchema } from '../schemas/patient-requirement';
-import { Patient } from './patient';
+import { User } from './user';
 
 @Entity('patient_requirements')
 export class PatientRequirement implements PatientRequirementSchema {
@@ -65,7 +65,7 @@ export class PatientRequirement implements PatientRequirementSchema {
   @UpdateDateColumn({ type: 'datetime' })
   updatedAt: Date;
 
-  @ManyToOne(() => Patient, (patient) => patient.requirements)
+  @ManyToOne(() => User)
   @JoinColumn()
-  patient: Patient;
+  patient: User;
 }

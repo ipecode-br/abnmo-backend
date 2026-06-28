@@ -15,7 +15,7 @@ import {
 import { PATIENT_CONDITIONS, type PatientCondition } from '../enums/patients';
 import { SPECIALTY_CATEGORIES, type SpecialtyCategory } from '../enums/shared';
 import type { AppointmentSchema } from '../schemas/appointments';
-import { Patient } from './patient';
+import { User } from './user';
 
 @Entity('appointments')
 export class Appointment implements AppointmentSchema {
@@ -55,7 +55,7 @@ export class Appointment implements AppointmentSchema {
   @UpdateDateColumn({ type: 'datetime' })
   updatedAt: Date;
 
-  @ManyToOne(() => Patient, (patient) => patient.appointments)
+  @ManyToOne(() => User)
   @JoinColumn()
-  patient: Patient;
+  patient: User;
 }

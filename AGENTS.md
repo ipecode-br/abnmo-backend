@@ -4,13 +4,13 @@ NestJS + TypeORM + MySQL + Zod API.
 
 ## Quick commands
 
-| Command | What it does |
-|---|---|
-| `npm run dev` | Docker up → wait for DB → migrate → `nest start --watch` |
-| `npm run test:prepare && npm run test:e2e` | Full E2E run |
-| `npm run lint:eslint:check` | ESLint **+** `tsc --noEmit` (both in one command) |
-| `npm run lint:prettier:check` | Prettier check only |
-| `npm run lint:prettier:fix` | Prettier fix only |
+| Command                                    | What it does                                             |
+| ------------------------------------------ | -------------------------------------------------------- |
+| `npm run dev`                              | Docker up → wait for DB → migrate → `nest start --watch` |
+| `npm run test:prepare && npm run test:e2e` | Full E2E run                                             |
+| `npm run lint:eslint:check`                | ESLint **+** `tsc --noEmit` (both in one command)        |
+| `npm run lint:prettier:check`              | Prettier check only                                      |
+| `npm run lint:prettier:fix`                | Prettier fix only                                        |
 
 ## Architecture
 
@@ -66,7 +66,9 @@ Import `createZodDto` from `nestjs-zod`, pass the Zod schema — never define fi
 import { createZodDto } from 'nestjs-zod';
 import { createAppointmentSchema } from '@/domain/schemas/appointments/requests';
 
-export class CreateAppointmentBody extends createZodDto(createAppointmentSchema) {}
+export class CreateAppointmentBody extends createZodDto(
+  createAppointmentSchema,
+) {}
 ```
 
 ### Schema reuse
@@ -75,25 +77,25 @@ Prefer `.pick()`, `.extend()`, or `.merge()` from existing schemas before defini
 
 ### Shared modules
 
-| Module | When to import |
-|---|---|
+| Module               | When to import        |
+| -------------------- | --------------------- |
 | `CryptographyModule` | Hashing, JWT, cookies |
-| `MailModule` | Sending emails |
-| `EnvModule` | Accessing env vars |
-| `StorageModule` | File uploads |
+| `MailModule`         | Sending emails        |
+| `EnvModule`          | Accessing env vars    |
+| `StorageModule`      | File uploads          |
 
 `LogModule` is global — never import it.
 
 ### Exception mapping
 
-| Exception | HTTP | When |
-|---|---|---|
-| `NotFoundException` | 404 | Entity not found by ID |
-| `UnauthorizedException` | 401 | Bad credentials, expired token |
-| `ForbiddenException` | 403 | Permission/ownership violation |
-| `BadRequestException` | 400 | Business rule violation |
-| `ConflictException` | 409 | Duplicate email, CPF, etc. |
-| `ServiceUnavailableException` | 503 | External service (email, S3) |
+| Exception                     | HTTP | When                           |
+| ----------------------------- | ---- | ------------------------------ |
+| `NotFoundException`           | 404  | Entity not found by ID         |
+| `UnauthorizedException`       | 401  | Bad credentials, expired token |
+| `ForbiddenException`          | 403  | Permission/ownership violation |
+| `BadRequestException`         | 400  | Business rule violation        |
+| `ConflictException`           | 409  | Duplicate email, CPF, etc.     |
+| `ServiceUnavailableException` | 503  | External service (email, S3)   |
 
 ### Use-case ownership checks
 

@@ -9,7 +9,6 @@ import type { Repository } from 'typeorm';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import type { RequestUser } from '@/common/types';
-import { Patient } from '@/domain/entities/patient';
 import { Referral } from '@/domain/entities/referral';
 import { User } from '@/domain/entities/user';
 import type { PatientCondition } from '@/domain/enums/patients';
@@ -29,8 +28,6 @@ interface CreateReferralUseCaseInput {
 @Log()
 export class CreateReferralUseCase {
   constructor(
-    @InjectRepository(Patient)
-    private readonly patientsRepository: Repository<Patient>,
     @InjectRepository(Referral)
     private readonly referralsRepository: Repository<Referral>,
     @InjectRepository(User)
@@ -47,8 +44,8 @@ export class CreateReferralUseCase {
     category,
     professionalName,
   }: CreateReferralUseCaseInput): Promise<void> {
-    const patient = await this.patientsRepository.findOne({
-      where: { id: patientId },
+    const patient = await this.usersRepository.findOne({
+      where: { id: patientId, role: 'patient' },
       select: { id: true },
     });
 

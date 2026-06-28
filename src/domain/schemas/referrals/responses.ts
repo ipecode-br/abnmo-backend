@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import { baseResponseSchema } from '../base';
-import { patientSchema } from '../patients';
+import { userSchema } from '../users';
 import { referralSchema } from '.';
 
 export const getReferralsResponseSchema = baseResponseSchema.extend({
@@ -22,7 +22,7 @@ export const getReferralsResponseSchema = baseResponseSchema.extend({
           updatedAt: true,
         })
         .extend({
-          patient: patientSchema.pick({
+          patient: userSchema.pick({
             name: true,
             email: true,
             avatarUrl: true,

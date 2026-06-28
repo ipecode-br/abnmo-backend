@@ -2,7 +2,6 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -22,9 +21,6 @@ import {
   type PatientRace,
   type PatientStatus,
 } from '../enums/patients';
-import { Appointment } from './appointment';
-import { PatientRequirement } from './patient-requirement';
-import { Referral } from './referral';
 
 @Entity('patients')
 export class Patient {
@@ -90,13 +86,4 @@ export class Patient {
 
   @UpdateDateColumn({ type: 'datetime' })
   updatedAt: Date;
-
-  @OneToMany(() => Appointment, (appointment) => appointment.patient)
-  appointments: Appointment[];
-
-  @OneToMany(() => Referral, (referral) => referral.patient)
-  referrals: Referral[];
-
-  @OneToMany(() => PatientRequirement, (requirement) => requirement.patient)
-  requirements: PatientRequirement[];
 }

@@ -10,7 +10,6 @@ import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import type { RequestUser } from '@/common/types';
 import { Appointment } from '@/domain/entities/appointment';
-import { Patient } from '@/domain/entities/patient';
 import { User } from '@/domain/entities/user';
 import type { PatientCondition } from '@/domain/enums/patients';
 import type { SpecialtyCategory } from '@/domain/enums/shared';
@@ -31,8 +30,6 @@ export class CreateAppointmentUseCase {
   constructor(
     @InjectRepository(Appointment)
     private readonly appointmentsRepository: Repository<Appointment>,
-    @InjectRepository(Patient)
-    private readonly patientsRepository: Repository<Patient>,
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
     private readonly logger: LogService,
@@ -47,8 +44,8 @@ export class CreateAppointmentUseCase {
     category,
     professionalName,
   }: CreateAppointmentUseCaseInput): Promise<void> {
-    const patient = await this.patientsRepository.findOne({
-      where: { id: patientId },
+    const patient = await this.usersRepository.findOne({
+      where: { id: patientId, role: 'patient' },
       select: { id: true },
     });
 

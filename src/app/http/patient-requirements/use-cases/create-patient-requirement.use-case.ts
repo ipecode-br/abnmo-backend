@@ -5,8 +5,8 @@ import type { Repository } from 'typeorm';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import type { RequestUser } from '@/common/types';
-import { Patient } from '@/domain/entities/patient';
 import { PatientRequirement } from '@/domain/entities/patient-requirement';
+import { User } from '@/domain/entities/user';
 import type { PatientRequirementType } from '@/domain/enums/patient-requirements';
 
 interface CreatePatientRequirementUseCaseInput {
@@ -21,8 +21,8 @@ interface CreatePatientRequirementUseCaseInput {
 @Log()
 export class CreatePatientRequirementUseCase {
   constructor(
-    @InjectRepository(Patient)
-    private readonly patientsRepository: Repository<Patient>,
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
     @InjectRepository(PatientRequirement)
     private readonly patientRequirementsRepository: Repository<PatientRequirement>,
     private readonly logger: LogService,
@@ -35,8 +35,8 @@ export class CreatePatientRequirementUseCase {
     title,
     description,
   }: CreatePatientRequirementUseCaseInput): Promise<void> {
-    const patient = await this.patientsRepository.findOne({
-      where: { id: patientId },
+    const patient = await this.usersRepository.findOne({
+      where: { id: patientId, role: 'patient' },
       select: { id: true },
     });
 

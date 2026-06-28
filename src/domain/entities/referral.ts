@@ -12,7 +12,7 @@ import { PATIENT_CONDITIONS, type PatientCondition } from '../enums/patients';
 import { REFERRAL_STATUSES, type ReferralStatus } from '../enums/referrals';
 import { SPECIALTY_CATEGORIES, type SpecialtyCategory } from '../enums/shared';
 import { ReferralSchema } from '../schemas/referrals';
-import { Patient } from './patient';
+import { User } from './user';
 
 @Entity('referrals')
 export class Referral implements ReferralSchema {
@@ -52,7 +52,7 @@ export class Referral implements ReferralSchema {
   @UpdateDateColumn({ type: 'datetime' })
   updatedAt: Date;
 
-  @ManyToOne(() => Patient, (patient) => patient.appointments)
+  @ManyToOne(() => User)
   @JoinColumn()
-  patient: Patient;
+  patient: User;
 }
