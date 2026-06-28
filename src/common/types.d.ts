@@ -25,7 +25,6 @@ type AuthEvent =
   | 'logout'
   | 'recover_password'
   | 'refresh_token'
-  | 'register_patient'
   | 'register_user'
   | 'reset_password'
   | 'sign_in';

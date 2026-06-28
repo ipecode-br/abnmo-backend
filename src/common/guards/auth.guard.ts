@@ -15,11 +15,9 @@ import { ContextService } from '@/common/context/context.service';
 import type { RequestUser } from '@/common/types';
 import type { Cookie } from '@/domain/cookies';
 import { COOKIES_MAPPING } from '@/domain/cookies';
-import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
-import { UserRole } from '@/domain/enums/users';
 import type {
   AccessTokenPayload,
   RefreshTokenPayload,
@@ -39,16 +37,14 @@ export class AuthGuard implements CanActivate {
   private readonly cookieDomain: string;
 
   constructor(
-    @InjectRepository(User)
-    private readonly usersRepository: Repository<User>,
-    @InjectRepository(Patient)
-    private readonly patientsRepository: Repository<Patient>,
     @InjectRepository(Token)
     private readonly tokensRepository: Repository<Token>,
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
     private readonly contextService: ContextService,
     private readonly cryptographyService: CryptographyService,
-    private readonly generateAuthTokensUseCase: GenerateAuthTokensUseCase,
     private readonly envService: EnvService,
+    private readonly generateAuthTokensUseCase: GenerateAuthTokensUseCase,
     private readonly reflector: Reflector,
   ) {
     this.cookieDomain = this.envService.get('COOKIE_DOMAIN');
@@ -78,11 +74,11 @@ export class AuthGuard implements CanActivate {
           await this.cryptographyService.verifyToken<AccessTokenPayload>(
             accessToken,
           );
-        const user = await this.getEntityById(payload.sub, payload.role);
+        const user = await this.getUserById(payload.sub);
 
         if (!user) {
           throw new UnauthorizedException(accessTokenMessage, {
-            cause: 'User not found',
+            cause: `User not found`,
           });
         }
 
@@ -119,7 +115,7 @@ export class AuthGuard implements CanActivate {
         );
 
       const [user, storedRefreshToken] = await Promise.all([
-        this.getEntityById(payload.sub, payload.role),
+        this.getUserById(payload.sub),
         this.tokensRepository.findOne({
           where: {
             type: AUTH_TOKENS_MAPPING.refreshToken,
@@ -135,7 +131,9 @@ export class AuthGuard implements CanActivate {
 
       if (storedRefreshToken.expiresAt < new Date()) {
         await this.tokensRepository.delete({ entityId: payload.sub });
-        throw new UnauthorizedException(refreshTokenMessage);
+        throw new UnauthorizedException(refreshTokenMessage, {
+          cause: 'Refresh token expired',
+        });
       }
 
       await this.generateAuthTokensUseCase.execute({
@@ -162,29 +160,9 @@ export class AuthGuard implements CanActivate {
     }
   }
 
-  private async getEntityById(
-    id: string,
-    role: UserRole,
-  ): Promise<RequestUser | null> {
-    if (role === 'patient') {
-      const patient = await this.patientsRepository.findOne({
-        select: { id: true, email: true, status: true },
-        where: { id },
-      });
-
-      if (!patient || patient.status !== 'active') {
-        return null;
-      }
-
-      return {
-        id: patient.id,
-        email: patient.email,
-        role: 'patient',
-        features: [],
-      };
-    }
-
+  private async getUserById(id: string): Promise<RequestUser | null> {
     const user = await this.usersRepository.findOne({
+      where: { id },
       select: {
         id: true,
         email: true,
@@ -192,12 +170,9 @@ export class AuthGuard implements CanActivate {
         features: true,
         status: true,
       },
-      where: { id },
     });
 
-    if (!user || user.status !== 'active') {
-      return null;
-    }
+    if (!user || user.status !== 'active') return null;
 
     return {
       id: user.id,

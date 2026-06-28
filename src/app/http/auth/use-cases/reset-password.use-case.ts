@@ -12,7 +12,6 @@ import { MailService } from '@/app/mail/mail.service';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import { buildResetPasswordEmail } from '@/domain/email-templates/reset-password-email';
-import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
@@ -33,8 +32,6 @@ export class ResetPasswordUseCase {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
-    @InjectRepository(Patient)
-    private readonly patientsRepository: Repository<Patient>,
     @InjectRepository(Token)
     private readonly tokensRepository: Repository<Token>,
     private readonly cryptographyService: CryptographyService,
@@ -75,62 +72,41 @@ export class ResetPasswordUseCase {
 
     const id = payload.sub;
 
-    let entity: User | Patient | null = null;
-    let role: UserRole = 'patient';
+    const user = await this.usersRepository.findOne({
+      select: { id: true, email: true, name: true },
+      where: { id },
+    });
 
-    const [user, patient] = await Promise.all([
-      this.usersRepository.findOne({
-        select: { id: true, email: true, name: true },
-        where: { id },
-      }),
-      this.patientsRepository.findOne({
-        select: { id: true, email: true, name: true },
-        where: { id },
-      }),
-    ]);
-
-    if (user) {
-      entity = user;
-      role = user.role;
-    }
-
-    if (patient) {
-      entity = patient;
-    }
-
-    if (!entity) {
+    if (!user) {
       this.logger.warn('Reset password failed: Entity not registered', { id });
       throw new NotFoundException('Usuário não encontrado.');
     }
 
+    const role: UserRole = user.role;
+
     const passwordHash = await this.cryptographyService.createHash(password);
 
-    if (role === 'patient') {
-      await this.patientsRepository.update(entity.id, {
-        password: passwordHash,
-      });
-    } else {
-      await this.usersRepository.update(entity.id, { password: passwordHash });
-    }
+    await this.usersRepository.update(user.id, {
+      password: passwordHash,
+    });
 
-    // Delete all tokens for this entity to ensure security after changing the password
-    await this.tokensRepository.delete({ entityId: entity.id });
+    await this.tokensRepository.delete({ entityId: user.id });
 
     await this.generateAuthTokensUseCase.execute({
-      user: { id: entity.id, email: entity.email, role },
+      user: { id: user.id, email: user.email, role },
       response,
     });
 
     this.logger.log('Password reseted', {
-      id: entity.id,
-      email: entity.email,
+      id: user.id,
+      email: user.email,
       role,
     });
 
     const subject = 'Senha de acesso alterada com sucesso';
     const preheader =
       'Sua senha de acesso ao Sistema Viver Melhor foi alterada com sucesso.';
-    const name = entity.name.split(' ')[0];
+    const name = user.name.split(' ')[0];
 
     const resetPasswordEmail = buildResetPasswordEmail({
       title: subject,
@@ -139,7 +115,7 @@ export class ResetPasswordUseCase {
     });
 
     await this.mailService.send({
-      to: entity.email,
+      to: user.email,
       subject,
       text: preheader,
       html: resetPasswordEmail,

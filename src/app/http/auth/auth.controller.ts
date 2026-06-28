@@ -1,6 +1,7 @@
 import { Body, Controller, Post, Res } from '@nestjs/common';
-import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiOperation } from '@nestjs/swagger';
 import type { Response } from 'express';
+import { ZodResponse } from 'nestjs-zod';
 
 import { Cookies } from '@/common/decorators/cookies.decorator';
 import { Public } from '@/common/decorators/public.decorator';
@@ -12,62 +13,56 @@ import type { RequestUser } from '@/common/types';
 import { COOKIES_MAPPING } from '@/domain/cookies';
 
 import {
-  ChangePasswordDto,
-  RecoverPasswordDto,
-  RegisterPatientDto,
-  RegisterUserDto,
-  ResetPasswordDto,
-  SignInWithEmailDto,
+  ChangePasswordBody,
+  CreateUserBody,
+  RecoverPasswordBody,
+  ResetPasswordBody,
+  SignInWithEmailBody,
   SignInWithEmailResponse,
 } from './auth.dtos';
 import { ChangePasswordUseCase } from './use-cases/change-password.use-case';
+import { CreateUserUseCase } from './use-cases/create-user.use-case';
 import { LogoutUseCase } from './use-cases/logout.use-case';
 import { RecoverPasswordUseCase } from './use-cases/recover-password.use-case';
 import { RefreshTokenUseCase } from './use-cases/refresh-token.use-case';
-import { RegisterPatientUseCase } from './use-cases/register-patient.use-case';
-import { RegisterUserUseCase } from './use-cases/register-user.use-case';
 import { ResetPasswordUseCase } from './use-cases/reset-password.use-case';
 import { SignInWithEmailUseCase } from './use-cases/sign-in-with-email.use-case';
 
 @Controller()
 export class AuthController {
   constructor(
-    private readonly signInUseCase: SignInWithEmailUseCase,
+    private readonly changePasswordUseCase: ChangePasswordUseCase,
+    private readonly createUserUseCase: CreateUserUseCase,
     private readonly logoutUseCase: LogoutUseCase,
     private readonly recoverPasswordUseCase: RecoverPasswordUseCase,
-    private readonly resetPasswordUseCase: ResetPasswordUseCase,
-    private readonly registerPatientUseCase: RegisterPatientUseCase,
-    private readonly registerUserUseCase: RegisterUserUseCase,
-    private readonly changePasswordUseCase: ChangePasswordUseCase,
     private readonly refreshTokenUseCase: RefreshTokenUseCase,
+    private readonly resetPasswordUseCase: ResetPasswordUseCase,
+    private readonly signInUseCase: SignInWithEmailUseCase,
   ) {}
 
-  @Public()
   @Post('login')
+  @Public()
   @Log('sign_in')
   @ApiOperation({ summary: 'Inicia a sessão do usuário ou paciente' })
-  @ApiResponse({ type: SignInWithEmailResponse })
+  @ZodResponse({ type: SignInWithEmailResponse, status: 201 })
   async login(
-    @Body() signInWithEmailDto: SignInWithEmailDto,
+    @Body() body: SignInWithEmailBody,
     @Res({ passthrough: true }) response: Response,
   ): Promise<SignInWithEmailResponse> {
-    const { accountType } = await this.signInUseCase.execute({
-      response,
-      ...signInWithEmailDto,
-    });
+    const data = await this.signInUseCase.execute({ response, ...body });
 
     return {
       success: true,
       message: 'Login realizado com sucesso.',
-      data: { accountType },
+      data,
     };
   }
 
-  @Public()
   @Post('refresh-token')
+  @Public()
   @Log('refresh_token')
   @ApiOperation({ summary: 'Atualiza o token de acesso' })
-  @ApiResponse({ type: BaseResponse })
+  @ZodResponse({ type: BaseResponse, status: 201 })
   async refreshToken(
     @Cookies(COOKIES_MAPPING.refreshToken) refreshToken: string,
     @Res({ passthrough: true }) response: Response,
@@ -80,36 +75,16 @@ export class AuthController {
     };
   }
 
-  @Public()
-  @Post('register/patient')
-  @Log('register_patient')
-  @ApiOperation({ summary: 'Registra um novo paciente' })
-  @ApiResponse({ type: BaseResponse })
-  async registerPatient(
-    @Body() registerPatientDto: RegisterPatientDto,
-    @Res({ passthrough: true }) response: Response,
-  ): Promise<BaseResponse> {
-    await this.registerPatientUseCase.execute({
-      response,
-      ...registerPatientDto,
-    });
-
-    return {
-      success: true,
-      message: 'Sua conta foi cadastrada com sucesso.',
-    };
-  }
-
-  @Public()
   @Post('register/user')
+  @Public()
   @Log('register_user')
   @ApiOperation({ summary: 'Registra um novo usuário via convite' })
-  @ApiResponse({ type: BaseResponse })
+  @ZodResponse({ type: BaseResponse, status: 201 })
   async registerUser(
-    @Body() registerUserDto: RegisterUserDto,
+    @Body() body: CreateUserBody,
     @Res({ passthrough: true }) response: Response,
   ): Promise<BaseResponse> {
-    await this.registerUserUseCase.execute({ response, ...registerUserDto });
+    await this.createUserUseCase.execute({ response, ...body });
 
     return {
       success: true,
@@ -117,15 +92,15 @@ export class AuthController {
     };
   }
 
-  @Public()
   @Post('recover-password')
+  @Public()
   @Log('recover_password')
   @ApiOperation({ summary: 'Solicita recuperação de senha' })
-  @ApiResponse({ type: BaseResponse })
+  @ZodResponse({ type: BaseResponse, status: 201 })
   async recoverPassword(
-    @Body() recoverPasswordDto: RecoverPasswordDto,
+    @Body() body: RecoverPasswordBody,
   ): Promise<BaseResponse> {
-    await this.recoverPasswordUseCase.execute(recoverPasswordDto);
+    await this.recoverPasswordUseCase.execute(body);
 
     return {
       success: true,
@@ -134,16 +109,16 @@ export class AuthController {
     };
   }
 
-  @Public()
   @Post('reset-password')
+  @Public()
   @Log('reset_password')
   @ApiOperation({ summary: 'Solicita redefinição de senha' })
-  @ApiResponse({ type: BaseResponse })
+  @ZodResponse({ type: BaseResponse, status: 201 })
   async resetPassword(
-    @Body() resetPasswordDto: ResetPasswordDto,
+    @Body() body: ResetPasswordBody,
     @Res({ passthrough: true }) response: Response,
   ): Promise<BaseResponse> {
-    await this.resetPasswordUseCase.execute({ response, ...resetPasswordDto });
+    await this.resetPasswordUseCase.execute({ response, ...body });
 
     return {
       success: true,
@@ -152,17 +127,17 @@ export class AuthController {
   }
 
   @Post('change-password')
-  @Log('change_password')
   @Roles(['all'])
+  @Log('change_password')
   @ApiOperation({
     summary: 'Altera a senha do usuário ou paciente autenticado',
   })
-  @ApiResponse({ type: BaseResponse })
+  @ZodResponse({ type: BaseResponse })
   async changePassword(
     @User() user: RequestUser,
-    @Body() changePasswordDto: ChangePasswordDto,
+    @Body() body: ChangePasswordBody,
   ): Promise<BaseResponse> {
-    await this.changePasswordUseCase.execute({ user, ...changePasswordDto });
+    await this.changePasswordUseCase.execute({ user, ...body });
 
     return {
       success: true,
@@ -171,10 +146,10 @@ export class AuthController {
   }
 
   @Post('logout')
-  @Log('logout')
   @Roles(['all'])
+  @Log('logout')
   @ApiOperation({ summary: 'Encerra a sessão do usuário ou paciente' })
-  @ApiResponse({ type: BaseResponse })
+  @ZodResponse({ type: BaseResponse })
   async logout(
     @Cookies(COOKIES_MAPPING.refreshToken) refreshToken: string,
     @Res({ passthrough: true }) response: Response,

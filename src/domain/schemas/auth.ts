@@ -1,6 +1,5 @@
 import { z } from 'zod';
 
-import { AUTH_ACCOUNT_TYPES } from '../enums/auth';
 import { baseResponseSchema } from './base';
 import {
   emailSchema,
@@ -11,13 +10,7 @@ import {
   userRoleSchema,
 } from './shared';
 
-export const registerPatientSchema = z.object({
-  name: nameSchema,
-  email: emailSchema,
-  password: passwordSchema,
-});
-
-export const registerUserSchema = z
+export const createUserSchema = z
   .object({
     name: nameSchema,
     password: passwordSchema,
@@ -53,14 +46,10 @@ export const signInWithEmailSchema = z.object({
 });
 
 export const signInWithEmailResponseSchema = baseResponseSchema.extend({
-  data: z.object({
-    accountType: z.enum(AUTH_ACCOUNT_TYPES),
-  }),
+  data: z.object({ role: userRoleSchema }),
 });
 
-export const recoverPasswordSchema = z.object({
-  email: emailSchema,
-});
+export const recoverPasswordSchema = z.object({ email: emailSchema });
 
 export const resetPasswordSchema = z.object({
   password: passwordSchema,

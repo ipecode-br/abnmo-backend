@@ -11,7 +11,6 @@ import { Repository } from 'typeorm';
 import { CryptographyService } from '@/app/cryptography/cryptography.service';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
-import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import type { SpecialtyCategory } from '@/domain/enums/shared';
@@ -20,7 +19,7 @@ import type { InviteUserPayload } from '@/domain/schemas/tokens';
 
 import { GenerateAuthTokensUseCase } from './generate-auth-tokens-use-case';
 
-interface RegisterUserUseCaseInput {
+interface CreateUserUseCaseInput {
   name: string;
   password: string;
   inviteToken: string;
@@ -31,14 +30,12 @@ interface RegisterUserUseCaseInput {
 
 @Injectable()
 @Log()
-export class RegisterUserUseCase {
+export class CreateUserUseCase {
   constructor(
     @InjectRepository(Token)
     private readonly tokensRepository: Repository<Token>,
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
-    @InjectRepository(Patient)
-    private readonly patientsRepository: Repository<Patient>,
     private readonly cryptographyService: CryptographyService,
     private readonly generateAuthTokensUseCase: GenerateAuthTokensUseCase,
     private readonly logger: LogService,
@@ -51,13 +48,15 @@ export class RegisterUserUseCase {
     registrationId,
     inviteToken,
     response,
-  }: RegisterUserUseCaseInput): Promise<void> {
+  }: CreateUserUseCaseInput): Promise<void> {
     const token = await this.tokensRepository.findOne({
       where: { token: inviteToken },
     });
 
     if (!token) {
-      throw new NotFoundException('Token de convite não encontrado.');
+      throw new NotFoundException('Token de convite não encontrado.', {
+        cause: `Invite token <${inviteToken}> not found`,
+      });
     }
 
     const email = token.email;
@@ -79,16 +78,16 @@ export class RegisterUserUseCase {
 
     const { role } = payload;
 
-    const [userWithSameEmail, patientWithSameEmail] = await Promise.all([
-      this.usersRepository.findOne({ select: { id: true }, where: { email } }),
-      this.patientsRepository.findOne({
-        select: { id: true },
-        where: { email },
-      }),
-    ]);
+    const userWithSameEmail = await this.usersRepository.findOne({
+      select: { id: true },
+      where: { email },
+    });
 
-    if (userWithSameEmail || patientWithSameEmail) {
-      throw new ConflictException('Este e-mail já está cadastrado no sistema.');
+    if (userWithSameEmail) {
+      throw new ConflictException(
+        'Este e-mail já está cadastrado no sistema.',
+        { cause: `User with e-mail <${email}> already exists` },
+      );
     }
 
     const passwordHash = await this.cryptographyService.createHash(password);

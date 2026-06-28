@@ -8,7 +8,6 @@ import { StorageModule } from '@/app/storage/storage.module';
 import { AuthGuard } from '@/common/guards/auth.guard';
 import { FeatureGuard } from '@/common/guards/feature.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
-import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { EnvModule } from '@/env/env.module';
@@ -16,18 +15,17 @@ import { EnvModule } from '@/env/env.module';
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
 import { ChangePasswordUseCase } from './use-cases/change-password.use-case';
+import { CreateUserUseCase } from './use-cases/create-user.use-case';
 import { GenerateAuthTokensUseCase } from './use-cases/generate-auth-tokens-use-case';
 import { LogoutUseCase } from './use-cases/logout.use-case';
 import { RecoverPasswordUseCase } from './use-cases/recover-password.use-case';
 import { RefreshTokenUseCase } from './use-cases/refresh-token.use-case';
-import { RegisterPatientUseCase } from './use-cases/register-patient.use-case';
-import { RegisterUserUseCase } from './use-cases/register-user.use-case';
 import { ResetPasswordUseCase } from './use-cases/reset-password.use-case';
 import { SignInWithEmailUseCase } from './use-cases/sign-in-with-email.use-case';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Patient, Token, User]),
+    TypeOrmModule.forFeature([Token, User]),
     CryptographyModule,
     EnvModule,
     MailModule,
@@ -36,12 +34,11 @@ import { SignInWithEmailUseCase } from './use-cases/sign-in-with-email.use-case'
   ],
   providers: [
     ChangePasswordUseCase,
+    CreateUserUseCase,
     GenerateAuthTokensUseCase,
     LogoutUseCase,
     RecoverPasswordUseCase,
     RefreshTokenUseCase,
-    RegisterPatientUseCase,
-    RegisterUserUseCase,
     ResetPasswordUseCase,
     SignInWithEmailUseCase,
     { provide: APP_GUARD, useClass: AuthGuard },

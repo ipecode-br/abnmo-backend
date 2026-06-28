@@ -11,7 +11,6 @@ import { CryptographyService } from '@/app/cryptography/cryptography.service';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import type { RequestUser } from '@/common/types';
-import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 
@@ -27,8 +26,6 @@ export class ChangePasswordUseCase {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
-    @InjectRepository(Patient)
-    private readonly patientsRepository: Repository<Patient>,
     @InjectRepository(Token)
     private readonly tokensRepository: Repository<Token>,
     private readonly cryptographyService: CryptographyService,
@@ -40,27 +37,19 @@ export class ChangePasswordUseCase {
     password,
     newPassword,
   }: ChangePasswordUseCaseInput): Promise<void> {
-    const { id, role } = user;
+    const { id } = user;
 
-    const entity: User | Patient | null =
-      role === 'patient'
-        ? await this.patientsRepository.findOne({ where: { id } })
-        : await this.usersRepository.findOne({ where: { id } });
+    const userToUpdate = await this.usersRepository.findOne({ where: { id } });
 
-    if (!entity) {
-      throw new NotFoundException('Usuário não encontrado.');
-    }
-
-    if (!entity.password) {
-      this.logger.error(
-        'Change password failed: Entity does not have password',
-      );
-      throw new BadRequestException('Usuário não encontrado.');
+    if (!userToUpdate) {
+      throw new NotFoundException('Usuário não encontrado.', {
+        cause: `User ID <${id}> not found`,
+      });
     }
 
     const passwordMatches = await this.cryptographyService.compareHash(
       password,
-      entity.password,
+      userToUpdate.password,
     );
 
     if (!passwordMatches) {
@@ -75,15 +64,11 @@ export class ChangePasswordUseCase {
 
     const passwordHash = await this.cryptographyService.createHash(newPassword);
 
-    if (role === 'patient') {
-      await this.patientsRepository.update({ id }, { password: passwordHash });
-    } else {
-      await this.usersRepository.update({ id }, { password: passwordHash });
-    }
+    await this.usersRepository.update({ id }, { password: passwordHash });
 
     this.logger.log('Password changed');
 
     // Delete all tokens for this entity to ensure security after changing password
-    await this.tokensRepository.delete({ entityId: entity.id });
+    await this.tokensRepository.delete({ entityId: userToUpdate.id });
   }
 }

@@ -12,7 +12,6 @@ import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.us
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import { COOKIES_MAPPING } from '@/domain/cookies';
-import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
@@ -31,7 +30,7 @@ interface SignInWithEmailUseCaseInput {
 }
 
 interface SignInWithEmailUseCaseOutput {
-  accountType: 'patient' | 'user';
+  role: UserRole;
 }
 
 @Injectable()
@@ -42,14 +41,12 @@ export class SignInWithEmailUseCase {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
-    @InjectRepository(Patient)
-    private readonly patientsRepository: Repository<Patient>,
     @InjectRepository(Token)
     private readonly tokensRepository: Repository<Token>,
     private readonly createTokenUseCase: CreateTokenUseCase,
     private readonly cryptographyService: CryptographyService,
-    private readonly generateAuthTokensUseCase: GenerateAuthTokensUseCase,
     private readonly envService: EnvService,
+    private readonly generateAuthTokensUseCase: GenerateAuthTokensUseCase,
     private readonly logger: LogService,
   ) {
     this.cookieDomain = this.envService.get('COOKIE_DOMAIN');
@@ -61,30 +58,18 @@ export class SignInWithEmailUseCase {
     keepLoggedIn,
     response,
   }: SignInWithEmailUseCaseInput): Promise<SignInWithEmailUseCaseOutput> {
-    let entity: User | Patient | null = null;
-    let role: UserRole = 'patient';
+    const user = await this.usersRepository.findOne({
+      select: {
+        id: true,
+        email: true,
+        password: true,
+        role: true,
+        status: true,
+      },
+      where: { email },
+    });
 
-    const [user, patient] = await Promise.all([
-      this.usersRepository.findOne({
-        select: { id: true, password: true, role: true, status: true },
-        where: { email },
-      }),
-      this.patientsRepository.findOne({
-        select: { id: true, password: true, status: true },
-        where: { email },
-      }),
-    ]);
-
-    if (user) {
-      entity = user;
-      role = user.role;
-    }
-
-    if (patient) {
-      entity = patient;
-    }
-
-    if (!entity || !entity.password) {
+    if (!user || !user.password) {
       throw new UnauthorizedException(
         'Credenciais inválidas. Por favor, tente novamente.',
       );
@@ -92,7 +77,7 @@ export class SignInWithEmailUseCase {
 
     const passwordMatches = await this.cryptographyService.compareHash(
       password,
-      entity.password,
+      user.password,
     );
 
     if (!passwordMatches) {
@@ -101,34 +86,29 @@ export class SignInWithEmailUseCase {
       );
     }
 
-    if (role === 'patient') {
-      // TODO: remove this error when patient dashboard is ready
-      throw new UnauthorizedException(
-        'O sistema ainda não está liberado para pacientes.',
-      );
-    }
-
-    if (entity.status === 'inactive') {
+    if (user.status === 'inactive') {
       throw new ForbiddenException(
         'Permissão de acesso negada. Sua conta está inativa.',
       );
     }
 
+    const role = user.role;
+
     await this.generateAuthTokensUseCase.execute({
-      user: { id: entity.id, email: entity.email, role },
+      user: { id: user.id, email: user.email, role },
       response,
     });
 
     if (keepLoggedIn) {
       const { token, expiresAt } = await this.createTokenUseCase.execute({
         type: AUTH_TOKENS_MAPPING.refreshToken,
-        payload: { sub: entity.id, role },
+        payload: { sub: user.id, role },
       });
 
       await this.tokensRepository.save<RefreshToken>({
         type: AUTH_TOKENS_MAPPING.refreshToken,
         expiresAt: expiresAt,
-        entityId: entity.id,
+        entityId: user.id,
         token,
       });
 
@@ -142,14 +122,12 @@ export class SignInWithEmailUseCase {
     }
 
     this.logger.log('Signed in with e-mail', {
-      id: entity.id,
+      id: user.id,
       email,
       role,
       keepLoggedIn,
     });
 
-    // TODO: return account type based on role when patient dashboard is ready
-    // return { accountType: role === 'patient' ? 'patient' : 'user' };
-    return { accountType: 'user' };
+    return { role };
   }
 }
