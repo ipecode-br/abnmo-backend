@@ -8,6 +8,9 @@ import { User } from '@/domain/entities/user';
 
 import { SurveyController } from './survey.controller';
 import { CompleteSurveyUseCase } from './use-cases/complete-survey.use-case';
+import { GetSurveySubmissionUseCase } from './use-cases/get-survey-submission.use-case';
+import { GetSurveySubmissionsUseCase } from './use-cases/get-survey-submissions.use-case';
+import { GetTotalSurveySubmissionsUseCase } from './use-cases/get-total-survey-submissions.use-case';
 import { InitSurveyUseCase } from './use-cases/init-survey.use-case';
 
 @Module({
@@ -16,6 +19,12 @@ import { InitSurveyUseCase } from './use-cases/init-survey.use-case';
     CryptographyModule,
   ],
   controllers: [SurveyController],
-  providers: [InitSurveyUseCase, CompleteSurveyUseCase],
+  providers: [
+    InitSurveyUseCase,
+    CompleteSurveyUseCase,
+    GetSurveySubmissionsUseCase,
+    GetSurveySubmissionUseCase,
+    GetTotalSurveySubmissionsUseCase,
+  ],
 })
 export class SurveyModule {}

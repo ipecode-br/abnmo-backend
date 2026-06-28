@@ -12,3 +12,10 @@ export function generateFakeEmail(): string {
 export function generateFakePhone(): string {
   return faker.string.numeric(11);
 }
+
+export function generateFakeDate(): Date {
+  return faker.date.between({
+    from: new Date().setMonth(new Date().getMonth() - 4),
+    to: new Date(),
+  });
+}

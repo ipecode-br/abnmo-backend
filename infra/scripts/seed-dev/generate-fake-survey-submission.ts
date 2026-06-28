@@ -5,6 +5,7 @@ import { SurveySubmission } from '@/domain/entities/survey-submission';
 import { SURVEY_SUBMISSION_STATUSES } from '@/domain/enums/survey';
 
 import {
+  generateFakeDate,
   generateFakeEmail,
   generateFakeName,
   generateFakePhone,
@@ -19,6 +20,7 @@ export function generateFakeSurveySubmission(
     email: generateFakeEmail(),
     phone: generateFakePhone(),
     status: faker.helpers.arrayElement(SURVEY_SUBMISSION_STATUSES),
+    createdAt: generateFakeDate(),
   };
 
   return repository.create({ ...baseData, ...data });

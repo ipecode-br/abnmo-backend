@@ -39,7 +39,7 @@ export class CompleteSurveyUseCase {
 
     if (!submission) {
       throw new NotFoundException('Catalogação não encontrada.', {
-        cause: `Survey submission "${input.token}" not found`,
+        cause: `Survey submission <${input.token}> not found`,
       });
     }
 
@@ -47,7 +47,7 @@ export class CompleteSurveyUseCase {
       throw new BadRequestException(
         'Esta catalogação já foi finalizada ou está em um estado inválido.',
         {
-          cause: `Survey submission "${input.token}" status is "${submission.status}"`,
+          cause: `Survey submission <${input.token}> status is "${submission.status}"`,
         },
       );
     }
@@ -60,7 +60,7 @@ export class CompleteSurveyUseCase {
     if (userWithSameEmail) {
       throw new ConflictException(
         'Já existe uma conta cadastrada com este e-mail.',
-        { cause: `E-mail "${submission.email}" already exists` },
+        { cause: `E-mail <${submission.email}> already exists` },
       );
     }
 
@@ -74,7 +74,7 @@ export class CompleteSurveyUseCase {
     if (userWithSameCpf) {
       throw new ConflictException(
         'Já existe uma conta cadastrada com este CPF.',
-        { cause: `CPF "${cpf}" already exists` },
+        { cause: `CPF <${cpf}> already exists` },
       );
     }
 

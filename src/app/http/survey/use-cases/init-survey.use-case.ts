@@ -25,24 +25,35 @@ export class InitSurveyUseCase {
   ) {}
 
   async execute({ name, email, phone }: InitSurveyUseCaseInput): Promise<void> {
-    const userWithSameEmail = await this.usersRepository.findOne({
-      select: { id: true },
-      where: { email },
-    });
+    const findOptions = { select: { id: true }, where: { email } };
+
+    const [userWithSameEmail, submissionWithSameEmail] = await Promise.all([
+      this.usersRepository.findOne(findOptions),
+      this.surveySubmissionsRepository.findOne(findOptions),
+    ]);
 
     if (userWithSameEmail) {
       throw new ConflictException(
         'Já existe uma conta cadastrada com este e-mail.',
-        { cause: `E-mail "${email}" already exists` },
+        { cause: `User with <${email}> already exists` },
       );
     }
 
-    await this.surveySubmissionsRepository.save({
+    if (submissionWithSameEmail) {
+      throw new ConflictException(
+        'Já existe um processo cadastrado neste e-mail.',
+        { cause: `Submission with <${email}> already exists` },
+      );
+    }
+
+    const submission = this.surveySubmissionsRepository.create({
       name,
       email,
       phone,
       status: 'pending',
     });
+
+    await this.surveySubmissionsRepository.save(submission);
 
     this.logger.log('Survey initiated', { name, email, phone });
   }

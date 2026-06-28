@@ -10,11 +10,11 @@ export abstract class BaseEntity {
   @PrimaryColumn('varchar', { length: 36 })
   id: string;
 
-  @CreateDateColumn({ type: 'datetime' })
-  createdAt: Date;
-
   @UpdateDateColumn({ type: 'datetime' })
   updatedAt: Date;
+
+  @CreateDateColumn({ type: 'datetime' })
+  createdAt: Date;
 
   @BeforeInsert()
   generateId() {

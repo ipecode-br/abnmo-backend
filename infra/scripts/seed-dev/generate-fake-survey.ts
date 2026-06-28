@@ -45,7 +45,7 @@ import {
   WALKING_DISTANCES,
 } from '@/domain/enums/survey';
 
-import { generateFakeName } from './generate-fakes';
+import { generateFakeDate, generateFakeName } from './generate-fakes';
 
 const citiesByState: Record<string, string[]> = {};
 const statesWithCities = ['AL', 'BA', 'CE', 'PA'] as const;
@@ -74,6 +74,7 @@ export function generateFakeSurvey(
   const baseData: Partial<Survey> = {
     userId: data.userId,
     status: faker.helpers.arrayElement(SURVEY_STATUSES),
+    createdAt: generateFakeDate(),
     // About
     dateOfBirth: faker.date.birthdate({ min: 18, max: 80, mode: 'age' }),
     gender: faker.helpers.arrayElement(GENDERS),

@@ -10,6 +10,15 @@ export type SurveySubmissionStatus =
 export const SURVEY_STATUSES = ['pending_signature', 'completed'] as const;
 export type SubmissionStatus = (typeof SURVEY_STATUSES)[number];
 
+export const SURVEY_SUBMISSION_ORDER_BY = [
+  'name',
+  'email',
+  'status',
+  'date',
+] as const;
+export type SurveySubmissionOrderBy =
+  (typeof SURVEY_SUBMISSION_ORDER_BY)[number];
+
 // About
 
 export const GENDERS = [

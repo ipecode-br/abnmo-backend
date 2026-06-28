@@ -7,6 +7,7 @@ import { KINSHIP_TYPES } from '@/domain/enums/survey';
 import { USER_FEATURES, USER_ROLES, USER_STATUSES } from '@/domain/enums/users';
 
 import {
+  generateFakeDate,
   generateFakeEmail,
   generateFakeName,
   generateFakePhone,
@@ -16,8 +17,6 @@ export function generateFakeUser(
   repository: Repository<User>,
   data: { password: string } & Partial<User>,
 ): User {
-  const today = new Date();
-
   const baseData: Partial<User> = {
     name: generateFakeName(),
     email: generateFakeEmail(),
@@ -26,10 +25,7 @@ export function generateFakeUser(
     features: faker.helpers.arrayElements(USER_FEATURES),
     status: faker.helpers.arrayElement(USER_STATUSES),
     avatarUrl: faker.image.avatar(),
-    createdAt: faker.date.between({
-      from: today.setMonth(today.getMonth() - 4),
-      to: today,
-    }),
+    createdAt: generateFakeDate(),
   };
 
   const mergedData = { ...baseData, ...data };
