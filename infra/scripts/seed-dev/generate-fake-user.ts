@@ -3,7 +3,7 @@ import { Repository } from 'typeorm';
 
 import { User } from '@/domain/entities/user';
 import { SPECIALTY_CATEGORIES } from '@/domain/enums/shared';
-import { KINSHIP_TYPES } from '@/domain/enums/survey';
+import { KINSHIP_TYPES } from '@/domain/enums/surveys';
 import { USER_FEATURES, USER_ROLES, USER_STATUSES } from '@/domain/enums/users';
 
 import {

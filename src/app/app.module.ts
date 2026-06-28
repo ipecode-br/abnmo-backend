@@ -23,7 +23,7 @@ import { PatientsModule } from './http/patients/patients.module';
 import { ReferralsModule } from './http/referrals/referrals.module';
 import { StatisticsModule } from './http/statistics/statistics.module';
 import { StatusModule } from './http/status/status.module';
-import { SurveyModule } from './http/survey/survey.module';
+import { SurveysModule } from './http/surveys/surveys.module';
 import { UsersModule } from './http/users/users.module';
 import { StorageModule } from './storage/storage.module';
 
@@ -65,7 +65,7 @@ import { StorageModule } from './storage/storage.module';
     }),
     LogModule,
     DatabaseModule,
-    SurveyModule,
+    SurveysModule,
     AuthModule,
     UsersModule,
     PatientsModule,

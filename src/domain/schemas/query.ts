@@ -5,7 +5,7 @@ import { QUERY_ORDERS, QUERY_PERIODS } from '../enums/queries';
 export const baseQuerySchema = z.object({
   search: z.string().optional(),
   order: z.enum(QUERY_ORDERS).optional(),
-  period: z.enum(QUERY_PERIODS).optional().default('today'),
+  period: z.enum(QUERY_PERIODS).optional(),
   page: z.coerce.number().min(1).optional().default(1),
   perPage: z.coerce.number().min(1).max(50).optional().default(10),
   limit: z.coerce.number().min(1).optional().default(10),

@@ -29,7 +29,7 @@ import {
   GetTotalSurveySubmissionsQuery,
   GetTotalSurveySubmissionsResponse,
   InitSurveyBody,
-} from './survey.dtos';
+} from './surveys.dtos';
 import { CompleteSurveyUseCase } from './use-cases/complete-survey.use-case';
 import { GetSurveySubmissionUseCase } from './use-cases/get-survey-submission.use-case';
 import { GetSurveySubmissionsUseCase } from './use-cases/get-survey-submissions.use-case';
@@ -39,7 +39,7 @@ import { InitSurveyUseCase } from './use-cases/init-survey.use-case';
 @Roles(['member'])
 @ApiTags('Catalogação')
 @Controller('surveys')
-export class SurveyController {
+export class SurveysController {
   constructor(
     private readonly completeSurveyUseCase: CompleteSurveyUseCase,
     private readonly getSurveySubmissionUseCase: GetSurveySubmissionUseCase,

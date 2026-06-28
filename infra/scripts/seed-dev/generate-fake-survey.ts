@@ -43,7 +43,7 @@ import {
   TREATMENT_LOCATIONS,
   VISUAL_ASSISTIVE_TECHNOLOGIES,
   WALKING_DISTANCES,
-} from '@/domain/enums/survey';
+} from '@/domain/enums/surveys';
 
 import { generateFakeDate, generateFakeName } from './generate-fakes';
 

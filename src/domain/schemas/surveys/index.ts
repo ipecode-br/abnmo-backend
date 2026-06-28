@@ -40,7 +40,7 @@ import {
   TREATMENT_LOCATIONS,
   VISUAL_ASSISTIVE_TECHNOLOGIES,
   WALKING_DISTANCES,
-} from '@/domain/enums/survey';
+} from '@/domain/enums/surveys';
 
 import { baseEntitySchema } from '../base';
 import { cepSchema, emailSchema, nameSchema, phoneSchema } from '../shared';

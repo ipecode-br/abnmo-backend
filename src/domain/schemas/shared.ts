@@ -4,7 +4,7 @@ import { ONLY_NUMBERS_REGEX } from '@/constants/regex';
 
 import { PATIENT_CONDITIONS } from '../enums/patients';
 import { SPECIALTY_CATEGORIES } from '../enums/shared';
-import { KINSHIP_TYPES } from '../enums/survey';
+import { KINSHIP_TYPES } from '../enums/surveys';
 import { USER_ROLES } from '../enums/users';
 
 export const nameSchema = z.string().min(3).max(64);

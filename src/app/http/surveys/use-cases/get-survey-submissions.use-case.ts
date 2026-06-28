@@ -14,8 +14,8 @@ import { QueryOrder } from '@/domain/enums/queries';
 import type {
   SurveySubmissionOrderBy,
   SurveySubmissionStatus,
-} from '@/domain/enums/survey';
-import { SurveySubmissionResponse } from '@/domain/schemas/survey/responses';
+} from '@/domain/enums/surveys';
+import { SurveySubmissionResponse } from '@/domain/schemas/surveys/responses';
 
 interface GetSurveySubmissionsUseCaseInput {
   page: number;

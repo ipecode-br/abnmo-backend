@@ -1,4 +1,4 @@
-import { EMPLOYMENT_STATUSES_WITH_DETAILS_REQUIRED } from '@/domain/enums/survey';
+import { EMPLOYMENT_STATUSES_WITH_DETAILS_REQUIRED } from '@/domain/enums/surveys';
 
 import { surveySchema } from '..';
 

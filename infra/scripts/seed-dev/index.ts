@@ -16,7 +16,7 @@ import { Survey } from '@/domain/entities/survey';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
-import { SURVEY_STATUSES } from '@/domain/enums/survey';
+import { SURVEY_STATUSES } from '@/domain/enums/surveys';
 import { USER_ROLES } from '@/domain/enums/users';
 
 const DATABASE_DEV_NAME = 'abnmo_dev';

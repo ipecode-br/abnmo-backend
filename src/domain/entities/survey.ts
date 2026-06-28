@@ -14,7 +14,7 @@ import type {
   SpecialtyBeforeDiagnosis,
   TransportMode,
   VisualAssistiveTechnology,
-} from '../enums/survey';
+} from '../enums/surveys';
 import {
   BLADDER_CONTROLS,
   type BladderControl,
@@ -76,8 +76,8 @@ import {
   type TreatmentLocation,
   WALKING_DISTANCES,
   type WalkingDistance,
-} from '../enums/survey';
-import type { SurveySchema } from '../schemas/survey';
+} from '../enums/surveys';
+import type { SurveySchema } from '../schemas/surveys';
 import { BaseEntity } from './base';
 import { User } from './user';
 

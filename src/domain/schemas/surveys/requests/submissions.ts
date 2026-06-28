@@ -3,7 +3,7 @@ import { z } from 'zod';
 import {
   SURVEY_SUBMISSION_ORDER_BY,
   SURVEY_SUBMISSION_STATUSES,
-} from '@/domain/enums/survey';
+} from '@/domain/enums/surveys';
 import { baseQuerySchema } from '@/domain/schemas/query';
 
 export const getSurveySubmissionsQuerySchema = baseQuerySchema

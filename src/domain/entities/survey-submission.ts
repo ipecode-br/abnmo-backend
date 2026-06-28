@@ -3,8 +3,8 @@ import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import {
   SURVEY_SUBMISSION_STATUSES,
   type SurveySubmissionStatus,
-} from '../enums/survey';
-import type { SurveySubmissionSchema } from '../schemas/survey';
+} from '../enums/surveys';
+import type { SurveySubmissionSchema } from '../schemas/surveys';
 import { BaseEntity } from './base';
 import { User } from './user';
 

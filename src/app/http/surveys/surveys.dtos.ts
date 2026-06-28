@@ -3,16 +3,16 @@ import { createZodDto } from 'nestjs-zod';
 import {
   completeSurveySchema,
   initSurveySchema,
-} from '@/domain/schemas/survey/requests';
+} from '@/domain/schemas/surveys/requests';
 import {
   getSurveySubmissionsQuerySchema,
   getTotalSurveySubmissionsQuerySchema,
-} from '@/domain/schemas/survey/requests/submissions';
+} from '@/domain/schemas/surveys/requests/submissions';
 import {
   getSurveySubmissionResponseSchema,
   getSurveySubmissionsResponseSchema,
   getTotalSurveySubmissionsResponseSchema,
-} from '@/domain/schemas/survey/responses';
+} from '@/domain/schemas/surveys/responses';
 
 export class InitSurveyBody extends createZodDto(initSurveySchema) {}
 

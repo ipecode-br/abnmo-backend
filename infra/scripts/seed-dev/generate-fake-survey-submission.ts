@@ -2,7 +2,7 @@ import { faker } from '@faker-js/faker';
 import { Repository } from 'typeorm';
 
 import { SurveySubmission } from '@/domain/entities/survey-submission';
-import { SURVEY_SUBMISSION_STATUSES } from '@/domain/enums/survey';
+import { SURVEY_SUBMISSION_STATUSES } from '@/domain/enums/surveys';
 
 import {
   generateFakeDate,

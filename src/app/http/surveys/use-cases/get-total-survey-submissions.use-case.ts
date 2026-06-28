@@ -10,7 +10,7 @@ import {
 
 import { SurveySubmission } from '@/domain/entities/survey-submission';
 import type { QueryPeriod } from '@/domain/enums/queries';
-import type { SurveySubmissionStatus } from '@/domain/enums/survey';
+import type { SurveySubmissionStatus } from '@/domain/enums/surveys';
 import { getDateRangeForPeriod } from '@/utils/get-date-range-for-period';
 
 interface GetTotalSurveySubmissionsUseCaseInput {

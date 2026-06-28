@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { SurveySubmission } from '@/domain/entities/survey-submission';
-import { SurveySubmissionDetailsResponse } from '@/domain/schemas/survey/responses';
+import { SurveySubmissionDetailsResponse } from '@/domain/schemas/surveys/responses';
 
 @Injectable()
 export class GetSurveySubmissionUseCase {

@@ -6,7 +6,7 @@ import { Survey } from '@/domain/entities/survey';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
 import { User } from '@/domain/entities/user';
 
-import { SurveyController } from './survey.controller';
+import { SurveysController } from './surveys.controller';
 import { CompleteSurveyUseCase } from './use-cases/complete-survey.use-case';
 import { GetSurveySubmissionUseCase } from './use-cases/get-survey-submission.use-case';
 import { GetSurveySubmissionsUseCase } from './use-cases/get-survey-submissions.use-case';
@@ -18,7 +18,7 @@ import { InitSurveyUseCase } from './use-cases/init-survey.use-case';
     TypeOrmModule.forFeature([SurveySubmission, Survey, User]),
     CryptographyModule,
   ],
-  controllers: [SurveyController],
+  controllers: [SurveysController],
   providers: [
     InitSurveyUseCase,
     CompleteSurveyUseCase,
@@ -27,4 +27,4 @@ import { InitSurveyUseCase } from './use-cases/init-survey.use-case';
     GetTotalSurveySubmissionsUseCase,
   ],
 })
-export class SurveyModule {}
+export class SurveysModule {}

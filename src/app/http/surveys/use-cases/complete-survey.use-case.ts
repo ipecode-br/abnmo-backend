@@ -16,7 +16,7 @@ import { Survey } from '@/domain/entities/survey';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
 import { User } from '@/domain/entities/user';
 
-import { CompleteSurveyBody } from '../survey.dtos';
+import { CompleteSurveyBody } from '../surveys.dtos';
 
 @Injectable()
 @Log()
