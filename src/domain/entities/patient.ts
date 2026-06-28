@@ -24,7 +24,6 @@ import {
 } from '../enums/patients';
 import { Appointment } from './appointment';
 import { PatientRequirement } from './patient-requirement';
-import { PatientSupport } from './patient-support';
 import { Referral } from './referral';
 
 @Entity('patients')
@@ -91,9 +90,6 @@ export class Patient {
 
   @UpdateDateColumn({ type: 'datetime' })
   updatedAt: Date;
-
-  @OneToMany(() => PatientSupport, (support) => support.patient)
-  supports: PatientSupport[];
 
   @OneToMany(() => Appointment, (appointment) => appointment.patient)
   appointments: Appointment[];

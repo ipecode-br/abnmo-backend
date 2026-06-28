@@ -10,7 +10,6 @@ import { generateFakeUser } from 'infra/scripts/seed-dev/generate-fake-user';
 import { Appointment } from '@/domain/entities/appointment';
 import { Patient } from '@/domain/entities/patient';
 import { PatientRequirement } from '@/domain/entities/patient-requirement';
-import { PatientSupport } from '@/domain/entities/patient-support';
 import { Referral } from '@/domain/entities/referral';
 import { Survey } from '@/domain/entities/survey';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
@@ -45,7 +44,6 @@ async function main() {
 
     console.log('🧹 Cleaning database...');
     await dataSource.query('SET FOREIGN_KEY_CHECKS = 0');
-    await dataSource.manager.clear(PatientSupport);
     await dataSource.manager.clear(Appointment);
     await dataSource.manager.clear(Referral);
     await dataSource.manager.clear(PatientRequirement);

@@ -18,7 +18,6 @@ import { DatabaseModule } from './database/database.module';
 import { AppointmentsModule } from './http/appointments/appointments.module';
 import { AuthModule } from './http/auth/auth.module';
 import { PatientRequirementsModule } from './http/patient-requirements/patient-requirements.module';
-import { PatientSupportsModule } from './http/patient-supports/patient-supports.module';
 import { PatientsModule } from './http/patients/patients.module';
 import { ReferralsModule } from './http/referrals/referrals.module';
 import { StatisticsModule } from './http/statistics/statistics.module';
@@ -73,7 +72,6 @@ import { StorageModule } from './storage/storage.module';
     AppointmentsModule,
     StatisticsModule,
     PatientRequirementsModule,
-    PatientSupportsModule,
     StorageModule,
     StatusModule,
   ],
