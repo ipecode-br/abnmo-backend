@@ -1,7 +1,4 @@
-import {
-  ForbiddenException,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { ForbiddenException } from '@nestjs/common';
 
 import { RequestUser } from '@/common/types';
 import { USER_FEATURES, UserFeature } from '@/domain/enums/users';
@@ -30,7 +27,7 @@ export function can(
   // but guards against bad database data or misconfigured decorators
   if (!feature || !USER_FEATURES.includes(feature)) {
     throw new ForbiddenException(errorMessage, {
-      cause: `Feature "${feature}" not found`,
+      cause: `Feature <${feature}> not found`,
     });
   }
 
@@ -38,28 +35,18 @@ export function can(
 
   if (!hasFeature) {
     throw new ForbiddenException(errorMessage, {
-      cause: `User does not have feature: ${feature}`,
+      cause: `User does not have feature <${feature}>`,
     });
   }
 
   const condition = feature.split(':')[2];
 
   const canOthers = condition === 'others';
-
   if (canOthers) return true;
-
-  const shouldCompare = condition === 'self';
-
-  if (shouldCompare && !compareToId) {
-    throw new InternalServerErrorException(
-      'Ocorreu um erro interno. Tente novamente mais tarde.',
-      { cause: '"compareToId" is not provided' },
-    );
-  }
 
   if (compareToId && user.id !== compareToId) {
     throw new ForbiddenException(errorMessage, {
-      cause: 'User ID does not match "compareToId"',
+      cause: 'User ID does not match compareToId',
     });
   }
 
