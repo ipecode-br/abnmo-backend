@@ -22,11 +22,13 @@ export const avatarSchema = z.string().url();
 
 export const cpfSchema = z
   .string()
+  .max(11)
   .length(11)
   .regex(ONLY_NUMBERS_REGEX, 'Only numbers are accepted');
 
 export const susIdSchema = z
   .string()
+  .max(15)
   .regex(ONLY_NUMBERS_REGEX, 'Only numbers are accepted');
 
 export const phoneSchema = z
@@ -37,6 +39,7 @@ export const phoneSchema = z
 
 export const cepSchema = z
   .string()
+  .max(8)
   .length(8)
   .regex(ONLY_NUMBERS_REGEX, 'Only numbers are accepted');
 

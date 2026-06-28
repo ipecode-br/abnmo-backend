@@ -6,36 +6,35 @@ import {
   ILike,
   LessThanOrEqual,
   MoreThanOrEqual,
-  Not,
   type Repository,
 } from 'typeorm';
 
-import { Patient } from '@/domain/entities/patient';
-import type { PatientOrderBy, PatientStatus } from '@/domain/enums/patients';
+import { User } from '@/domain/entities/user';
 import type { QueryOrder } from '@/domain/enums/queries';
-import type { PatientResponse } from '@/domain/schemas/patients/responses';
+import type { UsersOrderBy, UserStatus } from '@/domain/enums/users';
+import type { ListPatientResponse } from '@/domain/schemas/patients/responses';
 
 interface GetPatientsUseCaseInput {
   page: number;
   perPage: number;
   search?: string;
   order?: QueryOrder;
-  orderBy?: PatientOrderBy;
-  status?: PatientStatus;
+  orderBy?: UsersOrderBy;
+  status?: UserStatus;
   startDate?: string;
   endDate?: string;
 }
 
 interface GetPatientsUseCaseOutput {
-  patients: PatientResponse[];
+  patients: ListPatientResponse[];
   total: number;
 }
 
 @Injectable()
 export class GetPatientsUseCase {
   constructor(
-    @InjectRepository(Patient)
-    private readonly patientsRepository: Repository<Patient>,
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
   ) {}
 
   async execute({
@@ -48,16 +47,18 @@ export class GetPatientsUseCase {
     const startDate = props.startDate ? new Date(props.startDate) : null;
     const endDate = props.endDate ? new Date(props.endDate) : null;
 
-    const ORDER_BY_MAPPING: Record<PatientOrderBy, keyof Patient> = {
+    const ORDER_BY_MAPPING: Record<UsersOrderBy, keyof User> = {
       name: 'name',
-      email: 'email',
+      role: 'role',
       status: 'status',
       date: 'createdAt',
     };
 
-    const where: FindOptionsWhere<Patient> = {
-      status: status ?? Not('pending'),
-    };
+    const where: FindOptionsWhere<User> = { role: 'patient' };
+
+    if (search) {
+      where.status = status;
+    }
 
     if (search) {
       where.name = ILike(`%${search}%`);
@@ -75,19 +76,19 @@ export class GetPatientsUseCase {
       where.createdAt = LessThanOrEqual(endDate);
     }
 
-    const total = await this.patientsRepository.count({ where });
+    const total = await this.usersRepository.count({ where });
 
     const orderBy = ORDER_BY_MAPPING[props.orderBy || 'name'];
 
-    const patients = await this.patientsRepository.find({
+    const result = await this.usersRepository.find({
       where,
       select: {
         id: true,
         name: true,
         email: true,
+        cpf: true,
         status: true,
         avatarUrl: true,
-        phone: true,
         createdAt: true,
       },
       order: { [orderBy]: props.order },
@@ -95,6 +96,17 @@ export class GetPatientsUseCase {
       take: perPage,
     });
 
-    return { patients, total };
+    return {
+      patients: result.map((patient) => ({
+        id: patient.id,
+        name: patient.name,
+        email: patient.email,
+        cpf: patient.cpf,
+        status: patient.status,
+        avatarUrl: patient.avatarUrl,
+        createdAt: patient.createdAt,
+      })),
+      total,
+    };
   }
 }

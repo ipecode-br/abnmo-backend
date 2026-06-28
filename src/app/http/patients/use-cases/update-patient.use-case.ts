@@ -1,49 +1,33 @@
 import {
   ConflictException,
-  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
+import { can } from '@/common/authorization/can';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import type { RequestUser } from '@/common/types';
-import type { BrazilianState } from '@/constants/brazilian-states';
-import { Patient } from '@/domain/entities/patient';
-import type {
-  PatientGender,
-  PatientNmoDiagnosis,
-  PatientRace,
-} from '@/domain/enums/patients';
+import { User } from '@/domain/entities/user';
+import { SupportContact } from '@/domain/schemas/shared';
 
 interface UpdatePatientUseCaseInput {
-  id: string;
   user: RequestUser;
-  name?: string;
-  dateOfBirth?: Date;
-  cpf?: string;
-  gender?: PatientGender;
-  race?: PatientRace;
-  state?: BrazilianState;
-  city?: string;
-  email?: string;
-  phone?: string;
-  hasDisability?: boolean;
-  disabilityDesc?: string | null;
-  needLegalAssistance?: boolean;
-  takeMedication?: boolean;
-  medicationDesc?: string | null;
-  nmoDiagnosis?: PatientNmoDiagnosis;
+  id: string;
+  name: string;
+  cpf: string;
+  susId: string | null;
+  supportContacts: SupportContact[];
 }
 
 @Injectable()
 @Log()
 export class UpdatePatientUseCase {
   constructor(
-    @InjectRepository(Patient)
-    private readonly patientsRepository: Repository<Patient>,
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
     private readonly logger: LogService,
   ) {}
 
@@ -51,60 +35,36 @@ export class UpdatePatientUseCase {
     id,
     user,
     cpf,
-    email,
     ...props
   }: UpdatePatientUseCaseInput): Promise<void> {
-    if (user.role === 'patient' && user.id !== id) {
-      this.logger.log(
-        'Update patient failed: User does not have permission to update this patient',
-        { id },
-      );
-      throw new ForbiddenException(
-        'Você não tem permissão para atualizar este paciente.',
-      );
-    }
+    can(user, 'update:patient', id);
 
-    const patient = await this.patientsRepository.findOne({
-      select: { id: true, email: true, cpf: true },
-      where: { id },
+    const patient = await this.usersRepository.findOne({
+      select: { id: true, cpf: true },
+      where: { id, role: 'patient' },
     });
 
     if (!patient) {
-      throw new NotFoundException('Paciente não encontrado.');
+      throw new NotFoundException('Paciente não encontrado.', {
+        cause: `Patient ID <${id}> not found`,
+      });
     }
 
-    if (cpf && cpf !== patient.cpf) {
-      const patientWithSameCpf = await this.patientsRepository.findOne({
-        where: { cpf },
+    if (cpf !== patient.cpf) {
+      const patientWithSameCpf = await this.usersRepository.findOne({
+        where: { cpf, role: 'patient' },
         select: { id: true },
       });
 
       if (patientWithSameCpf && patientWithSameCpf.id !== id) {
-        this.logger.error('Update patient failed: CPF already registered', {
-          id,
-          cpf,
+        throw new ConflictException('O CPF informado já está registrado.', {
+          cause: `CPF <${cpf}> already exists`,
         });
-        throw new ConflictException('O CPF informado já está registrado.');
       }
     }
 
-    if (email && email !== patient.email) {
-      const patientWithSameEmail = await this.patientsRepository.findOne({
-        where: { email },
-        select: { id: true },
-      });
+    await this.usersRepository.update(id, { cpf, ...props });
 
-      if (patientWithSameEmail && patientWithSameEmail.id !== id) {
-        this.logger.error('Update patient failed: Email already registered', {
-          id,
-          email,
-        });
-        throw new ConflictException('O e-mail informado já está registrado.');
-      }
-    }
-
-    await this.patientsRepository.update(id, { cpf, email, ...props });
-
-    this.logger.log('Patient updated successfully', { id });
+    this.logger.log('Patient updated', { id });
   }
 }

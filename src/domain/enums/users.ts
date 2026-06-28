@@ -27,5 +27,11 @@ export const USER_FEATURES = [
   'create:user_invite',
   'read:user_invite',
   'delete:user_invite',
+  // Patients
+  'read:patient',
+  'read:patient:others',
+  'update:patient',
+  'update:patient:others',
+  'deactivate:patient',
 ] as const;
 export type UserFeature = (typeof USER_FEATURES)[number];

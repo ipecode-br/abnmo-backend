@@ -35,18 +35,18 @@ import { GetUsersUseCase } from './use-cases/get-users.use-case';
 import { UpdateUserUseCase } from './use-cases/update-user.use-case';
 import { UploadUserAvatarUseCase } from './use-cases/upload-user-avatar.use-case';
 import {
-  CreateUserInviteDto,
+  CreateUserInviteBody,
   GetUserInvitesQuery,
   GetUserInvitesResponse,
   GetUserResponse,
   GetUsersQuery,
   GetUsersResponse,
-  UpdateUserDto,
+  UpdateUserBody,
 } from './users.dtos';
 
 @ApiTags('Usuários')
-@Roles(['admin'])
 @Controller('users')
+@Roles(['admin'])
 export class UsersController {
   constructor(
     private readonly activateUserUseCase: ActivateUserUseCase,
@@ -97,9 +97,9 @@ export class UsersController {
   async updateUser(
     @Param('id') id: string,
     @User() user: RequestUser,
-    @Body() updateUserDto: UpdateUserDto,
+    @Body() body: UpdateUserBody,
   ): Promise<BaseResponse> {
-    await this.updateUserUseCase.execute({ id, user, ...updateUserDto });
+    await this.updateUserUseCase.execute({ id, user, ...body });
 
     return {
       success: true,
@@ -190,9 +190,9 @@ export class UsersController {
   @ApiOperation({ summary: 'Cria convite para registro de usuário' })
   @ZodResponse({ type: BaseResponse, status: 201 })
   async createUserInvite(
-    @Body() createUserInviteDto: CreateUserInviteDto,
+    @Body() body: CreateUserInviteBody,
   ): Promise<BaseResponse> {
-    await this.createUserInviteUseCase.execute(createUserInviteDto);
+    await this.createUserInviteUseCase.execute(body);
 
     return {
       success: true,

@@ -2,56 +2,54 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
-import { Patient } from '@/domain/entities/patient';
+import { User } from '@/domain/entities/user';
+import { PatientResponse } from '@/domain/schemas/patients/responses';
 
 interface GetPatientUseCaseInput {
   id: string;
 }
 
-interface GetPatientUseCaseOutput {
-  patient: Omit<Patient, 'password'>;
-}
-
 @Injectable()
 export class GetPatientUseCase {
   constructor(
-    @InjectRepository(Patient)
-    private readonly patientsRepository: Repository<Patient>,
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
   ) {}
 
-  async execute({
-    id,
-  }: GetPatientUseCaseInput): Promise<GetPatientUseCaseOutput> {
-    const patient = await this.patientsRepository.findOne({
-      relations: { supports: true },
-      where: { id },
+  async execute({ id }: GetPatientUseCaseInput): Promise<PatientResponse> {
+    const patient = await this.usersRepository.findOne({
+      where: { id, role: 'patient' },
       select: {
         id: true,
         name: true,
         email: true,
-        status: true,
         avatarUrl: true,
-        phone: true,
+        status: true,
         cpf: true,
-        gender: true,
-        race: true,
-        dateOfBirth: true,
-        state: true,
-        city: true,
-        hasDisability: true,
-        disabilityDesc: true,
-        needLegalAssistance: true,
-        takeMedication: true,
-        medicationDesc: true,
-        nmoDiagnosis: true,
+        susId: true,
+        supportContacts: true,
+        updatedAt: true,
         createdAt: true,
       },
     });
 
     if (!patient) {
-      throw new NotFoundException('Paciente não encontrado.');
+      throw new NotFoundException('Paciente não encontrado.', {
+        cause: `Patient ID <${id}> not found`,
+      });
     }
 
-    return { patient };
+    return {
+      id: patient.id,
+      name: patient.name,
+      email: patient.email,
+      avatarUrl: patient.avatarUrl,
+      status: patient.status,
+      cpf: patient.cpf,
+      susId: patient.susId,
+      supportContacts: patient.supportContacts,
+      updatedAt: patient.updatedAt,
+      createdAt: patient.createdAt,
+    };
   }
 }

@@ -22,14 +22,13 @@ import {
   type PatientRace,
   type PatientStatus,
 } from '../enums/patients';
-import type { PatientSchema } from '../schemas/patients';
 import { Appointment } from './appointment';
 import { PatientRequirement } from './patient-requirement';
 import { PatientSupport } from './patient-support';
 import { Referral } from './referral';
 
 @Entity('patients')
-export class Patient implements PatientSchema {
+export class Patient {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 

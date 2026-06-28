@@ -4,12 +4,13 @@ import {
   Get,
   Param,
   Patch,
-  Post,
   Put,
   Query,
 } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ZodResponse } from 'nestjs-zod';
 
+import { RequireFeature } from '@/common/decorators/require-feature.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
@@ -17,14 +18,12 @@ import { Log } from '@/common/log/log.decorator';
 import type { RequestUser } from '@/common/types';
 
 import {
-  CreatePatientDto,
   GetPatientOptionsResponse,
   GetPatientResponse,
   GetPatientsQuery,
   GetPatientsResponse,
-  UpdatePatientDto,
+  UpdatePatientBody,
 } from './patients.dtos';
-import { CreatePatientUseCase } from './use-cases/create-patient.use-case';
 import { DeactivatePatientUseCase } from './use-cases/deactivate-patient.use-case';
 import { GetPatientUseCase } from './use-cases/get-patient.use-case';
 import { GetPatientOptionsUseCase } from './use-cases/get-patient-options.use-case';
@@ -32,21 +31,21 @@ import { GetPatientsUseCase } from './use-cases/get-patients.use-case';
 import { UpdatePatientUseCase } from './use-cases/update-patient.use-case';
 
 @ApiTags('Pacientes')
-@Roles(['all'])
 @Controller('patients')
+@Roles(['all'])
 export class PatientsController {
   constructor(
-    private readonly getPatientsUseCase: GetPatientsUseCase,
-    private readonly getPatientUseCase: GetPatientUseCase,
-    private readonly getPatientOptionsUseCase: GetPatientOptionsUseCase,
-    private readonly createPatientUseCase: CreatePatientUseCase,
-    private readonly updatePatientUseCase: UpdatePatientUseCase,
     private readonly deactivatePatientUseCase: DeactivatePatientUseCase,
+    private readonly getPatientOptionsUseCase: GetPatientOptionsUseCase,
+    private readonly getPatientUseCase: GetPatientUseCase,
+    private readonly getPatientsUseCase: GetPatientsUseCase,
+    private readonly updatePatientUseCase: UpdatePatientUseCase,
   ) {}
 
   @Get()
+  @RequireFeature('read:patient:others')
   @ApiOperation({ summary: 'Lista todos os pacientes' })
-  @ApiResponse({ type: GetPatientsResponse })
+  @ZodResponse({ type: GetPatientsResponse })
   async getPatients(
     @Query() query: GetPatientsQuery,
   ): Promise<GetPatientsResponse> {
@@ -59,11 +58,12 @@ export class PatientsController {
     };
   }
 
-  @Get('/options')
+  @Get('options')
+  @RequireFeature('read:patient:others')
   @ApiOperation({
     summary: 'Retorna uma lista de opções com todos os pacientes ativos',
   })
-  @ApiResponse({ type: GetPatientOptionsResponse })
+  @ZodResponse({ type: GetPatientOptionsResponse })
   async getPatientOptions(): Promise<GetPatientOptionsResponse> {
     const data = await this.getPatientOptionsUseCase.execute();
 
@@ -75,47 +75,30 @@ export class PatientsController {
   }
 
   @Get(':id')
+  @RequireFeature('read:patient')
   @ApiOperation({ summary: 'Retorna os dados do paciente' })
-  @ApiResponse({ type: GetPatientResponse })
+  @ZodResponse({ type: GetPatientResponse })
   async getPatientById(@Param('id') id: string): Promise<GetPatientResponse> {
-    const { patient } = await this.getPatientUseCase.execute({ id });
+    const data = await this.getPatientUseCase.execute({ id });
 
     return {
       success: true,
       message: 'Paciente retornado com sucesso.',
-      data: patient,
-    };
-  }
-
-  @Post()
-  @Log('create_patient')
-  @ApiOperation({ summary: 'Cadastra um novo paciente' })
-  @ApiResponse({ type: BaseResponse })
-  async create(
-    @Body() createPatientDto: CreatePatientDto,
-  ): Promise<BaseResponse> {
-    await this.createPatientUseCase.execute(createPatientDto);
-
-    return {
-      success: true,
-      message: 'Paciente registrado com sucesso.',
+      data,
     };
   }
 
   @Put(':id')
   @Log('update_patient')
+  @RequireFeature('update:patient:others')
   @ApiOperation({ summary: 'Atualiza os dados do paciente' })
-  @ApiResponse({ type: BaseResponse })
+  @ZodResponse({ type: BaseResponse })
   async update(
     @Param('id') id: string,
     @User() user: RequestUser,
-    @Body() updatePatientDto: UpdatePatientDto,
+    @Body() body: UpdatePatientBody,
   ): Promise<BaseResponse> {
-    await this.updatePatientUseCase.execute({
-      id,
-      user,
-      ...updatePatientDto,
-    });
+    await this.updatePatientUseCase.execute({ id, user, ...body });
 
     return {
       success: true,
@@ -125,10 +108,14 @@ export class PatientsController {
 
   @Patch(':id/deactivate')
   @Log('deactivate_patient')
+  @RequireFeature('deactivate:patient')
   @ApiOperation({ summary: 'Inativa o paciente' })
-  @ApiResponse({ type: BaseResponse })
-  async deactivatePatient(@Param('id') id: string): Promise<BaseResponse> {
-    await this.deactivatePatientUseCase.execute({ id });
+  @ZodResponse({ type: BaseResponse })
+  async deactivatePatient(
+    @Param('id') id: string,
+    @User() user: RequestUser,
+  ): Promise<BaseResponse> {
+    await this.deactivatePatientUseCase.execute({ id, user });
 
     return {
       success: true,

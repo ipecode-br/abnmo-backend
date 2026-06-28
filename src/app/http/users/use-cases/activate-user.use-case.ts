@@ -51,6 +51,6 @@ export class ActivateUserUseCase {
 
     await this.usersRepository.update({ id }, { status: 'active' });
 
-    this.logger.log('User activated successfully', { id });
+    this.logger.log('User activated', { id });
   }
 }

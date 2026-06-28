@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { type FindOptionsWhere, type Repository } from 'typeorm';
 
-import { Patient } from '@/domain/entities/patient';
+import { User } from '@/domain/entities/user';
 import type { PatientOptionResponse } from '@/domain/schemas/patients/responses';
 
 interface GetPatientOptionsUseCaseOutput {
@@ -13,23 +13,28 @@ interface GetPatientOptionsUseCaseOutput {
 @Injectable()
 export class GetPatientOptionsUseCase {
   constructor(
-    @InjectRepository(Patient)
-    private readonly patientsRepository: Repository<Patient>,
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
   ) {}
 
   async execute(): Promise<GetPatientOptionsUseCaseOutput> {
-    const where: FindOptionsWhere<Patient> = {
-      status: 'active',
-    };
+    const where: FindOptionsWhere<User> = { role: 'patient', status: 'active' };
 
-    const total = await this.patientsRepository.count({ where });
+    const total = await this.usersRepository.count({ where });
 
-    const patients = await this.patientsRepository.find({
+    const result = await this.usersRepository.find({
       select: { id: true, name: true, cpf: true },
       order: { name: 'ASC' },
       where,
     });
 
-    return { patients, total };
+    return {
+      patients: result.map((patient) => ({
+        id: patient.id,
+        name: patient.name,
+        cpf: patient.cpf,
+      })),
+      total,
+    };
   }
 }

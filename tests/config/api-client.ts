@@ -353,7 +353,7 @@ class ApiClient {
   async createNurseAndLogin(
     userData?: Partial<{ name: string; email: string; password: string }>,
   ): Promise<AuthenticatedApiClient> {
-    return this.createUserWithRoleAndLogin('nurse', userData);
+    return this.createUserWithRoleAndLogin('member', userData);
   }
 
   /**
@@ -371,7 +371,7 @@ class ApiClient {
   async createManagerAndLogin(
     userData?: Partial<{ name: string; email: string; password: string }>,
   ): Promise<AuthenticatedApiClient> {
-    return this.createUserWithRoleAndLogin('manager', userData);
+    return this.createUserWithRoleAndLogin('admin', userData);
   }
 
   /**

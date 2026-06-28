@@ -1,23 +1,22 @@
 import { z } from 'zod';
 
 import { baseResponseSchema } from '../base';
-import { patientSupportSchema } from '../patient-support';
 import { patientSchema } from '.';
 
-export const patientResponseSchema = patientSchema.pick({
+export const listPatientResponseSchema = patientSchema.pick({
   id: true,
   name: true,
   email: true,
+  cpf: true,
   status: true,
   avatarUrl: true,
-  phone: true,
   createdAt: true,
 });
-export type PatientResponse = z.infer<typeof patientResponseSchema>;
+export type ListPatientResponse = z.infer<typeof listPatientResponseSchema>;
 
 export const getPatientsResponseSchema = baseResponseSchema.extend({
   data: z.object({
-    patients: z.array(patientResponseSchema),
+    patients: z.array(listPatientResponseSchema),
     total: z.number(),
   }),
 });
@@ -36,8 +35,20 @@ export const getPatientOptionsResponseSchema = baseResponseSchema.extend({
   }),
 });
 
+export const patientResponseSchema = patientSchema.pick({
+  id: true,
+  name: true,
+  email: true,
+  avatarUrl: true,
+  status: true,
+  cpf: true,
+  susId: true,
+  supportContacts: true,
+  updatedAt: true,
+  createdAt: true,
+});
+export type PatientResponse = z.infer<typeof patientResponseSchema>;
+
 export const getPatientResponseSchema = baseResponseSchema.extend({
-  data: patientSchema
-    .omit({ password: true })
-    .extend({ supports: z.array(patientSupportSchema) }),
+  data: patientSchema,
 });
