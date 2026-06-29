@@ -3,6 +3,8 @@ import { createHmac } from 'node:crypto';
 import { faker } from '@faker-js/faker';
 import { hash } from 'bcryptjs';
 import dataSource from 'infra/database/data.source';
+import { generateFakeAppointment } from 'infra/scripts/seed-dev/generate-fake-appointments';
+import { generateFakeReferral } from 'infra/scripts/seed-dev/generate-fake-referrals';
 import { generateFakeSurvey } from 'infra/scripts/seed-dev/generate-fake-survey';
 import { generateFakeSurveySubmission } from 'infra/scripts/seed-dev/generate-fake-survey-submission';
 import { generateFakeUser } from 'infra/scripts/seed-dev/generate-fake-user';
@@ -57,6 +59,8 @@ async function main() {
     const surveySubmissionRepository =
       dataSource.getRepository(SurveySubmission);
     const surveyRepository = dataSource.getRepository(Survey);
+    const appointmentsRepository = dataSource.getRepository(Appointment);
+    const referralsRepository = dataSource.getRepository(Referral);
 
     const ADMIN_USER = generateFakeUser(usersRepository, {
       password,
@@ -136,6 +140,65 @@ async function main() {
       await surveyRepository.save(survey);
     }
     console.log(`✅ ${totalOfSurveys} surveys created.`);
+
+    // Appointments
+
+    console.log('📅 Creating appointments...');
+    const allPatients = await usersRepository.find({
+      where: { role: 'patient' },
+      select: { id: true },
+    });
+    const allSpecialists = await usersRepository.find({
+      where: { role: 'specialist' },
+      select: { id: true },
+    });
+
+    const totalOfAppointments = 30;
+    const generatedAppointments: Appointment[] = [];
+    for (let i = 0; i < totalOfAppointments; i++) {
+      const patientId = faker.helpers.arrayElement(allPatients).id;
+      const specialistId = faker.datatype.boolean()
+        ? faker.helpers.arrayElement(allSpecialists).id
+        : undefined;
+
+      generatedAppointments.push(
+        generateFakeAppointment(appointmentsRepository, {
+          patient: { id: patientId },
+          specialist: specialistId ? { id: specialistId } : null,
+          createdBy: faker.helpers.arrayElement([
+            ADMIN_USER.id,
+            ...allSpecialists.map((s) => s.id),
+          ]),
+        }),
+      );
+    }
+    await appointmentsRepository.save(generatedAppointments);
+    console.log(`✅ ${totalOfAppointments} appointments created.`);
+
+    // Referrals
+
+    console.log('🔗 Creating referrals...');
+    const totalOfReferrals = 30;
+    const generatedReferrals: Referral[] = [];
+    for (let i = 0; i < totalOfReferrals; i++) {
+      const patientId = faker.helpers.arrayElement(allPatients).id;
+      const specialistId = faker.datatype.boolean()
+        ? faker.helpers.arrayElement(allSpecialists).id
+        : undefined;
+
+      generatedReferrals.push(
+        generateFakeReferral(referralsRepository, {
+          patient: { id: patientId },
+          specialist: specialistId ? { id: specialistId } : null,
+          createdBy: faker.helpers.arrayElement([
+            ADMIN_USER.id,
+            ...allSpecialists.map((s) => s.id),
+          ]),
+        }),
+      );
+    }
+    await referralsRepository.save(generatedReferrals);
+    console.log(`✅ ${totalOfReferrals} referrals created.`);
 
     console.log('🎉 Seed completed.');
     process.exit(0);

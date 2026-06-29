@@ -18,15 +18,15 @@ import {
 import { specialtySchema } from '../shared';
 import { appointmentSchema } from '.';
 
-export const createAppointmentSchema = appointmentSchema
-  .pick({
-    patientId: true,
-    date: true,
-    condition: true,
-    annotation: true,
-    professionalName: true,
+export const createAppointmentSchema = z
+  .object({
+    patientId: z.string().uuid(),
+    date: appointmentSchema.shape.date,
+    condition: appointmentSchema.shape.condition,
+    annotation: appointmentSchema.shape.annotation,
+    professionalName: appointmentSchema.shape.professionalName,
+    category: specialtySchema.optional(),
   })
-  .extend({ category: specialtySchema.optional() })
   .strict();
 
 export const updateAppointmentSchema = appointmentSchema.pick({

@@ -1,27 +1,14 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 
 import { PATIENT_CONDITIONS, type PatientCondition } from '../enums/patients';
 import { REFERRAL_STATUSES, type ReferralStatus } from '../enums/referrals';
 import { SPECIALTY_CATEGORIES, type SpecialtyCategory } from '../enums/shared';
 import { ReferralSchema } from '../schemas/referrals';
+import { BaseEntity } from './base';
 import { User } from './user';
 
 @Entity('referrals')
-export class Referral implements ReferralSchema {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  @Column('uuid')
-  patientId: string;
-
+export class Referral extends BaseEntity implements ReferralSchema {
   @Column({ type: 'datetime' })
   date: Date;
 
@@ -40,19 +27,14 @@ export class Referral implements ReferralSchema {
   @Column({ type: 'varchar', length: 64, nullable: true })
   professionalName: string | null;
 
-  @Column({ type: 'uuid', nullable: true })
-  userId: string | null;
-
   @Column('uuid')
   createdBy: string;
-
-  @CreateDateColumn({ type: 'datetime' })
-  createdAt: Date;
-
-  @UpdateDateColumn({ type: 'datetime' })
-  updatedAt: Date;
 
   @ManyToOne(() => User)
   @JoinColumn()
   patient: User;
+
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn()
+  specialist: User | null;
 }

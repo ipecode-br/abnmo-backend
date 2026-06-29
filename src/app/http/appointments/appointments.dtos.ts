@@ -14,10 +14,10 @@ export class GetAppointmentsResponse extends createZodDto(
   getAppointmentsResponseSchema,
 ) {}
 
-export class CreateAppointmentDto extends createZodDto(
+export class CreateAppointmentBody extends createZodDto(
   createAppointmentSchema,
 ) {}
 
-export class UpdateAppointmentDto extends createZodDto(
+export class UpdateAppointmentBody extends createZodDto(
   updateAppointmentSchema,
 ) {}

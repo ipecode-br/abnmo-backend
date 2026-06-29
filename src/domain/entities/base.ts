@@ -6,7 +6,9 @@ import {
 } from 'typeorm';
 import { v7 as uuidv7 } from 'uuid';
 
-export abstract class BaseEntity {
+import { BaseEntitySchema } from '../schemas/base';
+
+export abstract class BaseEntity implements BaseEntitySchema {
   @PrimaryColumn('varchar', { length: 36 })
   id: string;
 

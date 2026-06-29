@@ -61,7 +61,7 @@ export class GetTotalAppointmentsUseCase {
     }
 
     if (patientId) {
-      where.patientId = patientId;
+      where.patient = { id: patientId };
     }
 
     if (status) {

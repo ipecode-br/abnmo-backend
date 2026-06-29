@@ -20,19 +20,19 @@ import type { QueryOrder } from '@/domain/enums/queries';
 import type { SpecialtyCategory } from '@/domain/enums/shared';
 
 interface GetAppointmentsUseCaseInput {
-  user: RequestUser;
-  page: number;
-  perPage: number;
-  patientId?: string;
-  status?: AppointmentStatus;
   category?: SpecialtyCategory;
   condition?: PatientCondition;
-  search?: string;
-  startDate?: string;
   endDate?: string;
   limit?: number;
-  orderBy?: AppointmentsOrderBy;
   order?: QueryOrder;
+  orderBy?: AppointmentsOrderBy;
+  page: number;
+  patientId?: string;
+  perPage: number;
+  search?: string;
+  startDate?: string;
+  status?: AppointmentStatus;
+  user: RequestUser;
 }
 
 interface GetAppointmentsUseCaseOutput {
@@ -48,15 +48,15 @@ export class GetAppointmentsUseCase {
   ) {}
 
   async execute({
-    user,
-    patientId,
-    status,
     category,
     condition,
-    search,
-    page,
-    perPage,
     limit,
+    page,
+    patientId,
+    perPage,
+    search,
+    status,
+    user,
     ...props
   }: GetAppointmentsUseCaseInput): Promise<GetAppointmentsUseCaseOutput> {
     const startDate = props.startDate ? new Date(props.startDate) : null;
@@ -74,11 +74,11 @@ export class GetAppointmentsUseCase {
     const where: FindOptionsWhere<Appointment> = {};
 
     if (user.role === 'patient') {
-      where.patientId = user.id;
+      where.patient = { id: user.id };
     }
 
     if (patientId) {
-      where.patientId = patientId;
+      where.patient = { id: patientId };
     }
 
     if (startDate && !endDate) {
@@ -120,18 +120,16 @@ export class GetAppointmentsUseCase {
     const appointments = await this.appointmentsRepository.find({
       select: {
         id: true,
-        patientId: true,
         date: true,
         status: true,
         category: true,
         condition: true,
         annotation: true,
         professionalName: true,
-        createdAt: true,
-        updatedAt: true,
         patient: { id: true, name: true, avatarUrl: true },
+        specialist: { id: true, name: true, avatarUrl: true, specialty: true },
       },
-      relations: { patient: true },
+      relations: { patient: true, specialist: true },
       skip: (page - 1) * perPage,
       take: limit ?? perPage,
       order,

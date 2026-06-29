@@ -36,12 +36,15 @@ export class UpdateReferralUseCase {
     const referral = await this.referralsRepository.findOne({ where: { id } });
 
     if (!referral) {
-      throw new NotFoundException('Encaminhamento não encontrado.');
+      throw new NotFoundException('Encaminhamento não encontrado.', {
+        cause: `Referral with ID <${id}> not found`,
+      });
     }
 
     if (referral.status === 'canceled') {
       throw new BadRequestException(
         'Não é possível atualizar um encaminhamento cancelado.',
+        { cause: `Referral with ID <${id}> is already canceled` },
       );
     }
 
@@ -51,6 +54,6 @@ export class UpdateReferralUseCase {
       annotation,
     });
 
-    this.logger.log('Referral updated successfully', { id });
+    this.logger.log('Referral updated', { id });
   }
 }

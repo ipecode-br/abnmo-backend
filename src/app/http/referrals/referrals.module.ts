@@ -14,10 +14,10 @@ import { UpdateReferralUseCase } from './use-cases/update-referral.use-case';
   imports: [TypeOrmModule.forFeature([Referral, User])],
   controllers: [ReferralsController],
   providers: [
-    GetReferralsUseCase,
-    CreateReferralUseCase,
-    UpdateReferralUseCase,
     CancelReferralUseCase,
+    CreateReferralUseCase,
+    GetReferralsUseCase,
+    UpdateReferralUseCase,
   ],
 })
 export class ReferralsModule {}

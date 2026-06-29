@@ -18,15 +18,15 @@ import {
 import { specialtySchema } from '../shared';
 import { referralSchema } from '.';
 
-export const createReferralSchema = referralSchema
-  .pick({
-    patientId: true,
-    date: true,
-    condition: true,
-    annotation: true,
-    professionalName: true,
+export const createReferralSchema = z
+  .object({
+    patientId: z.string().uuid(),
+    date: referralSchema.shape.date,
+    condition: referralSchema.shape.condition,
+    annotation: referralSchema.shape.annotation,
+    professionalName: referralSchema.shape.professionalName,
+    category: specialtySchema.optional(),
   })
-  .extend({ category: specialtySchema.optional() })
   .strict();
 
 export const updateReferralSchema = referralSchema.pick({

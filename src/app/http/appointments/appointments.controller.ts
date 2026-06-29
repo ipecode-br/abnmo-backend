@@ -18,10 +18,10 @@ import { Log } from '@/common/log/log.decorator';
 import type { RequestUser } from '@/common/types';
 
 import {
-  CreateAppointmentDto,
+  CreateAppointmentBody,
   GetAppointmentsQuery,
   GetAppointmentsResponse,
-  UpdateAppointmentDto,
+  UpdateAppointmentBody,
 } from './appointments.dtos';
 import { CancelAppointmentUseCase } from './use-cases/cancel-appointment.use-case';
 import { CreateAppointmentUseCase } from './use-cases/create-appointment.use-case';
@@ -29,14 +29,14 @@ import { GetAppointmentsUseCase } from './use-cases/get-appointments.use-case';
 import { UpdateAppointmentUseCase } from './use-cases/update-appointment.use-case';
 
 @ApiTags('Atendimentos')
-@Roles(['all'])
 @Controller('appointments')
+@Roles(['all'])
 export class AppointmentsController {
   constructor(
-    private readonly getAppointmentsUseCase: GetAppointmentsUseCase,
-    private readonly createAppointmentUseCase: CreateAppointmentUseCase,
-    private readonly updateAppointmentUseCase: UpdateAppointmentUseCase,
     private readonly cancelAppointmentUseCase: CancelAppointmentUseCase,
+    private readonly createAppointmentUseCase: CreateAppointmentUseCase,
+    private readonly getAppointmentsUseCase: GetAppointmentsUseCase,
+    private readonly updateAppointmentUseCase: UpdateAppointmentUseCase,
   ) {}
 
   @Get()
@@ -61,12 +61,9 @@ export class AppointmentsController {
   @ZodResponse({ type: BaseResponse, status: 201 })
   async create(
     @User() user: RequestUser,
-    @Body() createAppointmentDto: CreateAppointmentDto,
+    @Body() body: CreateAppointmentBody,
   ): Promise<BaseResponse> {
-    await this.createAppointmentUseCase.execute({
-      user,
-      ...createAppointmentDto,
-    });
+    await this.createAppointmentUseCase.execute({ user, ...body });
 
     return {
       success: true,
@@ -80,12 +77,9 @@ export class AppointmentsController {
   @ZodResponse({ type: BaseResponse, status: 204 })
   public async update(
     @Param('id') id: string,
-    @Body() updateAppointmentDto: UpdateAppointmentDto,
+    @Body() body: UpdateAppointmentBody,
   ): Promise<BaseResponse> {
-    await this.updateAppointmentUseCase.execute({
-      id,
-      ...updateAppointmentDto,
-    });
+    await this.updateAppointmentUseCase.execute({ id, ...body });
 
     return {
       success: true,

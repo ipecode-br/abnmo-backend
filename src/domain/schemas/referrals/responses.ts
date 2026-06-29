@@ -10,23 +10,29 @@ export const getReferralsResponseSchema = baseResponseSchema.extend({
       referralSchema
         .pick({
           id: true,
-          patientId: true,
           date: true,
           status: true,
           category: true,
           condition: true,
           annotation: true,
           professionalName: true,
-          userId: true,
-          createdAt: true,
-          updatedAt: true,
         })
         .extend({
           patient: userSchema.pick({
+            id: true,
             name: true,
             email: true,
             avatarUrl: true,
           }),
+          specialist: userSchema
+            .pick({
+              id: true,
+              name: true,
+              email: true,
+              avatarUrl: true,
+              specialty: true,
+            })
+            .nullable(),
         }),
     ),
     total: z.number(),

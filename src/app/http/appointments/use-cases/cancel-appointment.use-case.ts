@@ -30,15 +30,19 @@ export class CancelAppointmentUseCase {
     });
 
     if (!appointment) {
-      throw new NotFoundException('Atendimento não encontrado.');
+      throw new NotFoundException('Atendimento não encontrado.', {
+        cause: `Appointment with ID <${id}> not found`,
+      });
     }
 
     if (appointment.status === 'canceled') {
-      throw new BadRequestException('Este atendimento já está cancelado.');
+      throw new BadRequestException('Este atendimento já está cancelado.', {
+        cause: `Appointment with ID <${id}> is already canceled`,
+      });
     }
 
-    await this.appointmentsRepository.update({ id }, { status: 'canceled' });
+    await this.appointmentsRepository.update(id, { status: 'canceled' });
 
-    this.logger.log('Appointment canceled successfully', { id });
+    this.logger.log('Appointment canceled', { id });
   }
 }

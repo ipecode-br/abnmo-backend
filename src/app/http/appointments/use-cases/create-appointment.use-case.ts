@@ -15,13 +15,13 @@ import type { PatientCondition } from '@/domain/enums/patients';
 import type { SpecialtyCategory } from '@/domain/enums/shared';
 
 interface CreateAppointmentUseCaseInput {
-  user: RequestUser;
-  patientId: string;
-  date: Date;
-  condition: PatientCondition;
   annotation: string | null;
-  professionalName: string | null;
   category?: SpecialtyCategory;
+  condition: PatientCondition;
+  date: Date;
+  patientId: string;
+  professionalName: string | null;
+  user: RequestUser;
 }
 
 @Injectable()
@@ -36,13 +36,13 @@ export class CreateAppointmentUseCase {
   ) {}
 
   async execute({
-    user,
-    patientId,
-    date,
-    condition,
     annotation,
     category,
+    condition,
+    date,
+    patientId,
     professionalName,
+    user,
   }: CreateAppointmentUseCaseInput): Promise<void> {
     const patient = await this.usersRepository.findOne({
       where: { id: patientId, role: 'patient' },
@@ -50,19 +50,14 @@ export class CreateAppointmentUseCase {
     });
 
     if (!patient) {
-      throw new NotFoundException('Paciente não encontrado.');
+      throw new NotFoundException('Paciente não encontrado.', {
+        cause: `Patient with ID <${patientId}> not found`,
+      });
     }
 
-    const appointmentPayload: Partial<Appointment> = {
-      patientId,
-      date,
-      category,
-      condition,
-      professionalName,
-      annotation,
-      status: 'scheduled',
-      createdBy: user.id,
-    };
+    let finalCategory = category;
+    let finalProfessionalName = professionalName;
+    let specialistRef: { id: string } | undefined;
 
     if (user.role === 'specialist') {
       if (category || professionalName) {
@@ -73,30 +68,39 @@ export class CreateAppointmentUseCase {
 
       const specialist = await this.usersRepository.findOne({
         select: { id: true, name: true, specialty: true },
-        where: { id: user.id },
+        where: { id: user.id, role: 'specialist' },
       });
 
       if (!specialist || !specialist.specialty) {
-        throw new NotFoundException('Especialista não encontrado.');
+        throw new NotFoundException('Especialista não encontrado.', {
+          cause: `Specialist with ID <${user.id}> not found`,
+        });
       }
 
-      appointmentPayload.userId = specialist.id;
-      appointmentPayload.professionalName = specialist.name;
-      appointmentPayload.category = specialist.specialty;
+      finalCategory = specialist.specialty;
+      finalProfessionalName = specialist.name;
+      specialistRef = { id: specialist.id };
     }
 
-    if (!appointmentPayload.category) {
+    if (!finalCategory) {
       throw new BadRequestException(
         'A categoria do atendimento é obrigatória.',
       );
     }
 
-    const appointment = this.appointmentsRepository.create(appointmentPayload);
+    const appointment = this.appointmentsRepository.create({
+      annotation,
+      category: finalCategory,
+      condition,
+      createdBy: user.id,
+      date,
+      patient: { id: patientId },
+      professionalName: finalProfessionalName,
+      specialist: specialistRef,
+      status: 'scheduled',
+    });
     await this.appointmentsRepository.save(appointment);
 
-    this.logger.log('Appointment created successfully', {
-      id: appointment.id,
-      patientId,
-    });
+    this.logger.log('Appointment created', { id: appointment.id, patientId });
   }
 }

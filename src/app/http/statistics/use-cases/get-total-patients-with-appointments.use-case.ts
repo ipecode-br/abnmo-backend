@@ -49,7 +49,7 @@ export class GetTotalPatientsWithAppointmentsUseCase {
       });
     }
 
-    query.select('COUNT(DISTINCT a.patientId)', 'count');
+    query.select('COUNT(DISTINCT a.patient_id)', 'count');
 
     const result = await query.getRawOne<{ count: string }>();
     return Number(result?.count ?? 0);

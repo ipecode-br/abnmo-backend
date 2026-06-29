@@ -49,7 +49,7 @@ export class GetTotalPatientsWithReferralsUseCase {
       });
     }
 
-    query.select('COUNT(DISTINCT r.patientId)', 'count');
+    query.select('COUNT(DISTINCT r.patient_id)', 'count');
 
     const result = await query.getRawOne<{ count: string }>();
     return Number(result?.count ?? 0);

@@ -14,10 +14,10 @@ import { UpdateAppointmentUseCase } from './use-cases/update-appointment.use-cas
   imports: [TypeOrmModule.forFeature([Appointment, User])],
   controllers: [AppointmentsController],
   providers: [
-    GetAppointmentsUseCase,
-    CreateAppointmentUseCase,
-    UpdateAppointmentUseCase,
     CancelAppointmentUseCase,
+    CreateAppointmentUseCase,
+    GetAppointmentsUseCase,
+    UpdateAppointmentUseCase,
   ],
 })
 export class AppointmentsModule {}

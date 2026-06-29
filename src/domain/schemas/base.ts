@@ -7,6 +7,7 @@ export const baseEntitySchema = z
     createdAt: z.coerce.date(),
   })
   .strict();
+export type BaseEntitySchema = z.infer<typeof baseEntitySchema>;
 
 export const baseResponseSchema = z
   .object({

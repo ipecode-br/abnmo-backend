@@ -20,19 +20,19 @@ import type {
 import type { SpecialtyCategory } from '@/domain/enums/shared';
 
 interface GetReferralsUseCaseInput {
-  user: RequestUser;
-  page: number;
-  perPage: number;
-  patientId?: string;
-  status?: ReferralStatus;
   category?: SpecialtyCategory;
   condition?: PatientCondition;
-  search?: string;
-  startDate?: string;
   endDate?: string;
   limit?: number;
-  orderBy?: ReferralsOrderBy;
   order?: QueryOrder;
+  orderBy?: ReferralsOrderBy;
+  page: number;
+  patientId?: string;
+  perPage: number;
+  search?: string;
+  startDate?: string;
+  status?: ReferralStatus;
+  user: RequestUser;
 }
 
 interface GetReferralsUseCaseOutput {
@@ -48,15 +48,15 @@ export class GetReferralsUseCase {
   ) {}
 
   async execute({
-    user,
-    patientId,
-    status,
     category,
     condition,
-    search,
-    page,
-    perPage,
     limit,
+    page,
+    patientId,
+    perPage,
+    search,
+    status,
+    user,
     ...props
   }: GetReferralsUseCaseInput): Promise<GetReferralsUseCaseOutput> {
     const startDate = props.startDate ? new Date(props.startDate) : null;
@@ -74,11 +74,11 @@ export class GetReferralsUseCase {
     const where: FindOptionsWhere<Referral> = {};
 
     if (user.role === 'patient') {
-      where.patientId = user.id;
+      where.patient = { id: user.id };
     }
 
     if (patientId) {
-      where.patientId = patientId;
+      where.patient = { id: patientId };
     }
 
     if (startDate && !endDate) {
@@ -120,18 +120,16 @@ export class GetReferralsUseCase {
     const referrals = await this.referralsRepository.find({
       select: {
         id: true,
-        patientId: true,
         date: true,
         status: true,
         category: true,
         condition: true,
         annotation: true,
         professionalName: true,
-        createdAt: true,
-        updatedAt: true,
         patient: { id: true, name: true, avatarUrl: true },
+        specialist: { id: true, name: true, avatarUrl: true, specialty: true },
       },
-      relations: { patient: true },
+      relations: { patient: true, specialist: true },
       skip: (page - 1) * perPage,
       take: limit ?? perPage,
       order,

@@ -10,7 +10,9 @@ import {
 } from '../enums/users';
 import type { SupportContact } from '../schemas/shared';
 import type { UserSchema } from '../schemas/users';
+import { Appointment } from './appointment';
 import { BaseEntity } from './base';
+import { Referral } from './referral';
 import { Survey } from './survey';
 import { SurveySubmission } from './survey-submission';
 
@@ -58,4 +60,10 @@ export class User extends BaseEntity implements UserSchema {
 
   @OneToMany(() => SurveySubmission, (submission) => submission.approvedBy)
   surveySubmissionsApproved: SurveySubmission[];
+
+  @OneToMany(() => Appointment, (appointment) => appointment.specialist)
+  appointmentsAsSpecialist: Appointment[];
+
+  @OneToMany(() => Referral, (referral) => referral.specialist)
+  referralsAsSpecialist: Referral[];
 }

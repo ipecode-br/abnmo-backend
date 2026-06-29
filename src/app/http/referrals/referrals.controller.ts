@@ -18,10 +18,10 @@ import { Log } from '@/common/log/log.decorator';
 import type { RequestUser } from '@/common/types';
 
 import {
-  CreateReferralDto,
+  CreateReferralBody,
   GetReferralsQuery,
   GetReferralsResponse,
-  UpdateReferralDto,
+  UpdateReferralBody,
 } from './referrals.dtos';
 import { CancelReferralUseCase } from './use-cases/cancel-referral.use-case';
 import { CreateReferralUseCase } from './use-cases/create-referrals.use-case';
@@ -29,14 +29,14 @@ import { GetReferralsUseCase } from './use-cases/get-referrals.use-case';
 import { UpdateReferralUseCase } from './use-cases/update-referral.use-case';
 
 @ApiTags('Encaminhamentos')
-@Roles(['all'])
 @Controller('referrals')
+@Roles(['all'])
 export class ReferralsController {
   constructor(
-    private readonly getReferralsUseCase: GetReferralsUseCase,
-    private readonly createReferralUseCase: CreateReferralUseCase,
-    private readonly updateReferralUseCase: UpdateReferralUseCase,
     private readonly cancelReferralUseCase: CancelReferralUseCase,
+    private readonly createReferralUseCase: CreateReferralUseCase,
+    private readonly getReferralsUseCase: GetReferralsUseCase,
+    private readonly updateReferralUseCase: UpdateReferralUseCase,
   ) {}
 
   @Get()
@@ -61,9 +61,9 @@ export class ReferralsController {
   @ZodResponse({ type: BaseResponse, status: 201 })
   async create(
     @User() user: RequestUser,
-    @Body() createReferralDto: CreateReferralDto,
+    @Body() body: CreateReferralBody,
   ): Promise<BaseResponse> {
-    await this.createReferralUseCase.execute({ user, ...createReferralDto });
+    await this.createReferralUseCase.execute({ user, ...body });
 
     return { success: true, message: 'Encaminhamento cadastrado com sucesso.' };
   }
@@ -74,9 +74,9 @@ export class ReferralsController {
   @ZodResponse({ type: BaseResponse, status: 204 })
   public async update(
     @Param('id') id: string,
-    @Body() updateReferralDto: UpdateReferralDto,
+    @Body() body: UpdateReferralBody,
   ): Promise<BaseResponse> {
-    await this.updateReferralUseCase.execute({ id, ...updateReferralDto });
+    await this.updateReferralUseCase.execute({ id, ...body });
 
     return {
       success: true,

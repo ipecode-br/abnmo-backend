@@ -30,15 +30,19 @@ export class CancelReferralUseCase {
     });
 
     if (!referral) {
-      throw new NotFoundException('Encaminhamento não encontrado.');
+      throw new NotFoundException('Encaminhamento não encontrado.', {
+        cause: `Referral with ID <${id}> not found`,
+      });
     }
 
     if (referral.status === 'canceled') {
-      throw new BadRequestException('Este encaminhamento já está cancelado.');
+      throw new BadRequestException('Este encaminhamento já está cancelado.', {
+        cause: `Referral with ID <${id}> is already canceled`,
+      });
     }
 
-    await this.referralsRepository.update({ id }, { status: 'canceled' });
+    await this.referralsRepository.update(id, { status: 'canceled' });
 
-    this.logger.log('Referral canceled successfully', { id });
+    this.logger.log('Referral canceled', { id });
   }
 }

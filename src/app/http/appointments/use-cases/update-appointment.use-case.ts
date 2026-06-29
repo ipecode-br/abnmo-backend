@@ -38,12 +38,15 @@ export class UpdateAppointmentUseCase {
     });
 
     if (!appointment) {
-      throw new NotFoundException('Atendimento não encontrado.');
+      throw new NotFoundException('Atendimento não encontrado.', {
+        cause: `Appointment with ID <${id}> not found`,
+      });
     }
 
     if (appointment.status === 'canceled') {
       throw new BadRequestException(
         'Não é possível atualizar um atendimento cancelado.',
+        { cause: `Appointment with ID <${id}> is already canceled` },
       );
     }
 
@@ -53,6 +56,6 @@ export class UpdateAppointmentUseCase {
       annotation,
     });
 
-    this.logger.log('Appointment updated successfully', { id });
+    this.logger.log('Appointment updated', { id });
   }
 }
