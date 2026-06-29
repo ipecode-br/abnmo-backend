@@ -9,13 +9,13 @@ import {
   type Repository,
 } from 'typeorm';
 
-import { Patient } from '@/domain/entities/patient';
-import type { PatientStatus } from '@/domain/enums/patients';
+import { User } from '@/domain/entities/user';
 import type { QueryPeriod } from '@/domain/enums/queries';
+import { UserStatus } from '@/domain/enums/users';
 import { getDateRangeForPeriod } from '@/utils/get-date-range-for-period';
 
 interface GetTotalPatientsUseCaseInput {
-  status?: PatientStatus;
+  status?: UserStatus;
   period?: QueryPeriod;
   startDate?: Date;
   endDate?: Date;
@@ -24,8 +24,8 @@ interface GetTotalPatientsUseCaseInput {
 @Injectable()
 export class GetTotalPatientsUseCase {
   constructor(
-    @InjectRepository(Patient)
-    private readonly patientsRepository: Repository<Patient>,
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
   ) {}
 
   async execute({
@@ -34,7 +34,7 @@ export class GetTotalPatientsUseCase {
     startDate,
     endDate,
   }: GetTotalPatientsUseCaseInput = {}): Promise<number> {
-    const where: FindOptionsWhere<Patient> = {
+    const where: FindOptionsWhere<User> = {
       status: status ?? Not('pending'),
     };
 
@@ -54,6 +54,7 @@ export class GetTotalPatientsUseCase {
     if (startDate && endDate) {
       where.createdAt = Between(startDate, endDate);
     }
-    return await this.patientsRepository.count({ select: { id: true }, where });
+
+    return await this.usersRepository.count({ select: { id: true }, where });
   }
 }

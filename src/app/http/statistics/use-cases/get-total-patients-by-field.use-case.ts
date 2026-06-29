@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository, SelectQueryBuilder } from 'typeorm';
 
-import { Patient } from '@/domain/entities/patient';
+import { User } from '@/domain/entities/user';
 import type { QueryOrder, QueryPeriod } from '@/domain/enums/queries';
 import type { PatientsStatisticField } from '@/domain/enums/statistics';
 import { getDateRangeForPeriod } from '@/utils/get-date-range-for-period';
@@ -27,8 +27,8 @@ interface GetTotalPatientsByFieldUseCaseOutput<T> {
 @Injectable()
 export class GetTotalPatientsByFieldUseCase {
   constructor(
-    @InjectRepository(Patient)
-    private readonly patientsRepository: Repository<Patient>,
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
     private readonly getTotalPatientsUseCase: GetTotalPatientsUseCase,
   ) {}
 
@@ -52,13 +52,13 @@ export class GetTotalPatientsByFieldUseCase {
       endDate: dateRange.endDate,
     });
 
-    const createBaseQuery = (): SelectQueryBuilder<Patient> => {
-      const baseQuery = this.patientsRepository
-        .createQueryBuilder('patient')
-        .where('patient.status != :status', { status: 'pending' });
+    const createBaseQuery = (): SelectQueryBuilder<User> => {
+      const baseQuery = this.usersRepository
+        .createQueryBuilder('user')
+        .where('user.status != :status', { status: 'pending' });
 
       if (dateRange.startDate && dateRange.endDate) {
-        baseQuery.andWhere('patient.created_at BETWEEN :start AND :end', {
+        baseQuery.andWhere('user.created_at BETWEEN :start AND :end', {
           start: dateRange.startDate,
           end: dateRange.endDate,
         });
@@ -68,19 +68,19 @@ export class GetTotalPatientsByFieldUseCase {
     };
 
     const totalQuery = createBaseQuery().select(
-      `COUNT(DISTINCT patient.${field})`,
+      `COUNT(DISTINCT user.${field})`,
       'total',
     );
 
     const fieldQuery = createBaseQuery()
-      .select(`patient.${field}`, field)
-      .addSelect('COUNT(patient.id)', 'total')
-      .groupBy(`patient.${field}`)
+      .select(`user.${field}`, field)
+      .addSelect('COUNT(user.id)', 'total')
+      .groupBy(`user.${field}`)
       .orderBy('total', order);
 
     if (withPercentage) {
       fieldQuery.addSelect(
-        `ROUND((COUNT(patient.id) * 100.0 / ${totalPatients}), 1)`,
+        `ROUND((COUNT(user.id) * 100.0 / ${totalPatients}), 1)`,
         'percentage',
       );
     }

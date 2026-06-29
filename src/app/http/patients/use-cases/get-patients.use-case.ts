@@ -10,8 +10,9 @@ import {
 } from 'typeorm';
 
 import { User } from '@/domain/entities/user';
+import { PatientsOrderBy } from '@/domain/enums/patients';
 import type { QueryOrder } from '@/domain/enums/queries';
-import type { UsersOrderBy, UserStatus } from '@/domain/enums/users';
+import type { UserStatus } from '@/domain/enums/users';
 import type { ListPatientResponse } from '@/domain/schemas/patients/responses';
 
 interface GetPatientsUseCaseInput {
@@ -19,7 +20,7 @@ interface GetPatientsUseCaseInput {
   perPage: number;
   search?: string;
   order?: QueryOrder;
-  orderBy?: UsersOrderBy;
+  orderBy?: PatientsOrderBy;
   status?: UserStatus;
   startDate?: string;
   endDate?: string;
@@ -47,9 +48,9 @@ export class GetPatientsUseCase {
     const startDate = props.startDate ? new Date(props.startDate) : null;
     const endDate = props.endDate ? new Date(props.endDate) : null;
 
-    const ORDER_BY_MAPPING: Record<UsersOrderBy, keyof User> = {
+    const ORDER_BY_MAPPING: Record<PatientsOrderBy, keyof User> = {
       name: 'name',
-      role: 'role',
+      email: 'email',
       status: 'status',
       date: 'createdAt',
     };

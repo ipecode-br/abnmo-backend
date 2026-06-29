@@ -8,7 +8,6 @@ import { generateFakeSurveySubmission } from 'infra/scripts/seed-dev/generate-fa
 import { generateFakeUser } from 'infra/scripts/seed-dev/generate-fake-user';
 
 import { Appointment } from '@/domain/entities/appointment';
-import { Patient } from '@/domain/entities/patient';
 import { PatientRequirement } from '@/domain/entities/patient-requirement';
 import { Referral } from '@/domain/entities/referral';
 import { Survey } from '@/domain/entities/survey';
@@ -47,7 +46,6 @@ async function main() {
     await dataSource.manager.clear(Appointment);
     await dataSource.manager.clear(Referral);
     await dataSource.manager.clear(PatientRequirement);
-    await dataSource.manager.clear(Patient);
     await dataSource.manager.clear(User);
     await dataSource.manager.clear(SurveySubmission);
     await dataSource.manager.clear(Survey);

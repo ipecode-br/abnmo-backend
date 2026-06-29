@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
-import { USER_STATUSES, USERS_ORDER_BY } from '@/domain/enums/users';
+import { PATIENTS_ORDER_BY } from '@/domain/enums/patients';
+import { USER_STATUSES } from '@/domain/enums/users';
 
 import { baseQuerySchema } from '../query';
 import { cpfSchema, supportContactSchema } from '../shared';
@@ -24,7 +25,7 @@ export const getPatientsQuerySchema = baseQuerySchema
   })
   .extend({
     status: z.enum(USER_STATUSES).optional(),
-    orderBy: z.enum(USERS_ORDER_BY).optional().default('name'),
+    orderBy: z.enum(PATIENTS_ORDER_BY).optional().default('name'),
   })
   .refine(
     (data) => {

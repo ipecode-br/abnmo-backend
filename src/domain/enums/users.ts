@@ -1,7 +1,7 @@
 export const USER_ROLES = ['admin', 'member', 'specialist', 'patient'] as const;
 export type UserRole = (typeof USER_ROLES)[number];
 
-export const USER_STATUSES = ['active', 'inactive'] as const;
+export const USER_STATUSES = ['active', 'inactive', 'pending'] as const;
 export type UserStatus = (typeof USER_STATUSES)[number];
 
 export const USERS_ORDER_BY = ['name', 'date', 'role', 'status'] as const;

@@ -1,10 +1,5 @@
 import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
 
-import {
-  BRAZILIAN_STATES,
-  type BrazilianState,
-} from '@/constants/brazilian-states';
-
 import { BRAZIL_STATES, BrazilState } from '../enums/shared';
 import type {
   AffectedArea,
@@ -221,8 +216,8 @@ export class Survey extends BaseEntity implements SurveySchema {
   @Column({ type: 'varchar', length: 8, nullable: true })
   diagnosisHospitalCep: string | null;
 
-  @Column({ type: 'enum', enum: BRAZILIAN_STATES, nullable: true })
-  diagnosisHospitalState: BrazilianState | null;
+  @Column({ type: 'enum', enum: BRAZIL_STATES, nullable: true })
+  diagnosisHospitalState: BrazilState | null;
 
   @Column({ type: 'varchar', length: 64, nullable: true })
   diagnosisHospitalCity: string | null;

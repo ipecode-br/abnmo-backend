@@ -21,6 +21,15 @@ NestJS + TypeORM + MySQL + Zod API.
 - **Enums**: `as const` arrays in `src/domain/enums/`, **not** TypeScript `enum` keyword
 - **Path alias**: `@/` → `./src/`
 
+## Patient data model
+
+- **No dedicated `Patient` entity** — patients are `User` records with `role: 'patient'`
+- **Sensitive/identifiable data** (name, phone, CPF, email, SUS ID) → `User` entity
+- **Anonymous demographic & clinical data** (birthday, gender, race, address, diagnosis, etc.) → `Survey` entity
+- `User` has a `@OneToOne` relation to `Survey` for survey data
+- **Never** join `User` in statistics queries — query `Survey` only
+- **Statistics must never return sensitive or linkable data** — only aggregate counts, percentages, etc.
+
 ## Auth
 
 - **JWT in HTTP-only signed cookies** (no `Authorization` header)
@@ -144,14 +153,20 @@ if (startDate && endDate) where.createdAt = Between(startDate, endDate);
 - Implement the matching Zod schema type
 - Always `select` specific fields in queries, avoid over-fetching
 - Explicit `relations: { entity: true }`
+- When querying `Survey`, **never** include `{ user: true }` in relations — this would leak identifiable data
 
 ### Transactions
 
 ```ts
 await this.dataSource.transaction(async (manager) => {
-  const patient = manager.create(Patient, { ... });
-  await manager.save(patient);
-  await manager.save(PatientSupport, supports.map(...));
+  const usersRepository = manager.getRepository(User);
+  const surveysRepository = manager.getRepository(Survey);
+
+  const patient = usersRepository.create({ role: 'patient', ... });
+  await usersRepository.save(patient);
+
+  const survey = surveysRepository.create({ user: patient, ... });
+  await surveysRepository.save(survey);
 });
 ```
 
@@ -161,7 +176,7 @@ Check existing utilities in `src/utils/` (cookies, date ranges, file names, vali
 
 ## Important constraints
 
-- **`patients` module**: now queries `User` entity with `role: "patient"` instead of the old `Patient` entity
+- **`patients` module**: queries `User` entity with `role: "patient"`
 - **Ignore tests** — broken and pending refactor; instructions will be added later
 - **Do NOT add comments** to code unless explicitly asked
 - Files: `kebab-case`, exports match file names (`create-appointment.use-case.ts` → `CreateAppointmentUseCase`)

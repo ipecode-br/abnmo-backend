@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { Appointment } from '@/domain/entities/appointment';
-import { Patient } from '@/domain/entities/patient';
 import { Referral } from '@/domain/entities/referral';
+import { User } from '@/domain/entities/user';
 
 import { StatisticsController } from './statistics.controller';
 import { GetTotalAppointmentsUseCase } from './use-cases/get-total-appointments.use-case';
@@ -18,19 +18,19 @@ import { GetTotalReferralsUseCase } from './use-cases/get-total-referrals.use-ca
 import { GetTotalReferralsByCategoryUseCase } from './use-cases/get-total-referrals-by-category.use-case';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Appointment, Patient, Referral])],
+  imports: [TypeOrmModule.forFeature([Appointment, User, Referral])],
   controllers: [StatisticsController],
   providers: [
-    GetTotalAppointmentsUseCase,
     GetTotalAppointmentsByCategoryUseCase,
-    GetTotalPatientsUseCase,
+    GetTotalAppointmentsUseCase,
     GetTotalPatientsByFieldUseCase,
-    GetTotalPatientsWithAppointmentsUseCase,
+    GetTotalPatientsUseCase,
     GetTotalPatientsWithAppointmentsByStateUseCase,
-    GetTotalPatientsWithReferralsUseCase,
+    GetTotalPatientsWithAppointmentsUseCase,
     GetTotalPatientsWithReferralsByStateUseCase,
-    GetTotalReferralsUseCase,
+    GetTotalPatientsWithReferralsUseCase,
     GetTotalReferralsByCategoryUseCase,
+    GetTotalReferralsUseCase,
   ],
 })
 export class StatisticsModule {}

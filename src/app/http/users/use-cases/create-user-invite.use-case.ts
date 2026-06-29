@@ -1,8 +1,4 @@
-import {
-  ConflictException,
-  Injectable,
-  ServiceUnavailableException,
-} from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 
@@ -11,7 +7,6 @@ import { MailService } from '@/app/mail/mail.service';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import { buildRegisterUserEmail } from '@/domain/email-templates/register-user-email';
-import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
@@ -29,33 +24,26 @@ export class CreateUserInviteUseCase {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
-    @InjectRepository(Patient)
-    private readonly patientsRepository: Repository<Patient>,
     @InjectRepository(Token)
     private readonly tokensRepository: Repository<Token>,
     private readonly createTokenUseCase: CreateTokenUseCase,
-    private readonly envService: EnvService,
-    private readonly mailService: MailService,
     private readonly dataSource: DataSource,
+    private readonly envService: EnvService,
     private readonly logger: LogService,
+    private readonly mailService: MailService,
   ) {}
 
   async execute({ email, role }: CreateUserInviteUseCaseInput): Promise<void> {
-    const [existingInviteUserToken, existingUser, existingPatient] =
-      await Promise.all([
-        this.tokensRepository.findOne({ where: { email } }),
-        this.usersRepository.findOne({
-          where: { email },
-          select: { id: true },
-        }),
-        this.patientsRepository.findOne({
-          where: { email },
-          select: { id: true },
-        }),
-      ]);
+    const [existingInviteUserToken, existingUser] = await Promise.all([
+      this.tokensRepository.findOne({ where: { email } }),
+      this.usersRepository.findOne({ where: { email }, select: { id: true } }),
+    ]);
 
-    if (existingUser || existingPatient) {
-      throw new ConflictException('Este e-mail já está cadastrado no sistema.');
+    if (existingUser) {
+      throw new ConflictException(
+        'Este e-mail já está cadastrado no sistema.',
+        { cause: `User with email <${email}> already exists` },
+      );
     }
 
     const existingTokenExpiryDate = existingInviteUserToken?.expiresAt;
@@ -63,6 +51,7 @@ export class CreateUserInviteUseCase {
     if (existingTokenExpiryDate && existingTokenExpiryDate > new Date()) {
       throw new ConflictException(
         'Já existe um convite ativo para este e-mail.',
+        { cause: `Invite user token for email <${email}> already exists` },
       );
     }
 
@@ -87,7 +76,7 @@ export class CreateUserInviteUseCase {
 
       await tokensRepository.save(newInviteUserToken);
 
-      this.logger.log('Invite user token created successfully', {
+      this.logger.log('Invite user token created', {
         id: newInviteUserToken.id,
         email,
         role,
@@ -106,18 +95,12 @@ export class CreateUserInviteUseCase {
         registerUserUrl,
       });
 
-      const emailSent = await this.mailService.send({
+      await this.mailService.send({
         to: email,
         subject,
         text: preheader,
         html: registerUserEmail,
       });
-
-      if (!emailSent) {
-        throw new ServiceUnavailableException(
-          'O envio do convite falhou. Por favor, tente novamente.',
-        );
-      }
     });
   }
 }

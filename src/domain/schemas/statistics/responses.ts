@@ -1,8 +1,7 @@
 import { z } from 'zod';
 
-import { BRAZILIAN_STATES } from '@/constants/brazilian-states';
-import { PATIENT_GENDERS } from '@/domain/enums/patients';
-import { SPECIALTY_CATEGORIES } from '@/domain/enums/shared';
+import { BRAZIL_STATES, SPECIALTY_CATEGORIES } from '@/domain/enums/shared';
+import { GENDERS } from '@/domain/enums/surveys';
 
 import { baseResponseSchema } from '../base';
 
@@ -49,7 +48,7 @@ export const getTotalPatientsByCityResponseSchema = baseResponseSchema.extend({
 });
 
 export const totalPatientsByGenderSchema = z.object({
-  gender: z.enum(PATIENT_GENDERS),
+  gender: z.enum(GENDERS),
   total: z.number(),
 });
 export type TotalPatientsByGender = z.infer<typeof totalPatientsByGenderSchema>;
@@ -69,7 +68,7 @@ export const getTotalPatientsWithAppointmentsResponseSchema =
   });
 
 export const totalPatientsWithAppointmentsByStateSchema = z.object({
-  state: z.enum(BRAZILIAN_STATES),
+  state: z.enum(BRAZIL_STATES),
   total: z.number(),
   percentage: z.number(),
 });
@@ -91,7 +90,7 @@ export const getTotalPatientsWithReferralsResponseSchema =
   });
 
 export const totalPatientsWithReferralsByStateSchema = z.object({
-  state: z.enum(BRAZILIAN_STATES),
+  state: z.enum(BRAZIL_STATES),
   total: z.number(),
   percentage: z.number(),
 });

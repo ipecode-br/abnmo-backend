@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository, SelectQueryBuilder } from 'typeorm';
 
-import { Patient } from '@/domain/entities/patient';
+import { User } from '@/domain/entities/user';
 import type { QueryPeriod } from '@/domain/enums/queries';
 import type { TotalPatientsWithReferralsByState } from '@/domain/schemas/statistics/responses';
 import { getDateRangeForPeriod } from '@/utils/get-date-range-for-period';
@@ -22,8 +22,8 @@ interface GetTotalPatientsWithReferralsByStateUseCaseOutput {
 @Injectable()
 export class GetTotalPatientsWithReferralsByStateUseCase {
   constructor(
-    @InjectRepository(Patient)
-    private readonly patientsRepository: Repository<Patient>,
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
   ) {}
 
   async execute({
@@ -36,11 +36,11 @@ export class GetTotalPatientsWithReferralsByStateUseCase {
       ? getDateRangeForPeriod(period)
       : { startDate, endDate };
 
-    const createBaseQuery = (): SelectQueryBuilder<Patient> => {
-      const baseQuery = this.patientsRepository
-        .createQueryBuilder('patient')
-        .innerJoin('patient.referrals', 'referral')
-        .where('patient.status != :status', { status: 'pending' });
+    const createBaseQuery = (): SelectQueryBuilder<User> => {
+      const baseQuery = this.usersRepository
+        .createQueryBuilder('user')
+        .innerJoin('user.referrals', 'referral')
+        .where('user.status != :status', { status: 'pending' });
 
       if (dateRange.startDate && dateRange.endDate) {
         baseQuery.andWhere('referral.date BETWEEN :start AND :end', {
@@ -53,23 +53,23 @@ export class GetTotalPatientsWithReferralsByStateUseCase {
     };
 
     const listStatesQuery = createBaseQuery()
-      .select('patient.state', 'state')
-      .addSelect('COUNT(DISTINCT patient.id)', 'total');
+      .select('user.state', 'state')
+      .addSelect('COUNT(DISTINCT user.id)', 'total');
 
     listStatesQuery
       .addSelect(
         `ROUND(
-          (COUNT(DISTINCT patient.id) / SUM(COUNT(DISTINCT patient.id)) OVER()) * 100,
+          (COUNT(DISTINCT user.id) / SUM(COUNT(DISTINCT user.id)) OVER()) * 100,
           1
         )`,
         'percentage',
       )
-      .groupBy('patient.state')
-      .orderBy('COUNT(DISTINCT patient.id)', 'DESC')
+      .groupBy('user.state')
+      .orderBy('COUNT(DISTINCT user.id)', 'DESC')
       .limit(limit);
 
     const totalQuery = createBaseQuery().select(
-      'COUNT(DISTINCT patient.state)',
+      'COUNT(DISTINCT user.state)',
       'total',
     );
 
