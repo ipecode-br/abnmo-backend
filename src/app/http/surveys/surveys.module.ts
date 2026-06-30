@@ -13,6 +13,7 @@ import { GetSurveySubmissionsUseCase } from './submissions/use-cases/get-survey-
 import { GetTotalSurveySubmissionsUseCase } from './submissions/use-cases/get-total-survey-submissions.use-case';
 import { SurveysController } from './surveys.controller';
 import { CreateSurveyUseCase } from './use-cases/create-survey.use-case';
+import { GetSurveysUseCase } from './use-cases/get-surveys.use-case';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { CreateSurveyUseCase } from './use-cases/create-survey.use-case';
     GetSurveySubmissionsUseCase,
     GetSurveySubmissionUseCase,
     GetTotalSurveySubmissionsUseCase,
+    GetSurveysUseCase,
   ],
 })
 export class SurveysModule {}

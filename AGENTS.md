@@ -50,10 +50,10 @@ NestJS + TypeORM + MySQL + Zod API.
 - `@ZodResponse` validates the response body against the DTO schema via the global `ZodSerializerInterceptor`
 - Every `@ZodResponse` **must** include an explicit `status` code:
 
-| HTTP  | When                                                                                                                         |
-| ----- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `200` | Endpoint that returns resource data (GET list/detail, action that returns data)                                              |
-| `201` | POST that creates a resource (`register/user`, `create-appointment`, `create-referral`, etc.)                                |
+| HTTP  | When                                                                                          |
+| ----- | --------------------------------------------------------------------------------------------- |
+| `200` | Endpoint that returns resource data (GET list/detail, action that returns data)               |
+| `201` | POST that creates a resource (`register/user`, `create-appointment`, `create-referral`, etc.) |
 
 - Do **not** inject `@Res()` response objects manually — use NestJS return values + HTTP exceptions
 - **Exception**: `GET /status` uses `@ApiResponse` + `@Res()` (not `@ZodResponse`) because it needs dynamic HTTP status — 200 when OK, 503 when services are down; it validates the response manually via `getStatusResponseSchema.parse()`
@@ -100,6 +100,8 @@ export class CreateAppointmentBody extends createZodDto(
 Prefer `.pick()`, `.extend()`, or `.merge()` from existing schemas before defining raw fields. Only create a new schema from scratch if no existing one covers the domain (e.g., a brand-new entity). This keeps schemas like `userSchema` as a single source of truth.
 
 When fields are shared or no longer exist on an entity schema (e.g. after removing a column), reuse shared schemas (`nameSchema`, `emailSchema`, `phoneSchema`, etc.) from `src/domain/schemas/shared.ts` instead of defining raw `z.string()` or picking from unrelated entity schemas.
+
+When composing a list response, extract a standalone list-item schema (e.g. `listSurveyResponseSchema`), export its inferred type (`ListSurveyResponse`), then use it in the response schema's array. This keeps the Zod type available for use-case return types and ensures runtime validation matches.
 
 ### Shared modules
 

@@ -1,5 +1,8 @@
 import { z } from 'zod';
 
+import { SURVEY_STATUSES, SURVEYS_ORDER_BY } from '@/domain/enums/surveys';
+
+import { baseQuerySchema } from '../../query';
 import { supportContactSchema } from '../../shared';
 import { aboutYouSurveySchema } from './about-you';
 import { dailyLifeSurveySchema } from './daily-life';
@@ -18,3 +21,17 @@ export const createSurveySchema = z.object({
   dailyLife: dailyLifeSurveySchema,
   supportContacts: z.array(supportContactSchema).min(1),
 });
+
+export const getSurveysQuerySchema = baseQuerySchema
+  .pick({
+    order: true,
+    period: true,
+    startDate: true,
+    endDate: true,
+    page: true,
+    perPage: true,
+  })
+  .extend({
+    status: z.enum(SURVEY_STATUSES).optional(),
+    orderBy: z.enum(SURVEYS_ORDER_BY).optional().default('date'),
+  });

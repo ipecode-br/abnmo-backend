@@ -13,6 +13,7 @@ export type UserInvitesOrderBy = (typeof USER_INVITES_ORDER_BY)[number];
 export const USER_FEATURES = [
   // Survey
   'read:survey',
+  'read:survey:others',
   'approve:survey',
   'update:survey',
   'delete:survey',
