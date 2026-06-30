@@ -31,6 +31,9 @@ export class User extends BaseEntity implements UserSchema {
   @Column({ type: 'varchar', length: 2048, nullable: true })
   avatarUrl: string | null;
 
+  @Column({ type: 'varchar', length: 11, nullable: true })
+  phone: string | null;
+
   @Column({ type: 'enum', enum: USER_ROLES })
   role: UserRole;
 
@@ -57,6 +60,9 @@ export class User extends BaseEntity implements UserSchema {
 
   @OneToOne(() => Survey, (survey) => survey.user)
   survey: Survey | null;
+
+  @OneToOne(() => SurveySubmission, (submission) => submission.user)
+  surveySubmission: SurveySubmission | null;
 
   @OneToMany(() => SurveySubmission, (submission) => submission.approvedBy)
   surveySubmissionsApproved: SurveySubmission[];

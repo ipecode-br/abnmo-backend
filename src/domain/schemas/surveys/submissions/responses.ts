@@ -1,18 +1,13 @@
 import { z } from 'zod';
 
 import { baseResponseSchema } from '../../base';
+import { emailSchema, nameSchema, phoneSchema } from '../../shared';
 import { userSchema } from '../../users';
 import { surveySubmissionSchema } from '.';
 
 export const surveySubmissionResponseSchema = surveySubmissionSchema
-  .pick({
-    id: true,
-    name: true,
-    email: true,
-    phone: true,
-    status: true,
-    createdAt: true,
-  })
+  .pick({ id: true, status: true, createdAt: true })
+  .extend({ name: nameSchema, email: emailSchema, phone: phoneSchema })
   .strict();
 export type SurveySubmissionResponse = z.infer<
   typeof surveySubmissionResponseSchema
@@ -30,14 +25,14 @@ export const getSurveySubmissionsResponseSchema = baseResponseSchema.extend({
 export const surveySubmissionDetailsResponseSchema = surveySubmissionSchema
   .pick({
     id: true,
-    name: true,
-    email: true,
-    phone: true,
     status: true,
     updatedAt: true,
     createdAt: true,
   })
   .extend({
+    name: nameSchema,
+    email: emailSchema,
+    phone: phoneSchema.nullable(),
     approvedBy: userSchema
       .pick({ id: true, name: true, email: true, avatarUrl: true })
       .nullable(),

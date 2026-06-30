@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { Repository } from 'typeorm';
+import dataSource from 'infra/database/data.source';
 
 import { User } from '@/domain/entities/user';
 import { SPECIALTY_CATEGORIES } from '@/domain/enums/shared';
@@ -14,9 +14,10 @@ import {
 } from './generate-fakes';
 
 export function generateFakeUser(
-  repository: Repository<User>,
   data: { password: string } & Partial<User>,
 ): User {
+  const repository = dataSource.getRepository(User);
+
   const baseData: Partial<User> = {
     name: generateFakeName(),
     email: generateFakeEmail(),
@@ -31,6 +32,7 @@ export function generateFakeUser(
   const mergedData = { ...baseData, ...data };
 
   if (mergedData.role === 'patient') {
+    mergedData.phone = generateFakePhone();
     mergedData.susId = faker.string.numeric(15);
     mergedData.cpf = faker.string.numeric(11);
 

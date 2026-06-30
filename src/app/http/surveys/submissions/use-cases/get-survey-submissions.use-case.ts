@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 
 import { SurveySubmission } from '@/domain/entities/survey-submission';
+import { User } from '@/domain/entities/user';
 import { QueryOrder } from '@/domain/enums/queries';
 import type {
   SurveySubmissionOrderBy,
@@ -33,6 +34,16 @@ interface GetSurveySubmissionsUseCaseOutput {
   total: number;
 }
 
+const ORDER_BY_MAPPING: Record<
+  SurveySubmissionOrderBy,
+  keyof SurveySubmission | keyof User
+> = {
+  name: 'name',
+  email: 'email',
+  status: 'status',
+  date: 'createdAt',
+};
+
 @Injectable()
 export class GetSurveySubmissionsUseCase {
   constructor(
@@ -50,16 +61,6 @@ export class GetSurveySubmissionsUseCase {
     const startDate = props.startDate ? new Date(props.startDate) : null;
     const endDate = props.endDate ? new Date(props.endDate) : null;
 
-    const ORDER_BY_MAPPING: Record<
-      SurveySubmissionOrderBy,
-      keyof SurveySubmission
-    > = {
-      name: 'name',
-      email: 'email',
-      status: 'status',
-      date: 'createdAt',
-    };
-
     const where: FindOptionsWhere<SurveySubmission> = {};
 
     if (status) {
@@ -67,7 +68,7 @@ export class GetSurveySubmissionsUseCase {
     }
 
     if (search) {
-      where.name = ILike(`%${search}%`);
+      where.user = { name: ILike(`%${search}%`) };
     }
 
     if (startDate && endDate) {
@@ -82,21 +83,26 @@ export class GetSurveySubmissionsUseCase {
       where.createdAt = LessThanOrEqual(endDate);
     }
 
-    const total = await this.surveySubmissionRepository.count({ where });
+    const total = await this.surveySubmissionRepository.count({
+      relations: { user: true },
+      where,
+    });
 
     const orderBy = ORDER_BY_MAPPING[props.orderBy || 'date'];
+    const shouldOrderByUser = orderBy === 'name' || orderBy === 'email';
 
     const result = await this.surveySubmissionRepository.find({
+      relations: { user: true },
       where,
       select: {
         id: true,
-        name: true,
-        email: true,
-        phone: true,
         status: true,
         createdAt: true,
+        user: { id: true, name: true, email: true, phone: true },
       },
-      order: { [orderBy]: props.order },
+      order: shouldOrderByUser
+        ? { user: { [orderBy]: props.order } }
+        : { [orderBy]: props.order },
       skip: (page - 1) * perPage,
       take: perPage,
     });
@@ -104,9 +110,9 @@ export class GetSurveySubmissionsUseCase {
     return {
       submissions: result.map((submission) => ({
         id: submission.id,
-        name: submission.name,
-        email: submission.email,
-        phone: submission.phone,
+        name: submission.user.name,
+        email: submission.user.email,
+        phone: submission.user.phone || '',
         status: submission.status,
         createdAt: submission.createdAt,
       })),

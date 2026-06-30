@@ -14,34 +14,29 @@ export class GetSurveySubmissionUseCase {
 
   async execute(id: string): Promise<SurveySubmissionDetailsResponse> {
     const submission = await this.surveySubmissionsRepository.findOne({
+      relations: { user: true, approvedBy: true },
       where: { id },
-      relations: { approvedBy: true },
       select: {
         id: true,
-        name: true,
-        email: true,
-        phone: true,
         status: true,
-        approvedBy: {
-          id: true,
-          name: true,
-          email: true,
-          avatarUrl: true,
-        },
+        user: { id: true, name: true, email: true, phone: true },
+        approvedBy: { id: true, name: true, email: true, avatarUrl: true },
         updatedAt: true,
         createdAt: true,
       },
     });
 
     if (!submission) {
-      throw new NotFoundException('Submissão de catalogação não encontrada.');
+      throw new NotFoundException('Submissão de catalogação não encontrada.', {
+        cause: `Survey submission with ID <${id}> not found`,
+      });
     }
 
     return {
       id: submission.id,
-      name: submission.name,
-      email: submission.email,
-      phone: submission.phone,
+      name: submission.user.name,
+      email: submission.user.email,
+      phone: submission.user.phone,
       status: submission.status,
       approvedBy: submission.approvedBy
         ? {

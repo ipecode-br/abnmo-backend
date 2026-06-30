@@ -100,6 +100,8 @@ export class CreateAppointmentBody extends createZodDto(
 
 Prefer `.pick()`, `.extend()`, or `.merge()` from existing schemas before defining raw fields. Only create a new schema from scratch if no existing one covers the domain (e.g., a brand-new entity). This keeps schemas like `userSchema` as a single source of truth.
 
+When fields are shared or no longer exist on an entity schema (e.g. after removing a column), reuse shared schemas (`nameSchema`, `emailSchema`, `phoneSchema`, etc.) from `src/domain/schemas/shared.ts` instead of defining raw `z.string()` or picking from unrelated entity schemas.
+
 ### Shared modules
 
 | Module               | When to import        |

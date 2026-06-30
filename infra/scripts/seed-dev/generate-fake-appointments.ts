@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
-import type { DeepPartial, Repository } from 'typeorm';
+import dataSource from 'infra/database/data.source';
+import type { DeepPartial } from 'typeorm';
 
 import { Appointment } from '@/domain/entities/appointment';
 import { APPOINTMENT_STATUSES } from '@/domain/enums/appointments';
@@ -9,9 +10,10 @@ import { SPECIALTY_CATEGORIES } from '@/domain/enums/shared';
 import { generateFakeDate, generateFakeName } from './generate-fakes';
 
 export function generateFakeAppointment(
-  repository: Repository<Appointment>,
   data: DeepPartial<Appointment>,
 ): Appointment {
+  const repository = dataSource.getRepository(Appointment);
+
   const baseData: DeepPartial<Appointment> = {
     date: generateFakeDate(),
     status: faker.helpers.arrayElement(APPOINTMENT_STATUSES),

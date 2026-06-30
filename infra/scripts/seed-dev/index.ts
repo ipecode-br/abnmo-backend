@@ -62,7 +62,7 @@ async function main() {
     const appointmentsRepository = dataSource.getRepository(Appointment);
     const referralsRepository = dataSource.getRepository(Referral);
 
-    const ADMIN_USER = generateFakeUser(usersRepository, {
+    const ADMIN_USER = generateFakeUser({
       password,
       role: 'admin',
       status: 'active',
@@ -73,7 +73,7 @@ async function main() {
 
     console.log('👤 Creating members...');
     for (const role of USER_ROLES) {
-      const user = generateFakeUser(usersRepository, {
+      const user = generateFakeUser({
         email: `${role}@abnmo.org`,
         password,
         role,
@@ -87,10 +87,7 @@ async function main() {
     console.log('👤 Creating specialists...');
     const totalOfSpecialists = 4;
     for (let i = 0; i < totalOfSpecialists; i++) {
-      const user = generateFakeUser(usersRepository, {
-        password,
-        role: 'specialist',
-      });
+      const user = generateFakeUser({ password, role: 'specialist' });
       await usersRepository.save(user);
     }
     console.log(`✅ ${totalOfSpecialists} specialists created.`);
@@ -100,10 +97,13 @@ async function main() {
     console.log('📝 Creating survey submissions...');
     const totalOfSubmissions = 5;
     for (let k = 0; k < totalOfSubmissions; k++) {
-      const submission = generateFakeSurveySubmission(
-        surveySubmissionRepository,
-        { status: faker.helpers.arrayElement(['pending', 'denied']) },
-      );
+      const user = generateFakeUser({ password, role: 'patient' });
+      await usersRepository.save(user);
+
+      const submission = generateFakeSurveySubmission({
+        user: { id: user.id },
+        status: faker.helpers.arrayElement(['pending', 'denied']),
+      });
       await surveySubmissionRepository.save(submission);
     }
     console.log(`✅ ${totalOfSubmissions} survey submissions created.`);
@@ -113,27 +113,23 @@ async function main() {
     console.log('📋 Creating surveys...');
     const totalOfSurveys = 10;
     for (let j = 0; j < totalOfSurveys; j++) {
-      const surveyStatus = faker.helpers.arrayElement(SURVEY_STATUSES);
-
-      const submission = generateFakeSurveySubmission(
-        surveySubmissionRepository,
-        {
-          status: surveyStatus === 'completed' ? 'completed' : 'approved',
-          approvedById: ADMIN_USER.id,
-        },
-      );
-      await surveySubmissionRepository.save(submission);
-
-      const user = generateFakeUser(usersRepository, {
-        name: submission.name,
-        email: submission.email,
+      const user = generateFakeUser({
         password,
         role: 'patient',
         status: 'active',
       });
       await usersRepository.save(user);
 
-      const survey = generateFakeSurvey(surveyRepository, {
+      const surveyStatus = faker.helpers.arrayElement(SURVEY_STATUSES);
+
+      const submission = generateFakeSurveySubmission({
+        user: { id: user.id },
+        status: surveyStatus === 'completed' ? 'completed' : 'approved',
+        approvedBy: { id: ADMIN_USER.id },
+      });
+      await surveySubmissionRepository.save(submission);
+
+      const survey = generateFakeSurvey({
         userId: user.id,
         status: surveyStatus,
       });
@@ -162,7 +158,7 @@ async function main() {
         : undefined;
 
       generatedAppointments.push(
-        generateFakeAppointment(appointmentsRepository, {
+        generateFakeAppointment({
           patient: { id: patientId },
           specialist: specialistId ? { id: specialistId } : null,
           createdBy: faker.helpers.arrayElement([
@@ -187,7 +183,7 @@ async function main() {
         : undefined;
 
       generatedReferrals.push(
-        generateFakeReferral(referralsRepository, {
+        generateFakeReferral({
           patient: { id: patientId },
           specialist: specialistId ? { id: specialistId } : null,
           createdBy: faker.helpers.arrayElement([

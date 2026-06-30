@@ -2,7 +2,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { faker } from '@faker-js/faker';
-import { Repository } from 'typeorm';
+import dataSource from 'infra/database/data.source';
 
 import { Survey } from '@/domain/entities/survey';
 import {
@@ -57,9 +57,10 @@ for (const state of statesWithCities) {
 }
 
 export function generateFakeSurvey(
-  repository: Repository<Survey>,
   data: Pick<Survey, 'userId'> & Partial<Survey>,
 ): Survey {
+  const repository = dataSource.getRepository(Survey);
+
   const today = new Date();
 
   const selectedState = faker.helpers.arrayElement(statesWithCities);

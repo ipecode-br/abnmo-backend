@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
-import type { DeepPartial, Repository } from 'typeorm';
+import dataSource from 'infra/database/data.source';
+import type { DeepPartial } from 'typeorm';
 
 import { Referral } from '@/domain/entities/referral';
 import { PATIENT_CONDITIONS } from '@/domain/enums/patients';
@@ -8,10 +9,9 @@ import { SPECIALTY_CATEGORIES } from '@/domain/enums/shared';
 
 import { generateFakeDate, generateFakeName } from './generate-fakes';
 
-export function generateFakeReferral(
-  repository: Repository<Referral>,
-  data: DeepPartial<Referral>,
-): Referral {
+export function generateFakeReferral(data: DeepPartial<Referral>): Referral {
+  const repository = dataSource.getRepository(Referral);
+
   const baseData: DeepPartial<Referral> = {
     date: generateFakeDate(),
     status: faker.helpers.arrayElement(REFERRAL_STATUSES),

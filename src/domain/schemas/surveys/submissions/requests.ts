@@ -6,12 +6,12 @@ import {
 } from '@/domain/enums/survey-submissions';
 import { baseQuerySchema } from '@/domain/schemas/query';
 
-import { surveySubmissionSchema } from '.';
+import { emailSchema, nameSchema, phoneSchema } from '../../shared';
 
-export const createSurveySubmissionSchema = surveySubmissionSchema.pick({
-  name: true,
-  email: true,
-  phone: true,
+export const createSurveySubmissionSchema = z.object({
+  name: nameSchema,
+  email: emailSchema,
+  phone: phoneSchema,
 });
 
 export const getSurveySubmissionsQuerySchema = baseQuerySchema

@@ -1,24 +1,18 @@
 import { faker } from '@faker-js/faker';
-import { Repository } from 'typeorm';
+import dataSource from 'infra/database/data.source';
+import type { DeepPartial } from 'typeorm';
 
 import { SurveySubmission } from '@/domain/entities/survey-submission';
 import { SURVEY_SUBMISSION_STATUSES } from '@/domain/enums/survey-submissions';
 
-import {
-  generateFakeDate,
-  generateFakeEmail,
-  generateFakeName,
-  generateFakePhone,
-} from './generate-fakes';
+import { generateFakeDate } from './generate-fakes';
 
 export function generateFakeSurveySubmission(
-  repository: Repository<SurveySubmission>,
-  data?: Partial<SurveySubmission>,
+  data: DeepPartial<SurveySubmission>,
 ): SurveySubmission {
-  const baseData: Partial<SurveySubmission> = {
-    name: generateFakeName(),
-    email: generateFakeEmail(),
-    phone: generateFakePhone(),
+  const repository = dataSource.getRepository(SurveySubmission);
+
+  const baseData: DeepPartial<SurveySubmission> = {
     status: faker.helpers.arrayElement(SURVEY_SUBMISSION_STATUSES),
     createdAt: generateFakeDate(),
   };

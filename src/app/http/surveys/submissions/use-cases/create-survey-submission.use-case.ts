@@ -1,7 +1,10 @@
-import { ConflictException, Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { randomBytes } from 'node:crypto';
 
+import { ConflictException, Injectable } from '@nestjs/common';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
+
+import { CryptographyService } from '@/app/cryptography/cryptography.service';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
@@ -17,10 +20,11 @@ interface CreateSurveySubmissionUseCaseInput {
 @Log()
 export class CreateSurveySubmissionUseCase {
   constructor(
+    @InjectDataSource()
+    private readonly dataSource: DataSource,
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
-    @InjectRepository(SurveySubmission)
-    private readonly surveySubmissionsRepository: Repository<SurveySubmission>,
+    private readonly cryptographyService: CryptographyService,
     private readonly logger: LogService,
   ) {}
 
@@ -29,36 +33,46 @@ export class CreateSurveySubmissionUseCase {
     email,
     phone,
   }: CreateSurveySubmissionUseCaseInput): Promise<void> {
-    const findOptions = { select: { id: true }, where: { email } };
+    const existingUser = await this.usersRepository.findOne({
+      select: { id: true },
+      where: { email },
+    });
 
-    const [userWithSameEmail, submissionWithSameEmail] = await Promise.all([
-      this.usersRepository.findOne(findOptions),
-      this.surveySubmissionsRepository.findOne(findOptions),
-    ]);
-
-    if (userWithSameEmail) {
+    if (existingUser) {
       throw new ConflictException(
         'Já existe uma conta cadastrada com este e-mail.',
         { cause: `User with <${email}> already exists` },
       );
     }
 
-    if (submissionWithSameEmail) {
-      throw new ConflictException(
-        'Já existe um processo cadastrado neste e-mail.',
-        { cause: `Submission with <${email}> already exists` },
-      );
-    }
+    const randomPassword = randomBytes(16).toString('hex');
+    const password = await this.cryptographyService.createHash(randomPassword);
 
-    const submission = this.surveySubmissionsRepository.create({
-      name,
-      email,
-      phone,
-      status: 'pending',
+    await this.dataSource.transaction(async (manager) => {
+      const usersRepository = manager.getRepository(User);
+      const submissionsRepository = manager.getRepository(SurveySubmission);
+
+      const user = usersRepository.create({
+        name,
+        email,
+        phone,
+        password,
+        role: 'patient',
+        status: 'pending',
+      });
+      await usersRepository.save(user);
+
+      const submission = submissionsRepository.create({
+        user: { id: user.id },
+      });
+      await submissionsRepository.save(submission);
+
+      this.logger.log('Survey initiated', {
+        id: submission.id,
+        userId: user.id,
+        email,
+        phone,
+      });
     });
-
-    await this.surveySubmissionsRepository.save(submission);
-
-    this.logger.log('Survey initiated', { name, email, phone });
   }
 }
