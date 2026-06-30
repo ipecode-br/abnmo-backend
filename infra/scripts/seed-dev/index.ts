@@ -102,7 +102,7 @@ async function main() {
 
       const submission = generateFakeSurveySubmission({
         user: { id: user.id },
-        status: faker.helpers.arrayElement(['pending', 'denied']),
+        status: faker.helpers.arrayElement(['pending', 'rejected']),
       });
       await surveySubmissionRepository.save(submission);
     }
@@ -125,7 +125,7 @@ async function main() {
       const submission = generateFakeSurveySubmission({
         user: { id: user.id },
         status: surveyStatus === 'completed' ? 'completed' : 'approved',
-        approvedBy: { id: ADMIN_USER.id },
+        updatedBy: { id: ADMIN_USER.id },
       });
       await surveySubmissionRepository.save(submission);
 

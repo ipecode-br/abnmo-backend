@@ -16,9 +16,9 @@ import {
 import { CreateSurveyUseCase } from './use-cases/create-survey.use-case';
 import { GetSurveysUseCase } from './use-cases/get-surveys.use-case';
 
-@Roles(['member'])
 @ApiTags('Catalogação')
 @Controller('surveys')
+@Roles(['member'])
 export class SurveysController {
   constructor(
     private readonly createSurveyUseCase: CreateSurveyUseCase,

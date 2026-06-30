@@ -21,6 +21,6 @@ export class SurveySubmission extends BaseEntity {
   user: User;
 
   @ManyToOne(() => User, { onDelete: 'SET NULL' })
-  @JoinColumn()
-  approvedBy: User | null;
+  @JoinColumn({ name: 'updated_by_id' })
+  updatedBy: User | null;
 }

@@ -50,7 +50,11 @@ type UsersEvent =
   | 'deactivate_user'
   | 'update_user';
 
-type SurveyEvent = 'init_survey' | 'complete_survey';
+type SurveyEvent =
+  | 'init_survey'
+  | 'complete_survey'
+  | 'approve_survey'
+  | 'reject_survey';
 
 type StatusEvent = 'get_status';
 

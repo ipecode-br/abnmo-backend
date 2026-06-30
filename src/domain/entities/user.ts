@@ -64,8 +64,8 @@ export class User extends BaseEntity implements UserSchema {
   @OneToOne(() => SurveySubmission, (submission) => submission.user)
   surveySubmission: SurveySubmission | null;
 
-  @OneToMany(() => SurveySubmission, (submission) => submission.approvedBy)
-  surveySubmissionsApproved: SurveySubmission[];
+  @OneToMany(() => SurveySubmission, (submission) => submission.updatedBy)
+  surveySubmissionsUpdated: SurveySubmission[];
 
   @OneToMany(() => Appointment, (appointment) => appointment.specialist)
   appointmentsAsSpecialist: Appointment[];

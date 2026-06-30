@@ -33,7 +33,7 @@ export const surveySubmissionDetailsResponseSchema = surveySubmissionSchema
     name: nameSchema,
     email: emailSchema,
     phone: phoneSchema.nullable(),
-    approvedBy: userSchema
+    updatedBy: userSchema
       .pick({ id: true, name: true, email: true, avatarUrl: true })
       .nullable(),
   })
