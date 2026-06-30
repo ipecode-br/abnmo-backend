@@ -74,7 +74,7 @@ export class AppointmentsController {
   @Put(':id')
   @Log('update_appointment')
   @ApiOperation({ summary: 'Atualiza os dados do atendimento' })
-  @ZodResponse({ type: BaseResponse, status: 204 })
+  @ZodResponse({ type: BaseResponse, status: 200 })
   public async update(
     @Param('id') id: string,
     @Body() body: UpdateAppointmentBody,
@@ -90,7 +90,7 @@ export class AppointmentsController {
   @Patch(':id/cancel')
   @Log('cancel_appointment')
   @ApiOperation({ summary: 'Cancela o atendimento' })
-  @ZodResponse({ type: BaseResponse, status: 204 })
+  @ZodResponse({ type: BaseResponse, status: 200 })
   async cancel(@Param('id') id: string): Promise<BaseResponse> {
     await this.cancelAppointmentUseCase.execute({ id });
 

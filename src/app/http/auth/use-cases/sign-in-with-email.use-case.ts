@@ -113,10 +113,11 @@ export class SignInWithEmailUseCase {
       });
 
       setCookie(response, {
-        name: COOKIES_MAPPING.refreshToken,
         domain: `.${this.cookieDomain}`,
-        sameSite: 'strict',
         expires: expiresAt,
+        name: COOKIES_MAPPING.refreshToken,
+        sameSite: 'strict',
+        secure: this.envService.get('APP_ENVIRONMENT') === 'lambda',
         value: token,
       });
     }

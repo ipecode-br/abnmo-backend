@@ -132,7 +132,7 @@ export class AuthController {
   @ApiOperation({
     summary: 'Altera a senha do usuário ou paciente autenticado',
   })
-  @ZodResponse({ type: BaseResponse, status: 204 })
+  @ZodResponse({ type: BaseResponse, status: 200 })
   async changePassword(
     @User() user: RequestUser,
     @Body() body: ChangePasswordBody,
@@ -146,10 +146,10 @@ export class AuthController {
   }
 
   @Post('logout')
-  @Roles(['all'])
+  @Public()
   @Log('logout')
   @ApiOperation({ summary: 'Encerra a sessão do usuário ou paciente' })
-  @ZodResponse({ type: BaseResponse, status: 204 })
+  @ZodResponse({ type: BaseResponse, status: 200 })
   async logout(
     @Cookies(COOKIES_MAPPING.refreshToken) refreshToken: string,
     @Res({ passthrough: true }) response: Response,

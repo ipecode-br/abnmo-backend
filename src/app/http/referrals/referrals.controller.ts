@@ -71,7 +71,7 @@ export class ReferralsController {
   @Put(':id')
   @Log('update_referral')
   @ApiOperation({ summary: 'Atualiza os dados do encaminhamento' })
-  @ZodResponse({ type: BaseResponse, status: 204 })
+  @ZodResponse({ type: BaseResponse, status: 200 })
   public async update(
     @Param('id') id: string,
     @Body() body: UpdateReferralBody,
@@ -87,7 +87,7 @@ export class ReferralsController {
   @Patch(':id/cancel')
   @Log('cancel_referral')
   @ApiOperation({ summary: 'Cancela o encaminhamento' })
-  @ZodResponse({ type: BaseResponse, status: 204 })
+  @ZodResponse({ type: BaseResponse, status: 200 })
   async cancel(@Param('id') id: string): Promise<BaseResponse> {
     await this.cancelReferralUseCase.execute({ id });
 

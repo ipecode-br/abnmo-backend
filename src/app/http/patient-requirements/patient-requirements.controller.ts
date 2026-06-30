@@ -99,7 +99,7 @@ export class PatientRequirementsController {
   @Patch(':id/approve')
   @Log('approve_patient_requirement')
   @ApiOperation({ summary: 'Aprova a solicitação' })
-  @ZodResponse({ type: BaseResponse, status: 204 })
+  @ZodResponse({ type: BaseResponse, status: 200 })
   async approve(
     @Param('id') id: string,
     @User() user: RequestUser,
@@ -115,7 +115,7 @@ export class PatientRequirementsController {
   @Patch(':id/decline')
   @Log('decline_patient_requirement')
   @ApiOperation({ summary: 'Recusa a solicitação' })
-  @ZodResponse({ type: BaseResponse, status: 204 })
+  @ZodResponse({ type: BaseResponse, status: 200 })
   async decline(
     @Param('id') id: string,
     @User() user: RequestUser,

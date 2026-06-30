@@ -93,7 +93,7 @@ export class UsersController {
   @Log('update_user')
   @RequireFeature('update:user')
   @ApiOperation({ summary: 'Atualiza os dados do usuário' })
-  @ZodResponse({ type: BaseResponse, status: 204 })
+  @ZodResponse({ type: BaseResponse, status: 200 })
   async updateUser(
     @Param('id') id: string,
     @User() user: RequestUser,
@@ -140,7 +140,7 @@ export class UsersController {
   @Log('deactivate_user')
   @RequireFeature('deactivate:user')
   @ApiOperation({ summary: 'Inativa o usuário' })
-  @ZodResponse({ type: BaseResponse, status: 204 })
+  @ZodResponse({ type: BaseResponse, status: 200 })
   async deactivateUser(
     @Param('id') id: string,
     @User() user: RequestUser,
@@ -157,7 +157,7 @@ export class UsersController {
   @Log('activate_user')
   @RequireFeature('activate:user')
   @ApiOperation({ summary: 'Ativa o usuário' })
-  @ZodResponse({ type: BaseResponse, status: 204 })
+  @ZodResponse({ type: BaseResponse, status: 200 })
   async activateUser(
     @Param('id') id: string,
     @User() user: RequestUser,
@@ -204,7 +204,7 @@ export class UsersController {
   @Log('cancel_user_invite')
   @RequireFeature('delete:user_invite')
   @ApiOperation({ summary: 'Cancela convite de usuário' })
-  @ZodResponse({ type: BaseResponse, status: 204 })
+  @ZodResponse({ type: BaseResponse, status: 200 })
   async cancelUserInvite(@Param('id') id: string): Promise<BaseResponse> {
     await this.cancelUserInviteUseCase.execute({ id });
 

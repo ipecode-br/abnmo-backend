@@ -92,7 +92,7 @@ export class PatientsController {
   @Log('update_patient')
   @RequireFeature('update:patient:others')
   @ApiOperation({ summary: 'Atualiza os dados do paciente' })
-  @ZodResponse({ type: BaseResponse, status: 204 })
+  @ZodResponse({ type: BaseResponse, status: 200 })
   async update(
     @Param('id') id: string,
     @User() user: RequestUser,
@@ -110,7 +110,7 @@ export class PatientsController {
   @Log('deactivate_patient')
   @RequireFeature('deactivate:patient')
   @ApiOperation({ summary: 'Inativa o paciente' })
-  @ZodResponse({ type: BaseResponse, status: 204 })
+  @ZodResponse({ type: BaseResponse, status: 200 })
   async deactivatePatient(
     @Param('id') id: string,
     @User() user: RequestUser,
