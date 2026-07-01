@@ -49,6 +49,14 @@ export const envSchema = z.object({
   AWS_SES_ACCESS_KEY_ID: z.string().min(1),
   AWS_SES_SECRET_ACCESS_KEY: z.string().min(1),
   AWS_SES_FROM_EMAIL: z.string().email(),
+
+  // Signature
+  SIGNATURE_ENABLED: z
+    .enum(['true', 'false'])
+    .transform((val) => val === 'true'),
+  SIGNATURE_MODEL_KEY: z.string().min(1),
+  CLICKSIGN_API_URL: z.string().url(),
+  CLICKSIGN_API_KEY: z.string().min(1),
 });
 
 export type Env = z.infer<typeof envSchema>;
