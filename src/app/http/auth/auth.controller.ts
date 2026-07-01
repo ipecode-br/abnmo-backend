@@ -24,7 +24,6 @@ import { ChangePasswordUseCase } from './use-cases/change-password.use-case';
 import { CreateUserUseCase } from './use-cases/create-user.use-case';
 import { LogoutUseCase } from './use-cases/logout.use-case';
 import { RecoverPasswordUseCase } from './use-cases/recover-password.use-case';
-import { RefreshTokenUseCase } from './use-cases/refresh-token.use-case';
 import { ResetPasswordUseCase } from './use-cases/reset-password.use-case';
 import { SignInWithEmailUseCase } from './use-cases/sign-in-with-email.use-case';
 
@@ -35,7 +34,6 @@ export class AuthController {
     private readonly createUserUseCase: CreateUserUseCase,
     private readonly logoutUseCase: LogoutUseCase,
     private readonly recoverPasswordUseCase: RecoverPasswordUseCase,
-    private readonly refreshTokenUseCase: RefreshTokenUseCase,
     private readonly resetPasswordUseCase: ResetPasswordUseCase,
     private readonly signInUseCase: SignInWithEmailUseCase,
   ) {}
@@ -55,23 +53,6 @@ export class AuthController {
       success: true,
       message: 'Login realizado com sucesso.',
       data,
-    };
-  }
-
-  @Post('refresh-token')
-  @Public()
-  @Log('refresh_token')
-  @ApiOperation({ summary: 'Atualiza o token de acesso' })
-  @ZodResponse({ type: BaseResponse, status: 201 })
-  async refreshToken(
-    @Cookies(COOKIES_MAPPING.refreshToken) refreshToken: string,
-    @Res({ passthrough: true }) response: Response,
-  ): Promise<BaseResponse> {
-    await this.refreshTokenUseCase.execute({ refreshToken, response });
-
-    return {
-      success: true,
-      message: 'Token atualizado com sucesso.',
     };
   }
 
@@ -151,10 +132,10 @@ export class AuthController {
   @ApiOperation({ summary: 'Encerra a sessão do usuário ou paciente' })
   @ZodResponse({ type: BaseResponse, status: 200 })
   async logout(
-    @Cookies(COOKIES_MAPPING.refreshToken) refreshToken: string,
+    @Cookies(COOKIES_MAPPING.session) sessionToken: string,
     @Res({ passthrough: true }) response: Response,
   ): Promise<BaseResponse> {
-    await this.logoutUseCase.execute({ response, refreshToken });
+    await this.logoutUseCase.execute({ response, sessionToken });
 
     return {
       success: true,

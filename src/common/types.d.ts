@@ -24,7 +24,6 @@ type AuthEvent =
   | 'change_password'
   | 'logout'
   | 'recover_password'
-  | 'refresh_token'
   | 'register_user'
   | 'reset_password'
   | 'sign_in';

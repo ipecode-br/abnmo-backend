@@ -18,7 +18,8 @@ import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
 import { UserRole } from '@/domain/enums/users';
 import type { ResetPasswordPayload } from '@/domain/schemas/tokens';
 
-import { GenerateAuthTokensUseCase } from './generate-auth-tokens-use-case';
+import { CreateSessionUseCase } from './create-session.use-case';
+import { ExpireSessionUseCase } from './expire-session.use-case';
 
 interface ResetPasswordUseCaseInput {
   password: string;
@@ -35,7 +36,8 @@ export class ResetPasswordUseCase {
     @InjectRepository(Token)
     private readonly tokensRepository: Repository<Token>,
     private readonly cryptographyService: CryptographyService,
-    private readonly generateAuthTokensUseCase: GenerateAuthTokensUseCase,
+    private readonly createSessionUseCase: CreateSessionUseCase,
+    private readonly expireSessionUseCase: ExpireSessionUseCase,
     private readonly mailService: MailService,
     private readonly logger: LogService,
   ) {}
@@ -78,7 +80,7 @@ export class ResetPasswordUseCase {
     });
 
     if (!user) {
-      this.logger.warn('Reset password failed: Entity not registered', { id });
+      this.logger.warn('Reset password failed: User not registered', { id });
       throw new NotFoundException('Usuário não encontrado.');
     }
 
@@ -92,8 +94,11 @@ export class ResetPasswordUseCase {
 
     await this.tokensRepository.delete({ entityId: user.id });
 
-    await this.generateAuthTokensUseCase.execute({
+    await this.expireSessionUseCase.execute({ userId: user.id });
+
+    await this.createSessionUseCase.execute({
       user: { id: user.id, email: user.email, role },
+      keepLoggedIn: false,
       response,
     });
 

@@ -1,4 +1,4 @@
-import { createHmac } from 'node:crypto';
+import { createHash, createHmac } from 'node:crypto';
 
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -28,6 +28,10 @@ export class CryptographyService {
     const pepper = this.envService.get('HASH_PEPPER');
     if (!pepper) return value;
     return createHmac('sha256', pepper).update(value).digest('base64');
+  }
+
+  hashToken(token: string): string {
+    return createHash('sha256').update(token).digest('hex');
   }
 
   async verifyToken<Payload extends object>(token: string): Promise<Payload> {

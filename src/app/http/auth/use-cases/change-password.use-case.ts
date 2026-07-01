@@ -11,8 +11,9 @@ import { CryptographyService } from '@/app/cryptography/cryptography.service';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import type { RequestUser } from '@/common/types';
-import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
+
+import { ExpireSessionUseCase } from './expire-session.use-case';
 
 interface ChangePasswordUseCaseInput {
   user: RequestUser;
@@ -26,9 +27,8 @@ export class ChangePasswordUseCase {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
-    @InjectRepository(Token)
-    private readonly tokensRepository: Repository<Token>,
     private readonly cryptographyService: CryptographyService,
+    private readonly expireSessionUseCase: ExpireSessionUseCase,
     private readonly logger: LogService,
   ) {}
 
@@ -66,9 +66,8 @@ export class ChangePasswordUseCase {
 
     await this.usersRepository.update({ id }, { password: passwordHash });
 
-    this.logger.log('Password changed');
+    await this.expireSessionUseCase.execute({ userId: userToUpdate.id });
 
-    // Delete all tokens for this entity to ensure security after changing password
-    await this.tokensRepository.delete({ entityId: userToUpdate.id });
+    this.logger.log('Password changed');
   }
 }

@@ -4,15 +4,15 @@ import { Response } from 'express';
 
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
+import { ContextUser } from '@/common/types';
 import { STORAGE_FOLDERS } from '@/config/storage';
-import { UserRole } from '@/domain/enums/users';
 import { EnvService } from '@/env/env.service';
 import { setCookie } from '@/utils/cookies';
 
 interface GenerateCdnCookiesUseCaseInput {
   expiresAt: Date;
+  user: ContextUser;
   response: Response;
-  user: { id: string; email: string; role: UserRole };
 }
 
 @Injectable()
@@ -80,11 +80,9 @@ export class GenerateCdnCookiesUseCase {
     const cookies = Object.entries(signedCookies) as Array<[string, string]>;
 
     for (const [name, value] of cookies) {
-      setCookie(response, {
-        domain: `.${this.cookieDomain}`,
+      setCookie(response, this.envService, {
         expires: expiresAt,
         name,
-        secure: this.envService.get('APP_ENVIRONMENT') === 'lambda',
         signed: false,
         value,
       });

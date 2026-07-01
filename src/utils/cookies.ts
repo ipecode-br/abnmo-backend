@@ -1,10 +1,11 @@
 import { CookieOptions, Response } from 'express';
 
+import { EnvService } from '@/env/env.service';
+
 const COOKIES_BASE_CONFIG: CookieOptions = {
   httpOnly: true,
   path: '/',
   sameSite: 'lax',
-  secure: true,
   signed: true,
 };
 
@@ -15,15 +16,27 @@ interface SetCookieOptions extends CookieOptions {
 
 export function setCookie(
   response: Response,
+  envService: EnvService,
   { name, value, ...options }: SetCookieOptions,
 ): void {
-  response.cookie(name, value, { ...COOKIES_BASE_CONFIG, ...options });
+  response.cookie(name, value, {
+    domain: `.${envService.get('COOKIE_DOMAIN')}`,
+    secure: envService.get('APP_ENVIRONMENT') === 'lambda',
+    ...COOKIES_BASE_CONFIG,
+    ...options,
+  });
 }
 
 export function deleteCookie(
   response: Response,
+  envService: EnvService,
   name: string,
   options?: CookieOptions,
 ): void {
-  response.clearCookie(name, { ...COOKIES_BASE_CONFIG, ...options });
+  response.clearCookie(name, {
+    domain: `.${envService.get('COOKIE_DOMAIN')}`,
+    secure: envService.get('APP_ENVIRONMENT') === 'lambda',
+    ...COOKIES_BASE_CONFIG,
+    ...options,
+  });
 }

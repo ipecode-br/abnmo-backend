@@ -12,6 +12,7 @@ import { generateFakeUser } from 'infra/scripts/seed-dev/generate-fake-user';
 import { Appointment } from '@/domain/entities/appointment';
 import { PatientRequirement } from '@/domain/entities/patient-requirement';
 import { Referral } from '@/domain/entities/referral';
+import { Session } from '@/domain/entities/session';
 import { Survey } from '@/domain/entities/survey';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
 import { Token } from '@/domain/entities/token';
@@ -51,6 +52,7 @@ async function main() {
     await dataSource.manager.clear(User);
     await dataSource.manager.clear(SurveySubmission);
     await dataSource.manager.clear(Survey);
+    await dataSource.manager.clear(Session);
     await dataSource.manager.clear(Token);
     await dataSource.query('SET FOREIGN_KEY_CHECKS = 1');
     console.log('✅ Old data deleted.');

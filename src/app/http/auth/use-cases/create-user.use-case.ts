@@ -17,7 +17,7 @@ import type { SpecialtyCategory } from '@/domain/enums/shared';
 import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
 import type { InviteUserPayload } from '@/domain/schemas/tokens';
 
-import { GenerateAuthTokensUseCase } from './generate-auth-tokens-use-case';
+import { CreateSessionUseCase } from './create-session.use-case';
 
 interface CreateUserUseCaseInput {
   name: string;
@@ -31,13 +31,15 @@ interface CreateUserUseCaseInput {
 @Injectable()
 @Log()
 export class CreateUserUseCase {
+  private readonly sessionMaxAge = 1000 * 60 * 60 * 8;
+
   constructor(
     @InjectRepository(Token)
     private readonly tokensRepository: Repository<Token>,
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    private readonly createSessionUseCase: CreateSessionUseCase,
     private readonly cryptographyService: CryptographyService,
-    private readonly generateAuthTokensUseCase: GenerateAuthTokensUseCase,
     private readonly logger: LogService,
   ) {}
 
@@ -103,8 +105,9 @@ export class CreateUserUseCase {
 
     await this.tokensRepository.delete({ token: inviteToken });
 
-    await this.generateAuthTokensUseCase.execute({
+    await this.createSessionUseCase.execute({
       user: { id: user.id, email, role },
+      keepLoggedIn: false,
       response,
     });
 
