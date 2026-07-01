@@ -46,7 +46,7 @@ import { cepSchema } from '../shared';
 
 export const surveySchema = baseEntitySchema.extend({
   // Base
-  userId: z.string().uuid(),
+  signatureId: z.string().max(64).nullable(),
   status: z.enum(SURVEY_STATUSES).default('pending_signature'),
   // About
   dateOfBirth: z.coerce.date(),

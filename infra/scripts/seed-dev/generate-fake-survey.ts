@@ -3,6 +3,7 @@ import * as path from 'node:path';
 
 import { faker } from '@faker-js/faker';
 import dataSource from 'infra/database/data.source';
+import type { DeepPartial } from 'typeorm';
 
 import { Survey } from '@/domain/entities/survey';
 import {
@@ -56,9 +57,7 @@ for (const state of statesWithCities) {
   citiesByState[state] = JSON.parse(data) as string[];
 }
 
-export function generateFakeSurvey(
-  data: Pick<Survey, 'userId'> & Partial<Survey>,
-): Survey {
+export function generateFakeSurvey(data: DeepPartial<Survey>): Survey {
   const repository = dataSource.getRepository(Survey);
 
   const today = new Date();
@@ -72,8 +71,7 @@ export function generateFakeSurvey(
 
   const numberOfChildren = faker.number.int({ min: 0, max: 5 });
 
-  const baseData: Partial<Survey> = {
-    userId: data.userId,
+  const baseData: DeepPartial<Survey> = {
     status: faker.helpers.arrayElement(SURVEY_STATUSES),
     createdAt: generateFakeDate(),
     // About

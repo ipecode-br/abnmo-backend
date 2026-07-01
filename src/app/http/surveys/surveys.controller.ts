@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ZodResponse } from 'nestjs-zod';
 
@@ -15,6 +15,7 @@ import {
 } from './surveys.dtos';
 import { CreateSurveyUseCase } from './use-cases/create-survey.use-case';
 import { GetSurveysUseCase } from './use-cases/get-surveys.use-case';
+import { SendSurveyReminderUseCase } from './use-cases/send-survey-reminder.use-case';
 
 @ApiTags('Catalogação')
 @Controller('surveys')
@@ -23,6 +24,7 @@ export class SurveysController {
   constructor(
     private readonly createSurveyUseCase: CreateSurveyUseCase,
     private readonly getSurveysUseCase: GetSurveysUseCase,
+    private readonly sendSurveyReminderUseCase: SendSurveyReminderUseCase,
   ) {}
 
   @Post('complete')
@@ -52,6 +54,20 @@ export class SurveysController {
       success: true,
       message: 'Lista de catalogações retornada com sucesso.',
       data,
+    };
+  }
+
+  @Post(':id/send-remind')
+  @RequireFeature('read:survey:others')
+  @Log('send_survey_reminder')
+  @ApiOperation({ summary: 'Envia lembrete de assinatura ao paciente' })
+  @ZodResponse({ type: BaseResponse, status: 200 })
+  async sendSignRemind(@Param('id') id: string): Promise<BaseResponse> {
+    await this.sendSurveyReminderUseCase.execute(id);
+
+    return {
+      success: true,
+      message: 'Lembrete enviado com sucesso.',
     };
   }
 }

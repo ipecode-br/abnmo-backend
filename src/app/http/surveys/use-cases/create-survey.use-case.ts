@@ -30,6 +30,8 @@ export class CreateSurveyUseCase {
     private readonly usersRepository: Repository<User>,
     @InjectRepository(SurveySubmission)
     private readonly surveySubmissionsRepository: Repository<SurveySubmission>,
+    @InjectRepository(Survey)
+    private readonly surveysRepository: Repository<Survey>,
     private readonly requestSignatureUseCase: RequestSignatureUseCase,
     private readonly envService: EnvService,
     private readonly logger: LogService,
@@ -81,6 +83,8 @@ export class CreateSurveyUseCase {
       ...input.dailyLife,
     };
 
+    let surveyId = '';
+
     await this.dataSource.transaction(async (manager) => {
       const usersRepository = manager.getRepository(User);
       const surveysRepository = manager.getRepository(Survey);
@@ -95,10 +99,11 @@ export class CreateSurveyUseCase {
 
       const survey = surveysRepository.create({
         ...surveyData,
-        userId: submission.user.id,
         status: 'pending_signature',
       });
       await surveysRepository.save(survey);
+
+      surveyId = survey.id;
 
       await submissionsRepository.update(submission.id, {
         status: 'completed',
@@ -112,7 +117,7 @@ export class CreateSurveyUseCase {
       });
     });
 
-    await this.requestSignatureUseCase.execute({
+    const { signatureId } = await this.requestSignatureUseCase.execute({
       config: {
         name: `Catalogação ABNMO - ${submission.user.name}`,
         filename: 'termo-de-aceite-catalogacao-abnmo',
@@ -133,5 +138,13 @@ export class CreateSurveyUseCase {
         data: { FULL_NAME: submission.user.name, CPF: cpf },
       },
     });
+
+    if (signatureId) {
+      await this.surveysRepository.update(surveyId, { signatureId });
+      this.logger.log('Signature ID stored for survey', {
+        id: surveyId,
+        signatureId,
+      });
+    }
   }
 }

@@ -18,6 +18,7 @@ import { RejectSurveySubmissionUseCase } from './submissions/use-cases/reject-su
 import { SurveysController } from './surveys.controller';
 import { CreateSurveyUseCase } from './use-cases/create-survey.use-case';
 import { GetSurveysUseCase } from './use-cases/get-surveys.use-case';
+import { SendSurveyReminderUseCase } from './use-cases/send-survey-reminder.use-case';
 
 @Module({
   imports: [
@@ -28,14 +29,15 @@ import { GetSurveysUseCase } from './use-cases/get-surveys.use-case';
   ],
   controllers: [SurveysController, SurveysSubmissionsController],
   providers: [
+    ApproveSurveySubmissionUseCase,
     CreateSurveySubmissionUseCase,
     CreateSurveyUseCase,
-    GetSurveySubmissionsUseCase,
     GetSurveySubmissionUseCase,
-    GetTotalSurveySubmissionsUseCase,
+    GetSurveySubmissionsUseCase,
     GetSurveysUseCase,
-    ApproveSurveySubmissionUseCase,
+    GetTotalSurveySubmissionsUseCase,
     RejectSurveySubmissionUseCase,
+    SendSurveyReminderUseCase,
   ],
 })
 export class SurveysModule {}

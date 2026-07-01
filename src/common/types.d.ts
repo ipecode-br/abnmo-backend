@@ -53,7 +53,8 @@ type SurveyEvent =
   | 'init_survey'
   | 'complete_survey'
   | 'approve_survey'
-  | 'reject_survey';
+  | 'reject_survey'
+  | 'send_survey_reminder';
 
 type StatusEvent = 'get_status';
 

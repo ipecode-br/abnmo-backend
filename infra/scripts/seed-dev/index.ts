@@ -132,7 +132,7 @@ async function main() {
       await surveySubmissionRepository.save(submission);
 
       const survey = generateFakeSurvey({
-        userId: user.id,
+        user: { id: user.id },
         status: surveyStatus,
       });
       await surveyRepository.save(survey);
