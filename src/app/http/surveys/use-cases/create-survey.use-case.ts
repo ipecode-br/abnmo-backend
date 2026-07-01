@@ -7,17 +7,21 @@ import {
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 
+import { RequestSignatureUseCase } from '@/app/signature/use-cases/request-signature.use-case';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import { Survey } from '@/domain/entities/survey';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
 import { User } from '@/domain/entities/user';
+import { EnvService } from '@/env/env.service';
 
 import { CreateSurveyBody } from '../surveys.dtos';
 
 @Injectable()
 @Log()
 export class CreateSurveyUseCase {
+  private readonly modelKey: string;
+
   constructor(
     @InjectDataSource()
     private readonly dataSource: DataSource,
@@ -25,8 +29,12 @@ export class CreateSurveyUseCase {
     private readonly usersRepository: Repository<User>,
     @InjectRepository(SurveySubmission)
     private readonly surveySubmissionsRepository: Repository<SurveySubmission>,
+    private readonly requestSignatureUseCase: RequestSignatureUseCase,
+    private readonly envService: EnvService,
     private readonly logger: LogService,
-  ) {}
+  ) {
+    this.modelKey = this.envService.get('SIGNATURE_MODEL_KEY');
+  }
 
   async execute(input: CreateSurveyBody): Promise<void> {
     const submission = await this.surveySubmissionsRepository.findOne({
@@ -95,7 +103,7 @@ export class CreateSurveyUseCase {
         status: 'completed',
       });
 
-      this.logger.log('Survey completed', {
+      this.logger.log('Survey submitted', {
         id: submission.id,
         userId: submission.user.id,
         email: submission.user.email,
@@ -103,6 +111,27 @@ export class CreateSurveyUseCase {
       });
     });
 
-    // TODO: implement ClickSign signature integration
+    await this.requestSignatureUseCase.execute({
+      config: {
+        name: `Catalogação ABNMO - ${submission.user.name}`,
+        filename: 'termo-de-aceite-catalogacao-abnmo',
+        subject: 'Termo de aceite para tratamento de dados - ABNMO',
+        message:
+          'Aceite os termos e assine o documento autorizando o tratamento dos seus dados de forma anônima.',
+        notificationChannel: 'whatsapp',
+        key: 'catalogacao-abnmo',
+      },
+      signer: {
+        fullName: submission.user.name,
+        email: submission.user.email,
+        phone: submission.user.phone!,
+        // TODO: format cpf to XXX.XXX.XXX-XX
+        cpf: cpf,
+      },
+      template: {
+        key: this.modelKey,
+        data: { FULL_NAME: submission.user.name, CPF: cpf },
+      },
+    });
   }
 }

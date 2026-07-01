@@ -2,9 +2,11 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { CryptographyModule } from '@/app/cryptography/cryptography.module';
+import { SignatureModule } from '@/app/signature/signature.module';
 import { Survey } from '@/domain/entities/survey';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
 import { User } from '@/domain/entities/user';
+import { EnvModule } from '@/env/env.module';
 
 import { SurveysSubmissionsController } from './submissions/surveys-submissions.controller';
 import { ApproveSurveySubmissionUseCase } from './submissions/use-cases/approve-survey-submission.use-case';
@@ -20,7 +22,9 @@ import { GetSurveysUseCase } from './use-cases/get-surveys.use-case';
 @Module({
   imports: [
     TypeOrmModule.forFeature([SurveySubmission, Survey, User]),
+    EnvModule,
     CryptographyModule,
+    SignatureModule,
   ],
   controllers: [SurveysController, SurveysSubmissionsController],
   providers: [
