@@ -20,7 +20,7 @@ export async function createNestApp(adapter?: ExpressAdapter) {
   const envService = app.get(EnvService);
 
   app.enableCors({
-    origin: envService.get('APP_URL'),
+    origin: [envService.get('APP_URL'), envService.get('DASHBOARD_URL')],
     allowedHeaders: ['Authorization', 'Content-Type', 'Content-Length'],
     methods: ['OPTIONS', 'GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
     credentials: true,

@@ -13,8 +13,9 @@ export const envSchema = z.object({
   API_BASE_URL: z.string().url().optional(),
   API_PORT: z.coerce.number().default(3333),
 
-  // APP
+  // APPs
   APP_URL: z.string().url(),
+  DASHBOARD_URL: z.string().url(),
 
   // Secrets
   COOKIE_DOMAIN: z.string().min(1),
