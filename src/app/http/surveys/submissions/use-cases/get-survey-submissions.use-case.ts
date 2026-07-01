@@ -97,6 +97,7 @@ export class GetSurveySubmissionsUseCase {
       select: {
         id: true,
         status: true,
+        documentKey: true,
         createdAt: true,
         user: { id: true, name: true, email: true, phone: true },
       },
@@ -114,6 +115,7 @@ export class GetSurveySubmissionsUseCase {
         email: submission.user.email,
         phone: submission.user.phone || '',
         status: submission.status,
+        documentKey: submission.documentKey,
         createdAt: submission.createdAt,
       })),
       total,

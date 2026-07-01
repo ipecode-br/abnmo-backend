@@ -1,11 +1,13 @@
 import { createZodDto } from 'nestjs-zod';
 
 import {
+  confirmSurveySubmissionUploadSchema,
   createSurveySubmissionSchema,
   getSurveySubmissionsQuerySchema,
   getTotalSurveySubmissionsQuerySchema,
 } from '@/domain/schemas/surveys/submissions/requests';
 import {
+  createSurveySubmissionResponseSchema,
   getSurveySubmissionResponseSchema,
   getSurveySubmissionsResponseSchema,
   getTotalSurveySubmissionsResponseSchema,
@@ -13,6 +15,13 @@ import {
 
 export class CreateSurveySubmissionBody extends createZodDto(
   createSurveySubmissionSchema,
+) {}
+export class CreateSurveySubmissionResponse extends createZodDto(
+  createSurveySubmissionResponseSchema,
+) {}
+
+export class ConfirmSurveySubmissionUploadBody extends createZodDto(
+  confirmSurveySubmissionUploadSchema,
 ) {}
 
 export class GetSurveySubmissionsQuery extends createZodDto(

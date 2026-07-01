@@ -12,9 +12,12 @@ export class SurveySubmission extends BaseEntity {
   @Column({
     type: 'enum',
     enum: SURVEY_SUBMISSION_STATUSES,
-    default: 'pending',
+    default: 'pending_document',
   })
   status: SurveySubmissionStatus;
+
+  @Column({ type: 'varchar', length: 512, nullable: true })
+  documentKey: string | null;
 
   @OneToOne(() => User, (user) => user.surveySubmission)
   @JoinColumn()

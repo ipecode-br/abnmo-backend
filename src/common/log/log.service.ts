@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PinoLogger } from 'nestjs-pino';
 
 import { ContextService } from '../context/context.service';
-import type { ContextEvent } from '../types';
+import type { ContextEvent, ContextUser } from '../types';
 
 @Injectable()
 export class LogService {
@@ -21,6 +21,10 @@ export class LogService {
 
   resetEvent() {
     this.ctx.resetEvent();
+  }
+
+  setUser(user: ContextUser) {
+    this.ctx.setUser(user);
   }
 
   info(message: string, extras?: Record<string, any>) {
@@ -54,6 +58,6 @@ export class LogService {
 
     if (context.extras) Object.assign(extras, context.extras);
 
-    return { event: context.event, ...extras, user: context.user };
+    return { event: context.event, user: context.user, ...extras };
   }
 }

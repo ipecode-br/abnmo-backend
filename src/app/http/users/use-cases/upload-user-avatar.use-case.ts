@@ -36,7 +36,6 @@ export class UploadUserAvatarUseCase {
   async execute({
     user,
     buffer,
-    originalName,
     mimeType,
   }: UploadUserAvatarUseCaseInput): Promise<void> {
     const userToUpdate = await this.usersRepository.findOne({
@@ -48,7 +47,11 @@ export class UploadUserAvatarUseCase {
       throw new NotFoundException('Usuário não encontrado.');
     }
 
-    const fileName = generateFileName({ originalName, replace: 'avatar' });
+    const fileName = generateFileName({
+      name: userToUpdate.name,
+      prefix: 'avatar',
+      mimeType,
+    });
 
     const file = await this.uploadFileUseCase.execute({
       folder: STORAGE_FOLDERS.users.avatars,

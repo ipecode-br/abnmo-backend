@@ -6,12 +6,8 @@ import {
   Patch,
   Post,
   Query,
-  UploadedFile,
-  UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Express } from 'express';
 import { ZodResponse } from 'nestjs-zod';
 
 import { Public } from '@/common/decorators/public.decorator';
@@ -19,13 +15,13 @@ import { RequireFeature } from '@/common/decorators/require-feature.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
-import { FileValidationPipe } from '@/common/file-validation.pipe';
 import { Log } from '@/common/log/log.decorator';
 import type { RequestUser } from '@/common/types';
-import { MIME_TYPES } from '@/constants/mime-types';
 
 import {
+  ConfirmSurveySubmissionUploadBody,
   CreateSurveySubmissionBody,
+  CreateSurveySubmissionResponse,
   GetSurveySubmissionResponse,
   GetSurveySubmissionsQuery,
   GetSurveySubmissionsResponse,
@@ -33,6 +29,7 @@ import {
   GetTotalSurveySubmissionsResponse,
 } from './surveys.dtos';
 import { ApproveSurveySubmissionUseCase } from './use-cases/approve-survey-submission.use-case';
+import { ConfirmSurveySubmissionUploadUseCase } from './use-cases/confirm-survey-submission-upload.use-case';
 import { CreateSurveySubmissionUseCase } from './use-cases/create-survey-submission.use-case';
 import { GetSurveySubmissionUseCase } from './use-cases/get-survey-submission.use-case';
 import { GetSurveySubmissionsUseCase } from './use-cases/get-survey-submissions.use-case';
@@ -44,42 +41,49 @@ import { RejectSurveySubmissionUseCase } from './use-cases/reject-survey-submiss
 @Roles(['member'])
 export class SurveysSubmissionsController {
   constructor(
+    private readonly approveSurveySubmissionUseCase: ApproveSurveySubmissionUseCase,
+    private readonly confirmSurveySubmissionUploadUseCase: ConfirmSurveySubmissionUploadUseCase,
     private readonly createSurveySubmissionUseCase: CreateSurveySubmissionUseCase,
     private readonly getSurveySubmissionUseCase: GetSurveySubmissionUseCase,
     private readonly getSurveySubmissionsUseCase: GetSurveySubmissionsUseCase,
     private readonly getTotalSurveySubmissionsUseCase: GetTotalSurveySubmissionsUseCase,
-    private readonly approveSurveySubmissionUseCase: ApproveSurveySubmissionUseCase,
     private readonly rejectSurveySubmissionUseCase: RejectSurveySubmissionUseCase,
   ) {}
 
   @Post()
   @Public()
   @Log('init_survey')
-  @UseInterceptors(FileInterceptor('medicalReport'))
   @ApiOperation({ summary: 'Inicia o formulário de catalogação' })
-  @ZodResponse({ type: BaseResponse, status: 201 })
+  @ZodResponse({ type: CreateSurveySubmissionResponse, status: 201 })
   async initSurvey(
     @Body() body: CreateSurveySubmissionBody,
-    @UploadedFile(
-      new FileValidationPipe({
-        maxSize: 4 * 1024 * 1024,
-        allowedMimeTypes: [
-          MIME_TYPES.jpg,
-          MIME_TYPES.jpeg,
-          MIME_TYPES.png,
-          MIME_TYPES.pdf,
-        ],
-      }),
-    )
-    medicalReport: Express.Multer.File,
-  ): Promise<BaseResponse> {
-    void medicalReport;
-
-    await this.createSurveySubmissionUseCase.execute(body);
+  ): Promise<CreateSurveySubmissionResponse> {
+    const data = await this.createSurveySubmissionUseCase.execute(body);
 
     return {
       success: true,
       message: 'Catalogação iniciada com sucesso.',
+      data,
+    };
+  }
+
+  @Post(':id/confirm-upload')
+  @Public()
+  @Log('init_survey')
+  @ApiOperation({ summary: 'Confirma o upload do documento' })
+  @ZodResponse({ type: BaseResponse, status: 200 })
+  async confirmDocumentUpload(
+    @Param('id') id: string,
+    @Body() body: ConfirmSurveySubmissionUploadBody,
+  ): Promise<BaseResponse> {
+    await this.confirmSurveySubmissionUploadUseCase.execute({
+      submissionId: id,
+      ...body,
+    });
+
+    return {
+      success: true,
+      message: 'Documento confirmado com sucesso.',
     };
   }
 
@@ -99,7 +103,7 @@ export class SurveysSubmissionsController {
     };
   }
 
-  @Get('details/:id')
+  @Get(':id')
   @RequireFeature('read:survey')
   @ApiOperation({ summary: 'Detalhes de uma submissão de catalogação' })
   @ZodResponse({ type: GetSurveySubmissionResponse, status: 200 })
@@ -115,6 +119,7 @@ export class SurveysSubmissionsController {
     };
   }
 
+  // TODO: move this to a survey stats controller
   @Get('total')
   @RequireFeature('read:survey')
   @ApiOperation({ summary: 'Total de submissões de catalogação' })

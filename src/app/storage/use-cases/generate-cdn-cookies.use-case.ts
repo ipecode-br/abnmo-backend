@@ -37,8 +37,8 @@ export class GenerateCdnCookiesUseCase {
   }
 
   execute({ user, expiresAt, response }: GenerateCdnCookiesUseCaseInput): void {
-    const { role } = user;
     const allowedPaths: string[] = [];
+    const { role } = user;
 
     const sharedPaths = [
       `${STORAGE_FOLDERS.users.avatars}/*`,
@@ -62,7 +62,7 @@ export class GenerateCdnCookiesUseCase {
 
     const policy = JSON.stringify({
       Statement: allowedPaths.map((path) => ({
-        Resource: `${this.cdnPrivateUrl}${path}`,
+        Resource: path,
         Condition: {
           DateLessThan: {
             'AWS:EpochTime': Math.floor(expiresAt.getTime() / 1000),

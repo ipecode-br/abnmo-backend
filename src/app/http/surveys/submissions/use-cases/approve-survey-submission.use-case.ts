@@ -39,7 +39,7 @@ export class ApproveSurveySubmissionUseCase {
       });
     }
 
-    if (submission.status !== 'pending') {
+    if (submission.status !== 'pending_review') {
       throw new BadRequestException(
         'Somente submissões pendentes podem ser aprovadas.',
         {

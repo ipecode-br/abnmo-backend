@@ -1,9 +1,11 @@
 import { z } from 'zod';
 
+import { MAX_SURVEY_DOCUMENT_FILE_SIZE } from '@/config/storage';
 import {
   SURVEY_SUBMISSION_ORDER_BY,
   SURVEY_SUBMISSION_STATUSES,
 } from '@/domain/enums/survey-submissions';
+import { SURVEY_DOCUMENT_TYPES } from '@/domain/enums/surveys';
 import { baseQuerySchema } from '@/domain/schemas/query';
 
 import { emailSchema, nameSchema, phoneSchema } from '../../shared';
@@ -12,6 +14,12 @@ export const createSurveySubmissionSchema = z.object({
   name: nameSchema,
   email: emailSchema,
   phone: phoneSchema,
+  mimeType: z.enum(SURVEY_DOCUMENT_TYPES),
+  fileSize: z.number().min(1).max(MAX_SURVEY_DOCUMENT_FILE_SIZE),
+});
+
+export const confirmSurveySubmissionUploadSchema = z.object({
+  key: z.string().min(1).max(512),
 });
 
 export const getSurveySubmissionsQuerySchema = baseQuerySchema

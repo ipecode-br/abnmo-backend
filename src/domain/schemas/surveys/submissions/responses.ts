@@ -5,8 +5,17 @@ import { emailSchema, nameSchema, phoneSchema } from '../../shared';
 import { userSchema } from '../../users';
 import { surveySubmissionSchema } from '.';
 
+export const createSurveySubmissionResponseSchema = baseResponseSchema.extend({
+  data: z.object({
+    submissionId: surveySubmissionSchema.shape.id,
+    key: z.string(),
+    url: z.string().url(),
+    fields: z.record(z.string(), z.string()),
+  }),
+});
+
 export const surveySubmissionResponseSchema = surveySubmissionSchema
-  .pick({ id: true, status: true, createdAt: true })
+  .pick({ id: true, status: true, documentKey: true, createdAt: true })
   .extend({ name: nameSchema, email: emailSchema, phone: phoneSchema })
   .strict();
 export type SurveySubmissionResponse = z.infer<
@@ -26,6 +35,7 @@ export const surveySubmissionDetailsResponseSchema = surveySubmissionSchema
   .pick({
     id: true,
     status: true,
+    documentKey: true,
     updatedAt: true,
     createdAt: true,
   })

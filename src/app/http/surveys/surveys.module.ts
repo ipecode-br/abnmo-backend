@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { CryptographyModule } from '@/app/cryptography/cryptography.module';
 import { SignatureModule } from '@/app/signature/signature.module';
+import { StorageModule } from '@/app/storage/storage.module';
 import { Survey } from '@/domain/entities/survey';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
 import { User } from '@/domain/entities/user';
@@ -10,6 +11,7 @@ import { EnvModule } from '@/env/env.module';
 
 import { SurveysSubmissionsController } from './submissions/surveys-submissions.controller';
 import { ApproveSurveySubmissionUseCase } from './submissions/use-cases/approve-survey-submission.use-case';
+import { ConfirmSurveySubmissionUploadUseCase } from './submissions/use-cases/confirm-survey-submission-upload.use-case';
 import { CreateSurveySubmissionUseCase } from './submissions/use-cases/create-survey-submission.use-case';
 import { GetSurveySubmissionUseCase } from './submissions/use-cases/get-survey-submission.use-case';
 import { GetSurveySubmissionsUseCase } from './submissions/use-cases/get-survey-submissions.use-case';
@@ -26,10 +28,12 @@ import { SendSurveyReminderUseCase } from './use-cases/send-survey-reminder.use-
     EnvModule,
     CryptographyModule,
     SignatureModule,
+    StorageModule,
   ],
   controllers: [SurveysController, SurveysSubmissionsController],
   providers: [
     ApproveSurveySubmissionUseCase,
+    ConfirmSurveySubmissionUploadUseCase,
     CreateSurveySubmissionUseCase,
     CreateSurveyUseCase,
     GetSurveySubmissionUseCase,

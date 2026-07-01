@@ -5,15 +5,31 @@ import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 
 import { CryptographyService } from '@/app/cryptography/cryptography.service';
+import { GenerateUploadUrlUseCase } from '@/app/storage/use-cases/generate-upload-url.use-case';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
+import { STORAGE_FOLDERS } from '@/config/storage';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
 import { User } from '@/domain/entities/user';
+import {
+  SURVEY_DOCUMENT_TYPES,
+  type SurveyDocumentType,
+} from '@/domain/enums/surveys';
+import { generateFileName } from '@/utils/generate-file-name';
 
 interface CreateSurveySubmissionUseCaseInput {
   name: string;
   email: string;
   phone: string;
+  fileSize: number;
+  mimeType: SurveyDocumentType;
+}
+
+interface CreateSurveySubmissionUseCaseOutput {
+  submissionId: string;
+  key: string;
+  url: string;
+  fields: Record<string, string>;
 }
 
 @Injectable()
@@ -25,6 +41,7 @@ export class CreateSurveySubmissionUseCase {
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
     private readonly cryptographyService: CryptographyService,
+    private readonly generateUploadUrlUseCase: GenerateUploadUrlUseCase,
     private readonly logger: LogService,
   ) {}
 
@@ -32,7 +49,9 @@ export class CreateSurveySubmissionUseCase {
     name,
     email,
     phone,
-  }: CreateSurveySubmissionUseCaseInput): Promise<void> {
+    mimeType,
+    fileSize,
+  }: CreateSurveySubmissionUseCaseInput): Promise<CreateSurveySubmissionUseCaseOutput> {
     const existingUser = await this.usersRepository.findOne({
       select: { id: true },
       where: { email },
@@ -48,7 +67,7 @@ export class CreateSurveySubmissionUseCase {
     const randomPassword = randomBytes(16).toString('hex');
     const password = await this.cryptographyService.createHash(randomPassword);
 
-    await this.dataSource.transaction(async (manager) => {
+    return await this.dataSource.transaction(async (manager) => {
       const usersRepository = manager.getRepository(User);
       const submissionsRepository = manager.getRepository(SurveySubmission);
 
@@ -62,17 +81,33 @@ export class CreateSurveySubmissionUseCase {
       });
       await usersRepository.save(user);
 
+      this.logger.setUser({ id: user.id, email: user.email, role: user.role });
+      this.logger.log('User created');
+
       const submission = submissionsRepository.create({
         user: { id: user.id },
       });
       await submissionsRepository.save(submission);
 
-      this.logger.log('Survey initiated', {
-        id: submission.id,
-        userId: user.id,
-        email,
-        phone,
+      this.logger.log('Survey submission created', { id: submission.id });
+
+      const fileName = generateFileName({ name, mimeType, prefix: 'laudo' });
+      const key = `${STORAGE_FOLDERS.patients.documents(user.id)}/${fileName}`;
+
+      const data = await this.generateUploadUrlUseCase.execute({
+        key,
+        mimeType,
+        fileSize,
+        expiresInSeconds: 300,
+        allowedMimeTypes: [...SURVEY_DOCUMENT_TYPES],
       });
+
+      return {
+        submissionId: submission.id,
+        key,
+        url: data.url,
+        fields: data.fields,
+      };
     });
   }
 }

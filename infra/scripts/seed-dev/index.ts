@@ -40,10 +40,6 @@ async function main() {
       process.exit(1);
     }
 
-    console.log('📦 Running migrations...');
-    await dataSource.runMigrations();
-    console.log('✅ Migrations completed.');
-
     console.log('🧹 Cleaning database...');
     await dataSource.query('SET FOREIGN_KEY_CHECKS = 0');
     await dataSource.manager.clear(Appointment);
@@ -56,6 +52,10 @@ async function main() {
     await dataSource.manager.clear(Token);
     await dataSource.query('SET FOREIGN_KEY_CHECKS = 1');
     console.log('✅ Old data deleted.');
+
+    console.log('📦 Running migrations...');
+    await dataSource.runMigrations();
+    console.log('✅ Migrations completed.');
 
     const usersRepository = dataSource.getRepository(User);
     const surveySubmissionRepository =
@@ -104,7 +104,11 @@ async function main() {
 
       const submission = generateFakeSurveySubmission({
         user: { id: user.id },
-        status: faker.helpers.arrayElement(['pending', 'rejected']),
+        status: faker.helpers.arrayElement([
+          'pending_document',
+          'pending_review',
+          'rejected',
+        ]),
       });
       await surveySubmissionRepository.save(submission);
     }

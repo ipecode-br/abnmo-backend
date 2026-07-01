@@ -19,6 +19,7 @@ export class GetSurveySubmissionUseCase {
       select: {
         id: true,
         status: true,
+        documentKey: true,
         user: { id: true, name: true, email: true, phone: true },
         updatedBy: { id: true, name: true, email: true, avatarUrl: true },
         updatedAt: true,
@@ -38,6 +39,7 @@ export class GetSurveySubmissionUseCase {
       email: submission.user.email,
       phone: submission.user.phone,
       status: submission.status,
+      documentKey: submission.documentKey,
       updatedBy: submission.updatedBy
         ? {
             id: submission.updatedBy.id,

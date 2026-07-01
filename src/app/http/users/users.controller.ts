@@ -23,7 +23,7 @@ import { BaseResponse } from '@/common/dtos';
 import { FileValidationPipe } from '@/common/file-validation.pipe';
 import { Log } from '@/common/log/log.decorator';
 import type { RequestUser } from '@/common/types';
-import { MIME_TYPES } from '@/constants/mime-types';
+import { MIME_TYPES } from '@/config/storage';
 
 import { ActivateUserUseCase } from './use-cases/activate-user.use-case';
 import { CancelUserInviteUseCase } from './use-cases/cancel-user-invite.use-case';

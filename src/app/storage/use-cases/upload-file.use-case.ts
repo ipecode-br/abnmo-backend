@@ -25,20 +25,17 @@ interface UploadFileUseCaseOutput {
 @Log()
 export class UploadFileUseCase {
   private readonly bucketName: string;
-  private readonly s3Client: S3Client;
   private readonly cdnPublicUrl: string;
   private readonly cdnPrivateUrl: string;
 
   constructor(
     private readonly envService: EnvService,
     private readonly logger: LogService,
+    private readonly s3Client: S3Client,
   ) {
     this.bucketName = this.envService.get('STORAGE_BUCKET_NAME');
     this.cdnPublicUrl = this.envService.get('CDN_PUBLIC_URL');
     this.cdnPrivateUrl = this.envService.get('CDN_PRIVATE_URL');
-
-    // Initialize S3 client - use default AWS credentials chain
-    this.s3Client = new S3Client({});
   }
 
   async execute({

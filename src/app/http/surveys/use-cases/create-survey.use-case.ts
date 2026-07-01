@@ -51,7 +51,7 @@ export class CreateSurveyUseCase {
       });
     }
 
-    if (submission.status !== 'pending') {
+    if (submission.status !== 'pending_review') {
       throw new BadRequestException(
         'Esta catalogação já foi finalizada ou está em um estado inválido.',
         {
