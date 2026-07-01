@@ -14,6 +14,7 @@ import { Survey } from '@/domain/entities/survey';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
 import { User } from '@/domain/entities/user';
 import { EnvService } from '@/env/env.service';
+import { formatCpfNumber } from '@/utils/formatters/format-cpf-number';
 
 import { CreateSurveyBody } from '../surveys.dtos';
 
@@ -125,8 +126,7 @@ export class CreateSurveyUseCase {
         fullName: submission.user.name,
         email: submission.user.email,
         phone: submission.user.phone!,
-        // TODO: format cpf to XXX.XXX.XXX-XX
-        cpf: cpf,
+        cpf: formatCpfNumber(cpf),
       },
       template: {
         key: this.modelKey,
