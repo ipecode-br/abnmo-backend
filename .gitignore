@@ -1,4 +1,4 @@
-# compiled output
+# Compiled output
 /dist
 /dist-lambda
 /dist-docker
@@ -8,6 +8,7 @@ lambda.zip
 .lambda-build
 .lambda-esbuild
 .devcontainer
+/docs/openapi.json
 
 # Logs
 logs

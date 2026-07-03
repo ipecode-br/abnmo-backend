@@ -1,3 +1,6 @@
+import { writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+
 import { DocumentBuilder, OpenAPIObject, SwaggerModule } from '@nestjs/swagger';
 import { cleanupOpenApiDoc } from 'nestjs-zod';
 
@@ -13,13 +16,12 @@ async function bootstrap(): Promise<void> {
     .setDescription(
       'Esta documentação lista as rotas disponíveis da aplicação, bem como seus respectivos requisitos e dados retornados.',
     )
-    .setVersion('0.0.1')
+    .setVersion('0.1.0')
     .build();
 
   const cleanupSwagger = cleanupOpenApiDoc as unknown as (
     doc: OpenAPIObject,
   ) => OpenAPIObject;
-
   const swaggerDocument = SwaggerModule.createDocument(app, config);
   const cleanedDocument = cleanupSwagger(swaggerDocument);
 
@@ -38,10 +40,19 @@ async function bootstrap(): Promise<void> {
 
   const BASE_URL = envService.get('API_BASE_URL');
   const PORT = envService.get('API_PORT');
+  const NODE_ENV = envService.get('NODE_ENV');
+
+  // Dump OpenAPI spec to disk in dev, so tools/LLMs can read it without hitting the server
+  if (NODE_ENV !== 'production') {
+    const outputPath = join(process.cwd(), 'docs/openapi.json');
+    writeFileSync(outputPath, JSON.stringify(cleanedDocument, null, 2));
+    console.log(`📄 OpenAPI spec written to ${outputPath}`);
+  }
 
   await app.listen(PORT).then(() => {
     console.log(`🚀 Server running on ${BASE_URL}:${PORT}`);
     console.log(`📘 Swagger running on ${BASE_URL}:${PORT}/swagger`);
+    console.log(`📘 Swagger JSON running on ${BASE_URL}:${PORT}/swagger-json`);
   });
 }
 
