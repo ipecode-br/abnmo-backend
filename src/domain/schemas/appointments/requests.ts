@@ -7,6 +7,7 @@ import {
 import { PATIENT_CONDITIONS } from '@/domain/enums/patients';
 import { SPECIALTY_CATEGORIES } from '@/domain/enums/shared';
 
+import { patientSchema } from '../patients';
 import {
   queryDateSchema,
   queryLimitSchema,
@@ -20,13 +21,17 @@ import { appointmentSchema } from '.';
 
 export const createAppointmentSchema = z
   .object({
-    patientId: z.string().uuid(),
-    date: appointmentSchema.shape.date,
-    condition: appointmentSchema.shape.condition,
-    annotation: appointmentSchema.shape.annotation,
-    professionalName: appointmentSchema.shape.professionalName,
+    patientId: patientSchema.shape.id,
     category: specialtySchema.optional(),
   })
+  .merge(
+    appointmentSchema.pick({
+      date: true,
+      condition: true,
+      annotation: true,
+      professionalName: true,
+    }),
+  )
   .strict();
 
 export const updateAppointmentSchema = appointmentSchema.pick({

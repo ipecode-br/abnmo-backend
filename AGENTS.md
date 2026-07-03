@@ -58,6 +58,52 @@ NestJS + TypeORM + MySQL + Zod API.
 - Do **not** inject `@Res()` response objects manually — use NestJS return values + HTTP exceptions
 - **Exception**: `GET /status` uses `@ApiResponse` + `@Res()` (not `@ZodResponse`) because it needs dynamic HTTP status — 200 when OK, 503 when services are down; it validates the response manually via `getStatusResponseSchema.parse()`
 
+### Response mapping in use cases
+
+When the response schema extends the entity schema with relations (nested objects) or picks a subset, **never** return raw TypeORM entities. The `ZodSerializerInterceptor` validates responses against the schema with `.strict()` — any extra properties (e.g. `createdBy`, `updatedAt`, `createdAt` from `BaseEntity`, or full relation objects) cause runtime failures.
+
+Map entities to plain objects matching the schema exactly:
+
+```ts
+import type { AppointmentResponseSchema } from '@/domain/schemas/appointments/responses';
+
+interface GetAppointmentsUseCaseOutput {
+  appointments: AppointmentResponseSchema[];
+  total: number;
+}
+
+// ...
+
+return {
+  appointments: appointments.map((appointment) => ({
+    id: appointment.id,
+    date: appointment.date,
+    status: appointment.status,
+    category: appointment.category,
+    condition: appointment.condition,
+    annotation: appointment.annotation,
+    professionalName: appointment.professionalName,
+    patient: {
+      id: appointment.patient.id,
+      name: appointment.patient.name,
+      email: appointment.patient.email,
+      avatarUrl: appointment.patient.avatarUrl,
+    },
+    specialist: appointment.specialist
+      ? {
+          id: appointment.specialist.id,
+          name: appointment.specialist.name,
+          email: appointment.specialist.email,
+          avatarUrl: appointment.specialist.avatarUrl,
+        }
+      : null,
+  })),
+  total,
+};
+```
+
+Import the inferred schema type from `responses.ts`, use it as the return type, and map every entity to a plain object with only the fields in the response schema.
+
 ## Database
 
 - **synchronize: false** — migrations only

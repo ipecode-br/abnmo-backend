@@ -18,6 +18,7 @@ import type {
   ReferralStatus,
 } from '@/domain/enums/referrals';
 import type { SpecialtyCategory } from '@/domain/enums/shared';
+import type { ReferralResponseSchema } from '@/domain/schemas/referrals/responses';
 
 interface GetReferralsUseCaseInput {
   category?: SpecialtyCategory;
@@ -36,7 +37,7 @@ interface GetReferralsUseCaseInput {
 }
 
 interface GetReferralsUseCaseOutput {
-  referrals: Referral[];
+  referrals: ReferralResponseSchema[];
   total: number;
 }
 
@@ -126,8 +127,8 @@ export class GetReferralsUseCase {
         condition: true,
         annotation: true,
         professionalName: true,
-        patient: { id: true, name: true, avatarUrl: true },
-        specialist: { id: true, name: true, avatarUrl: true, specialty: true },
+        patient: { id: true, name: true, email: true, avatarUrl: true },
+        specialist: { id: true, name: true, email: true, avatarUrl: true },
       },
       relations: { patient: true, specialist: true },
       skip: (page - 1) * perPage,
@@ -136,6 +137,31 @@ export class GetReferralsUseCase {
       where,
     });
 
-    return { referrals, total };
+    return {
+      referrals: referrals.map((referral) => ({
+        id: referral.id,
+        date: referral.date,
+        status: referral.status,
+        category: referral.category,
+        condition: referral.condition,
+        annotation: referral.annotation,
+        professionalName: referral.professionalName,
+        patient: {
+          id: referral.patient.id,
+          name: referral.patient.name,
+          email: referral.patient.email,
+          avatarUrl: referral.patient.avatarUrl,
+        },
+        specialist: referral.specialist
+          ? {
+              id: referral.specialist.id,
+              name: referral.specialist.name,
+              email: referral.specialist.email,
+              avatarUrl: referral.specialist.avatarUrl,
+            }
+          : null,
+      })),
+      total,
+    };
   }
 }

@@ -13,7 +13,6 @@ export const referralSchema = baseEntitySchema
     condition: patientConditionSchema,
     annotation: z.string().max(2000).nullable(),
     professionalName: nameSchema.nullable(),
-    createdBy: z.string().uuid(),
   })
   .strict();
 export type ReferralSchema = z.infer<typeof referralSchema>;

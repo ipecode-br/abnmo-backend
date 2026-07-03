@@ -13,7 +13,6 @@ export const appointmentSchema = baseEntitySchema
     condition: patientConditionSchema,
     annotation: z.string().max(500).nullable(),
     professionalName: nameSchema.nullable(),
-    createdBy: z.string().uuid(),
   })
   .strict();
 export type AppointmentSchema = z.infer<typeof appointmentSchema>;

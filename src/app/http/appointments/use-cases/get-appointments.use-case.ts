@@ -18,6 +18,7 @@ import type {
 import type { PatientCondition } from '@/domain/enums/patients';
 import type { QueryOrder } from '@/domain/enums/queries';
 import type { SpecialtyCategory } from '@/domain/enums/shared';
+import type { AppointmentResponseSchema } from '@/domain/schemas/appointments/responses';
 
 interface GetAppointmentsUseCaseInput {
   category?: SpecialtyCategory;
@@ -36,7 +37,7 @@ interface GetAppointmentsUseCaseInput {
 }
 
 interface GetAppointmentsUseCaseOutput {
-  appointments: Appointment[];
+  appointments: AppointmentResponseSchema[];
   total: number;
 }
 
@@ -126,8 +127,8 @@ export class GetAppointmentsUseCase {
         condition: true,
         annotation: true,
         professionalName: true,
-        patient: { id: true, name: true, avatarUrl: true },
-        specialist: { id: true, name: true, avatarUrl: true, specialty: true },
+        patient: { id: true, name: true, email: true, avatarUrl: true },
+        specialist: { id: true, name: true, email: true, avatarUrl: true },
       },
       relations: { patient: true, specialist: true },
       skip: (page - 1) * perPage,
@@ -136,6 +137,31 @@ export class GetAppointmentsUseCase {
       where,
     });
 
-    return { appointments, total };
+    return {
+      appointments: appointments.map((appointment) => ({
+        id: appointment.id,
+        date: appointment.date,
+        status: appointment.status,
+        category: appointment.category,
+        condition: appointment.condition,
+        annotation: appointment.annotation,
+        professionalName: appointment.professionalName,
+        patient: {
+          id: appointment.patient.id,
+          name: appointment.patient.name,
+          email: appointment.patient.email,
+          avatarUrl: appointment.patient.avatarUrl,
+        },
+        specialist: appointment.specialist
+          ? {
+              id: appointment.specialist.id,
+              name: appointment.specialist.name,
+              email: appointment.specialist.email,
+              avatarUrl: appointment.specialist.avatarUrl,
+            }
+          : null,
+      })),
+      total,
+    };
   }
 }

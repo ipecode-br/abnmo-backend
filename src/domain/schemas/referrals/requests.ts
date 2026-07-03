@@ -7,6 +7,7 @@ import {
 } from '@/domain/enums/referrals';
 import { SPECIALTY_CATEGORIES } from '@/domain/enums/shared';
 
+import { patientSchema } from '../patients';
 import {
   queryDateSchema,
   queryLimitSchema,
@@ -20,13 +21,17 @@ import { referralSchema } from '.';
 
 export const createReferralSchema = z
   .object({
-    patientId: z.string().uuid(),
-    date: referralSchema.shape.date,
-    condition: referralSchema.shape.condition,
-    annotation: referralSchema.shape.annotation,
-    professionalName: referralSchema.shape.professionalName,
+    patientId: patientSchema.shape.id,
     category: specialtySchema.optional(),
   })
+  .merge(
+    referralSchema.pick({
+      date: true,
+      condition: true,
+      annotation: true,
+      professionalName: true,
+    }),
+  )
   .strict();
 
 export const updateReferralSchema = referralSchema.pick({
