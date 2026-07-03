@@ -10,24 +10,36 @@ export const userResponseSchema = userSchema.pick({
   email: true,
   avatarUrl: true,
   role: true,
-  features: true,
   status: true,
   specialty: true,
   registrationId: true,
-  updatedAt: true,
   createdAt: true,
 });
 export type UserResponse = z.infer<typeof userResponseSchema>;
-
-export const getUserResponseSchema = baseResponseSchema.extend({
-  data: userResponseSchema,
-});
 
 export const getUsersResponseSchema = baseResponseSchema.extend({
   data: z.object({
     users: z.array(userResponseSchema),
     total: z.number(),
   }),
+});
+
+export const userDetailsResponseSchema = userSchema.pick({
+  id: true,
+  name: true,
+  email: true,
+  avatarUrl: true,
+  role: true,
+  features: true,
+  status: true,
+  specialty: true,
+  registrationId: true,
+  createdAt: true,
+});
+export type UserDetailsResponse = z.infer<typeof userDetailsResponseSchema>;
+
+export const getUserResponseSchema = baseResponseSchema.extend({
+  data: userDetailsResponseSchema,
 });
 
 export const userInviteResponseSchema = authTokenSchema.pick({

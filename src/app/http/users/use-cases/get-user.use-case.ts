@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { User } from '@/domain/entities/user';
-import { UserResponse } from '@/domain/schemas/users/responses';
+import { UserDetailsResponse } from '@/domain/schemas/users/responses';
 
 interface GetUserUseCaseInput {
   id: string;
@@ -16,7 +16,7 @@ export class GetUserUseCase {
     private readonly usersRepository: Repository<User>,
   ) {}
 
-  async execute({ id }: GetUserUseCaseInput): Promise<UserResponse> {
+  async execute({ id }: GetUserUseCaseInput): Promise<UserDetailsResponse> {
     const user = await this.usersRepository.findOne({
       where: { id },
       select: {
@@ -29,7 +29,6 @@ export class GetUserUseCase {
         status: true,
         specialty: true,
         registrationId: true,
-        updatedAt: true,
         createdAt: true,
       },
     });
@@ -38,9 +37,17 @@ export class GetUserUseCase {
       throw new NotFoundException('Usuário não encontrado.');
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...userWithoutPassword } = user;
-
-    return userWithoutPassword;
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      avatarUrl: user.avatarUrl,
+      role: user.role,
+      features: user.features,
+      status: user.status,
+      specialty: user.specialty,
+      registrationId: user.registrationId,
+      createdAt: user.createdAt,
+    };
   }
 }

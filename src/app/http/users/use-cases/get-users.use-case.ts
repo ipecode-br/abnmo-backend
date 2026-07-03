@@ -93,11 +93,9 @@ export class GetUsersUseCase {
         email: true,
         avatarUrl: true,
         role: true,
-        features: true,
         status: true,
         specialty: true,
         registrationId: true,
-        updatedAt: true,
         createdAt: true,
       },
       order: { [orderBy]: props.order },
@@ -112,11 +110,9 @@ export class GetUsersUseCase {
       email: user.email,
       avatarUrl: user.avatarUrl,
       role: user.role,
-      features: user.features,
       status: user.status,
       specialty: user.specialty,
       registrationId: user.registrationId,
-      updatedAt: user.updatedAt,
       createdAt: user.createdAt,
     }));
 
