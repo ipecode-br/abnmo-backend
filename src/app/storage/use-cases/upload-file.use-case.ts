@@ -25,8 +25,7 @@ interface UploadFileUseCaseOutput {
 @Log()
 export class UploadFileUseCase {
   private readonly bucketName: string;
-  private readonly cdnPublicUrl: string;
-  private readonly cdnPrivateUrl: string;
+  private readonly cdnUrl: string;
 
   constructor(
     private readonly envService: EnvService,
@@ -34,8 +33,7 @@ export class UploadFileUseCase {
     private readonly s3Client: S3Client,
   ) {
     this.bucketName = this.envService.get('STORAGE_BUCKET_NAME');
-    this.cdnPublicUrl = this.envService.get('CDN_PUBLIC_URL');
-    this.cdnPrivateUrl = this.envService.get('CDN_PRIVATE_URL');
+    this.cdnUrl = this.envService.get('CDN_URL');
   }
 
   async execute({
@@ -61,8 +59,7 @@ export class UploadFileUseCase {
 
     await this.s3Client.send(uploadCommand);
 
-    const cdnBaseUrl =
-      visibility === 'private' ? this.cdnPrivateUrl : this.cdnPublicUrl;
+    const cdnBaseUrl = `${this.cdnUrl}/${visibility}`;
     const url = `${cdnBaseUrl}${filePath}`;
     const size = formatSize(buffer.length);
 

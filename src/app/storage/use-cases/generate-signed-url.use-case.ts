@@ -18,7 +18,7 @@ interface GenerateSignedUrlUseCaseOutput {
 @Injectable()
 @Log()
 export class GenerateSignedUrlUseCase {
-  private readonly cdnPrivateUrl: string;
+  private readonly cdnUrl: string;
   private readonly cdnPublicKeyId: string;
   private readonly cdnPrivateKey: string;
 
@@ -26,7 +26,7 @@ export class GenerateSignedUrlUseCase {
     private readonly envService: EnvService,
     private readonly logger: LogService,
   ) {
-    this.cdnPrivateUrl = this.envService.get('CDN_PRIVATE_URL');
+    this.cdnUrl = this.envService.get('CDN_URL');
     this.cdnPublicKeyId = this.envService.get('CDN_PUBLIC_KEY_ID');
     this.cdnPrivateKey = Buffer.from(
       this.envService.get('CDN_PRIVATE_KEY'),
@@ -38,7 +38,7 @@ export class GenerateSignedUrlUseCase {
     url,
     expiresInHours = 1,
   }: GenerateSignedUrlUseCaseInput): GenerateSignedUrlUseCaseOutput {
-    if (!url.startsWith(this.cdnPrivateUrl)) {
+    if (!url.startsWith(`${this.cdnUrl}/private`)) {
       throw new BadRequestException(
         'URLs assinadas são válidas apenas para arquivos privados.',
       );

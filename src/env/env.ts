@@ -30,8 +30,7 @@ export const envSchema = z.object({
 
   // Storage
   STORAGE_BUCKET_NAME: z.string().min(1),
-  CDN_PUBLIC_URL: z.string().url(),
-  CDN_PRIVATE_URL: z.string().url(),
+  CDN_URL: z.string().url(),
   CDN_PUBLIC_KEY_ID: z.string().min(1),
   CDN_PRIVATE_KEY: z.string().min(1),
 

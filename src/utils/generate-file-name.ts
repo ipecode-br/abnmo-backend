@@ -19,7 +19,8 @@ export function generateFileName({
   let fileName = name ? normalizeString(name) : '';
 
   if (prefix) {
-    fileName = `${prefix}_${fileName}`;
+    const separator = fileName ? '_' : '';
+    fileName = `${prefix}${separator}${fileName}`;
   }
 
   const truncatedName = fileName.substring(0, 40);

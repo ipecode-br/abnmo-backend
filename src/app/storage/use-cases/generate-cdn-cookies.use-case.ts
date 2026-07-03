@@ -18,8 +18,7 @@ interface GenerateCdnCookiesUseCaseInput {
 @Injectable()
 @Log()
 export class GenerateCdnCookiesUseCase {
-  private readonly cookieDomain: string;
-  private readonly cdnPrivateUrl: string;
+  private readonly cdnUrl: string;
   private readonly cdnPublicKeyId: string;
   private readonly cdnPrivateKey: string;
 
@@ -27,8 +26,7 @@ export class GenerateCdnCookiesUseCase {
     private readonly envService: EnvService,
     private readonly logger: LogService,
   ) {
-    this.cookieDomain = this.envService.get('COOKIE_DOMAIN');
-    this.cdnPrivateUrl = this.envService.get('CDN_PRIVATE_URL');
+    this.cdnUrl = this.envService.get('CDN_URL');
     this.cdnPublicKeyId = this.envService.get('CDN_PUBLIC_KEY_ID');
     this.cdnPrivateKey = Buffer.from(
       this.envService.get('CDN_PRIVATE_KEY'),
@@ -62,7 +60,7 @@ export class GenerateCdnCookiesUseCase {
 
     const policy = JSON.stringify({
       Statement: allowedPaths.map((path) => ({
-        Resource: path,
+        Resource: `${this.cdnUrl}/${path}`,
         Condition: {
           DateLessThan: {
             'AWS:EpochTime': Math.floor(expiresAt.getTime() / 1000),
