@@ -89,6 +89,21 @@ export class UsersController {
     };
   }
 
+  @Get(':id')
+  @Roles(['member'])
+  @RequireFeature('read:user')
+  @ApiOperation({ summary: 'Retorna os dados do usuário pelo ID' })
+  @ZodResponse({ type: GetUserResponse, status: 200 })
+  async getUserById(@Param('id') id: string): Promise<GetUserResponse> {
+    const data = await this.getUserUseCase.execute({ id });
+
+    return {
+      success: true,
+      message: 'Dados do usuário retornados com sucesso.',
+      data,
+    };
+  }
+
   @Put(':id')
   @Log('update_user')
   @RequireFeature('update:user')
