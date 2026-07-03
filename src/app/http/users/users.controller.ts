@@ -80,7 +80,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Retorna os dados do usuário autenticado' })
   @ZodResponse({ type: GetUserResponse, status: 200 })
   async getProfile(@User() user: RequestUser): Promise<GetUserResponse> {
-    const data = await this.getUserUseCase.execute({ id: user.id });
+    const data = await this.getUserUseCase.execute({ id: user.id, user });
 
     return {
       success: true,
@@ -94,8 +94,11 @@ export class UsersController {
   @RequireFeature('read:user')
   @ApiOperation({ summary: 'Retorna os dados do usuário pelo ID' })
   @ZodResponse({ type: GetUserResponse, status: 200 })
-  async getUserById(@Param('id') id: string): Promise<GetUserResponse> {
-    const data = await this.getUserUseCase.execute({ id });
+  async getUserById(
+    @Param('id') id: string,
+    @User() user: RequestUser,
+  ): Promise<GetUserResponse> {
+    const data = await this.getUserUseCase.execute({ id, user });
 
     return {
       success: true,
