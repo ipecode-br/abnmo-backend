@@ -7,11 +7,10 @@ import { EnvService } from '@/env/env.service';
 import { formatSize } from '@/utils/formatters/format-size';
 
 interface UploadFileUseCaseInput {
-  visibility: 'public' | 'private';
   fileName: string;
   mimeType: string;
   buffer: Buffer;
-  folder?: string;
+  folder: string;
 }
 
 interface UploadFileUseCaseOutput {
@@ -37,7 +36,6 @@ export class UploadFileUseCase {
   }
 
   async execute({
-    visibility,
     fileName,
     mimeType,
     buffer,
@@ -47,8 +45,7 @@ export class UploadFileUseCase {
       this.validateFolder(folder);
     }
 
-    const filePath = folder ? `${folder}/${fileName}` : `/${fileName}`;
-    const s3Key = `${visibility}${filePath}`;
+    const s3Key = `${folder}/${fileName}`;
 
     const uploadCommand = new PutObjectCommand({
       Bucket: this.bucketName,
@@ -59,8 +56,7 @@ export class UploadFileUseCase {
 
     await this.s3Client.send(uploadCommand);
 
-    const cdnBaseUrl = `${this.cdnUrl}/${visibility}`;
-    const url = `${cdnBaseUrl}${filePath}`;
+    const url = `${this.cdnUrl}/${s3Key}`;
     const size = formatSize(buffer.length);
 
     this.logger.log('File uploaded', { url, s3Key, size });

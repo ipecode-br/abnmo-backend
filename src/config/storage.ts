@@ -18,10 +18,13 @@ export const MAGIC_BYTES: Record<string, Buffer[]> = {
 
 export const STORAGE_FOLDERS = {
   users: {
-    avatars: 'private/users/avatars',
+    avatarsRoot: 'private/avatars/users',
+    avatars: (id: string) => `private/avatars/users/${id}`,
   },
   patients: {
-    avatars: 'private/patients/avatars',
-    documents: (id: string) => `private/patients/documents/${id}`,
+    avatarsRoot: 'private/avatars/patients',
+    avatars: (id: string) => `private/avatars/patients/${id}`,
+    documentsRoot: 'private/documents/patients',
+    documents: (id: string) => `private/documents/patients/${id}`,
   },
 };

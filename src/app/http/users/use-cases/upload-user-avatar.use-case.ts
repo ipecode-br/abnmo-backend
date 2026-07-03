@@ -54,8 +54,7 @@ export class UploadUserAvatarUseCase {
     });
 
     const file = await this.uploadFileUseCase.execute({
-      folder: STORAGE_FOLDERS.users.avatars,
-      visibility: 'private',
+      folder: STORAGE_FOLDERS.users.avatars(user.id),
       buffer: buffer,
       fileName,
       mimeType,

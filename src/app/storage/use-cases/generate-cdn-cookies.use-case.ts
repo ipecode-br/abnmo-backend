@@ -38,14 +38,14 @@ export class GenerateCdnCookiesUseCase {
     const allowedPaths: string[] = [];
     const { role } = user;
 
-    const sharedPaths = [
-      `${STORAGE_FOLDERS.users.avatars}/*`,
-      `${STORAGE_FOLDERS.patients.avatars}/*`,
-    ];
-
     if (role === 'admin') {
       allowedPaths.push('/*');
     }
+
+    const sharedPaths = [
+      `${STORAGE_FOLDERS.users.avatars(user.id)}/*`,
+      `${STORAGE_FOLDERS.patients.avatarsRoot}/*`,
+    ];
 
     if (role === 'member' || role === 'specialist') {
       for (const path of sharedPaths) {
@@ -54,7 +54,7 @@ export class GenerateCdnCookiesUseCase {
     }
 
     if (role === 'patient') {
-      allowedPaths.push(`${STORAGE_FOLDERS.patients.avatars}/*`);
+      allowedPaths.push(`${STORAGE_FOLDERS.patients.avatars(user.id)}/*`);
       allowedPaths.push(`${STORAGE_FOLDERS.patients.documents(user.id)}/*`);
     }
 
