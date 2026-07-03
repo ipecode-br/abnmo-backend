@@ -14,13 +14,20 @@ export class GetSurveySubmissionUseCase {
 
   async execute(id: string): Promise<SurveySubmissionDetailsResponse> {
     const submission = await this.surveySubmissionsRepository.findOne({
-      relations: { user: true, updatedBy: true },
+      relations: { user: true, document: true, updatedBy: true },
       where: { id },
       select: {
         id: true,
         status: true,
-        documentKey: true,
         user: { id: true, name: true, email: true, phone: true },
+        document: {
+          key: true,
+          url: true,
+          name: true,
+          filename: true,
+          size: true,
+          mimeType: true,
+        },
         updatedBy: { id: true, name: true, email: true, avatarUrl: true },
         updatedAt: true,
         createdAt: true,
@@ -39,7 +46,16 @@ export class GetSurveySubmissionUseCase {
       email: submission.user.email,
       phone: submission.user.phone,
       status: submission.status,
-      documentKey: submission.documentKey,
+      document: submission.document
+        ? {
+            key: submission.document.key,
+            url: submission.document.url,
+            name: submission.document.name,
+            filename: submission.document.filename,
+            size: submission.document.size,
+            mimeType: submission.document.mimeType,
+          }
+        : null,
       updatedBy: submission.updatedBy
         ? {
             id: submission.updatedBy.id,

@@ -48,7 +48,7 @@ const ORDER_BY_MAPPING: Record<
 export class GetSurveySubmissionsUseCase {
   constructor(
     @InjectRepository(SurveySubmission)
-    private readonly surveySubmissionRepository: Repository<SurveySubmission>,
+    private readonly surveySubmissionsRepository: Repository<SurveySubmission>,
   ) {}
 
   async execute({
@@ -83,7 +83,7 @@ export class GetSurveySubmissionsUseCase {
       where.createdAt = LessThanOrEqual(endDate);
     }
 
-    const total = await this.surveySubmissionRepository.count({
+    const total = await this.surveySubmissionsRepository.count({
       relations: { user: true },
       where,
     });
@@ -91,13 +91,11 @@ export class GetSurveySubmissionsUseCase {
     const orderBy = ORDER_BY_MAPPING[props.orderBy || 'date'];
     const shouldOrderByUser = orderBy === 'name' || orderBy === 'email';
 
-    const result = await this.surveySubmissionRepository.find({
+    const result = await this.surveySubmissionsRepository.find({
       relations: { user: true },
-      where,
       select: {
         id: true,
         status: true,
-        documentKey: true,
         createdAt: true,
         user: { id: true, name: true, email: true, phone: true },
       },
@@ -106,6 +104,7 @@ export class GetSurveySubmissionsUseCase {
         : { [orderBy]: props.order },
       skip: (page - 1) * perPage,
       take: perPage,
+      where,
     });
 
     return {
@@ -115,7 +114,6 @@ export class GetSurveySubmissionsUseCase {
         email: submission.user.email,
         phone: submission.user.phone || '',
         status: submission.status,
-        documentKey: submission.documentKey,
         createdAt: submission.createdAt,
       })),
       total,

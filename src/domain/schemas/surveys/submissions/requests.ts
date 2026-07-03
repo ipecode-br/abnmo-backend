@@ -18,10 +18,6 @@ export const createSurveySubmissionSchema = z.object({
   fileSize: z.number().min(1).max(MAX_SURVEY_DOCUMENT_FILE_SIZE),
 });
 
-export const confirmSurveySubmissionUploadSchema = z.object({
-  key: z.string().min(1).max(512),
-});
-
 export const getSurveySubmissionsQuerySchema = baseQuerySchema
   .pick({
     search: true,

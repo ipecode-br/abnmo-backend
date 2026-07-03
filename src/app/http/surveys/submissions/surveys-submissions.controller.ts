@@ -19,7 +19,6 @@ import { Log } from '@/common/log/log.decorator';
 import type { RequestUser } from '@/common/types';
 
 import {
-  ConfirmSurveySubmissionUploadBody,
   CreateSurveySubmissionBody,
   CreateSurveySubmissionResponse,
   GetSurveySubmissionResponse,
@@ -72,14 +71,8 @@ export class SurveysSubmissionsController {
   @Log('init_survey')
   @ApiOperation({ summary: 'Confirma o upload do documento' })
   @ZodResponse({ type: BaseResponse, status: 200 })
-  async confirmDocumentUpload(
-    @Param('id') id: string,
-    @Body() body: ConfirmSurveySubmissionUploadBody,
-  ): Promise<BaseResponse> {
-    await this.confirmSurveySubmissionUploadUseCase.execute({
-      submissionId: id,
-      ...body,
-    });
+  async confirmDocumentUpload(@Param('id') id: string): Promise<BaseResponse> {
+    await this.confirmSurveySubmissionUploadUseCase.execute({ id });
 
     return {
       success: true,

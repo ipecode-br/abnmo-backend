@@ -15,7 +15,7 @@ export const createSurveySubmissionResponseSchema = baseResponseSchema.extend({
 });
 
 export const surveySubmissionResponseSchema = surveySubmissionSchema
-  .pick({ id: true, status: true, documentKey: true, createdAt: true })
+  .pick({ id: true, status: true, createdAt: true })
   .extend({ name: nameSchema, email: emailSchema, phone: phoneSchema })
   .strict();
 export type SurveySubmissionResponse = z.infer<
@@ -35,7 +35,6 @@ export const surveySubmissionDetailsResponseSchema = surveySubmissionSchema
   .pick({
     id: true,
     status: true,
-    documentKey: true,
     updatedAt: true,
     createdAt: true,
   })
@@ -43,6 +42,16 @@ export const surveySubmissionDetailsResponseSchema = surveySubmissionSchema
     name: nameSchema,
     email: emailSchema,
     phone: phoneSchema.nullable(),
+    document: z
+      .object({
+        key: z.string(),
+        url: z.string(),
+        name: z.string(),
+        filename: z.string(),
+        size: z.number(),
+        mimeType: z.string(),
+      })
+      .nullable(),
     updatedBy: userSchema
       .pick({ id: true, name: true, email: true, avatarUrl: true })
       .nullable(),

@@ -14,8 +14,7 @@ import { SurveySubmission } from '@/domain/entities/survey-submission';
 import { SURVEY_DOCUMENT_TYPES } from '@/domain/enums/surveys';
 
 interface ConfirmSurveySubmissionUploadUseCaseInput {
-  submissionId: string;
-  key: string;
+  id: string;
 }
 
 @Injectable()
@@ -29,19 +28,25 @@ export class ConfirmSurveySubmissionUploadUseCase {
   ) {}
 
   async execute({
-    submissionId,
-    key,
+    id,
   }: ConfirmSurveySubmissionUploadUseCaseInput): Promise<void> {
     const submission = await this.surveySubmissionsRepository.findOne({
       select: { id: true, status: true, user: { id: true, email: true } },
-      where: { id: submissionId },
-      relations: { user: true },
+      relations: { user: true, document: true },
+      where: { id },
     });
 
     if (!submission) {
       throw new NotFoundException('Catalogação não encontrada.', {
-        cause: `Submission with ID <${submissionId}> not found`,
+        cause: `Submission with ID <${id}> not found`,
       });
+    }
+
+    if (!submission.document) {
+      throw new BadRequestException(
+        'Nenhum documento associado a esta submissão.',
+        { cause: `Submission with ID <${id}> has no document` },
+      );
     }
 
     this.logger.setUser({
@@ -53,18 +58,22 @@ export class ConfirmSurveySubmissionUploadUseCase {
     const { isValid, message, cause } = await this.validateFileUseCase.execute({
       allowedMimeTypes: SURVEY_DOCUMENT_TYPES,
       maxSize: MAX_SURVEY_DOCUMENT_FILE_SIZE,
-      key,
+      documentId: submission.document.id,
+      key: submission.document.key,
     });
 
     if (!isValid) {
       throw new BadRequestException(message, { cause });
     }
 
-    await this.surveySubmissionsRepository.update(submission.id, {
+    await this.surveySubmissionsRepository.update(id, {
       status: 'pending_review',
-      documentKey: key,
     });
 
-    this.logger.log('Document upload confirmed', { submissionId, key });
+    this.logger.log('Document upload confirmed', {
+      id,
+      documentId: submission.document.id,
+      key: submission.document.key,
+    });
   }
 }

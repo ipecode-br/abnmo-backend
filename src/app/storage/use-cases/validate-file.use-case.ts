@@ -4,8 +4,12 @@ import {
   S3Client,
 } from '@aws-sdk/client-s3';
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 import { MAGIC_BYTES } from '@/config/storage';
+import { Document } from '@/domain/entities/document';
+import type { DocumentMimeType } from '@/domain/enums/documents';
 import { EnvService } from '@/env/env.service';
 import { formatSize } from '@/utils/formatters/format-size';
 import { getFileExtension } from '@/utils/get-file-extension';
@@ -14,6 +18,7 @@ import { DeleteFileUseCase } from './delete-file.use-case';
 
 interface ValidateFileUseCaseInput {
   allowedMimeTypes: readonly string[];
+  documentId?: string;
   maxSize: number;
   key: string;
 }
@@ -30,6 +35,8 @@ export class ValidateFileUseCase {
 
   constructor(
     private readonly deleteFileUseCase: DeleteFileUseCase,
+    @InjectRepository(Document)
+    private readonly documentsRepository: Repository<Document>,
     private readonly envService: EnvService,
     private readonly s3Client: S3Client,
   ) {
@@ -38,6 +45,7 @@ export class ValidateFileUseCase {
 
   async execute({
     allowedMimeTypes,
+    documentId,
     maxSize,
     key,
   }: ValidateFileUseCaseInput): Promise<ValidateFileUseCaseOutput> {
@@ -113,6 +121,14 @@ export class ValidateFileUseCase {
     if (!isValidSignature) {
       await this.deleteFileUseCase.execute(key);
       return invalidMimeTypeError;
+    }
+
+    if (documentId) {
+      await this.documentsRepository.update(documentId, {
+        status: 'confirmed',
+        size: head.ContentLength ?? 0,
+        mimeType: fileMimeType as DocumentMimeType,
+      });
     }
 
     return {

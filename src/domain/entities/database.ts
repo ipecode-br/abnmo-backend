@@ -1,4 +1,5 @@
 import { Appointment } from './appointment';
+import { Document } from './document';
 import { PatientRequirement } from './patient-requirement';
 import { Referral } from './referral';
 import { Session } from './session';
@@ -9,6 +10,7 @@ import { User } from './user';
 
 export const DATABASE_ENTITIES = [
   Appointment,
+  Document,
   PatientRequirement,
   Referral,
   Session,

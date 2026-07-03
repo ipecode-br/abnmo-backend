@@ -5,6 +5,7 @@ import {
   SurveySubmissionStatus,
 } from '../enums/survey-submissions';
 import { BaseEntity } from './base';
+import { Document } from './document';
 import { User } from './user';
 
 @Entity('survey_submissions')
@@ -16,12 +17,12 @@ export class SurveySubmission extends BaseEntity {
   })
   status: SurveySubmissionStatus;
 
-  @Column({ type: 'varchar', length: 512, nullable: true })
-  documentKey: string | null;
-
   @OneToOne(() => User, (user) => user.surveySubmission)
   @JoinColumn()
   user: User;
+
+  @OneToOne(() => Document, (document) => document.submission)
+  document: Document | null;
 
   @ManyToOne(() => User, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'updated_by_id' })

@@ -1,12 +1,13 @@
+import { DocumentMimeType } from '@/domain/enums/documents';
+
 export const MAX_SURVEY_DOCUMENT_FILE_SIZE = 6 * 1024 * 1024; // 6mb
 
-export const MIME_TYPES = {
+export const MIME_TYPES: Record<string, DocumentMimeType> = {
   jpeg: 'image/jpeg',
   jpg: 'image/jpg',
   png: 'image/png',
   pdf: 'application/pdf',
 } as const;
-export type MimeType = (typeof MIME_TYPES)[keyof typeof MIME_TYPES];
 
 export const MAGIC_BYTES: Record<string, Buffer[]> = {
   'image/jpg': [Buffer.from([0xff, 0xd8, 0xff])],

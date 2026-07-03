@@ -7,7 +7,6 @@ import { baseEntitySchema } from '../../base';
 export const surveySubmissionSchema = baseEntitySchema
   .extend({
     status: z.enum(SURVEY_SUBMISSION_STATUSES).default('pending_document'),
-    documentKey: z.string().max(512).nullable(),
   })
   .strict();
 export type SurveySubmissionSchema = z.infer<typeof surveySubmissionSchema>;

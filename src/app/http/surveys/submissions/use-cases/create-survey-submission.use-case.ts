@@ -9,12 +9,14 @@ import { GenerateUploadUrlUseCase } from '@/app/storage/use-cases/generate-uploa
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import { STORAGE_FOLDERS } from '@/config/storage';
+import { Document } from '@/domain/entities/document';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
 import { User } from '@/domain/entities/user';
 import {
   SURVEY_DOCUMENT_TYPES,
   type SurveyDocumentType,
 } from '@/domain/enums/surveys';
+import { EnvService } from '@/env/env.service';
 import { generateFileName } from '@/utils/generate-file-name';
 
 interface CreateSurveySubmissionUseCaseInput {
@@ -35,15 +37,20 @@ interface CreateSurveySubmissionUseCaseOutput {
 @Injectable()
 @Log()
 export class CreateSurveySubmissionUseCase {
+  private readonly cdnUrl: string;
+
   constructor(
     @InjectDataSource()
     private readonly dataSource: DataSource,
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
     private readonly cryptographyService: CryptographyService,
+    private readonly envService: EnvService,
     private readonly generateUploadUrlUseCase: GenerateUploadUrlUseCase,
     private readonly logger: LogService,
-  ) {}
+  ) {
+    this.cdnUrl = this.envService.get('CDN_URL');
+  }
 
   async execute({
     name,
@@ -70,6 +77,7 @@ export class CreateSurveySubmissionUseCase {
     return await this.dataSource.transaction(async (manager) => {
       const usersRepository = manager.getRepository(User);
       const submissionsRepository = manager.getRepository(SurveySubmission);
+      const documentsRepository = manager.getRepository(Document);
 
       const user = usersRepository.create({
         name,
@@ -93,6 +101,22 @@ export class CreateSurveySubmissionUseCase {
 
       const fileName = generateFileName({ name, mimeType, prefix: 'laudo' });
       const key = `${STORAGE_FOLDERS.patients.documents(user.id)}/${fileName}`;
+      const url = `${this.cdnUrl}/${key}`;
+
+      const document = documentsRepository.create({
+        name: `Laudo Médico - ${user.name}`,
+        filename: fileName,
+        key,
+        url,
+        size: fileSize,
+        mimeType,
+        category: 'medical_report',
+        user: { id: user.id },
+        submission: { id: submission.id },
+      });
+      await documentsRepository.save(document);
+
+      this.logger.log('Document created', { id: document.id, key });
 
       const data = await this.generateUploadUrlUseCase.execute({
         key,

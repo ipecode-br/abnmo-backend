@@ -12,6 +12,7 @@ import type { SupportContact } from '../schemas/shared';
 import type { UserSchema } from '../schemas/users';
 import { Appointment } from './appointment';
 import { BaseEntity } from './base';
+import { Document } from './document';
 import { Referral } from './referral';
 import { Survey } from './survey';
 import { SurveySubmission } from './survey-submission';
@@ -63,6 +64,9 @@ export class User extends BaseEntity implements UserSchema {
 
   @OneToOne(() => SurveySubmission, (submission) => submission.user)
   surveySubmission: SurveySubmission | null;
+
+  @OneToMany(() => Document, (document) => document.user)
+  documents: Document[];
 
   @OneToMany(() => SurveySubmission, (submission) => submission.updatedBy)
   surveySubmissionsUpdated: SurveySubmission[];

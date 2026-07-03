@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { CryptographyModule } from '@/app/cryptography/cryptography.module';
 import { SignatureModule } from '@/app/signature/signature.module';
 import { StorageModule } from '@/app/storage/storage.module';
+import { Document } from '@/domain/entities/document';
 import { Survey } from '@/domain/entities/survey';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
 import { User } from '@/domain/entities/user';
@@ -24,7 +25,7 @@ import { SendSurveyReminderUseCase } from './use-cases/send-survey-reminder.use-
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([SurveySubmission, Survey, User]),
+    TypeOrmModule.forFeature([SurveySubmission, Survey, User, Document]),
     EnvModule,
     CryptographyModule,
     SignatureModule,
