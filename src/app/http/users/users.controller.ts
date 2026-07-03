@@ -46,7 +46,7 @@ import {
 
 @ApiTags('Usuários')
 @Controller('users')
-@Roles(['admin'])
+@Roles(['member'])
 export class UsersController {
   constructor(
     private readonly activateUserUseCase: ActivateUserUseCase,
@@ -85,6 +85,20 @@ export class UsersController {
     return {
       success: true,
       message: 'Dados do usuário retornados com sucesso.',
+      data,
+    };
+  }
+
+  @Get('invites')
+  @RequireFeature('read:user_invite')
+  @ApiOperation({ summary: 'Lista todos os convites de usuário' })
+  @ZodResponse({ type: GetUserInvitesResponse, status: 200 })
+  async getUserInvites(@Query() query: GetUserInvitesQuery): Promise<any> {
+    const data = await this.getUserInvitesUseCase.execute(query);
+
+    return {
+      success: true,
+      message: 'Lista de convites retornada com sucesso.',
       data,
     };
   }
@@ -185,20 +199,6 @@ export class UsersController {
     return {
       success: true,
       message: 'Usuário ativado com sucesso.',
-    };
-  }
-
-  @Get('invites')
-  @RequireFeature('read:user_invite')
-  @ApiOperation({ summary: 'Lista todos os convites de usuário' })
-  @ZodResponse({ type: GetUserInvitesResponse, status: 200 })
-  async getUserInvites(@Query() query: GetUserInvitesQuery): Promise<any> {
-    const data = await this.getUserInvitesUseCase.execute(query);
-
-    return {
-      success: true,
-      message: 'Lista de convites retornada com sucesso.',
-      data,
     };
   }
 
