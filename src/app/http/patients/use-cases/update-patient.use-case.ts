@@ -17,6 +17,7 @@ interface UpdatePatientUseCaseInput {
   user: RequestUser;
   id: string;
   name: string;
+  phone: string | null;
   cpf: string;
   susId: string | null;
   supportContacts: SupportContact[];

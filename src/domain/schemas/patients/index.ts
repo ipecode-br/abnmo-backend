@@ -1,17 +1,15 @@
-import { z } from 'zod';
-
 import { userSchema } from '@/domain/schemas/users';
 
 export const patientSchema = userSchema.pick({
   id: true,
   name: true,
   email: true,
+  phone: true,
   cpf: true,
-  avatarUrl: true,
-  status: true,
   susId: true,
-  supportContacts: true,
+  status: true,
+  avatarUrl: true,
   updatedAt: true,
   createdAt: true,
+  supportContacts: true,
 });
-export type PatientSchema = z.infer<typeof patientSchema>;

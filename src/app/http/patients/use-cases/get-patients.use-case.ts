@@ -13,7 +13,7 @@ import { User } from '@/domain/entities/user';
 import { PatientsOrderBy } from '@/domain/enums/patients';
 import type { QueryOrder } from '@/domain/enums/queries';
 import type { UserStatus } from '@/domain/enums/users';
-import type { ListPatientResponse } from '@/domain/schemas/patients/responses';
+import type { PatientResponse } from '@/domain/schemas/patients/responses';
 
 interface GetPatientsUseCaseInput {
   page: number;
@@ -27,7 +27,7 @@ interface GetPatientsUseCaseInput {
 }
 
 interface GetPatientsUseCaseOutput {
-  patients: ListPatientResponse[];
+  patients: PatientResponse[];
   total: number;
 }
 

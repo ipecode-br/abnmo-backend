@@ -4,13 +4,14 @@ import { PATIENTS_ORDER_BY } from '@/domain/enums/patients';
 import { USER_STATUSES } from '@/domain/enums/users';
 
 import { baseQuerySchema } from '../query';
-import { cpfSchema, supportContactSchema } from '../shared';
-import { userSchema } from '../users';
+import { cpfSchema, phoneSchema, supportContactSchema } from '../shared';
+import { patientSchema } from '.';
 
-export const updatePatientSchema = userSchema
+export const updatePatientSchema = patientSchema
   .pick({ name: true, susId: true })
   .extend({
     cpf: cpfSchema,
+    phone: phoneSchema,
     supportContacts: z.array(supportContactSchema).min(1),
   });
 
