@@ -17,7 +17,6 @@ import { Survey } from '@/domain/entities/survey';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
-import { SURVEY_STATUSES } from '@/domain/enums/surveys';
 import { USER_ROLES } from '@/domain/enums/users';
 
 const DATABASE_DEV_NAME = 'abnmo_dev';
@@ -94,43 +93,24 @@ async function main() {
     }
     console.log(`✅ ${totalOfSpecialists} specialists created.`);
 
-    // Survey submissions
-
-    console.log('📝 Creating survey submissions...');
-    const totalOfSubmissions = 5;
-    for (let k = 0; k < totalOfSubmissions; k++) {
-      const user = generateFakeUser({ password, role: 'patient' });
-      await usersRepository.save(user);
-
-      const submission = generateFakeSurveySubmission({
-        user: { id: user.id },
-        status: faker.helpers.arrayElement([
-          'pending_document',
-          'pending_review',
-          'rejected',
-        ]),
-      });
-      await surveySubmissionRepository.save(submission);
-    }
-    console.log(`✅ ${totalOfSubmissions} survey submissions created.`);
-
-    // Surveys
+    // Surveys (each with a patient + submission)
 
     console.log('📋 Creating surveys...');
     const totalOfSurveys = 10;
-    for (let j = 0; j < totalOfSurveys; j++) {
+    for (let i = 0; i < totalOfSurveys; i++) {
+      const isCompleted = i >= 5;
+      const surveyStatus = isCompleted ? 'completed' : 'pending_signature';
+
       const user = generateFakeUser({
         password,
         role: 'patient',
-        status: 'active',
+        status: isCompleted ? 'active' : 'pending',
       });
       await usersRepository.save(user);
 
-      const surveyStatus = faker.helpers.arrayElement(SURVEY_STATUSES);
-
       const submission = generateFakeSurveySubmission({
         user: { id: user.id },
-        status: surveyStatus === 'completed' ? 'completed' : 'approved',
+        status: isCompleted ? 'completed' : 'approved',
         updatedBy: { id: ADMIN_USER.id },
       });
       await surveySubmissionRepository.save(submission);
@@ -142,6 +122,31 @@ async function main() {
       await surveyRepository.save(survey);
     }
     console.log(`✅ ${totalOfSurveys} surveys created.`);
+
+    // Survey submissions only (patients without surveys)
+
+    console.log('📝 Creating survey submissions...');
+    const totalOfSubmissions = 10;
+    const submissionStatuses = [
+      'pending_document',
+      'pending_review',
+      'rejected',
+    ] as const;
+    for (let i = 0; i < totalOfSubmissions; i++) {
+      const user = generateFakeUser({
+        password,
+        role: 'patient',
+        status: 'pending',
+      });
+      await usersRepository.save(user);
+
+      const submission = generateFakeSurveySubmission({
+        user: { id: user.id },
+        status: faker.helpers.arrayElement(submissionStatuses),
+      });
+      await surveySubmissionRepository.save(submission);
+    }
+    console.log(`✅ ${totalOfSubmissions} survey submissions created.`);
 
     // Appointments
 

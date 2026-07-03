@@ -59,17 +59,17 @@ export class User extends BaseEntity implements UserSchema {
   @Column({ type: 'json', nullable: true })
   supportContacts: SupportContact[] | null;
 
-  @OneToOne(() => Survey, (survey) => survey.user)
-  survey: Survey | null;
+  @OneToMany(() => Document, (document) => document.user)
+  documents: Document[];
 
   @OneToOne(() => SurveySubmission, (submission) => submission.user)
   surveySubmission: SurveySubmission | null;
 
-  @OneToMany(() => Document, (document) => document.user)
-  documents: Document[];
-
   @OneToMany(() => SurveySubmission, (submission) => submission.updatedBy)
   surveySubmissionsUpdated: SurveySubmission[];
+
+  @OneToOne(() => Survey, (survey) => survey.user)
+  survey: Survey | null;
 
   @OneToMany(() => Appointment, (appointment) => appointment.specialist)
   appointmentsAsSpecialist: Appointment[];
