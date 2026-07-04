@@ -49,7 +49,7 @@ export const surveySchema = baseEntitySchema.extend({
   signatureId: z.string().max(64).nullable(),
   status: z.enum(SURVEY_STATUSES).default('pending_signature'),
   // About
-  dateOfBirth: z.coerce.date(),
+  dateOfBirth: z.string().date(),
   gender: z.enum(GENDERS),
   race: z.enum(RACES).nullable(),
   maritalStatus: z.enum(MARITAL_STATUSES),

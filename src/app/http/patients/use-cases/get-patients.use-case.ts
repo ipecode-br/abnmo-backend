@@ -6,6 +6,7 @@ import {
   ILike,
   LessThanOrEqual,
   MoreThanOrEqual,
+  Not,
   type Repository,
 } from 'typeorm';
 
@@ -55,9 +56,12 @@ export class GetPatientsUseCase {
       date: 'createdAt',
     };
 
-    const where: FindOptionsWhere<User> = { role: 'patient' };
+    const where: FindOptionsWhere<User> = {
+      role: 'patient',
+      status: Not('pending'),
+    };
 
-    if (search) {
+    if (status) {
       where.status = status;
     }
 
@@ -87,7 +91,7 @@ export class GetPatientsUseCase {
         id: true,
         name: true,
         email: true,
-        cpf: true,
+        phone: true,
         status: true,
         avatarUrl: true,
         createdAt: true,
@@ -102,7 +106,7 @@ export class GetPatientsUseCase {
         id: patient.id,
         name: patient.name,
         email: patient.email,
-        cpf: patient.cpf,
+        phone: patient.phone,
         status: patient.status,
         avatarUrl: patient.avatarUrl,
         createdAt: patient.createdAt,

@@ -6,6 +6,7 @@ import {
   ILike,
   LessThanOrEqual,
   MoreThanOrEqual,
+  Not,
   type Repository,
 } from 'typeorm';
 
@@ -56,7 +57,9 @@ export class GetUsersUseCase {
       date: 'createdAt',
     };
 
-    const where: FindOptionsWhere<User> = {};
+    const where: FindOptionsWhere<User> = {
+      role: Not('patient'),
+    };
 
     if (startDate && !endDate) {
       where.createdAt = MoreThanOrEqual(startDate);

@@ -8,7 +8,7 @@ export const patientResponseSchema = patientSchema.pick({
   id: true,
   name: true,
   email: true,
-  cpf: true,
+  phone: true,
   status: true,
   avatarUrl: true,
   createdAt: true,

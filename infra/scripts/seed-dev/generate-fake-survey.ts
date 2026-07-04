@@ -75,7 +75,10 @@ export function generateFakeSurvey(data: DeepPartial<Survey>): Survey {
     status: faker.helpers.arrayElement(SURVEY_STATUSES),
     createdAt: generateFakeDate(),
     // About
-    dateOfBirth: faker.date.birthdate({ min: 18, max: 80, mode: 'age' }),
+    dateOfBirth: faker.date
+      .birthdate({ min: 18, max: 80, mode: 'age' })
+      .toISOString()
+      .split('T')[0],
     gender: faker.helpers.arrayElement(GENDERS),
     race: faker.helpers.arrayElement(RACES),
     maritalStatus: faker.helpers.arrayElement(MARITAL_STATUSES),

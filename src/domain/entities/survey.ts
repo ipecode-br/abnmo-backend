@@ -87,7 +87,7 @@ export class Survey extends BaseEntity implements SurveySchema {
   // About
 
   @Column({ type: 'date' })
-  dateOfBirth: Date;
+  dateOfBirth: string;
 
   @Column({ type: 'enum', enum: GENDERS })
   gender: Gender;
