@@ -24,7 +24,11 @@ export class GetTotalPatientsWithReferralsUseCase {
     startDate,
     endDate,
   }: GetTotalPatientsWithReferralsUseCaseInput = {}): Promise<number> {
-    const query = this.referralsRepository.createQueryBuilder('r');
+    const query = this.referralsRepository
+      .createQueryBuilder('r')
+      .innerJoin('r.patient', 'patient')
+      .innerJoin('patient.survey', 'survey')
+      .andWhere('patient.status != :status', { status: 'pending' });
 
     if (period) {
       const dateRange = getDateRangeForPeriod(period);
@@ -52,6 +56,7 @@ export class GetTotalPatientsWithReferralsUseCase {
     query.select('COUNT(DISTINCT r.patient_id)', 'count');
 
     const result = await query.getRawOne<{ count: string }>();
-    return Number(result?.count ?? 0);
+
+    return Number(result?.count) || 0;
   }
 }

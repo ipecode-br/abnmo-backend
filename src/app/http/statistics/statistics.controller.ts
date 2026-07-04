@@ -4,17 +4,17 @@ import { ZodResponse } from 'nestjs-zod';
 
 import { Roles } from '@/common/decorators/roles.decorator';
 import type {
-  TotalPatientsByCity,
   TotalPatientsByGender,
+  TotalPatientsByState,
 } from '@/domain/schemas/statistics/responses';
 
 import {
   GetTotalAppointmentsByCategoryQuery,
   GetTotalAppointmentsByCategoryResponse,
   GetTotalAppointmentsResponse,
-  GetTotalPatientsByCityResponse,
   GetTotalPatientsByFieldQuery,
   GetTotalPatientsByGenderResponse,
+  GetTotalPatientsByStateResponse,
   GetTotalPatientsResponse,
   GetTotalPatientsWithAppointmentsByStateQuery,
   GetTotalPatientsWithAppointmentsByStateResponse,
@@ -128,23 +128,23 @@ export class StatisticsController {
     };
   }
 
-  @Get('patients/by-city')
-  @ApiOperation({ summary: 'Número total de pacientes por cidade' })
-  @ZodResponse({ status: 200, type: GetTotalPatientsByCityResponse })
-  async getTotalPatientsByCity(
+  @Get('patients/by-state')
+  @ApiOperation({ summary: 'Número total de pacientes por estado' })
+  @ZodResponse({ status: 200, type: GetTotalPatientsByStateResponse })
+  async getTotalPatientsByState(
     @Query() query: GetTotalPatientsByFieldQuery,
-  ): Promise<GetTotalPatientsByCityResponse> {
-    const { items: cities, total } =
-      await this.getTotalPatientsByFieldUseCase.execute<TotalPatientsByCity>({
-        field: 'city',
+  ): Promise<GetTotalPatientsByStateResponse> {
+    const { items: states, total } =
+      await this.getTotalPatientsByFieldUseCase.execute<TotalPatientsByState>({
+        field: 'state',
         ...query,
       });
 
     return {
       success: true,
       message:
-        'Lista com o total de pacientes por cidade retornado com sucesso.',
-      data: { cities, total },
+        'Lista com o total de pacientes por estado retornado com sucesso.',
+      data: { states, total },
     };
   }
 
@@ -210,7 +210,7 @@ export class StatisticsController {
     status: 200,
     type: GetTotalPatientsWithReferralsByStateResponse,
   })
-  async getTotalPatientsWithReferralsByStatel(
+  async getTotalPatientsWithReferralsByState(
     @Query() query: GetTotalPatientsWithReferralsByStateQuery,
   ): Promise<GetTotalPatientsWithReferralsByStateResponse> {
     const { states, total } =

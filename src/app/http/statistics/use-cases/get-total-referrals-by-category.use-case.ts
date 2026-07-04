@@ -75,8 +75,11 @@ export class GetTotalReferralsByCategoryUseCase {
     ]);
 
     return {
-      categories: categories.map((c) => ({ ...c, total: Number(c.total) })),
-      total: Number(totalResult?.total || 0),
+      categories: categories.map((category) => ({
+        ...category,
+        total: Number(category.total) || 0,
+      })),
+      total: Number(totalResult?.total) || 0,
     };
   }
 }

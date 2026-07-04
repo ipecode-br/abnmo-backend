@@ -39,7 +39,8 @@ export class GetTotalPatientsWithReferralsByStateUseCase {
     const createBaseQuery = (): SelectQueryBuilder<User> => {
       const baseQuery = this.usersRepository
         .createQueryBuilder('user')
-        .innerJoin('user.referrals', 'referral')
+        .innerJoin('referrals', 'referral', 'referral.patient_id = user.id')
+        .innerJoin('user.survey', 'survey')
         .where('user.status != :status', { status: 'pending' });
 
       if (dateRange.startDate && dateRange.endDate) {
@@ -53,7 +54,7 @@ export class GetTotalPatientsWithReferralsByStateUseCase {
     };
 
     const listStatesQuery = createBaseQuery()
-      .select('user.state', 'state')
+      .select('survey.addressState', 'state')
       .addSelect('COUNT(DISTINCT user.id)', 'total');
 
     listStatesQuery
@@ -64,12 +65,12 @@ export class GetTotalPatientsWithReferralsByStateUseCase {
         )`,
         'percentage',
       )
-      .groupBy('user.state')
+      .groupBy('survey.addressState')
       .orderBy('COUNT(DISTINCT user.id)', 'DESC')
       .limit(limit);
 
     const totalQuery = createBaseQuery().select(
-      'COUNT(DISTINCT user.state)',
+      'COUNT(DISTINCT survey.addressState)',
       'total',
     );
 
@@ -80,6 +81,13 @@ export class GetTotalPatientsWithReferralsByStateUseCase {
 
     const totalPatients = Number(totalResult?.total || 0);
 
-    return { states, total: totalPatients };
+    return {
+      states: states.map((state) => ({
+        ...state,
+        total: Number(state.total) || 0,
+        percentage: Number(state.percentage) || 0,
+      })),
+      total: totalPatients,
+    };
   }
 }

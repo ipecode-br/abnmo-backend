@@ -24,7 +24,11 @@ export class GetTotalPatientsWithAppointmentsUseCase {
     startDate,
     endDate,
   }: GetTotalPatientsWithAppointmentsUseCaseInput = {}): Promise<number> {
-    const query = this.appointmentsRepository.createQueryBuilder('a');
+    const query = this.appointmentsRepository
+      .createQueryBuilder('a')
+      .innerJoin('a.patient', 'patient')
+      .innerJoin('patient.survey', 'survey')
+      .andWhere('patient.status != :status', { status: 'pending' });
 
     if (period) {
       const dateRange = getDateRangeForPeriod(period);
@@ -52,6 +56,7 @@ export class GetTotalPatientsWithAppointmentsUseCase {
     query.select('COUNT(DISTINCT a.patient_id)', 'count');
 
     const result = await query.getRawOne<{ count: string }>();
-    return Number(result?.count ?? 0);
+
+    return Number(result?.count) || 0;
   }
 }

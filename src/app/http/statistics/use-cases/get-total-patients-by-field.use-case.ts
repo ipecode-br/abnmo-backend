@@ -24,6 +24,11 @@ interface GetTotalPatientsByFieldUseCaseOutput<T> {
   total: number;
 }
 
+const FIELD_COLUMN_MAP: Record<PatientsStatisticField, string> = {
+  gender: 'survey.gender',
+  state: 'survey.addressState',
+};
+
 @Injectable()
 export class GetTotalPatientsByFieldUseCase {
   constructor(
@@ -52,9 +57,12 @@ export class GetTotalPatientsByFieldUseCase {
       endDate: dateRange.endDate,
     });
 
+    const column = FIELD_COLUMN_MAP[field];
+
     const createBaseQuery = (): SelectQueryBuilder<User> => {
       const baseQuery = this.usersRepository
         .createQueryBuilder('user')
+        .innerJoin('user.survey', 'survey')
         .where('user.status != :status', { status: 'pending' });
 
       if (dateRange.startDate && dateRange.endDate) {
@@ -68,14 +76,14 @@ export class GetTotalPatientsByFieldUseCase {
     };
 
     const totalQuery = createBaseQuery().select(
-      `COUNT(DISTINCT user.${field})`,
+      `COUNT(DISTINCT ${column})`,
       'total',
     );
 
     const fieldQuery = createBaseQuery()
-      .select(`user.${field}`, field)
+      .select(`${column}`, field)
       .addSelect('COUNT(user.id)', 'total')
-      .groupBy(`user.${field}`)
+      .groupBy(`${column}`)
       .orderBy('total', order);
 
     if (withPercentage) {
@@ -91,8 +99,18 @@ export class GetTotalPatientsByFieldUseCase {
     ]);
 
     return {
-      items: items.slice(0, limit),
-      total: Number(totalResult?.total || 0),
+      items: (items as Record<string, unknown>[])
+        .slice(0, limit)
+        .map((item) => {
+          const baseData = { ...item, total: Number(item.total) || 0 };
+
+          if (withPercentage) {
+            return { ...baseData, percentage: Number(item.percentage) || 0 };
+          }
+
+          return baseData;
+        }) as T[],
+      total: Number(totalResult?.total) || 0,
     };
   }
 }

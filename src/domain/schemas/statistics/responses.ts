@@ -33,16 +33,16 @@ export const getTotalPatientsResponseSchema = baseResponseSchema.extend({
   data: z.object({ total: z.number() }),
 });
 
-export const totalPatientsByCitySchema = z.object({
-  city: z.string(),
+export const totalPatientsByStateSchema = z.object({
+  state: z.enum(BRAZIL_STATES),
   total: z.number(),
-  percentage: z.number(),
+  percentage: z.number().optional(),
 });
-export type TotalPatientsByCity = z.infer<typeof totalPatientsByCitySchema>;
+export type TotalPatientsByState = z.infer<typeof totalPatientsByStateSchema>;
 
-export const getTotalPatientsByCityResponseSchema = baseResponseSchema.extend({
+export const getTotalPatientsByStateResponseSchema = baseResponseSchema.extend({
   data: z.object({
-    cities: z.array(totalPatientsByCitySchema),
+    states: z.array(totalPatientsByStateSchema),
     total: z.number(),
   }),
 });
