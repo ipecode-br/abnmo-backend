@@ -75,6 +75,9 @@ export class GetTotalAppointmentsByCategoryUseCase {
       totalQuery.getRawOne<{ total: string }>(),
     ]);
 
-    return { categories, total: Number(totalResult?.total || 0) };
+    return {
+      categories: categories.map((c) => ({ ...c, total: Number(c.total) })),
+      total: Number(totalResult?.total || 0),
+    };
   }
 }

@@ -36,6 +36,7 @@ export class GetTotalPatientsUseCase {
   }: GetTotalPatientsUseCaseInput = {}): Promise<number> {
     const where: FindOptionsWhere<User> = {
       status: status ?? Not('pending'),
+      role: 'patient',
     };
 
     if (period) {
