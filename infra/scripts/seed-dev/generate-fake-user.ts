@@ -15,8 +15,13 @@ import {
 
 export function generateFakeUser(
   data: { password: string } & Partial<User>,
+  gender?: 'male' | 'female',
 ): User {
   const repository = dataSource.getRepository(User);
+
+  const randomNumber = faker.number.int({ min: 1, max: 99 });
+  const randomGender = faker.helpers.arrayElement(['male', 'female']);
+  const avatarUrl = `https://cdn.jsdelivr.net/gh/faker-js/assets-person-portrait/${gender ?? randomGender}/256/${randomNumber}.jpg`;
 
   const baseData: Partial<User> = {
     name: generateFakeName(),
@@ -25,7 +30,7 @@ export function generateFakeUser(
     role: faker.helpers.arrayElement(USER_ROLES),
     features: faker.helpers.arrayElements(USER_FEATURES),
     status: faker.helpers.arrayElement(USER_STATUSES),
-    avatarUrl: faker.image.avatar(),
+    avatarUrl,
     createdAt: generateFakeDate(),
   };
 

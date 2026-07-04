@@ -49,7 +49,16 @@ import {
 import { generateFakeDate, generateFakeName } from './generate-fakes';
 
 const citiesByState: Record<string, string[]> = {};
-const statesWithCities = ['AL', 'BA', 'CE', 'PA'] as const;
+const statesWithCities = [
+  'AL',
+  'BA',
+  'CE',
+  'MG',
+  'PA',
+  'PE',
+  'RS',
+  'SP',
+] as const;
 
 for (const state of statesWithCities) {
   const filePath = path.join(__dirname, 'utils', 'cities', `${state}.json`);

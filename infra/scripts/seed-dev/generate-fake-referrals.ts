@@ -13,7 +13,7 @@ export function generateFakeReferral(data: DeepPartial<Referral>): Referral {
   const repository = dataSource.getRepository(Referral);
 
   const baseData: DeepPartial<Referral> = {
-    date: generateFakeDate(),
+    date: generateFakeDate(4, 2),
     status: faker.helpers.arrayElement(REFERRAL_STATUSES),
     category: faker.helpers.arrayElement(SPECIALTY_CATEGORIES),
     condition: faker.helpers.arrayElement(PATIENT_CONDITIONS),

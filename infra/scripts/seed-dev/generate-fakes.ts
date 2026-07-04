@@ -13,9 +13,9 @@ export function generateFakePhone(): string {
   return faker.string.numeric(11);
 }
 
-export function generateFakeDate(): Date {
+export function generateFakeDate(monthsBefore = 4, monthsAhead = 0): Date {
   return faker.date.between({
-    from: new Date().setMonth(new Date().getMonth() - 4),
-    to: new Date(),
+    from: new Date().setMonth(new Date().getMonth() - monthsBefore),
+    to: new Date().setMonth(new Date().getMonth() + monthsAhead),
   });
 }

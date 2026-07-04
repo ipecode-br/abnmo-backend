@@ -15,7 +15,7 @@ export function generateFakeAppointment(
   const repository = dataSource.getRepository(Appointment);
 
   const baseData: DeepPartial<Appointment> = {
-    date: generateFakeDate(),
+    date: generateFakeDate(4, 2),
     status: faker.helpers.arrayElement(APPOINTMENT_STATUSES),
     category: faker.helpers.arrayElement(SPECIALTY_CATEGORIES),
     condition: faker.helpers.arrayElement(PATIENT_CONDITIONS),

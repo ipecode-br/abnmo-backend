@@ -86,9 +86,13 @@ async function main() {
     // Specialists
 
     console.log('👤 Creating specialists...');
-    const totalOfSpecialists = 4;
+    const totalOfSpecialists = 8;
     for (let i = 0; i < totalOfSpecialists; i++) {
-      const user = generateFakeUser({ password, role: 'specialist' });
+      const user = generateFakeUser({
+        password,
+        role: 'specialist',
+        status: 'active',
+      });
       await usersRepository.save(user);
     }
     console.log(`✅ ${totalOfSpecialists} specialists created.`);
@@ -96,7 +100,7 @@ async function main() {
     // Surveys (each with a patient + submission)
 
     console.log('📋 Creating surveys...');
-    const totalOfSurveys = 10;
+    const totalOfSurveys = 120;
     for (let i = 0; i < totalOfSurveys; i++) {
       const isCompleted = i >= 5;
       const surveyStatus = isCompleted ? 'completed' : 'pending_signature';
@@ -126,7 +130,7 @@ async function main() {
     // Survey submissions only (patients without surveys)
 
     console.log('📝 Creating survey submissions...');
-    const totalOfSubmissions = 10;
+    const totalOfSubmissions = 40;
     const submissionStatuses = [
       'pending_document',
       'pending_review',
@@ -160,7 +164,7 @@ async function main() {
       select: { id: true },
     });
 
-    const totalOfAppointments = 30;
+    const totalOfAppointments = 155;
     const generatedAppointments: Appointment[] = [];
     for (let i = 0; i < totalOfAppointments; i++) {
       const patientId = faker.helpers.arrayElement(allPatients).id;
@@ -185,7 +189,7 @@ async function main() {
     // Referrals
 
     console.log('🔗 Creating referrals...');
-    const totalOfReferrals = 30;
+    const totalOfReferrals = 98;
     const generatedReferrals: Referral[] = [];
     for (let i = 0; i < totalOfReferrals; i++) {
       const patientId = faker.helpers.arrayElement(allPatients).id;
