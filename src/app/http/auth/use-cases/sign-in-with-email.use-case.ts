@@ -79,6 +79,12 @@ export class SignInWithEmailUseCase {
 
     const role = user.role;
 
+    if (role === 'patient') {
+      throw new UnauthorizedException(
+        'O sistema ainda não está pronto para pacientes.',
+      );
+    }
+
     await this.createSessionUseCase.execute({
       user: { id: user.id, email, role },
       keepLoggedIn,
