@@ -37,6 +37,7 @@ export class GetUserUseCase {
         status: true,
         specialty: true,
         registrationId: true,
+        updatedAt: true,
         createdAt: true,
       },
     });
@@ -55,6 +56,7 @@ export class GetUserUseCase {
       status: foundUser.status,
       specialty: foundUser.specialty,
       registrationId: foundUser.registrationId,
+      updatedAt: foundUser.updatedAt,
       createdAt: foundUser.createdAt,
     };
   }

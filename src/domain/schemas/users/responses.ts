@@ -34,6 +34,7 @@ export const userDetailsResponseSchema = userSchema.pick({
   status: true,
   specialty: true,
   registrationId: true,
+  updatedAt: true,
   createdAt: true,
 });
 export type UserDetailsResponse = z.infer<typeof userDetailsResponseSchema>;
