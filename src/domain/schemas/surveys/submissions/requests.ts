@@ -35,3 +35,7 @@ export const getSurveySubmissionsQuerySchema = baseQuerySchema
 export const getTotalSurveySubmissionsQuerySchema = baseQuerySchema
   .pick({ period: true, startDate: true, endDate: true })
   .extend({ status: z.enum(SURVEY_SUBMISSION_STATUSES).optional() });
+
+export const declineSurveySubmissionSchema = z.object({
+  reason: z.string().min(1).max(500),
+});

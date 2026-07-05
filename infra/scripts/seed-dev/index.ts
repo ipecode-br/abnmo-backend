@@ -144,7 +144,7 @@ async function main() {
     const submissionStatuses = [
       'pending_document',
       'pending_review',
-      'rejected',
+      'declined',
     ] as const;
     for (let i = 0; i < totalOfSubmissions; i++) {
       const user = generateFakeUser({

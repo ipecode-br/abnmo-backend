@@ -11,14 +11,15 @@ import { LogService } from '@/common/log/log.service';
 import type { RequestUser } from '@/common/types';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
 
-interface RejectSurveySubmissionUseCaseInput {
+interface DeclineSurveySubmissionUseCaseInput {
   id: string;
+  reason: string;
   user: RequestUser;
 }
 
 @Injectable()
 @Log()
-export class RejectSurveySubmissionUseCase {
+export class DeclineSurveySubmissionUseCase {
   constructor(
     @InjectRepository(SurveySubmission)
     private readonly surveySubmissionsRepository: Repository<SurveySubmission>,
@@ -28,7 +29,8 @@ export class RejectSurveySubmissionUseCase {
   async execute({
     id,
     user,
-  }: RejectSurveySubmissionUseCaseInput): Promise<void> {
+    reason,
+  }: DeclineSurveySubmissionUseCaseInput): Promise<void> {
     const submission = await this.surveySubmissionsRepository.findOne({
       where: { id },
     });
@@ -49,10 +51,11 @@ export class RejectSurveySubmissionUseCase {
     }
 
     await this.surveySubmissionsRepository.update(submission.id, {
-      status: 'rejected',
+      status: 'declined',
+      reason,
       updatedBy: { id: user.id },
     });
 
-    this.logger.log('Survey submission rejected', { id });
+    this.logger.log('Survey submission declined', { id, reason });
   }
 }

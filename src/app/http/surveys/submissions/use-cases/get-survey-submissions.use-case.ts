@@ -96,6 +96,7 @@ export class GetSurveySubmissionsUseCase {
       select: {
         id: true,
         status: true,
+        reason: true,
         createdAt: true,
         user: { id: true, name: true, email: true, phone: true },
         document: { name: true, url: true },
@@ -115,6 +116,7 @@ export class GetSurveySubmissionsUseCase {
         email: submission.user.email,
         phone: submission.user.phone || '',
         status: submission.status,
+        reason: submission.reason,
         createdAt: submission.createdAt,
         document: submission.document
           ? { name: submission.document.name, url: submission.document.url }

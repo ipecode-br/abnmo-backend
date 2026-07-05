@@ -21,6 +21,7 @@ import type { RequestUser } from '@/common/types';
 import {
   CreateSurveySubmissionBody,
   CreateSurveySubmissionResponse,
+  DeclineSurveySubmissionBody,
   GetSurveySubmissionResponse,
   GetSurveySubmissionsQuery,
   GetSurveySubmissionsResponse,
@@ -30,10 +31,10 @@ import {
 import { ApproveSurveySubmissionUseCase } from './use-cases/approve-survey-submission.use-case';
 import { ConfirmSurveySubmissionUploadUseCase } from './use-cases/confirm-survey-submission-upload.use-case';
 import { CreateSurveySubmissionUseCase } from './use-cases/create-survey-submission.use-case';
+import { DeclineSurveySubmissionUseCase } from './use-cases/decline-survey-submission.use-case';
 import { GetSurveySubmissionUseCase } from './use-cases/get-survey-submission.use-case';
 import { GetSurveySubmissionsUseCase } from './use-cases/get-survey-submissions.use-case';
 import { GetTotalSurveySubmissionsUseCase } from './use-cases/get-total-survey-submissions.use-case';
-import { RejectSurveySubmissionUseCase } from './use-cases/reject-survey-submission.use-case';
 
 @ApiTags('Catalogação')
 @Controller('surveys/submissions')
@@ -43,10 +44,10 @@ export class SurveysSubmissionsController {
     private readonly approveSurveySubmissionUseCase: ApproveSurveySubmissionUseCase,
     private readonly confirmSurveySubmissionUploadUseCase: ConfirmSurveySubmissionUploadUseCase,
     private readonly createSurveySubmissionUseCase: CreateSurveySubmissionUseCase,
+    private readonly declineSurveySubmissionUseCase: DeclineSurveySubmissionUseCase,
     private readonly getSurveySubmissionUseCase: GetSurveySubmissionUseCase,
     private readonly getSurveySubmissionsUseCase: GetSurveySubmissionsUseCase,
     private readonly getTotalSurveySubmissionsUseCase: GetTotalSurveySubmissionsUseCase,
-    private readonly rejectSurveySubmissionUseCase: RejectSurveySubmissionUseCase,
   ) {}
 
   @Post()
@@ -96,22 +97,6 @@ export class SurveysSubmissionsController {
     };
   }
 
-  @Get(':id')
-  @RequireFeature('read:survey')
-  @ApiOperation({ summary: 'Detalhes de uma submissão de catalogação' })
-  @ZodResponse({ type: GetSurveySubmissionResponse, status: 200 })
-  async getSurveySubmissionDetails(
-    @Param('id') id: string,
-  ): Promise<GetSurveySubmissionResponse> {
-    const data = await this.getSurveySubmissionUseCase.execute(id);
-
-    return {
-      success: true,
-      message: 'Detalhes da submissão retornados com sucesso.',
-      data,
-    };
-  }
-
   // TODO: move this to a survey stats controller
   @Get('total')
   @RequireFeature('read:survey')
@@ -126,6 +111,22 @@ export class SurveysSubmissionsController {
       success: true,
       message: 'Total de submissões retornado com sucesso.',
       data: { total },
+    };
+  }
+
+  @Get(':id')
+  @RequireFeature('read:survey')
+  @ApiOperation({ summary: 'Detalhes de uma submissão de catalogação' })
+  @ZodResponse({ type: GetSurveySubmissionResponse, status: 200 })
+  async getSurveySubmissionDetails(
+    @Param('id') id: string,
+  ): Promise<GetSurveySubmissionResponse> {
+    const data = await this.getSurveySubmissionUseCase.execute(id);
+
+    return {
+      success: true,
+      message: 'Detalhes da submissão retornados com sucesso.',
+      data,
     };
   }
 
@@ -146,16 +147,21 @@ export class SurveysSubmissionsController {
     };
   }
 
-  @Patch(':id/reject')
-  @Log('reject_survey')
+  @Patch(':id/decline')
+  @Log('decline_survey')
   @RequireFeature('approve:survey')
   @ApiOperation({ summary: 'Recusa uma submissão de catalogação' })
   @ZodResponse({ type: BaseResponse, status: 200 })
-  async rejectSurveySubmission(
+  async declineSurveySubmission(
     @Param('id') id: string,
     @User() user: RequestUser,
+    @Body() body: DeclineSurveySubmissionBody,
   ): Promise<BaseResponse> {
-    await this.rejectSurveySubmissionUseCase.execute({ id, user });
+    await this.declineSurveySubmissionUseCase.execute({
+      id,
+      user,
+      reason: body.reason,
+    });
 
     return {
       success: true,

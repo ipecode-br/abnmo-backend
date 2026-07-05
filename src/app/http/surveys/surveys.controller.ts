@@ -57,7 +57,7 @@ export class SurveysController {
     };
   }
 
-  @Post(':id/send-remind')
+  @Post(':id/send-reminder')
   @RequireFeature('read:survey:others')
   @Log('send_survey_reminder')
   @ApiOperation({ summary: 'Envia lembrete de assinatura ao paciente' })

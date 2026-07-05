@@ -17,6 +17,9 @@ export class SurveySubmission extends BaseEntity {
   })
   status: SurveySubmissionStatus;
 
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  reason: string | null;
+
   @OneToOne(() => User, (user) => user.surveySubmission)
   @JoinColumn()
   user: User;

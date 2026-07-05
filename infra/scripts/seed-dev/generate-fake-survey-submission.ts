@@ -12,10 +12,15 @@ export function generateFakeSurveySubmission(
 ): SurveySubmission {
   const repository = dataSource.getRepository(SurveySubmission);
 
-  const baseData: DeepPartial<SurveySubmission> = {
+  const merged: DeepPartial<SurveySubmission> = {
     status: faker.helpers.arrayElement(SURVEY_SUBMISSION_STATUSES),
     createdAt: generateFakeDate(),
+    ...data,
   };
 
-  return repository.create({ ...baseData, ...data });
+  if (merged.status === 'declined') {
+    merged.reason = faker.lorem.sentence();
+  }
+
+  return repository.create(merged);
 }

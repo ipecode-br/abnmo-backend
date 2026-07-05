@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { baseResponseSchema } from '../../base';
+import { documentSchema } from '../../documents';
 import { emailSchema, nameSchema, phoneSchema } from '../../shared';
 import { userSchema } from '../../users';
 import { surveySubmissionSchema } from '.';
@@ -8,19 +9,19 @@ import { surveySubmissionSchema } from '.';
 export const createSurveySubmissionResponseSchema = baseResponseSchema.extend({
   data: z.object({
     submissionId: surveySubmissionSchema.shape.id,
-    key: z.string(),
+    key: documentSchema.shape.key,
     url: z.string().url(),
     fields: z.record(z.string(), z.string()),
   }),
 });
 
 export const surveySubmissionResponseSchema = surveySubmissionSchema
-  .pick({ id: true, status: true, createdAt: true })
+  .pick({ id: true, status: true, reason: true, createdAt: true })
   .extend({
     name: nameSchema,
     email: emailSchema,
     phone: phoneSchema,
-    document: z.object({ name: z.string(), url: z.string().url() }).nullable(),
+    document: documentSchema.pick({ name: true, url: true }).nullable(),
   })
   .strict();
 export type SurveySubmissionResponse = z.infer<
@@ -40,21 +41,22 @@ export const surveySubmissionDetailsResponseSchema = surveySubmissionSchema
   .pick({
     id: true,
     status: true,
+    reason: true,
     updatedAt: true,
     createdAt: true,
   })
   .extend({
     name: nameSchema,
     email: emailSchema,
-    phone: phoneSchema.nullable(),
-    document: z
-      .object({
-        key: z.string(),
-        url: z.string(),
-        name: z.string(),
-        filename: z.string(),
-        size: z.number(),
-        mimeType: z.string(),
+    phone: phoneSchema,
+    document: documentSchema
+      .pick({
+        key: true,
+        url: true,
+        name: true,
+        filename: true,
+        size: true,
+        mimeType: true,
       })
       .nullable(),
     updatedBy: userSchema

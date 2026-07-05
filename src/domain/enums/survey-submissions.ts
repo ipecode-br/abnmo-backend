@@ -1,7 +1,7 @@
 export const SURVEY_SUBMISSION_STATUSES = [
   'pending_document',
   'pending_review',
-  'rejected',
+  'declined',
   'approved',
   'completed',
 ] as const;

@@ -14,10 +14,10 @@ import { SurveysSubmissionsController } from './submissions/surveys-submissions.
 import { ApproveSurveySubmissionUseCase } from './submissions/use-cases/approve-survey-submission.use-case';
 import { ConfirmSurveySubmissionUploadUseCase } from './submissions/use-cases/confirm-survey-submission-upload.use-case';
 import { CreateSurveySubmissionUseCase } from './submissions/use-cases/create-survey-submission.use-case';
+import { DeclineSurveySubmissionUseCase } from './submissions/use-cases/decline-survey-submission.use-case';
 import { GetSurveySubmissionUseCase } from './submissions/use-cases/get-survey-submission.use-case';
 import { GetSurveySubmissionsUseCase } from './submissions/use-cases/get-survey-submissions.use-case';
 import { GetTotalSurveySubmissionsUseCase } from './submissions/use-cases/get-total-survey-submissions.use-case';
-import { RejectSurveySubmissionUseCase } from './submissions/use-cases/reject-survey-submission.use-case';
 import { SurveysController } from './surveys.controller';
 import { CreateSurveyUseCase } from './use-cases/create-survey.use-case';
 import { GetSurveysUseCase } from './use-cases/get-surveys.use-case';
@@ -41,7 +41,7 @@ import { SendSurveyReminderUseCase } from './use-cases/send-survey-reminder.use-
     GetSurveySubmissionsUseCase,
     GetSurveysUseCase,
     GetTotalSurveySubmissionsUseCase,
-    RejectSurveySubmissionUseCase,
+    DeclineSurveySubmissionUseCase,
     SendSurveyReminderUseCase,
   ],
 })

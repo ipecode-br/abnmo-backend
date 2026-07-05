@@ -19,6 +19,7 @@ export class GetSurveySubmissionUseCase {
       select: {
         id: true,
         status: true,
+        reason: true,
         user: { id: true, name: true, email: true, phone: true },
         document: {
           key: true,
@@ -44,8 +45,9 @@ export class GetSurveySubmissionUseCase {
       id: submission.id,
       name: submission.user.name,
       email: submission.user.email,
-      phone: submission.user.phone,
+      phone: submission.user.phone || '',
       status: submission.status,
+      reason: submission.reason,
       document: submission.document
         ? {
             key: submission.document.key,
