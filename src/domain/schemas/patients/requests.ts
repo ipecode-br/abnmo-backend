@@ -3,7 +3,13 @@ import { z } from 'zod';
 import { PATIENTS_ORDER_BY } from '@/domain/enums/patients';
 import { USER_STATUSES } from '@/domain/enums/users';
 
-import { baseQuerySchema } from '../query';
+import {
+  queryDateSchema,
+  queryOrderSchema,
+  queryPageSchema,
+  queryPerPageSchema,
+  querySearchSchema,
+} from '../query';
 import { cpfSchema, phoneSchema, supportContactSchema } from '../shared';
 import { patientSchema } from '.';
 
@@ -15,18 +21,16 @@ export const updatePatientSchema = patientSchema
     supportContacts: z.array(supportContactSchema).min(1),
   });
 
-export const getPatientsQuerySchema = baseQuerySchema
-  .pick({
-    search: true,
-    order: true,
-    page: true,
-    perPage: true,
-    startDate: true,
-    endDate: true,
-  })
-  .extend({
+export const getPatientsQuerySchema = z
+  .object({
+    search: querySearchSchema.optional(),
     status: z.enum(USER_STATUSES).optional(),
     orderBy: z.enum(PATIENTS_ORDER_BY).optional().default('name'),
+    order: queryOrderSchema.default('ASC'),
+    startDate: queryDateSchema.optional(),
+    endDate: queryDateSchema.optional(),
+    page: queryPageSchema,
+    perPage: queryPerPageSchema,
   })
   .refine(
     (data) => {

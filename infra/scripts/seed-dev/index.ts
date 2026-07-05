@@ -4,12 +4,14 @@ import { faker } from '@faker-js/faker';
 import { hash } from 'bcryptjs';
 import dataSource from 'infra/database/data.source';
 import { generateFakeAppointment } from 'infra/scripts/seed-dev/generate-fake-appointments';
+import { generateFakeDocument } from 'infra/scripts/seed-dev/generate-fake-document';
 import { generateFakeReferral } from 'infra/scripts/seed-dev/generate-fake-referrals';
 import { generateFakeSurvey } from 'infra/scripts/seed-dev/generate-fake-survey';
 import { generateFakeSurveySubmission } from 'infra/scripts/seed-dev/generate-fake-survey-submission';
 import { generateFakeUser } from 'infra/scripts/seed-dev/generate-fake-user';
 
 import { Appointment } from '@/domain/entities/appointment';
+import { Document } from '@/domain/entities/document';
 import { PatientRequirement } from '@/domain/entities/patient-requirement';
 import { Referral } from '@/domain/entities/referral';
 import { Session } from '@/domain/entities/session';
@@ -43,6 +45,7 @@ async function main() {
     await dataSource.query('SET FOREIGN_KEY_CHECKS = 0');
     await dataSource.manager.clear(Appointment);
     await dataSource.manager.clear(Referral);
+    await dataSource.manager.clear(Document);
     await dataSource.manager.clear(PatientRequirement);
     await dataSource.manager.clear(User);
     await dataSource.manager.clear(SurveySubmission);
@@ -60,6 +63,7 @@ async function main() {
     const surveySubmissionRepository =
       dataSource.getRepository(SurveySubmission);
     const surveyRepository = dataSource.getRepository(Survey);
+    const documentRepository = dataSource.getRepository(Document);
     const appointmentsRepository = dataSource.getRepository(Appointment);
     const referralsRepository = dataSource.getRepository(Referral);
 
@@ -119,6 +123,12 @@ async function main() {
       });
       await surveySubmissionRepository.save(submission);
 
+      const document = generateFakeDocument({
+        user: { id: user.id },
+        submission: { id: submission.id },
+      });
+      await documentRepository.save(document);
+
       const survey = generateFakeSurvey({
         user: { id: user.id },
         status: surveyStatus,
@@ -149,6 +159,14 @@ async function main() {
         status: faker.helpers.arrayElement(submissionStatuses),
       });
       await surveySubmissionRepository.save(submission);
+
+      if (submission.status !== 'pending_document') {
+        const document = generateFakeDocument({
+          user: { id: user.id },
+          submission: { id: submission.id },
+        });
+        await documentRepository.save(document);
+      }
     }
     console.log(`✅ ${totalOfSubmissions} survey submissions created.`);
 

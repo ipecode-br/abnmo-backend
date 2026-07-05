@@ -92,12 +92,13 @@ export class GetSurveySubmissionsUseCase {
     const shouldOrderByUser = orderBy === 'name' || orderBy === 'email';
 
     const result = await this.surveySubmissionsRepository.find({
-      relations: { user: true },
+      relations: { user: true, document: true },
       select: {
         id: true,
         status: true,
         createdAt: true,
         user: { id: true, name: true, email: true, phone: true },
+        document: { name: true, url: true },
       },
       order: shouldOrderByUser
         ? { user: { [orderBy]: props.order } }
@@ -115,6 +116,9 @@ export class GetSurveySubmissionsUseCase {
         phone: submission.user.phone || '',
         status: submission.status,
         createdAt: submission.createdAt,
+        document: submission.document
+          ? { name: submission.document.name, url: submission.document.url }
+          : null,
       })),
       total,
     };

@@ -16,7 +16,12 @@ export const createSurveySubmissionResponseSchema = baseResponseSchema.extend({
 
 export const surveySubmissionResponseSchema = surveySubmissionSchema
   .pick({ id: true, status: true, createdAt: true })
-  .extend({ name: nameSchema, email: emailSchema, phone: phoneSchema })
+  .extend({
+    name: nameSchema,
+    email: emailSchema,
+    phone: phoneSchema,
+    document: z.object({ name: z.string(), url: z.string().url() }).nullable(),
+  })
   .strict();
 export type SurveySubmissionResponse = z.infer<
   typeof surveySubmissionResponseSchema

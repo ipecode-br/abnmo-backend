@@ -32,6 +32,13 @@ interface GetPatientsUseCaseOutput {
   total: number;
 }
 
+const ORDER_BY_MAPPING: Record<PatientsOrderBy, keyof User> = {
+  name: 'name',
+  email: 'email',
+  status: 'status',
+  date: 'createdAt',
+};
+
 @Injectable()
 export class GetPatientsUseCase {
   constructor(
@@ -48,13 +55,6 @@ export class GetPatientsUseCase {
   }: GetPatientsUseCaseInput): Promise<GetPatientsUseCaseOutput> {
     const startDate = props.startDate ? new Date(props.startDate) : null;
     const endDate = props.endDate ? new Date(props.endDate) : null;
-
-    const ORDER_BY_MAPPING: Record<PatientsOrderBy, keyof User> = {
-      name: 'name',
-      email: 'email',
-      status: 'status',
-      date: 'createdAt',
-    };
 
     const where: FindOptionsWhere<User> = {
       role: 'patient',
