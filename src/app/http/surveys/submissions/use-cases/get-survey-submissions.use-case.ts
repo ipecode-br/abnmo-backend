@@ -67,10 +67,6 @@ export class GetSurveySubmissionsUseCase {
       where.status = status;
     }
 
-    if (search) {
-      where.user = { name: ILike(`%${search}%`) };
-    }
-
     if (startDate && endDate) {
       where.createdAt = Between(startDate, endDate);
     }
@@ -81,6 +77,10 @@ export class GetSurveySubmissionsUseCase {
 
     if (endDate && !startDate) {
       where.createdAt = LessThanOrEqual(endDate);
+    }
+
+    if (search) {
+      where.user = { name: ILike(`%${search}%`) };
     }
 
     const total = await this.surveySubmissionsRepository.count({

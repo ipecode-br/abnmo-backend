@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import {
   Between,
   type FindOptionsWhere,
+  ILike,
   LessThanOrEqual,
   MoreThanOrEqual,
   type Repository,
@@ -17,6 +18,7 @@ import { getDateRangeForPeriod } from '@/utils/get-date-range-for-period';
 interface GetSurveysUseCaseInput {
   page: number;
   perPage: number;
+  search?: string;
   status?: SurveyStatus;
   period?: QueryPeriod;
   startDate?: string;
@@ -43,6 +45,7 @@ export class GetSurveysUseCase {
   ) {}
 
   async execute({
+    search,
     status,
     period,
     page,
@@ -76,6 +79,10 @@ export class GetSurveysUseCase {
       where.createdAt = Between(startDate, endDate);
     }
 
+    if (search) {
+      where.user = { name: ILike(`%${search}%`) };
+    }
+
     const total = await this.surveysRepository.count({
       relations: { user: true },
       where,
@@ -88,7 +95,7 @@ export class GetSurveysUseCase {
         id: true,
         status: true,
         createdAt: true,
-        user: { name: true, email: true },
+        user: { name: true, phone: true, email: true },
       },
       order: { [orderBy]: props.order },
       skip: (page - 1) * perPage,
@@ -99,6 +106,7 @@ export class GetSurveysUseCase {
       surveys: surveys.map((survey) => ({
         id: survey.id,
         name: survey.user.name,
+        phone: survey.user.phone || '',
         email: survey.user.email,
         status: survey.status,
         createdAt: survey.createdAt,

@@ -2,7 +2,14 @@ import { z } from 'zod';
 
 import { SURVEY_STATUSES, SURVEYS_ORDER_BY } from '@/domain/enums/surveys';
 
-import { baseQuerySchema } from '../../query';
+import {
+  queryDateSchema,
+  queryOrderSchema,
+  queryPageSchema,
+  queryPeriodSchema,
+  queryPerPageSchema,
+  querySearchSchema,
+} from '../../query';
 import { supportContactSchema } from '../../shared';
 import { aboutYouSurveySchema } from './about-you';
 import { dailyLifeSurveySchema } from './daily-life';
@@ -22,16 +29,14 @@ export const createSurveySchema = z.object({
   supportContacts: z.array(supportContactSchema).min(1),
 });
 
-export const getSurveysQuerySchema = baseQuerySchema
-  .pick({
-    order: true,
-    period: true,
-    startDate: true,
-    endDate: true,
-    page: true,
-    perPage: true,
-  })
-  .extend({
-    status: z.enum(SURVEY_STATUSES).optional(),
-    orderBy: z.enum(SURVEYS_ORDER_BY).optional().default('date'),
-  });
+export const getSurveysQuerySchema = z.object({
+  search: querySearchSchema.optional(),
+  status: z.enum(SURVEY_STATUSES).optional(),
+  order: queryOrderSchema.default('DESC'),
+  orderBy: z.enum(SURVEYS_ORDER_BY).optional().default('date'),
+  period: queryPeriodSchema.optional(),
+  startDate: queryDateSchema.optional(),
+  endDate: queryDateSchema.optional(),
+  page: queryPageSchema,
+  perPage: queryPerPageSchema,
+});

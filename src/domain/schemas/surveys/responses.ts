@@ -6,7 +6,7 @@ import { surveySchema } from '.';
 
 export const listSurveyResponseSchema = surveySchema
   .pick({ id: true, status: true, createdAt: true })
-  .merge(userSchema.pick({ name: true, email: true }))
+  .merge(userSchema.pick({ name: true, phone: true, email: true }))
   .strict();
 export type ListSurveyResponse = z.infer<typeof listSurveyResponseSchema>;
 
