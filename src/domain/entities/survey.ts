@@ -255,10 +255,10 @@ export class Survey extends BaseEntity implements SurveySchema {
   @Column({ type: 'varchar', length: 200, nullable: true })
   otherSuspectedDiseases: string | null;
 
-  @Column({ type: 'boolean', nullable: true })
+  @Column({ type: 'int', nullable: true })
   crisesBeforeDiagnosis: number | null;
 
-  @Column({ type: 'boolean', nullable: true })
+  @Column({ type: 'int', nullable: true })
   crisesSinceDiagnosis: number | null;
 
   @Column({ type: 'enum', enum: TREATMENT_LOCATIONS })
@@ -287,7 +287,7 @@ export class Survey extends BaseEntity implements SurveySchema {
   @Column({ type: 'json' })
   nmoMedications: string[] = [];
 
-  @Column({ type: 'boolean', nullable: true })
+  @Column({ type: 'int', nullable: true })
   crisesAfterMedication: number | null;
 
   @Column({ type: 'enum', enum: LEGAL_ACTIONS })

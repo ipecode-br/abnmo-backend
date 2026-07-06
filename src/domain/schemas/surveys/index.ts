@@ -109,7 +109,7 @@ export const surveySchema = baseEntitySchema.extend({
   timeToDiagnosisUnit: z.enum(TIME_UNITS),
   suspectedMultipleSclerosis: z.boolean().nullable(),
   otherSuspectedDiseases: z.string().nullable(),
-  crisesBeforeDiagnosis: z.number().nullable(),
+  crisesBeforeDiagnosis: z.number().min(0).nullable(),
   crisesSinceDiagnosis: z.number().min(0).nullable(),
   treatmentInHomeCity: z.enum(TREATMENT_LOCATIONS),
   hasNeurologistsInCity: z.boolean().nullable(),

@@ -18,3 +18,21 @@ export const getSurveysResponseSchema = baseResponseSchema.extend({
     })
     .strict(),
 });
+
+export const surveyDetailsResponseSchema = surveySchema
+  .omit({ signatureId: true })
+  .extend({
+    user: userSchema.pick({
+      id: true,
+      name: true,
+      cpf: true,
+      phone: true,
+      email: true,
+    }),
+  })
+  .strict();
+export type SurveyDetailsResponse = z.infer<typeof surveyDetailsResponseSchema>;
+
+export const getSurveyResponseSchema = baseResponseSchema.extend({
+  data: surveyDetailsResponseSchema,
+});

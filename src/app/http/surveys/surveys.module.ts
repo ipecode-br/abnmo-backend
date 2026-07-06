@@ -20,6 +20,7 @@ import { GetSurveySubmissionsUseCase } from './submissions/use-cases/get-survey-
 import { GetTotalSurveySubmissionsUseCase } from './submissions/use-cases/get-total-survey-submissions.use-case';
 import { SurveysController } from './surveys.controller';
 import { CreateSurveyUseCase } from './use-cases/create-survey.use-case';
+import { GetSurveyUseCase } from './use-cases/get-survey.use-case';
 import { GetSurveysUseCase } from './use-cases/get-surveys.use-case';
 import { SendSurveyReminderUseCase } from './use-cases/send-survey-reminder.use-case';
 
@@ -37,11 +38,12 @@ import { SendSurveyReminderUseCase } from './use-cases/send-survey-reminder.use-
     ConfirmSurveySubmissionUploadUseCase,
     CreateSurveySubmissionUseCase,
     CreateSurveyUseCase,
+    DeclineSurveySubmissionUseCase,
     GetSurveySubmissionUseCase,
     GetSurveySubmissionsUseCase,
+    GetSurveyUseCase,
     GetSurveysUseCase,
     GetTotalSurveySubmissionsUseCase,
-    DeclineSurveySubmissionUseCase,
     SendSurveyReminderUseCase,
   ],
 })

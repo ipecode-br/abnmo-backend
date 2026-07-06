@@ -10,10 +10,12 @@ import { Log } from '@/common/log/log.decorator';
 
 import {
   CreateSurveyBody,
+  GetSurveyResponse,
   GetSurveysQuery,
   GetSurveysResponse,
 } from './surveys.dtos';
 import { CreateSurveyUseCase } from './use-cases/create-survey.use-case';
+import { GetSurveyUseCase } from './use-cases/get-survey.use-case';
 import { GetSurveysUseCase } from './use-cases/get-surveys.use-case';
 import { SendSurveyReminderUseCase } from './use-cases/send-survey-reminder.use-case';
 
@@ -23,6 +25,7 @@ import { SendSurveyReminderUseCase } from './use-cases/send-survey-reminder.use-
 export class SurveysController {
   constructor(
     private readonly createSurveyUseCase: CreateSurveyUseCase,
+    private readonly getSurveyUseCase: GetSurveyUseCase,
     private readonly getSurveysUseCase: GetSurveysUseCase,
     private readonly sendSurveyReminderUseCase: SendSurveyReminderUseCase,
   ) {}
@@ -53,6 +56,20 @@ export class SurveysController {
     return {
       success: true,
       message: 'Lista de catalogações retornada com sucesso.',
+      data,
+    };
+  }
+
+  @Get(':id')
+  @RequireFeature('read:survey')
+  @ApiOperation({ summary: 'Detalhes de uma catalogação' })
+  @ZodResponse({ type: GetSurveyResponse, status: 200 })
+  async getSurvey(@Param('id') id: string): Promise<GetSurveyResponse> {
+    const data = await this.getSurveyUseCase.execute(id);
+
+    return {
+      success: true,
+      message: 'Detalhes da catalogação retornados com sucesso.',
       data,
     };
   }
