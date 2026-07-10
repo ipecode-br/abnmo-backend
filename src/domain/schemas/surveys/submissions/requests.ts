@@ -6,7 +6,14 @@ import {
   SURVEY_SUBMISSION_STATUSES,
 } from '@/domain/enums/survey-submissions';
 import { SURVEY_DOCUMENT_TYPES } from '@/domain/enums/surveys';
-import { baseQuerySchema } from '@/domain/schemas/query';
+import {
+  queryDateSchema,
+  queryOrderSchema,
+  queryPageSchema,
+  queryPeriodSchema,
+  queryPerPageSchema,
+  querySearchSchema,
+} from '@/domain/schemas/query';
 
 import { emailSchema, nameSchema, phoneSchema } from '../../shared';
 
@@ -18,24 +25,24 @@ export const createSurveySubmissionSchema = z.object({
   fileSize: z.number().min(1).max(MAX_SURVEY_DOCUMENT_FILE_SIZE),
 });
 
-export const getSurveySubmissionsQuerySchema = baseQuerySchema
-  .pick({
-    search: true,
-    order: true,
-    startDate: true,
-    endDate: true,
-    page: true,
-    perPage: true,
-  })
-  .extend({
-    status: z.enum(SURVEY_SUBMISSION_STATUSES).optional(),
-    orderBy: z.enum(SURVEY_SUBMISSION_ORDER_BY).optional(),
-  });
-
-export const getTotalSurveySubmissionsQuerySchema = baseQuerySchema
-  .pick({ period: true, startDate: true, endDate: true })
-  .extend({ status: z.enum(SURVEY_SUBMISSION_STATUSES).optional() });
-
 export const declineSurveySubmissionSchema = z.object({
   reason: z.string().min(1).max(500),
+});
+
+export const getSurveySubmissionsQuerySchema = z.object({
+  search: querySearchSchema.optional(),
+  status: z.enum(SURVEY_SUBMISSION_STATUSES).optional(),
+  orderBy: z.enum(SURVEY_SUBMISSION_ORDER_BY).optional().default('date'),
+  order: queryOrderSchema.default('ASC'),
+  startDate: queryDateSchema.optional(),
+  endDate: queryDateSchema.optional(),
+  page: queryPageSchema,
+  perPage: queryPerPageSchema,
+});
+
+export const getTotalSurveySubmissionsQuerySchema = z.object({
+  status: z.enum(SURVEY_SUBMISSION_STATUSES).optional(),
+  period: queryPeriodSchema.optional(),
+  startDate: queryDateSchema.optional(),
+  endDate: queryDateSchema.optional(),
 });

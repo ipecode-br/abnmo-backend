@@ -21,6 +21,7 @@ import type { SpecialtyCategory } from '@/domain/enums/shared';
 import type { ReferralResponseSchema } from '@/domain/schemas/referrals/responses';
 
 interface GetReferralsUseCaseInput {
+  user: RequestUser;
   category?: SpecialtyCategory;
   condition?: PatientCondition;
   endDate?: string;
@@ -33,7 +34,6 @@ interface GetReferralsUseCaseInput {
   search?: string;
   startDate?: string;
   status?: ReferralStatus;
-  user: RequestUser;
 }
 
 interface GetReferralsUseCaseOutput {
@@ -127,6 +127,8 @@ export class GetReferralsUseCase {
         condition: true,
         annotation: true,
         professionalName: true,
+        updatedAt: true,
+        createdAt: true,
         patient: { id: true, name: true, email: true, avatarUrl: true },
         specialist: { id: true, name: true, email: true, avatarUrl: true },
       },
@@ -146,6 +148,8 @@ export class GetReferralsUseCase {
         condition: referral.condition,
         annotation: referral.annotation,
         professionalName: referral.professionalName,
+        updatedAt: referral.updatedAt,
+        createdAt: referral.createdAt,
         patient: {
           id: referral.patient.id,
           name: referral.patient.name,

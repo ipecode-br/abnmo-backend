@@ -7,9 +7,10 @@
   "license": "UNLICENSED",
   "scripts": {
     "dev": "npm run services:up && npm run services:wait:database && npm run db:migrate && nest start --watch",
-    "lint:eslint:check": "eslint . && tsc --noEmit",
+    "lint:eslint:check": "eslint .",
     "lint:prettier:check": "prettier --check .",
     "lint:prettier:fix": "prettier --write . --log-level=warn",
+    "validate": "eslint . && tsc --noEmit",
     "services:up": "docker compose -f infra/docker/compose-dev.yaml --env-file .env up -d",
     "services:stop": "docker compose -f infra/docker/compose-dev.yaml --env-file .env stop",
     "services:down": "docker compose -f infra/docker/compose-dev.yaml --env-file .env down",

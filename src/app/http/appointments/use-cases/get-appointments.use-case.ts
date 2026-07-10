@@ -21,6 +21,7 @@ import type { SpecialtyCategory } from '@/domain/enums/shared';
 import type { AppointmentResponseSchema } from '@/domain/schemas/appointments/responses';
 
 interface GetAppointmentsUseCaseInput {
+  user: RequestUser;
   category?: SpecialtyCategory;
   condition?: PatientCondition;
   endDate?: string;
@@ -33,7 +34,6 @@ interface GetAppointmentsUseCaseInput {
   search?: string;
   startDate?: string;
   status?: AppointmentStatus;
-  user: RequestUser;
 }
 
 interface GetAppointmentsUseCaseOutput {
@@ -127,6 +127,8 @@ export class GetAppointmentsUseCase {
         condition: true,
         annotation: true,
         professionalName: true,
+        updatedAt: true,
+        createdAt: true,
         patient: { id: true, name: true, email: true, avatarUrl: true },
         specialist: { id: true, name: true, email: true, avatarUrl: true },
       },
@@ -146,6 +148,8 @@ export class GetAppointmentsUseCase {
         condition: appointment.condition,
         annotation: appointment.annotation,
         professionalName: appointment.professionalName,
+        updatedAt: appointment.updatedAt,
+        createdAt: appointment.createdAt,
         patient: {
           id: appointment.patient.id,
           name: appointment.patient.name,

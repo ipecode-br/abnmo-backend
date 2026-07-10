@@ -4,7 +4,12 @@ import dataSource from 'infra/database/data.source';
 import { User } from '@/domain/entities/user';
 import { SPECIALTY_CATEGORIES } from '@/domain/enums/shared';
 import { KINSHIP_TYPES } from '@/domain/enums/surveys';
-import { USER_FEATURES, USER_ROLES, USER_STATUSES } from '@/domain/enums/users';
+import {
+  BASE_USER_FEATURES,
+  USER_FEATURES,
+  USER_ROLES,
+  USER_STATUSES,
+} from '@/domain/enums/users';
 
 import {
   generateFakeDate,
@@ -23,12 +28,19 @@ export function generateFakeUser(
   const randomGender = faker.helpers.arrayElement(['male', 'female']);
   const avatarUrl = `https://cdn.jsdelivr.net/gh/faker-js/assets-person-portrait/${gender ?? randomGender}/256/${randomNumber}.jpg`;
 
+  const features = [
+    ...new Set([
+      ...BASE_USER_FEATURES,
+      ...faker.helpers.arrayElements(USER_FEATURES),
+    ]),
+  ];
+
   const baseData: Partial<User> = {
     name: generateFakeName(),
     email: generateFakeEmail(),
     password: data.password,
     role: faker.helpers.arrayElement(USER_ROLES),
-    features: faker.helpers.arrayElements(USER_FEATURES),
+    features,
     status: faker.helpers.arrayElement(USER_STATUSES),
     avatarUrl,
     createdAt: generateFakeDate(),

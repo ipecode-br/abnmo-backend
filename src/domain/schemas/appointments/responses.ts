@@ -14,6 +14,8 @@ export const appointmentResponseSchema = appointmentSchema
     condition: true,
     annotation: true,
     professionalName: true,
+    updatedAt: true,
+    createdAt: true,
   })
   .extend({
     patient: patientSchema.pick({

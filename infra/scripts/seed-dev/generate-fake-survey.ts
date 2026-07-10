@@ -18,6 +18,7 @@ import {
   DIAGNOSIS_TYPES,
   EDUCATION_LEVELS,
   EMPLOYMENT_STATUSES,
+  EMPLOYMENT_STATUSES_WITH_DETAILS_REQUIRED,
   EXERCISES_BEFORE_NMO,
   FAMILY_INCOMES,
   FAMILY_SUPPORTS,
@@ -78,7 +79,17 @@ export function generateFakeSurvey(data: DeepPartial<Survey>): Survey {
     return faker.helpers.arrayElement(cities);
   }
 
+  const hasLivedElsewhere = faker.datatype.boolean();
   const numberOfChildren = faker.number.int({ min: 0, max: 5 });
+  const employmentStatus = faker.helpers.arrayElement(EMPLOYMENT_STATUSES);
+  const changedProfession = EMPLOYMENT_STATUSES_WITH_DETAILS_REQUIRED.includes(
+    employmentStatus,
+  )
+    ? faker.datatype.boolean()
+    : null;
+  const diagnosisHospitalName = faker.datatype.boolean()
+    ? faker.company.name()
+    : null;
 
   const baseData: DeepPartial<Survey> = {
     status: faker.helpers.arrayElement(SURVEY_STATUSES),
@@ -94,15 +105,15 @@ export function generateFakeSurvey(data: DeepPartial<Survey>): Survey {
     addressCep: faker.string.numeric(8),
     addressState: selectedState,
     addressCity: getRandomCity(),
-    addressStreet: faker.location.streetAddress(),
+    addressStreet: faker.location.street(),
     addressNumber: faker.datatype.boolean()
       ? faker.number.int({ min: 1, max: 9999 }).toString()
       : null,
     addressNeighborhood: faker.datatype.boolean()
       ? faker.location.county()
       : null,
-    hasLivedElsewhere: faker.datatype.boolean(),
-    livedElsewhereDescription: faker.datatype.boolean()
+    hasLivedElsewhere,
+    livedElsewhereDescription: hasLivedElsewhere
       ? faker.lorem.sentence()
       : null,
     // Family
@@ -123,21 +134,27 @@ export function generateFakeSurvey(data: DeepPartial<Survey>): Survey {
     houseRooms: faker.number.int({ min: 1, max: 8 }),
     houseBathrooms: faker.number.int({ min: 1, max: 4 }),
     homeAccessLevel: faker.helpers.arrayElement(HOME_ACCESS_LEVELS),
-    transportModes: faker.helpers.arrayElements(TRANSPORT_MODES),
+    transportModes: faker.helpers.arrayElements(TRANSPORT_MODES, {
+      min: 1,
+      max: 4,
+    }),
     // Journey
     educationLevel: faker.helpers.arrayElement(EDUCATION_LEVELS),
-    employmentStatus: faker.helpers.arrayElement(EMPLOYMENT_STATUSES),
-    studyInterruption: faker.helpers.arrayElement(
-      STUDY_INTERRUPTION_SITUATIONS,
-    ),
-    profession: faker.datatype.boolean() ? faker.person.jobType() : null,
+    employmentStatus,
+    studyInterruption:
+      employmentStatus === 'student'
+        ? faker.helpers.arrayElement(STUDY_INTERRUPTION_SITUATIONS)
+        : null,
+    profession: EMPLOYMENT_STATUSES_WITH_DETAILS_REQUIRED.includes(
+      employmentStatus,
+    )
+      ? faker.person.jobType()
+      : null,
     jobTitle: faker.datatype.boolean() ? faker.person.jobTitle() : null,
     salaryRange: faker.helpers.arrayElement(SALARY_RANGES),
     dismissedAfterDiagnosis: faker.datatype.boolean() || null,
-    changedProfession: faker.datatype.boolean() || null,
-    changedProfessionTo: faker.datatype.boolean()
-      ? faker.person.jobTitle()
-      : null,
+    changedProfession,
+    changedProfessionTo: changedProfession ? faker.person.jobTitle() : null,
     currentJobIsPcd: faker.datatype.boolean() || null,
     receivesSicknessBenefit: faker.helpers.arrayElement(
       SICKNESS_BENEFIT_STATUSES,
@@ -145,15 +162,20 @@ export function generateFakeSurvey(data: DeepPartial<Survey>): Survey {
     receivesBpcLoas: faker.helpers.arrayElement(BPC_LOAS_STATUSES),
     // Diagnosis
     diagnosis: faker.helpers.arrayElement(DIAGNOSIS_TYPES),
-    firstCrisisSymptoms: faker.helpers.arrayElements(FIRST_CRISIS_SYMPTOMS),
-    affectedAreas: faker.helpers.arrayElements(AFFECTED_AREAS),
+    firstCrisisSymptoms: faker.helpers.arrayElements(FIRST_CRISIS_SYMPTOMS, {
+      min: 1,
+      max: 4,
+    }),
+    affectedAreas: faker.helpers.arrayElements(AFFECTED_AREAS, {
+      min: 1,
+      max: 4,
+    }),
     diagnosingDoctorName: faker.datatype.boolean() ? generateFakeName() : null,
-    diagnosisHospitalName: faker.datatype.boolean()
-      ? faker.company.name()
-      : null,
-    diagnosisHospitalCep: faker.datatype.boolean()
-      ? faker.string.numeric(8)
-      : null,
+    diagnosisHospitalName,
+    diagnosisHospitalCep:
+      diagnosisHospitalName && faker.datatype.boolean()
+        ? faker.string.numeric(8)
+        : null,
     diagnosisHospitalState: faker.datatype.boolean() ? selectedState : null,
     diagnosisHospitalCity: faker.datatype.boolean() ? getRandomCity() : null,
     diagnosisHospitalStreet: faker.datatype.boolean()
@@ -175,6 +197,7 @@ export function generateFakeSurvey(data: DeepPartial<Survey>): Survey {
       : null,
     specialistsBeforeDiagnosis: faker.helpers.arrayElements(
       SPECIALTIES_BEFORE_DIAGNOSIS,
+      { min: 1, max: 4 },
     ),
     timeToDiagnosis: faker.number.int({ min: 1, max: 30 }),
     timeToDiagnosisUnit: faker.helpers.arrayElement(TIME_UNITS),
@@ -192,7 +215,10 @@ export function generateFakeSurvey(data: DeepPartial<Survey>): Survey {
     hasNeurologistsInCity: faker.datatype.boolean() || null,
     crisisAction: faker.helpers.arrayElement(CRISIS_ACTIONS),
     // Follow-up
-    followUpSpecialties: faker.helpers.arrayElements(FOLLOW_UP_SPECIALTIES),
+    followUpSpecialties: faker.helpers.arrayElements(FOLLOW_UP_SPECIALTIES, {
+      min: 1,
+      max: 4,
+    }),
     otherFollowUpProfessionals: faker.helpers.arrayElements(
       ['Personal trainer', 'Psicólogo', 'Nutricionista'],
       faker.number.int({ min: 0, max: 2 }),
@@ -257,7 +283,10 @@ export function generateFakeSurvey(data: DeepPartial<Survey>): Survey {
       : null,
     exercisedBeforeNmo: faker.datatype.boolean(),
     exercisesBeforeNmo: faker.helpers.arrayElement(EXERCISES_BEFORE_NMO),
-    informationSources: faker.helpers.arrayElements(INFORMATION_SOURCES),
+    informationSources: faker.helpers.arrayElements(INFORMATION_SOURCES, {
+      min: 1,
+      max: 4,
+    }),
     lifePerception: faker.lorem.paragraph(),
     dreams: faker.lorem.paragraph(),
     additionalInfo: faker.lorem.paragraph(),

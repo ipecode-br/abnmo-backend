@@ -20,14 +20,14 @@ export const getSurveysResponseSchema = baseResponseSchema.extend({
 });
 
 export const surveyDetailsResponseSchema = surveySchema
-  .omit({ signatureId: true })
   .extend({
     user: userSchema.pick({
       id: true,
       name: true,
-      cpf: true,
       phone: true,
       email: true,
+      cpf: true,
+      susId: true,
     }),
   })
   .strict();

@@ -19,6 +19,7 @@ export class GetSurveyUseCase {
       select: {
         id: true,
         status: true,
+        signatureId: true,
         dateOfBirth: true,
         gender: true,
         race: true,
@@ -118,9 +119,10 @@ export class GetSurveyUseCase {
         user: {
           id: true,
           name: true,
-          cpf: true,
           phone: true,
           email: true,
+          cpf: true,
+          susId: true,
         },
       },
     });
@@ -132,6 +134,7 @@ export class GetSurveyUseCase {
     return {
       id: survey.id,
       status: survey.status,
+      signatureId: survey.signatureId,
       dateOfBirth: survey.dateOfBirth,
       gender: survey.gender,
       race: survey.race,
@@ -231,9 +234,10 @@ export class GetSurveyUseCase {
       user: {
         id: survey.user.id,
         name: survey.user.name,
-        cpf: survey.user.cpf,
         phone: survey.user.phone,
         email: survey.user.email,
+        cpf: survey.user.cpf,
+        susId: survey.user.susId,
       },
     };
   }
