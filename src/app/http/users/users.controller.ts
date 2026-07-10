@@ -33,6 +33,7 @@ import { GetUserUseCase } from './use-cases/get-user.use-case';
 import { GetUserInvitesUseCase } from './use-cases/get-user-invites.use-case';
 import { GetUsersUseCase } from './use-cases/get-users.use-case';
 import { UpdateUserUseCase } from './use-cases/update-user.use-case';
+import { UpdateUserFeaturesUseCase } from './use-cases/update-user-features.use-case';
 import { UploadUserAvatarUseCase } from './use-cases/upload-user-avatar.use-case';
 import {
   CreateUserInviteBody,
@@ -42,6 +43,7 @@ import {
   GetUsersQuery,
   GetUsersResponse,
   UpdateUserBody,
+  UpdateUserFeaturesBody,
 } from './users.dtos';
 
 @ApiTags('Usuários')
@@ -57,6 +59,7 @@ export class UsersController {
     private readonly getUserUseCase: GetUserUseCase,
     private readonly getUsersUseCase: GetUsersUseCase,
     private readonly updateUserUseCase: UpdateUserUseCase,
+    private readonly updateUserFeaturesUseCase: UpdateUserFeaturesUseCase,
     private readonly uploadUserAvatarUseCase: UploadUserAvatarUseCase,
   ) {}
 
@@ -136,6 +139,28 @@ export class UsersController {
     return {
       success: true,
       message: 'Usuário atualizado com sucesso.',
+    };
+  }
+
+  @Patch(':id/features')
+  @Roles(['admin'])
+  @Log('update_user')
+  @ApiOperation({ summary: 'Atualiza as permissões do usuário' })
+  @ZodResponse({ type: BaseResponse, status: 200 })
+  async updateUserFeatures(
+    @Param('id') id: string,
+    @User() user: RequestUser,
+    @Body() body: UpdateUserFeaturesBody,
+  ): Promise<BaseResponse> {
+    await this.updateUserFeaturesUseCase.execute({
+      id,
+      user,
+      features: body.features,
+    });
+
+    return {
+      success: true,
+      message: 'Permissões atualizadas com sucesso.',
     };
   }
 

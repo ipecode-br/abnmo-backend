@@ -36,3 +36,9 @@ export const USER_FEATURES = [
   'deactivate:patient',
 ] as const;
 export type UserFeature = (typeof USER_FEATURES)[number];
+
+export const BASE_USER_FEATURES = [
+  'read:user',
+  'update:user',
+  'read:patient',
+] as const;

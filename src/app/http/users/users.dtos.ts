@@ -4,6 +4,7 @@ import {
   createUserInviteSchema,
   getUserInvitesQuerySchema,
   getUsersQuerySchema,
+  updateUserFeaturesSchema,
   updateUserSchema,
 } from '@/domain/schemas/users/requests';
 import {
@@ -28,4 +29,8 @@ export class GetUserInvitesResponse extends createZodDto(
 
 export class CreateUserInviteBody extends createZodDto(
   createUserInviteSchema,
+) {}
+
+export class UpdateUserFeaturesBody extends createZodDto(
+  updateUserFeaturesSchema,
 ) {}

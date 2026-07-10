@@ -29,6 +29,10 @@ export const updateUserSchema = userSchema.pick({
   registrationId: true,
 });
 
+export const updateUserFeaturesSchema = userSchema.pick({
+  features: true,
+});
+
 export const getUsersQuerySchema = baseQuerySchema
   .pick({
     search: true,

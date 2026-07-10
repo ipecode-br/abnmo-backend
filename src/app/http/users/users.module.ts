@@ -16,6 +16,7 @@ import { GetUserUseCase } from './use-cases/get-user.use-case';
 import { GetUserInvitesUseCase } from './use-cases/get-user-invites.use-case';
 import { GetUsersUseCase } from './use-cases/get-users.use-case';
 import { UpdateUserUseCase } from './use-cases/update-user.use-case';
+import { UpdateUserFeaturesUseCase } from './use-cases/update-user-features.use-case';
 import { UploadUserAvatarUseCase } from './use-cases/upload-user-avatar.use-case';
 import { UsersController } from './users.controller';
 
@@ -36,6 +37,7 @@ import { UsersController } from './users.controller';
     GetUserUseCase,
     GetUsersUseCase,
     UpdateUserUseCase,
+    UpdateUserFeaturesUseCase,
     UploadUserAvatarUseCase,
   ],
   controllers: [UsersController],
