@@ -57,6 +57,6 @@ export class DeactivateUserUseCase {
 
     await this.tokensRepository.delete({ entityId: id });
 
-    this.logger.log('User deactivated successfully', { id });
+    this.logger.log('User deactivated', { id });
   }
 }

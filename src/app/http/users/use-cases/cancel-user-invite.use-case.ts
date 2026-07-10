@@ -32,7 +32,7 @@ export class CancelUserInviteUseCase {
 
     await this.tokensRepository.remove(token);
 
-    this.logger.log('Invite user token canceled successfully', {
+    this.logger.log('Invite user token canceled', {
       id: token.id,
       email: token.email,
     });

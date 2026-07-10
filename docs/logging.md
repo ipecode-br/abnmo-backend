@@ -23,7 +23,7 @@ O `AppLogger` é o único serviço de log a ser usado na aplicação. Injetável
 Todos os métodos aceitam um segundo argumento de metadados extras que são mesclados ao contexto:
 
 ```typescript
-this.logger.log('Appointment created successfully', {
+this.logger.log('Appointment created', {
   patientId,
   appointmentId: appointment.id,
   createdBy: user.id,
@@ -37,7 +37,7 @@ Cada log é enriquecido automaticamente com:
 ```json
 {
   "level": "info",
-  "msg": "Appointment created successfully",
+  "msg": "Appointment created",
   "event": "create_appointment",
   "authUser": { "id": "...", "email": "...", "role": "nurse" },
   "patientId": "...",
@@ -128,7 +128,7 @@ export class CreatePatientUseCase {
 
     const patient = await this.patientsRepository.save({ ...input });
 
-    this.logger.log('Patient created successfully', {
+    this.logger.log('Patient created', {
       patientId: patient.id,
       createdBy: input.user.id,
     });

@@ -16,7 +16,32 @@ export const USER_FEATURES = [
   'read:survey:others',
   'approve:survey',
   'update:survey',
-  'delete:survey',
+  'update:survey:others',
+  'cancel:survey',
+  'cancel:survey:others',
+  // Patients
+  'read:patient',
+  'read:patient:others',
+  'update:patient',
+  'update:patient:others',
+  'activate:patient',
+  'deactivate:patient',
+  // Appointments
+  'create:appointment',
+  'read:appointment',
+  'read:appointment:others',
+  'update:appointment',
+  'update:appointment:others',
+  'cancel:appointment',
+  'cancel:appointment:others',
+  // Referrals
+  'create:referral',
+  'read:referral',
+  'read:referral:others',
+  'update:referral',
+  'update:referral:others',
+  'cancel:referral',
+  'cancel:referral:others',
   // Users
   'read:user',
   'read:user:others',
@@ -28,12 +53,6 @@ export const USER_FEATURES = [
   'create:user_invite',
   'read:user_invite',
   'delete:user_invite',
-  // Patients
-  'read:patient',
-  'read:patient:others',
-  'update:patient',
-  'update:patient:others',
-  'deactivate:patient',
 ] as const;
 export type UserFeature = (typeof USER_FEATURES)[number];
 

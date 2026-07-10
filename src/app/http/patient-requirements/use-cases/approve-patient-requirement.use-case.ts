@@ -50,6 +50,6 @@ export class ApprovePatientRequirementUseCase {
       approvedAt: new Date(),
     });
 
-    this.logger.log('Patient requirement approved successfully', { id });
+    this.logger.log('Patient requirement approved', { id });
   }
 }

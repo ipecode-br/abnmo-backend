@@ -67,7 +67,7 @@ export class CreateAppointmentUseCase {
       createdBy: input.user.id,
     });
 
-    this.logger.log('Appointment created successfully', {
+    this.logger.log('Appointment created', {
       patientId: input.patientId,
       createdBy: input.user.id,
     });
@@ -199,7 +199,7 @@ export class CreatePatientUseCase {
       }
     });
 
-    this.logger.log('Patient created successfully', { email: input.email });
+    this.logger.log('Patient created', { email: input.email });
   }
 }
 ```

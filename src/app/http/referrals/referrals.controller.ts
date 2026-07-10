@@ -11,6 +11,7 @@ import {
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ZodResponse } from 'nestjs-zod';
 
+import { RequireFeature } from '@/common/decorators/require-feature.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
@@ -40,6 +41,7 @@ export class ReferralsController {
   ) {}
 
   @Get()
+  @RequireFeature('read:referral:others')
   @ApiOperation({ summary: 'Lista todos os encaminhamentos' })
   @ZodResponse({ type: GetReferralsResponse, status: 200 })
   async getReferrals(
@@ -57,6 +59,7 @@ export class ReferralsController {
 
   @Post()
   @Log('create_referral')
+  @RequireFeature('create:referral')
   @ApiOperation({ summary: 'Cadastra um novo encaminhamento' })
   @ZodResponse({ type: BaseResponse, status: 201 })
   async create(
@@ -70,6 +73,7 @@ export class ReferralsController {
 
   @Put(':id')
   @Log('update_referral')
+  @RequireFeature('update:referral')
   @ApiOperation({ summary: 'Atualiza os dados do encaminhamento' })
   @ZodResponse({ type: BaseResponse, status: 200 })
   public async update(
@@ -86,6 +90,7 @@ export class ReferralsController {
 
   @Patch(':id/cancel')
   @Log('cancel_referral')
+  @RequireFeature('cancel:referral')
   @ApiOperation({ summary: 'Cancela o encaminhamento' })
   @ZodResponse({ type: BaseResponse, status: 200 })
   async cancel(@Param('id') id: string): Promise<BaseResponse> {

@@ -50,6 +50,6 @@ export class DeclinePatientRequirementUseCase {
       declinedAt: new Date(),
     });
 
-    this.logger.log('Patient requirement declined successfully', { id });
+    this.logger.log('Patient requirement declined', { id });
   }
 }

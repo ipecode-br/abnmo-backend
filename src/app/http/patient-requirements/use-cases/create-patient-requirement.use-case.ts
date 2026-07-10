@@ -54,7 +54,7 @@ export class CreatePatientRequirementUseCase {
 
     await this.patientRequirementsRepository.save(patientRequirement);
 
-    this.logger.log('Requirement created successfully', {
+    this.logger.log('Requirement created', {
       id: patientRequirement.id,
       patientId,
     });

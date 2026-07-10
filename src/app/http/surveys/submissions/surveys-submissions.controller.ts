@@ -99,7 +99,7 @@ export class SurveysSubmissionsController {
 
   // TODO: move this to a survey stats controller
   @Get('total')
-  @RequireFeature('read:survey')
+  @RequireFeature('read:survey:others')
   @ApiOperation({ summary: 'Total de submissões de catalogação' })
   @ZodResponse({ type: GetTotalSurveySubmissionsResponse, status: 200 })
   async getTotalSurveySubmissions(

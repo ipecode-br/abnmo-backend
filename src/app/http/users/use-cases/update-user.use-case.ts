@@ -66,7 +66,7 @@ export class UpdateUserUseCase {
       registrationId,
     });
 
-    this.logger.log('User updated successfully', {
+    this.logger.log('User updated', {
       id,
       email: userToUpdate.email,
     });

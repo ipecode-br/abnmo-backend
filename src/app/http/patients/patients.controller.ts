@@ -90,7 +90,7 @@ export class PatientsController {
 
   @Put(':id')
   @Log('update_patient')
-  @RequireFeature('update:patient:others')
+  @RequireFeature('update:patient')
   @ApiOperation({ summary: 'Atualiza os dados do paciente' })
   @ZodResponse({ type: BaseResponse, status: 200 })
   async update(
