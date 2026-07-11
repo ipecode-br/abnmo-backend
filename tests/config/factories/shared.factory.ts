@@ -1,6 +1,8 @@
 import { faker } from '@faker-js/faker';
 import { v7 as uuidv7 } from 'uuid';
 
+import { RequestUser } from '@/common/types';
+
 export function baseEntityFactory() {
   return {
     id: idFactory(),
@@ -32,4 +34,16 @@ export function dateFactory(monthsBefore = 4, monthsAhead = 0): Date {
     from: new Date().setMonth(new Date().getMonth() - monthsBefore),
     to: new Date().setMonth(new Date().getMonth() + monthsAhead),
   });
+}
+
+export function requestUserFactory(
+  overrides: Partial<RequestUser> = {},
+): RequestUser {
+  return {
+    id: idFactory(),
+    email: emailFactory(),
+    role: 'member',
+    features: [],
+    ...overrides,
+  };
 }
