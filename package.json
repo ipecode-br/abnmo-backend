@@ -19,12 +19,15 @@
     "db:migrate": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js -d ./infra/database/data.source.ts migration:run",
     "db:seed-dev": "ts-node -r tsconfig-paths/register infra/scripts/seed-dev/index.ts",
     "test:prepare": "docker compose -f infra/docker/compose-test.yaml --env-file .env.test up -d && NODE_ENV=test npm run services:wait:database && NODE_ENV=test npm run db:migrate",
-    "test:e2e": "NODE_ENV=test jest --config ./tests/config/jest-e2e.json --runInBand --detectOpenHandles",
-    "test:e2e:watch": "NODE_ENV=test jest --config ./tests/config/jest-e2e.json --runInBand --detectOpenHandles --watch",
-    "test:e2e:cov": "NODE_ENV=test jest --config ./tests/config/jest-e2e.json --runInBand --detectOpenHandles --coverage",
-    "test:e2e:debug": "NODE_ENV=test node --inspect-brk ./node_modules/.bin/jest --config ./tests/config/jest-e2e.json --runInBand",
+    "test:unit": "jest --config ./tests/config/jest-unit.json",
+    "test:unit:watch": "jest --config ./tests/config/jest-unit.json --watch",
+    "test:unit:cov": "jest --config ./tests/config/jest-unit.json --coverage",
+    "test:e2e": "NODE_ENV=test jest --config ./tests/config/jest-e2e.json --detectOpenHandles",
+    "test:e2e:watch": "NODE_ENV=test jest --config ./tests/config/jest-e2e.json --detectOpenHandles --watch",
+    "test:e2e:cov": "NODE_ENV=test jest --config ./tests/config/jest-e2e.json --detectOpenHandles --coverage",
     "test:stop": "docker compose -f infra/docker/compose-test.yaml --env-file .env.test stop",
     "test:down": "docker compose -f infra/docker/compose-test.yaml --env-file .env.test down",
+    "test:all": "npm run test:unit && npm run test:e2e",
     "build:lambda": "ts-node infra/scripts/build-lambda.ts",
     "build:docker": "tsc -p tsconfig.docker.json && tsc-alias -p tsconfig.docker.json",
     "docker:dev:up": "docker compose -f infra/docker/dev/compose.yaml --env-file .env.docker up -d",
@@ -102,6 +105,7 @@
     "globals": "15.14.0",
     "husky": "9.1.7",
     "jest": "29.7.0",
+    "jest-mock-extended": "4.0.1",
     "lint-staged": "16.0.0",
     "prettier": "3.4.2",
     "source-map-support": "0.5.21",
@@ -113,25 +117,5 @@
     "tsconfig-paths": "4.2.0",
     "typescript": "5.7.3",
     "typescript-eslint": "8.20.0"
-  },
-  "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
-    "moduleNameMapper": {
-      "^src/(.*)$": "<rootDir>/$1"
-    },
-    "rootDir": "src",
-    "testRegex": ".*\\.spec\\.ts$",
-    "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
-    },
-    "collectCoverageFrom": [
-      "**/*.(t|j)s"
-    ],
-    "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
   }
 }

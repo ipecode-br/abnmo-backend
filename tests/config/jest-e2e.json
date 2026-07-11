@@ -3,33 +3,24 @@
   "moduleFileExtensions": ["js", "json", "ts"],
   "rootDir": "..",
   "testEnvironment": "node",
-  "testMatch": ["<rootDir>/e2e/**/*.spec.ts"],
-  "collectCoverageFrom": ["**/*.(t|j)s"],
-  "coverageDirectory": "../coverage",
+  "testMatch": ["<rootDir>/e2e/**/*.e2e-spec.ts"],
   "maxWorkers": 1,
-  "setupFilesAfterEnv": ["<rootDir>/config/setup.ts"],
+  "setupFilesAfterEnv": ["<rootDir>/config/setup-e2e.ts"],
   "moduleNameMapper": {
-    "^@/(.*)$": "<rootDir>/../src/$1"
+    "^@/(.*)$": "<rootDir>/../src/$1",
+    "^uuid$": "<rootDir>/../src/__mocks__/uuid.ts"
   },
-  "testTimeout": 20000,
-  "verbose": false,
-  "silent": true,
-  "forceExit": true,
-  "detectOpenHandles": false,
   "transform": {
-    "^.+\\.(t|ts)$": [
+    "^.+\\.(t|j)s$": [
       "ts-jest",
       {
-        "tsconfig": {
-          "skipLibCheck": true,
-          "incremental": true
-        },
+        "tsconfig": { "skipLibCheck": true },
         "transpileOnly": true
       }
     ]
   },
-  "cache": true,
-  "cacheDirectory": "/tmp/jest_cache",
+  "testTimeout": 30000,
+  "forceExit": true,
   "clearMocks": true,
   "restoreMocks": true
 }
