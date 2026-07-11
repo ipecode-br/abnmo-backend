@@ -1,6 +1,5 @@
 import { z } from 'zod';
 
-import { QUERY_ORDERS } from '@/domain/enums/queries';
 import {
   USER_INVITES_ORDER_BY,
   USER_ROLES,
@@ -9,7 +8,6 @@ import {
 } from '@/domain/enums/users';
 
 import {
-  baseQuerySchema,
   queryDateSchema,
   queryOrderSchema,
   queryPageSchema,
@@ -33,19 +31,17 @@ export const updateUserFeaturesSchema = userSchema.pick({
   features: true,
 });
 
-export const getUsersQuerySchema = baseQuerySchema
-  .pick({
-    search: true,
-    startDate: true,
-    endDate: true,
-    page: true,
-    perPage: true,
-  })
-  .extend({
+export const getUsersQuerySchema = z
+  .object({
+    search: querySearchSchema.optional(),
     role: z.enum(USER_ROLES).optional(),
     status: z.enum(USER_STATUSES).optional(),
     orderBy: z.enum(USERS_ORDER_BY).optional().default('name'),
-    order: z.enum(QUERY_ORDERS).optional().default('ASC'),
+    order: queryOrderSchema.default('ASC'),
+    startDate: queryDateSchema.optional(),
+    endDate: queryDateSchema.optional(),
+    page: queryPageSchema,
+    perPage: queryPerPageSchema,
   })
   .refine(
     (data) => {
