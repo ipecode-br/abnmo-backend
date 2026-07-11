@@ -6,7 +6,7 @@ import { USER_FEATURES, UserFeature } from '@/domain/enums/users';
 export function can(
   user: RequestUser,
   feature: UserFeature | UserFeature[],
-  compareToId?: string,
+  compareToId?: string | string[],
 ) {
   const errorMessage = 'Você não tem permissão para executar esta ação.';
 
@@ -22,6 +22,12 @@ export function can(
     });
   }
 
+  function matchesId(): boolean {
+    if (compareToId === undefined) return true;
+    const ids = Array.isArray(compareToId) ? compareToId : [compareToId];
+    return ids.includes(user.id);
+  }
+
   if (Array.isArray(feature)) {
     const invalidFeatures = feature.filter((f) => !USER_FEATURES.includes(f));
 
@@ -35,8 +41,7 @@ export function can(
       if (!user.features.includes(f)) return false;
       const condition = f.split(':')[2];
       if (condition === 'others') return true;
-      if (compareToId && user.id !== compareToId) return false;
-      return true;
+      return matchesId();
     });
 
     if (!match) {
@@ -67,7 +72,7 @@ export function can(
   const canOthers = condition === 'others';
   if (canOthers) return true;
 
-  if (compareToId && user.id !== compareToId) {
+  if (!matchesId()) {
     throw new ForbiddenException(errorMessage, {
       cause: 'User ID does not match compareToId',
     });
