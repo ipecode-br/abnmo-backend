@@ -31,11 +31,17 @@ export function can(
       });
     }
 
-    const hasAny = feature.some((f) => user.features.includes(f));
+    const match = feature.some((f) => {
+      if (!user.features.includes(f)) return false;
+      const condition = f.split(':')[2];
+      if (condition === 'others') return true;
+      if (compareToId && user.id !== compareToId) return false;
+      return true;
+    });
 
-    if (!hasAny) {
+    if (!match) {
       throw new ForbiddenException(errorMessage, {
-        cause: `User does not have any of features <${feature.join(', ')}>`,
+        cause: `User does not have any of features <${feature.join(', ')}> matching the requested action`,
       });
     }
 
