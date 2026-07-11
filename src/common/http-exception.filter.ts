@@ -101,6 +101,18 @@ export class HttpExceptionFilter extends BaseExceptionFilter {
         message = responseMessage;
       }
 
+      // TODO: make this block more readable
+      if (
+        status === HttpStatus.NOT_FOUND &&
+        responseMessage &&
+        /^Cannot (GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS) \//.test(
+          responseMessage,
+        )
+      ) {
+        status = HttpStatus.FORBIDDEN;
+        message = 'Você não tem permissão para executar esta ação.';
+      }
+
       this.logger.error('HttpException', {
         status,
         message,
