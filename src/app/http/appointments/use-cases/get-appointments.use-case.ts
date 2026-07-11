@@ -9,6 +9,7 @@ import {
   type Repository,
 } from 'typeorm';
 
+import { can } from '@/common/authorization/can';
 import type { RequestUser } from '@/common/types';
 import { Appointment } from '@/domain/entities/appointment';
 import type {
@@ -60,6 +61,8 @@ export class GetAppointmentsUseCase {
     user,
     ...props
   }: GetAppointmentsUseCaseInput): Promise<GetAppointmentsUseCaseOutput> {
+    can(user, ['read:appointment', 'read:appointment:others']);
+
     const startDate = props.startDate ? new Date(props.startDate) : null;
     const endDate = props.endDate ? new Date(props.endDate) : null;
 

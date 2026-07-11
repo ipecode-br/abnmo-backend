@@ -6,11 +6,14 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
+import { can } from '@/common/authorization/can';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
+import type { RequestUser } from '@/common/types';
 import { Referral } from '@/domain/entities/referral';
 
 interface CancelReferralUseCaseInput {
+  user: RequestUser;
   id: string;
 }
 
@@ -23,9 +26,10 @@ export class CancelReferralUseCase {
     private readonly logger: LogService,
   ) {}
 
-  async execute({ id }: CancelReferralUseCaseInput): Promise<void> {
+  async execute({ id, user }: CancelReferralUseCaseInput): Promise<void> {
     const referral = await this.referralsRepository.findOne({
-      select: { id: true, status: true },
+      select: { id: true, status: true, specialist: { id: true } },
+      relations: { specialist: true },
       where: { id },
     });
 
@@ -34,6 +38,12 @@ export class CancelReferralUseCase {
         cause: `Referral with ID <${id}> not found`,
       });
     }
+
+    can(
+      user,
+      ['cancel:referral', 'cancel:referral:others'],
+      referral.specialist?.id,
+    );
 
     if (referral.status === 'canceled') {
       throw new BadRequestException('Este encaminhamento já está cancelado.', {

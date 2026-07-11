@@ -77,6 +77,20 @@ export class UsersController {
     };
   }
 
+  @Get('invites')
+  @RequireFeature('read:user_invite')
+  @ApiOperation({ summary: 'Lista todos os convites de usuário' })
+  @ZodResponse({ type: GetUserInvitesResponse, status: 200 })
+  async getUserInvites(@Query() query: GetUserInvitesQuery): Promise<any> {
+    const data = await this.getUserInvitesUseCase.execute(query);
+
+    return {
+      success: true,
+      message: 'Lista de convites retornada com sucesso.',
+      data,
+    };
+  }
+
   @Get('me')
   @Roles(['member', 'specialist'])
   @RequireFeature(['read:user'])
@@ -92,23 +106,9 @@ export class UsersController {
     };
   }
 
-  @Get('invites')
-  @RequireFeature('read:user_invite')
-  @ApiOperation({ summary: 'Lista todos os convites de usuário' })
-  @ZodResponse({ type: GetUserInvitesResponse, status: 200 })
-  async getUserInvites(@Query() query: GetUserInvitesQuery): Promise<any> {
-    const data = await this.getUserInvitesUseCase.execute(query);
-
-    return {
-      success: true,
-      message: 'Lista de convites retornada com sucesso.',
-      data,
-    };
-  }
-
   @Get(':id')
   @Roles(['member'])
-  @RequireFeature(['read:user', 'read:user:others'])
+  @RequireFeature(['read:user:others'])
   @ApiOperation({ summary: 'Retorna os dados do usuário pelo ID' })
   @ZodResponse({ type: GetUserResponse, status: 200 })
   async getUserById(

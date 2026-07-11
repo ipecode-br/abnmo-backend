@@ -78,9 +78,10 @@ export class ReferralsController {
   @ZodResponse({ type: BaseResponse, status: 200 })
   public async update(
     @Param('id') id: string,
+    @User() user: RequestUser,
     @Body() body: UpdateReferralBody,
   ): Promise<BaseResponse> {
-    await this.updateReferralUseCase.execute({ id, ...body });
+    await this.updateReferralUseCase.execute({ id, user, ...body });
 
     return {
       success: true,
@@ -93,8 +94,11 @@ export class ReferralsController {
   @RequireFeature(['cancel:referral', 'cancel:referral:others'])
   @ApiOperation({ summary: 'Cancela o encaminhamento' })
   @ZodResponse({ type: BaseResponse, status: 200 })
-  async cancel(@Param('id') id: string): Promise<BaseResponse> {
-    await this.cancelReferralUseCase.execute({ id });
+  async cancel(
+    @Param('id') id: string,
+    @User() user: RequestUser,
+  ): Promise<BaseResponse> {
+    await this.cancelReferralUseCase.execute({ id, user });
 
     return {
       success: true,

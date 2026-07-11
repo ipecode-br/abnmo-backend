@@ -6,12 +6,15 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
+import { can } from '@/common/authorization/can';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
+import type { RequestUser } from '@/common/types';
 import { Referral } from '@/domain/entities/referral';
 import type { PatientCondition } from '@/domain/enums/patients';
 
 interface UpdateReferralUseCaseInput {
+  user: RequestUser;
   id: string;
   date: Date;
   condition: PatientCondition;
@@ -29,17 +32,28 @@ export class UpdateReferralUseCase {
 
   async execute({
     id,
+    user,
     date,
     condition,
     annotation,
   }: UpdateReferralUseCaseInput): Promise<void> {
-    const referral = await this.referralsRepository.findOne({ where: { id } });
+    const referral = await this.referralsRepository.findOne({
+      select: { id: true, status: true, specialist: { id: true } },
+      relations: { specialist: true },
+      where: { id },
+    });
 
     if (!referral) {
       throw new NotFoundException('Encaminhamento não encontrado.', {
         cause: `Referral with ID <${id}> not found`,
       });
     }
+
+    can(
+      user,
+      ['update:referral', 'update:referral:others'],
+      referral.specialist?.id,
+    );
 
     if (referral.status === 'canceled') {
       throw new BadRequestException(

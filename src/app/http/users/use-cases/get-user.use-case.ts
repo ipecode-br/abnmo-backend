@@ -21,9 +21,9 @@ export class GetUserUseCase {
 
   async execute({
     id,
-    user: requestUser,
+    user,
   }: GetUserUseCaseInput): Promise<UserDetailsResponse> {
-    can(requestUser, 'read:user', id);
+    can(user, ['read:user', 'read:user:others'], id);
 
     const foundUser = await this.usersRepository.findOne({
       where: { id },

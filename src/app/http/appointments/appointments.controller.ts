@@ -81,9 +81,10 @@ export class AppointmentsController {
   @ZodResponse({ type: BaseResponse, status: 200 })
   public async update(
     @Param('id') id: string,
+    @User() user: RequestUser,
     @Body() body: UpdateAppointmentBody,
   ): Promise<BaseResponse> {
-    await this.updateAppointmentUseCase.execute({ id, ...body });
+    await this.updateAppointmentUseCase.execute({ id, user, ...body });
 
     return {
       success: true,
@@ -96,8 +97,11 @@ export class AppointmentsController {
   @RequireFeature(['cancel:appointment', 'cancel:appointment:others'])
   @ApiOperation({ summary: 'Cancela o atendimento' })
   @ZodResponse({ type: BaseResponse, status: 200 })
-  async cancel(@Param('id') id: string): Promise<BaseResponse> {
-    await this.cancelAppointmentUseCase.execute({ id });
+  async cancel(
+    @Param('id') id: string,
+    @User() user: RequestUser,
+  ): Promise<BaseResponse> {
+    await this.cancelAppointmentUseCase.execute({ id, user });
 
     return {
       success: true,
