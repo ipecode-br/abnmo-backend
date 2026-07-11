@@ -4,13 +4,13 @@ NestJS + TypeORM + MySQL + Zod API.
 
 ## Quick commands
 
-| Command                                    | What it does                                             |
-| ------------------------------------------ | -------------------------------------------------------- |
-| `npm run dev`                              | Docker up → wait for DB → migrate → `nest start --watch` |
-| `npm run test:prepare && npm run test:e2e` | Full E2E run                                             |
-| `npm run lint:eslint:check`                | ESLint **+** `tsc --noEmit` (both in one command)        |
-| `npm run lint:prettier:check`              | Prettier check only                                      |
-| `npm run lint:prettier:fix`                | Prettier fix only                                        |
+| Command            | What it does                                             |
+| ------------------ | -------------------------------------------------------- |
+| `npm run dev`      | Docker up → wait for DB → migrate → `nest start --watch` |
+| `npm run validate` | ESLint **+** `tsc --noEmit` (both in one command)        |
+| `npm run lint:prettier:check` | Prettier check only                            |
+| `npm run lint:prettier:fix`   | Prettier fix only                              |
+| `npm run test:prepare && npm run test:e2e` | Full E2E run                         |
 
 ## Architecture
 
@@ -30,13 +30,53 @@ NestJS + TypeORM + MySQL + Zod API.
 - **Never** join `User` in statistics queries — query `Survey` only
 - **Statistics must never return sensitive or linkable data** — only aggregate counts, percentages, etc.
 
-## Auth
+## Auth & permissions
 
-- **JWT in HTTP-only signed cookies** (no `Authorization` header)
-- Global guards: `AuthGuard` + `RolesGuard` + `FeatureGuard` (all registered in `AuthModule`)
-- Decorators: `@Public()`, `@Roles(['all'])`, `@Roles(['admin', 'patient'])`, `@User()`, `@Cookies('name')`
-- `admin` role **always** bypasses `RolesGuard` regardless of `@Roles()`
+- **Session-based auth in HTTP-only signed cookies** (no `Authorization` header)
+- Global guards (registered in `AuthModule`, evaluated in order): `AuthGuard` → `RolesGuard` → `FeatureGuard`
+- **Admin** bypasses `RolesGuard` (regardless of `@Roles()`) and `can()` (returns `true` unconditionally)
 - User roles (from `USER_ROLES`): `admin`, `member`, `specialist`, `patient`
+
+### Decorators
+
+| Decorator | Purpose |
+|---|---|
+| `@Public()` | Skip `AuthGuard` |
+| `@Roles(['member'])` | Require role — admin always bypasses |
+| `@RequireFeature(X)` | Require feature(s) — see below |
+| `@User()` | Injects `RequestUser` from cookie session |
+| `@Cookies('name')` | Injects raw cookie value |
+
+### `@RequireFeature` decorator
+
+Accepts `UserFeature` (single) or `UserFeature[]` (OR logic). If the user has **any** of the listed features, the guard passes — it never checks ownership.
+
+```ts
+@RequireFeature('create:appointment')
+@RequireFeature(['read:survey', 'read:survey:others'])  // OR: either feature grants access
+```
+
+The guard only validates feature existence. Ownership is enforced separately in use cases via `can()`.
+
+### `can()` — use-case level authorization
+
+Imports from `@/common/authorization/can`. Use inside use cases to check both feature ownership and resource ownership.
+
+```ts
+import { can } from '@/common/authorization/can';
+
+// Single feature + single owner: user must have the feature AND match the ID
+can(user, 'update:user', targetId);
+
+// Multi-feature OR: user must have at least ONE feature AND pass ownership
+can(user, ['update:appointment', 'update:appointment:others'], appointment.specialist?.id);
+
+// Multi-feature OR + multi-owner: user must have a feature AND match AT LEAST ONE owner
+can(user, ['update:appointment', 'update:appointment:others'],
+  [appointment.specialist?.id || '', appointment.patient.id]);
+```
+
+`compareToId` accepts `string | string[]`. Features ending with `:others` bypass ownership entirely. `undefined` `compareToId` skips ownership checks.
 
 ## Response conventions
 
@@ -171,18 +211,36 @@ When composing a list response, extract a standalone list-item schema (e.g. `lis
 | `ConflictException`           | 409  | Duplicate email, CPF, etc.     |
 | `ServiceUnavailableException` | 503  | External service (email, S3)   |
 
-### Use-case ownership checks
+### Query schemas
 
-Use `can()` from `@/common/authorization/can`:
+Define query schemas using individual query field schemas directly — **do not** `.pick()` or `.extend()` from `baseQuerySchema`:
 
 ```ts
-import { can } from '@/common/authorization/can';
+import {
+  queryDateSchema,
+  queryOrderSchema,
+  queryPageSchema,
+  queryPerPageSchema,
+  querySearchSchema,
+} from '@/domain/schemas/query';
 
-// Automatically handles: admin bypass, feature check, self vs others
-can(user, 'update:user', targetId);
+export const getPatientsQuerySchema = z.object({
+  search: querySearchSchema.optional(),
+  status: z.enum(USER_STATUSES).optional(),
+  orderBy: z.enum(PATIENTS_ORDER_BY).optional().default('name'),
+  order: queryOrderSchema.default('ASC'),
+  startDate: queryDateSchema.optional(),
+  endDate: queryDateSchema.optional(),
+  page: queryPageSchema,
+  perPage: queryPerPageSchema,
+});
 ```
 
-The third argument (`compareToId`) triggers the ownership comparison — omitting it skips ID checks.
+Available query field schemas: `querySearchSchema`, `queryOrderSchema`, `queryDateSchema`, `queryPageSchema`, `queryPerPageSchema`, `queryPeriodSchema` (from `src/domain/schemas/query.ts`).
+
+### Use-case ownership checks
+
+Ownership is now covered in [Auth & permissions](#auth--permissions) — see `can()` documentation above.
 
 ### Dynamic filtering
 
