@@ -5,7 +5,7 @@ import { USER_FEATURES, UserFeature } from '@/domain/enums/users';
 
 export function can(
   user: RequestUser,
-  feature: UserFeature,
+  feature: UserFeature | UserFeature[],
   compareToId?: string,
 ) {
   const errorMessage = 'Você não tem permissão para executar esta ação.';
@@ -14,7 +14,6 @@ export function can(
     throw new ForbiddenException(errorMessage, { cause: 'User not found' });
   }
 
-  // Admin users have full access
   if (user.role === 'admin') return true;
 
   if (!user.features) {
@@ -23,8 +22,26 @@ export function can(
     });
   }
 
-  // Runtime guard: feature should always be valid here,
-  // but guards against bad database data or misconfigured decorators
+  if (Array.isArray(feature)) {
+    const invalidFeatures = feature.filter((f) => !USER_FEATURES.includes(f));
+
+    if (invalidFeatures.length > 0) {
+      throw new ForbiddenException(errorMessage, {
+        cause: `Features <${invalidFeatures.join(', ')}> not found`,
+      });
+    }
+
+    const hasAny = feature.some((f) => user.features.includes(f));
+
+    if (!hasAny) {
+      throw new ForbiddenException(errorMessage, {
+        cause: `User does not have any of features <${feature.join(', ')}>`,
+      });
+    }
+
+    return true;
+  }
+
   if (!feature || !USER_FEATURES.includes(feature)) {
     throw new ForbiddenException(errorMessage, {
       cause: `Feature <${feature}> not found`,
