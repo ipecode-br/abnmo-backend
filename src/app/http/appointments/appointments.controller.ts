@@ -41,7 +41,7 @@ export class AppointmentsController {
   ) {}
 
   @Get()
-  @RequireFeature('read:appointment:others')
+  @RequireFeature(['read:appointment', 'read:appointment:others'])
   @ApiOperation({ summary: 'Lista todos os atendimentos' })
   @ZodResponse({ type: GetAppointmentsResponse, status: 200 })
   async getAppointments(
@@ -76,7 +76,7 @@ export class AppointmentsController {
 
   @Put(':id')
   @Log('update_appointment')
-  @RequireFeature('update:appointment')
+  @RequireFeature(['update:appointment', 'update:appointment:others'])
   @ApiOperation({ summary: 'Atualiza os dados do atendimento' })
   @ZodResponse({ type: BaseResponse, status: 200 })
   public async update(
@@ -93,7 +93,7 @@ export class AppointmentsController {
 
   @Patch(':id/cancel')
   @Log('cancel_appointment')
-  @RequireFeature('cancel:appointment')
+  @RequireFeature(['cancel:appointment', 'cancel:appointment:others'])
   @ApiOperation({ summary: 'Cancela o atendimento' })
   @ZodResponse({ type: BaseResponse, status: 200 })
   async cancel(@Param('id') id: string): Promise<BaseResponse> {

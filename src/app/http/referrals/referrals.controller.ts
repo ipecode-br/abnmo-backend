@@ -41,7 +41,7 @@ export class ReferralsController {
   ) {}
 
   @Get()
-  @RequireFeature('read:referral:others')
+  @RequireFeature(['read:referral', 'read:referral:others'])
   @ApiOperation({ summary: 'Lista todos os encaminhamentos' })
   @ZodResponse({ type: GetReferralsResponse, status: 200 })
   async getReferrals(
@@ -73,7 +73,7 @@ export class ReferralsController {
 
   @Put(':id')
   @Log('update_referral')
-  @RequireFeature('update:referral')
+  @RequireFeature(['update:referral', 'update:referral:others'])
   @ApiOperation({ summary: 'Atualiza os dados do encaminhamento' })
   @ZodResponse({ type: BaseResponse, status: 200 })
   public async update(
@@ -90,7 +90,7 @@ export class ReferralsController {
 
   @Patch(':id/cancel')
   @Log('cancel_referral')
-  @RequireFeature('cancel:referral')
+  @RequireFeature(['cancel:referral', 'cancel:referral:others'])
   @ApiOperation({ summary: 'Cancela o encaminhamento' })
   @ZodResponse({ type: BaseResponse, status: 200 })
   async cancel(@Param('id') id: string): Promise<BaseResponse> {

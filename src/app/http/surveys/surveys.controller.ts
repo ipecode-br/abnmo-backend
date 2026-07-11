@@ -61,7 +61,7 @@ export class SurveysController {
   }
 
   @Get(':id')
-  @RequireFeature('read:survey')
+  @RequireFeature(['read:survey', 'read:survey:others'])
   @ApiOperation({ summary: 'Detalhes de uma catalogação' })
   @ZodResponse({ type: GetSurveyResponse, status: 200 })
   async getSurvey(@Param('id') id: string): Promise<GetSurveyResponse> {

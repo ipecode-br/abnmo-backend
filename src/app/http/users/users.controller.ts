@@ -79,7 +79,7 @@ export class UsersController {
 
   @Get('me')
   @Roles(['member', 'specialist'])
-  @RequireFeature('read:user')
+  @RequireFeature(['read:user'])
   @ApiOperation({ summary: 'Retorna os dados do usuário autenticado' })
   @ZodResponse({ type: GetUserResponse, status: 200 })
   async getProfile(@User() user: RequestUser): Promise<GetUserResponse> {
@@ -108,7 +108,7 @@ export class UsersController {
 
   @Get(':id')
   @Roles(['member'])
-  @RequireFeature('read:user')
+  @RequireFeature(['read:user', 'read:user:others'])
   @ApiOperation({ summary: 'Retorna os dados do usuário pelo ID' })
   @ZodResponse({ type: GetUserResponse, status: 200 })
   async getUserById(
@@ -126,7 +126,7 @@ export class UsersController {
 
   @Put(':id')
   @Log('update_user')
-  @RequireFeature('update:user')
+  @RequireFeature(['update:user', 'update:user:others'])
   @ApiOperation({ summary: 'Atualiza os dados do usuário' })
   @ZodResponse({ type: BaseResponse, status: 200 })
   async updateUser(

@@ -82,7 +82,7 @@ export class SurveysSubmissionsController {
   }
 
   @Get()
-  @RequireFeature('read:survey')
+  @RequireFeature('read:survey:others')
   @ApiOperation({ summary: 'Lista submissões de catalogação' })
   @ZodResponse({ type: GetSurveySubmissionsResponse, status: 200 })
   async getSurveySubmissions(
@@ -115,7 +115,7 @@ export class SurveysSubmissionsController {
   }
 
   @Get(':id')
-  @RequireFeature('read:survey')
+  @RequireFeature(['read:survey', 'read:survey:others'])
   @ApiOperation({ summary: 'Detalhes de uma submissão de catalogação' })
   @ZodResponse({ type: GetSurveySubmissionResponse, status: 200 })
   async getSurveySubmissionDetails(

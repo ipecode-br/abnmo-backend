@@ -75,7 +75,7 @@ export class PatientsController {
   }
 
   @Get(':id')
-  @RequireFeature('read:patient')
+  @RequireFeature(['read:patient', 'read:patient:others'])
   @ApiOperation({ summary: 'Retorna os dados do paciente' })
   @ZodResponse({ type: GetPatientResponse, status: 200 })
   async getPatientById(@Param('id') id: string): Promise<GetPatientResponse> {
@@ -90,7 +90,7 @@ export class PatientsController {
 
   @Put(':id')
   @Log('update_patient')
-  @RequireFeature('update:patient')
+  @RequireFeature(['update:patient', 'update:patient:others'])
   @ApiOperation({ summary: 'Atualiza os dados do paciente' })
   @ZodResponse({ type: BaseResponse, status: 200 })
   async update(
