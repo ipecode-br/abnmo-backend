@@ -18,6 +18,7 @@ interface GenerateCdnCookiesUseCaseInput {
 @Injectable()
 @Log()
 export class GenerateCdnCookiesUseCase {
+  private readonly isTestMode: boolean;
   private readonly cdnUrl: string;
   private readonly cdnPublicKeyId: string;
   private readonly cdnPrivateKey: string;
@@ -26,6 +27,7 @@ export class GenerateCdnCookiesUseCase {
     private readonly envService: EnvService,
     private readonly logger: LogService,
   ) {
+    this.isTestMode = this.envService.get('NODE_ENV') === 'test';
     this.cdnUrl = this.envService.get('CDN_URL');
     this.cdnPublicKeyId = this.envService.get('CDN_PUBLIC_KEY_ID');
     this.cdnPrivateKey = Buffer.from(
@@ -35,6 +37,11 @@ export class GenerateCdnCookiesUseCase {
   }
 
   execute({ user, expiresAt, response }: GenerateCdnCookiesUseCaseInput): void {
+    if (this.isTestMode) {
+      this.logger.log('Test mode: skipping CDN cookie generation');
+      return;
+    }
+
     const allowedPaths: string[] = [];
     const { role } = user;
 

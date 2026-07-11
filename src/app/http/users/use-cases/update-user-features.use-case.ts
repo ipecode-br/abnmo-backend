@@ -12,7 +12,7 @@ import { LogService } from '@/common/log/log.service';
 import type { RequestUser } from '@/common/types';
 import { User } from '@/domain/entities/user';
 import {
-  BASE_USER_FEATURES,
+  BASE_FEATURES,
   USER_FEATURES,
   type UserFeature,
 } from '@/domain/enums/users';
@@ -66,7 +66,7 @@ export class UpdateUserFeaturesUseCase {
       );
     }
 
-    const mergedFeatures = [...new Set([...BASE_USER_FEATURES, ...features])];
+    const mergedFeatures = [...new Set([...BASE_FEATURES, ...features])];
 
     await this.usersRepository.update({ id }, { features: mergedFeatures });
 

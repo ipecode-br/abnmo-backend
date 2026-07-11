@@ -5,7 +5,7 @@ import { User } from '@/domain/entities/user';
 import { SPECIALTY_CATEGORIES } from '@/domain/enums/shared';
 import { KINSHIP_TYPES } from '@/domain/enums/surveys';
 import {
-  BASE_USER_FEATURES,
+  DEFAULT_MEMBER_FEATURES,
   USER_FEATURES,
   USER_ROLES,
   USER_STATUSES,
@@ -30,7 +30,7 @@ export function generateFakeUser(
 
   const features = [
     ...new Set([
-      ...BASE_USER_FEATURES,
+      ...DEFAULT_MEMBER_FEATURES,
       ...faker.helpers.arrayElements(USER_FEATURES),
     ]),
   ];

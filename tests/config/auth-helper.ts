@@ -2,7 +2,6 @@ import request from 'supertest';
 
 import { CryptographyService } from '@/app/cryptography/cryptography.service';
 import { User } from '@/domain/entities/user';
-import { USER_FEATURES } from '@/domain/enums/users';
 
 import { userFactory } from './factories/user.factory';
 import { getTestApp, getTestDataSource } from './setup-e2e';
@@ -53,46 +52,23 @@ export async function createUserAndLogin(
 export async function createAdminAndLogin(
   overrides: Partial<User> = {},
 ): Promise<UserAndCookies> {
-  return createUserAndLoginWithOpts({
-    role: 'admin',
-    features: [...USER_FEATURES],
-    ...overrides,
-  });
+  return createUserAndLoginWithOpts({ role: 'admin', ...overrides });
+}
+
+export async function createMemberAndLogin(
+  overrides: Partial<User> = {},
+): Promise<UserAndCookies> {
+  return createUserAndLoginWithOpts({ role: 'member', ...overrides });
 }
 
 export async function createSpecialistAndLogin(
   overrides: Partial<User> = {},
 ): Promise<UserAndCookies> {
-  return createUserAndLoginWithOpts({
-    role: 'specialist',
-    features: [
-      'read:appointment',
-      'update:appointment',
-      'create:appointment',
-      'read:referral',
-      'create:referral',
-    ],
-    ...overrides,
-  });
+  return createUserAndLoginWithOpts({ role: 'specialist', ...overrides });
 }
 
 export async function createPatientAndLogin(
   overrides: Partial<User> = {},
 ): Promise<UserAndCookies> {
   return createUserAndLoginWithOpts({ role: 'patient', ...overrides });
-}
-
-export async function createMemberAndLogin(
-  overrides: Partial<User> = {},
-): Promise<UserAndCookies> {
-  return createUserAndLoginWithOpts({
-    role: 'member',
-    features: [
-      'read:patient:others',
-      'read:appointment:others',
-      'read:survey:others',
-      'read:survey',
-    ],
-    ...overrides,
-  });
 }

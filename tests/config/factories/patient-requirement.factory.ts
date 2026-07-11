@@ -13,11 +13,11 @@ export function patientRequirementFactory(
   patient: User,
   overrides: Partial<PatientRequirement> = {},
 ): PatientRequirement {
-  const result: PatientRequirement = {
+  const data: PatientRequirement = {
     id: idFactory(),
     patientId: patient.id,
     type: faker.helpers.arrayElement(PATIENT_REQUIREMENT_TYPES),
-    title: 'Solicitação de Documento',
+    title: 'Solicitação de documento',
     description: faker.datatype.boolean() ? faker.lorem.sentence() : null,
     status: faker.helpers.arrayElement(PATIENT_REQUIREMENT_STATUSES),
     submittedAt: null,
@@ -32,17 +32,17 @@ export function patientRequirementFactory(
     ...overrides,
   };
 
-  if (result.status !== 'pending') {
-    result.submittedAt = faker.date.recent();
+  if (data.status !== 'pending') {
+    data.submittedAt = faker.date.recent();
   }
-  if (result.status === 'approved') {
-    result.approvedBy = idFactory();
-    result.approvedAt = faker.date.recent();
+  if (data.status === 'approved') {
+    data.approvedBy = idFactory();
+    data.approvedAt = faker.date.recent();
   }
-  if (result.status === 'declined') {
-    result.declinedBy = idFactory();
-    result.declinedAt = faker.date.recent();
+  if (data.status === 'declined') {
+    data.declinedBy = idFactory();
+    data.declinedAt = faker.date.recent();
   }
 
-  return result;
+  return data;
 }

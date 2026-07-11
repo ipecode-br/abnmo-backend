@@ -56,8 +56,36 @@ export const USER_FEATURES = [
 ] as const;
 export type UserFeature = (typeof USER_FEATURES)[number];
 
-export const BASE_USER_FEATURES = [
+export const BASE_FEATURES: UserFeature[] = ['read:user', 'update:user'];
+
+export const DEFAULT_MEMBER_FEATURES: UserFeature[] = [
   'read:user',
   'update:user',
   'read:patient',
-] as const;
+  'read:patient:others',
+];
+
+export const DEFAULT_SPECIALIST_FEATURES: UserFeature[] = [
+  'read:user',
+  'update:user',
+  'create:appointment',
+  'read:appointment',
+  'update:appointment',
+  'cancel:appointment',
+  'create:referral',
+  'read:referral',
+  'update:referral',
+  'cancel:referral',
+];
+
+export const DEFAULT_PATIENT_FEATURES: UserFeature[] = [
+  'read:patient',
+  'update:patient',
+  'read:survey',
+  'read:appointment',
+  'update:appointment',
+  'cancel:appointment',
+  'read:referral',
+  'update:referral',
+  'cancel:referral',
+];

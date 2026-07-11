@@ -10,7 +10,7 @@ export function surveySubmissionFactory(
   patient: User,
   overrides: Partial<SurveySubmission> = {},
 ): SurveySubmission {
-  const result: SurveySubmission = {
+  const data: SurveySubmission = {
     ...baseEntityFactory(),
     status: faker.helpers.arrayElement(SURVEY_SUBMISSION_STATUSES),
     reason: null,
@@ -20,9 +20,9 @@ export function surveySubmissionFactory(
     ...overrides,
   };
 
-  if (result.status === 'declined') {
-    result.reason = faker.lorem.sentence();
+  if (data.status === 'declined') {
+    data.reason = faker.lorem.sentence();
   }
 
-  return result;
+  return data;
 }

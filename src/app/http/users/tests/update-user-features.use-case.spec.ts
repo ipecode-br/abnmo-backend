@@ -11,7 +11,10 @@ import { Repository } from 'typeorm';
 import { LogService } from '@/common/log/log.service';
 import type { RequestUser } from '@/common/types';
 import { User } from '@/domain/entities/user';
-import { BASE_USER_FEATURES, type UserFeature } from '@/domain/enums/users';
+import {
+  DEFAULT_MEMBER_FEATURES,
+  type UserFeature,
+} from '@/domain/enums/users';
 
 import { adminUserFactory } from '../../../../../tests/config/factories/user.factory';
 import { UpdateUserFeaturesUseCase } from '../use-cases/update-user-features.use-case';
@@ -66,7 +69,7 @@ describe('UpdateUserFeaturesUseCase', () => {
     });
 
     const mergedFeatures = [
-      ...new Set([...BASE_USER_FEATURES, 'create:appointment']),
+      ...new Set([...DEFAULT_MEMBER_FEATURES, 'create:appointment']),
     ];
     expect(repo.update).toHaveBeenCalledWith(
       { id: 'target-id' },
@@ -90,7 +93,7 @@ describe('UpdateUserFeaturesUseCase', () => {
     });
 
     const mergedFeatures = [
-      ...new Set([...BASE_USER_FEATURES, 'read:user:others']),
+      ...new Set([...DEFAULT_MEMBER_FEATURES, 'read:user:others']),
     ];
     expect(repo.update).toHaveBeenCalledWith(
       { id: 'target-id' },
@@ -112,7 +115,7 @@ describe('UpdateUserFeaturesUseCase', () => {
 
     expect(repo.update).toHaveBeenCalledWith(
       { id: 'target-id' },
-      { features: [...BASE_USER_FEATURES] },
+      { features: [...DEFAULT_MEMBER_FEATURES] },
     );
   });
 
