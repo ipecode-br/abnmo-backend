@@ -28,9 +28,14 @@ export class CancelAppointmentUseCase {
 
   async execute({ id, user }: CancelAppointmentUseCaseInput): Promise<void> {
     const appointment = await this.appointmentsRepository.findOne({
-      select: { id: true, status: true, specialist: { id: true } },
-      relations: { specialist: true },
+      relations: { specialist: true, patient: true },
       where: { id },
+      select: {
+        id: true,
+        status: true,
+        specialist: { id: true },
+        patient: { id: true },
+      },
     });
 
     if (!appointment) {
@@ -42,7 +47,7 @@ export class CancelAppointmentUseCase {
     can(
       user,
       ['cancel:appointment', 'cancel:appointment:others'],
-      appointment.specialist?.id,
+      [appointment.patient?.id, appointment.specialist?.id || ''],
     );
 
     if (appointment.status === 'canceled') {

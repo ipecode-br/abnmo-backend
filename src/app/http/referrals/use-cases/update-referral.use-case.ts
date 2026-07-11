@@ -38,9 +38,14 @@ export class UpdateReferralUseCase {
     annotation,
   }: UpdateReferralUseCaseInput): Promise<void> {
     const referral = await this.referralsRepository.findOne({
-      select: { id: true, status: true, specialist: { id: true } },
-      relations: { specialist: true },
+      relations: { specialist: true, patient: true },
       where: { id },
+      select: {
+        id: true,
+        status: true,
+        specialist: { id: true },
+        patient: { id: true },
+      },
     });
 
     if (!referral) {
@@ -52,7 +57,7 @@ export class UpdateReferralUseCase {
     can(
       user,
       ['update:referral', 'update:referral:others'],
-      referral.specialist?.id,
+      [referral.specialist?.id || '', referral.patient.id],
     );
 
     if (referral.status === 'canceled') {

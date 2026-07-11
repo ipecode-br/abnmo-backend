@@ -28,9 +28,14 @@ export class CancelReferralUseCase {
 
   async execute({ id, user }: CancelReferralUseCaseInput): Promise<void> {
     const referral = await this.referralsRepository.findOne({
-      select: { id: true, status: true, specialist: { id: true } },
-      relations: { specialist: true },
+      relations: { specialist: true, patient: true },
       where: { id },
+      select: {
+        id: true,
+        status: true,
+        specialist: { id: true },
+        patient: { id: true },
+      },
     });
 
     if (!referral) {
@@ -42,7 +47,7 @@ export class CancelReferralUseCase {
     can(
       user,
       ['cancel:referral', 'cancel:referral:others'],
-      referral.specialist?.id,
+      [referral.specialist?.id || '', referral.patient.id],
     );
 
     if (referral.status === 'canceled') {

@@ -6,6 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import { can } from '@/common/authorization/can';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import type { RequestUser } from '@/common/types';
@@ -36,17 +37,7 @@ export class UpdateUserUseCase {
     specialty,
     registrationId,
   }: UpdateUserUseCaseInput): Promise<void> {
-    if (user.role !== 'admin' && user.id !== id) {
-      this.logger.warn(
-        'Update user failed: User does not have permission to update this user',
-        {
-          id,
-        },
-      );
-      throw new ForbiddenException(
-        'Você não tem permissão para atualizar este usuário.',
-      );
-    }
+    can(user, ['update:user', 'update:user:others'], id);
 
     const userToUpdate = await this.usersRepository.findOne({ where: { id } });
 

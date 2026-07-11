@@ -8,6 +8,7 @@ import { Repository } from 'typeorm';
 
 import { DeleteFileUseCase } from '@/app/storage/use-cases/delete-file.use-case';
 import { UploadFileUseCase } from '@/app/storage/use-cases/upload-file.use-case';
+import { can } from '@/common/authorization/can';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import type { RequestUser } from '@/common/types';
@@ -39,13 +40,15 @@ export class UploadUserAvatarUseCase {
     mimeType,
   }: UploadUserAvatarUseCaseInput): Promise<void> {
     const userToUpdate = await this.usersRepository.findOne({
-      select: { id: true, avatarUrl: true },
+      select: { id: true, avatarUrl: true, name: true },
       where: { id: user.id },
     });
 
     if (!userToUpdate) {
       throw new NotFoundException('Usuário não encontrado.');
     }
+
+    can(user, 'update:user', userToUpdate.id);
 
     const fileName = generateFileName({
       name: userToUpdate.name,

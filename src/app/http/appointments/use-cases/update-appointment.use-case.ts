@@ -38,9 +38,14 @@ export class UpdateAppointmentUseCase {
     annotation,
   }: UpdateAppointmentUseCaseInput): Promise<void> {
     const appointment = await this.appointmentsRepository.findOne({
-      select: { id: true, status: true, specialist: { id: true } },
-      relations: { specialist: true },
+      relations: { specialist: true, patient: true },
       where: { id },
+      select: {
+        id: true,
+        status: true,
+        specialist: { id: true },
+        patient: { id: true },
+      },
     });
 
     if (!appointment) {
@@ -52,7 +57,7 @@ export class UpdateAppointmentUseCase {
     can(
       user,
       ['update:appointment', 'update:appointment:others'],
-      appointment.specialist?.id,
+      [appointment.specialist?.id || '', appointment.patient.id],
     );
 
     if (appointment.status === 'canceled') {
