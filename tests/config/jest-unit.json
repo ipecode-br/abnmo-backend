@@ -15,8 +15,8 @@
     "^.+\\.(t|j)s$": [
       "ts-jest",
       {
-        "isolatedModules": true,
         "tsconfig": {
+          "isolatedModules": true,
           "strictNullChecks": true,
           "emitDecoratorMetadata": true,
           "experimentalDecorators": true,

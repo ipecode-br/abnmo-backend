@@ -26,13 +26,13 @@ describe('CreateReferralUseCase', () => {
 
   const baseInput = {
     annotation: null,
-    category: 'neurology' as const,
-    condition: 'nmo' as const,
+    category: 'neurology',
+    condition: 'stable',
     date: new Date('2024-06-15'),
     patientId: patient.id,
     professionalName: null,
     user: memberUser,
-  };
+  } as const;
 
   beforeEach(async () => {
     referralsRepo = mock<Repository<Referral>>();
@@ -68,7 +68,7 @@ describe('CreateReferralUseCase', () => {
       expect.objectContaining({
         annotation: null,
         category: 'neurology',
-        condition: 'nmo',
+        condition: 'stable',
         patient: { id: patient.id },
         status: 'scheduled',
       }),
@@ -102,7 +102,7 @@ describe('CreateReferralUseCase', () => {
 
     await useCase.execute({
       annotation: null,
-      condition: 'nmo' as const,
+      condition: 'stable' as const,
       date: new Date('2024-06-15'),
       patientId: patient.id,
       professionalName: null,

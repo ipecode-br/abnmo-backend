@@ -32,9 +32,9 @@ describe('UpdateReferralUseCase', () => {
   const baseInput = {
     id: referral.id,
     date: new Date('2024-06-15'),
-    condition: 'nmo' as const,
+    condition: 'stable',
     annotation: 'Updated annotation',
-  };
+  } as const;
 
   beforeEach(async () => {
     referralsRepo = mock<Repository<Referral>>();
