@@ -14,12 +14,12 @@ import {
 } from 'tests/config/factories/user.factory';
 import { Repository } from 'typeorm';
 
-import { CancelAppointmentUseCase } from '@/app/http/appointments/use-cases/cancel-appointment.use-case';
+import { UpdateAppointmentUseCase } from '@/app/http/appointments/use-cases/update-appointment.use-case';
 import { LogService } from '@/common/log/log.service';
 import { Appointment } from '@/domain/entities/appointment';
 
-describe('CancelAppointmentUseCase', () => {
-  let useCase: CancelAppointmentUseCase;
+describe('UpdateAppointmentUseCase', () => {
+  let useCase: UpdateAppointmentUseCase;
   let appointmentsRepo: MockProxy<Repository<Appointment>>;
 
   const patient = patientUserFactory();
@@ -30,12 +30,18 @@ describe('CancelAppointmentUseCase', () => {
     patient,
   });
 
+  const dataToUpdate = {
+    date: new Date('2026-08-01'),
+    condition: 'in_crisis',
+    annotation: 'Updated notes',
+  } as const;
+
   beforeEach(async () => {
     appointmentsRepo = mock<Repository<Appointment>>();
 
     const module = await Test.createTestingModule({
       providers: [
-        CancelAppointmentUseCase,
+        UpdateAppointmentUseCase,
         {
           provide: getRepositoryToken(Appointment),
           useValue: appointmentsRepo,
@@ -44,109 +50,91 @@ describe('CancelAppointmentUseCase', () => {
       ],
     }).compile();
 
-    useCase = module.get(CancelAppointmentUseCase);
+    useCase = module.get(UpdateAppointmentUseCase);
   });
 
-  it('allows with "cancel:appointment:others"', async () => {
+  it('allows with "update:appointment:others"', async () => {
     const user = requestUserFactory({
-      role: 'member',
-      features: ['cancel:appointment:others'],
+      features: ['update:appointment:others'],
     });
     appointmentsRepo.findOne.mockResolvedValue(appointment);
 
-    await useCase.execute({ user, id: appointment.id });
+    await useCase.execute({ user, id: appointment.id, ...dataToUpdate });
 
     expect(appointmentsRepo.findOne).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: appointment.id } }),
     );
-    expect(appointmentsRepo.update).toHaveBeenCalledWith(appointment.id, {
-      status: 'canceled',
-    });
-  });
-
-  it('throws "ForbiddenException" without "cancel:appointment" or "cancel:appointment:others"', async () => {
-    const user = requestUserFactory({ features: [] });
-    appointmentsRepo.findOne.mockResolvedValue(appointment);
-
-    await expect(useCase.execute({ user, id: appointment.id })).rejects.toThrow(
-      ForbiddenException,
+    expect(appointmentsRepo.update).toHaveBeenCalledWith(
+      appointment.id,
+      dataToUpdate,
     );
   });
 
+  it('throws "ForbiddenException" without "update:appointment" or "update:appointment:others"', async () => {
+    const user = requestUserFactory({ features: [] });
+    appointmentsRepo.findOne.mockResolvedValue(appointment);
+
+    await expect(
+      useCase.execute({ user, id: appointment.id, ...dataToUpdate }),
+    ).rejects.toThrow(ForbiddenException);
+  });
+
   describe('Specialist', () => {
-    it('allows with "cancel:appointment"', async () => {
+    it('allows with "update:appointment" when specialist owns the appointment', async () => {
       const user = requestUserFactory({
         id: specialist.id,
         role: specialist.role,
-        features: ['cancel:appointment'],
+        features: ['update:appointment'],
       });
       appointmentsRepo.findOne.mockResolvedValue(appointment);
 
-      await useCase.execute({ user, id: appointment.id });
+      await useCase.execute({ user, id: appointment.id, ...dataToUpdate });
 
       expect(appointmentsRepo.findOne).toHaveBeenCalledWith(
         expect.objectContaining({ where: { id: appointment.id } }),
       );
-      expect(appointmentsRepo.update).toHaveBeenCalledWith(appointment.id, {
-        status: 'canceled',
-      });
+      expect(appointmentsRepo.update).toHaveBeenCalledWith(
+        appointment.id,
+        dataToUpdate,
+      );
     });
 
-    it('allows with "cancel:appointment:others"', async () => {
+    it('throws "ForbiddenException" when specialist does not own or have "update:appointment:others"', async () => {
       const user = requestUserFactory({
-        id: 'other-id',
         role: specialist.role,
-        features: ['cancel:appointment:others'],
+        features: ['update:appointment'],
       });
       appointmentsRepo.findOne.mockResolvedValue(appointment);
 
-      await useCase.execute({ user, id: appointment.id });
-
-      expect(appointmentsRepo.update).toHaveBeenCalledWith(appointment.id, {
-        status: 'canceled',
-      });
+      await expect(
+        useCase.execute({ user, id: appointment.id, ...dataToUpdate }),
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 
   describe('Patient', () => {
-    it('allows with "cancel:appointment" to cancel its own appointment', async () => {
+    it('allows with "update:appointment" when patient owns the appointment', async () => {
       const user = requestUserFactory({
         id: patient.id,
         role: patient.role,
-        features: ['cancel:appointment'],
+        features: ['update:appointment'],
       });
       appointmentsRepo.findOne.mockResolvedValue(appointment);
 
-      await useCase.execute({ user, id: appointment.id });
+      await useCase.execute({ user, id: appointment.id, ...dataToUpdate });
 
-      expect(appointmentsRepo.update).toHaveBeenCalledWith(appointment.id, {
-        status: 'canceled',
-      });
+      expect(appointmentsRepo.update).toHaveBeenCalled();
     });
 
-    it('throws "ForbiddenException" without "cancel:appointment"', async () => {
+    it('throws "ForbiddenException" when trying to update another patient appointment', async () => {
       const user = requestUserFactory({
-        id: patient.id,
         role: patient.role,
-        features: [],
+        features: ['update:appointment'],
       });
       appointmentsRepo.findOne.mockResolvedValue(appointment);
 
       await expect(
-        useCase.execute({ user, id: appointment.id }),
-      ).rejects.toThrow(ForbiddenException);
-    });
-
-    it('throws "ForbiddenException" when trying to cancel another patient appointment', async () => {
-      const user = requestUserFactory({
-        id: 'new-id',
-        role: patient.role,
-        features: ['cancel:appointment'],
-      });
-      appointmentsRepo.findOne.mockResolvedValue(appointment);
-
-      await expect(
-        useCase.execute({ user, id: appointment.id }),
+        useCase.execute({ user, id: appointment.id, ...dataToUpdate }),
       ).rejects.toThrow(ForbiddenException);
     });
   });
@@ -154,23 +142,18 @@ describe('CancelAppointmentUseCase', () => {
   describe('Edge cases', () => {
     it('throws "NotFoundException" when appointment not found', async () => {
       const user = requestUserFactory({
-        id: specialist.id,
-        role: specialist.role,
-        features: ['cancel:appointment'],
+        features: ['update:appointment:others'],
       });
       appointmentsRepo.findOne.mockResolvedValue(null);
 
       await expect(
-        useCase.execute({ user, id: 'nonexistent' }),
+        useCase.execute({ user, id: 'nonexistent', ...dataToUpdate }),
       ).rejects.toThrow(NotFoundException);
-      expect(appointmentsRepo.findOne).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { id: 'nonexistent' } }),
-      );
     });
 
-    it('throws "BadRequestException" when already canceled', async () => {
+    it('throws "BadRequestException" when appointment is already "canceled"', async () => {
       const user = requestUserFactory({
-        features: ['cancel:appointment:others'],
+        features: ['update:appointment:others'],
       });
       const canceledAppointment = {
         ...appointment,
@@ -179,7 +162,7 @@ describe('CancelAppointmentUseCase', () => {
       appointmentsRepo.findOne.mockResolvedValue(canceledAppointment);
 
       await expect(
-        useCase.execute({ user, id: canceledAppointment.id }),
+        useCase.execute({ user, id: appointment.id, ...dataToUpdate }),
       ).rejects.toThrow(BadRequestException);
     });
   });

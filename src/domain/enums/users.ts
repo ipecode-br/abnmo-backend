@@ -72,7 +72,6 @@ export const DEFAULT_SPECIALIST_FEATURES: UserFeature[] = [
   'read:appointment',
   'update:appointment',
   'cancel:appointment',
-  'create:referral',
   'read:referral',
   'update:referral',
   'cancel:referral',

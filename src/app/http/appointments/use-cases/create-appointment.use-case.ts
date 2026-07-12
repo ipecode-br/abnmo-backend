@@ -6,6 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
+import { can } from '@/common/authorization/can';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import type { RequestUser } from '@/common/types';
@@ -44,6 +45,8 @@ export class CreateAppointmentUseCase {
     professionalName,
     user,
   }: CreateAppointmentUseCaseInput): Promise<void> {
+    can(user, 'create:appointment');
+
     const patient = await this.usersRepository.findOne({
       where: { id: patientId, role: 'patient' },
       select: { id: true },

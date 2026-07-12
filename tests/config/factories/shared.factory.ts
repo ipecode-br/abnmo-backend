@@ -1,5 +1,4 @@
 import { faker } from '@faker-js/faker';
-import { v7 as uuidv7 } from 'uuid';
 
 import { RequestUser } from '@/common/types';
 
@@ -13,7 +12,7 @@ export function baseEntityFactory() {
 }
 
 export function idFactory(): string {
-  return uuidv7();
+  return faker.string.uuid();
 }
 
 export function nameFactory(): string {
