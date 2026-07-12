@@ -8,7 +8,6 @@ import {
   DEFAULT_PATIENT_FEATURES,
   DEFAULT_SPECIALIST_FEATURES,
   USER_ROLES,
-  USER_STATUSES,
 } from '@/domain/enums/users';
 
 import {
@@ -33,7 +32,7 @@ export function userFactory(overrides: Partial<User> = {}): User {
     phone: null,
     role,
     features: [],
-    status: faker.helpers.arrayElement(USER_STATUSES),
+    status: 'active',
     specialty: null,
     registrationId: null,
     cpf: null,
