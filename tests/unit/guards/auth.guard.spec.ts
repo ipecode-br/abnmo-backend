@@ -49,14 +49,14 @@ describe('AuthGuard', () => {
   });
 
   const makeContext = (
-    opts: { public?: boolean; token?: string } = {},
+    options: { public?: boolean; token?: string } = {},
   ): ExecutionContext => {
-    reflector.getAllAndOverride.mockReturnValue(opts.public ?? false);
+    reflector.getAllAndOverride.mockReturnValue(options.public ?? false);
 
     return {
       switchToHttp: () => ({
         getRequest: () => ({
-          signedCookies: opts.token ? { session: opts.token } : {},
+          signedCookies: options.token ? { session: options.token } : {},
         }),
         getResponse: () => mockResponse(),
       }),
@@ -65,23 +65,16 @@ describe('AuthGuard', () => {
     } as unknown as ExecutionContext;
   };
 
-  describe('@Public routes', () => {
-    it('returns true without checking session', async () => {
+  describe('@Public() routes', () => {
+    it('returns "true" without checking session', async () => {
       const ctx = makeContext({ public: true });
       const result = await guard.canActivate(ctx);
       expect(result).toBe(true);
     });
   });
 
-  describe('authentication', () => {
-    it('throws UnauthorizedException when no session cookie', async () => {
-      const ctx = makeContext({ token: undefined });
-      await expect(guard.canActivate(ctx)).rejects.toThrow(
-        UnauthorizedException,
-      );
-    });
-
-    it('throws UnauthorizedException when session not found in DB', async () => {
+  describe('Authenticated users', () => {
+    it('throws "UnauthorizedException" when session not found in DB', async () => {
       cryptoService.hashToken.mockReturnValue('hashed-token');
       sessionsRepo.findOne.mockResolvedValue(null);
 
@@ -91,7 +84,7 @@ describe('AuthGuard', () => {
       );
     });
 
-    it('throws UnauthorizedException when user not found', async () => {
+    it('throws "UnauthorizedException" when user not found', async () => {
       cryptoService.hashToken.mockReturnValue('hashed-token');
       sessionsRepo.findOne.mockResolvedValue({
         id: 'session-1',
@@ -105,19 +98,9 @@ describe('AuthGuard', () => {
       );
     });
 
-    it('throws UnauthorizedException when user is inactive', async () => {
-      cryptoService.hashToken.mockReturnValue('hashed-token');
-      sessionsRepo.findOne.mockResolvedValue({
-        id: 'session-1',
-        userId: 'user-1',
-      } as Session);
-      usersRepo.findOne.mockResolvedValue({
-        id: 'user-1',
-        email: 'test@test.com',
-        role: 'patient',
-        features: [],
-        status: 'inactive',
-      } as unknown as User);
+    it('throws "UnauthorizedException" when user is inactive', async () => {
+      sessionsRepo.findOne.mockResolvedValue({} as Session);
+      usersRepo.findOne.mockResolvedValue({ status: 'inactive' } as User);
 
       const ctx = makeContext({ token: 'some-raw-token' });
       await expect(guard.canActivate(ctx)).rejects.toThrow(
@@ -125,19 +108,18 @@ describe('AuthGuard', () => {
       );
     });
 
-    it('sets user on request and returns true for valid session', async () => {
-      cryptoService.hashToken.mockReturnValue('hashed-token');
-      sessionsRepo.findOne.mockResolvedValue({
-        id: 'session-1',
-        userId: 'user-1',
-      } as Session);
-      usersRepo.findOne.mockResolvedValue({
+    it('sets request user and returns "true" for valid session', async () => {
+      const user = {
         id: 'user-1',
         email: 'test@test.com',
-        role: 'patient',
+        role: 'member',
         features: ['read:patient'],
         status: 'active',
-      } as User);
+      } as User;
+
+      cryptoService.hashToken.mockReturnValue('hashed-token');
+      sessionsRepo.findOne.mockResolvedValue({} as Session);
+      usersRepo.findOne.mockResolvedValue(user);
 
       const res = mockResponse();
       const req = {
@@ -160,16 +142,25 @@ describe('AuthGuard', () => {
 
       expect(result).toBe(true);
       expect(req.user).toEqual({
-        id: 'user-1',
-        email: 'test@test.com',
-        role: 'patient',
-        features: ['read:patient'],
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        features: user.features,
       });
       expect(contextService.setUser).toHaveBeenCalledWith({
-        id: 'user-1',
-        email: 'test@test.com',
-        role: 'patient',
+        id: user.id,
+        email: user.email,
+        role: user.role,
       });
+    });
+  });
+
+  describe('Unauthenticated users', () => {
+    it('throws "UnauthorizedException" when no session cookie', async () => {
+      const ctx = makeContext({ token: undefined });
+      await expect(guard.canActivate(ctx)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 });

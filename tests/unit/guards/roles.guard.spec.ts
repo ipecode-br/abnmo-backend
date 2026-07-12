@@ -2,10 +2,12 @@ import { ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
 import { mock, MockProxy } from 'jest-mock-extended';
+import { requestUserFactory } from 'tests/config/factories/shared.factory';
 
 import { IS_PUBLIC_KEY } from '@/common/decorators/public.decorator';
 import { RolesGuard } from '@/common/guards/roles.guard';
-import type { RequestUser } from '@/common/types';
+import { AllowedRole } from '@/domain/enums/tokens';
+import { UserRole } from '@/domain/enums/users';
 
 describe('RolesGuard', () => {
   let guard: RolesGuard;
@@ -21,25 +23,20 @@ describe('RolesGuard', () => {
     guard = module.get(RolesGuard);
   });
 
-  const makeContext = (
-    opts: {
+  function makeContext(
+    options: {
       public?: boolean;
-      roles?: string[];
-      userRole?: string;
+      roles?: AllowedRole[];
+      userRole?: UserRole;
     } = {},
-  ): ExecutionContext => {
+  ): ExecutionContext {
     reflector.getAllAndOverride.mockImplementation((key) => {
-      if (key === IS_PUBLIC_KEY) return opts.public ?? false;
+      if (key === IS_PUBLIC_KEY) return options.public ?? false;
       return undefined;
     });
-    reflector.getAllAndMerge.mockReturnValue(opts.roles ?? []);
+    reflector.getAllAndMerge.mockReturnValue(options.roles ?? []);
 
-    const user: RequestUser = {
-      id: 'user-1',
-      email: 'test@test.com',
-      role: (opts.userRole ?? 'patient') as RequestUser['role'],
-      features: [],
-    };
+    const user = requestUserFactory({ role: options.userRole ?? 'patient' });
 
     return {
       switchToHttp: () => ({
@@ -48,40 +45,40 @@ describe('RolesGuard', () => {
       }),
       getHandler: () => ({}),
       getClass: () => ({}),
-    } as unknown as ExecutionContext;
-  };
+    } as ExecutionContext;
+  }
 
-  describe('@Public routes', () => {
-    it('returns true for public routes', () => {
+  describe('@Public() routes', () => {
+    it('returns "true" for public routes', () => {
       const ctx = makeContext({ public: true, roles: ['member'] });
       expect(guard.canActivate(ctx)).toBe(true);
     });
   });
 
-  describe('admin bypass', () => {
-    it('returns true for admin regardless of @Roles', () => {
+  describe('Admin bypass', () => {
+    it('returns "true" for admin regardless of @Roles()', () => {
       const ctx = makeContext({ roles: ['member'], userRole: 'admin' });
       expect(guard.canActivate(ctx)).toBe(true);
     });
   });
 
-  describe('@Roles matching', () => {
-    it('returns true when @Roles includes "all"', () => {
+  describe('@Roles() matching', () => {
+    it('returns "true" when @Roles() includes "all"', () => {
       const ctx = makeContext({ roles: ['all'], userRole: 'patient' });
       expect(guard.canActivate(ctx)).toBe(true);
     });
 
-    it('returns true when user role matches @Roles', () => {
+    it('returns "true" when user role matches @Roles()', () => {
       const ctx = makeContext({ roles: ['member'], userRole: 'member' });
       expect(guard.canActivate(ctx)).toBe(true);
     });
 
-    it('throws ForbiddenException when user role does not match', () => {
+    it('throws "ForbiddenException" when user role does not match @Roles()', () => {
       const ctx = makeContext({ roles: ['member'], userRole: 'patient' });
       expect(() => guard.canActivate(ctx)).toThrow(ForbiddenException);
     });
 
-    it('throws ForbiddenException when no @Roles metadata', () => {
+    it('throws "ForbiddenException" when no @Roles() metadata', () => {
       const ctx = makeContext({ roles: [], userRole: 'patient' });
       expect(() => guard.canActivate(ctx)).toThrow(ForbiddenException);
     });
