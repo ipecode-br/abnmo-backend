@@ -24,9 +24,10 @@ describe('CancelReferralUseCase', () => {
 
   const patient = patientUserFactory();
   const specialist = specialistUserFactory();
-  const referral = referralFactory(patient, {
+  const referral = referralFactory({
     status: 'scheduled',
     specialist,
+    patient,
   });
 
   beforeEach(async () => {

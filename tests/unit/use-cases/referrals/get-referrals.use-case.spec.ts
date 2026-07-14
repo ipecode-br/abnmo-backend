@@ -14,9 +14,10 @@ describe('GetReferralsUseCase', () => {
   let referralsRepo: MockProxy<Repository<Referral>>;
 
   const patient = patientUserFactory({ id: 'pat-1', name: 'Alice' });
-  const referral = referralFactory(patient, {
+  const referral = referralFactory({
     id: 'ref-1',
     status: 'scheduled',
+    patient,
   });
 
   beforeEach(async () => {

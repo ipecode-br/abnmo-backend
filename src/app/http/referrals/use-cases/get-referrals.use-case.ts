@@ -9,6 +9,7 @@ import {
   type Repository,
 } from 'typeorm';
 
+import { can } from '@/common/authorization/can';
 import type { RequestUser } from '@/common/types';
 import { Referral } from '@/domain/entities/referral';
 import type { PatientCondition } from '@/domain/enums/patients';
@@ -60,8 +61,7 @@ export class GetReferralsUseCase {
     user,
     ...props
   }: GetReferralsUseCaseInput): Promise<GetReferralsUseCaseOutput> {
-    const startDate = props.startDate ? new Date(props.startDate) : null;
-    const endDate = props.endDate ? new Date(props.endDate) : null;
+    can(user, ['read:referral', 'read:referral:others']);
 
     const ORDER_BY_MAPPING: Record<ReferralsOrderBy, keyof Referral> = {
       date: 'date',
@@ -71,6 +71,9 @@ export class GetReferralsUseCase {
       condition: 'condition',
       professional: 'professionalName',
     };
+
+    const startDate = props.startDate ? new Date(props.startDate) : null;
+    const endDate = props.endDate ? new Date(props.endDate) : null;
 
     const where: FindOptionsWhere<Referral> = {};
 

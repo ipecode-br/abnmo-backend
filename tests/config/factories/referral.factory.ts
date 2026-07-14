@@ -1,7 +1,6 @@
 import { faker } from '@faker-js/faker';
 
 import { Referral } from '@/domain/entities/referral';
-import { User } from '@/domain/entities/user';
 import { PATIENT_CONDITIONS } from '@/domain/enums/patients';
 import { REFERRAL_STATUSES } from '@/domain/enums/referrals';
 import { SPECIALTY_CATEGORIES } from '@/domain/enums/shared';
@@ -14,8 +13,7 @@ import {
 } from './shared.factory';
 
 export function referralFactory(
-  patient: User,
-  overrides: Partial<Referral> = {},
+  overrides: Partial<Referral> & { patient: Referral['patient'] },
 ): Referral {
   return {
     ...baseEntityFactory(),
@@ -23,10 +21,9 @@ export function referralFactory(
     status: faker.helpers.arrayElement(REFERRAL_STATUSES),
     category: faker.helpers.arrayElement(SPECIALTY_CATEGORIES),
     condition: faker.helpers.arrayElement(PATIENT_CONDITIONS),
-    annotation: faker.datatype.boolean() ? faker.lorem.sentences() : null,
+    annotation: faker.datatype.boolean() ? faker.lorem.sentence() : null,
     professionalName: faker.datatype.boolean() ? nameFactory() : null,
     createdBy: idFactory(),
-    patient,
     specialist: null,
     ...overrides,
   };

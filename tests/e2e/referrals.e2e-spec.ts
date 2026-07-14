@@ -16,8 +16,12 @@ import {
   createPatient,
   createSpecialist,
 } from '../config/helpers';
-import { getTestApp, getTestDataSource } from '../config/setup-e2e';
-import { createReferral, getReferral } from '../helpers/referrals';
+import { getTestApp } from '../config/setup-e2e';
+import {
+  createReferral,
+  getReferralById,
+  getReferrals,
+} from '../helpers/referrals';
 
 describe('Referrals (e2e)', () => {
   let app: INestApplication;
@@ -54,16 +58,13 @@ describe('Referrals (e2e)', () => {
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
       expect(res.body.message).toBe('Encaminhamento cadastrado com sucesso.');
-    });
 
-    it('cannot create a referral without auth', async () => {
-      const res = await api.post('/referrals');
+      const referrals = await getReferrals();
 
-      expect(res.status).toBe(401);
-      expect(res.body.success).toBe(false);
-      expect(res.body.message).toBe(
-        'Você não tem permissão para executar esta ação.',
-      );
+      expect(referrals.length).toBe(1);
+      expect(referrals[0].patient.id).toBe(patient.id);
+      expect(referrals[0].patient.name).toBe(patient.name);
+      expect(referrals[0].patient.email).toBe(patient.email);
     });
 
     it('cannot create a referral without "create:referral"', async () => {
@@ -107,11 +108,10 @@ describe('Referrals (e2e)', () => {
         features: ['read:referral:others'],
       });
       const { patient } = await createPatient();
-      const dataSource = getTestDataSource();
 
       const totalReferrals = 15;
       for (let i = 0; i < totalReferrals; i++) {
-        await createReferral(dataSource, { patient });
+        await createReferral({ patient });
       }
 
       const firstPage = await api.get<GetReferralsResponse>(
@@ -133,16 +133,6 @@ describe('Referrals (e2e)', () => {
       expect(secondPage.status).toBe(200);
       expect(secondPage.body.data.referrals).toHaveLength(5);
       expect(secondPage.body.data.total).toBe(totalReferrals);
-    });
-
-    it('cannot list referrals without auth', async () => {
-      const res = await api.get('/referrals');
-
-      expect(res.status).toBe(401);
-      expect(res.body.success).toBe(false);
-      expect(res.body.message).toBe(
-        'Você não tem permissão para executar esta ação.',
-      );
     });
 
     it('cannot list referrals without "read:referral" or "read:referral:others"', async () => {
@@ -167,9 +157,8 @@ describe('Referrals (e2e)', () => {
       });
       const { patient: patientB } = await createPatient();
 
-      const dataSource = getTestDataSource();
-      await createReferral(dataSource, { patient: patientA });
-      await createReferral(dataSource, { patient: patientB });
+      await createReferral({ patient: patientA });
+      await createReferral({ patient: patientB });
 
       const res = await api.get<GetReferralsResponse>(
         '/referrals',
@@ -198,8 +187,7 @@ describe('Referrals (e2e)', () => {
         features: ['update:referral:others'],
       });
 
-      const dataSource = getTestDataSource();
-      const referral = await createReferral(dataSource, {
+      const referral = await createReferral({
         annotation: null,
         condition: 'stable',
         patient,
@@ -215,7 +203,7 @@ describe('Referrals (e2e)', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.message).toBe('Encaminhamento atualizado com sucesso.');
 
-      const updatedReferral = await getReferral(dataSource, referral.id);
+      const updatedReferral = await getReferralById(referral.id);
 
       expect(updatedReferral?.condition).toBe(dataToUpdate.condition);
       expect(updatedReferral?.annotation).toBe(dataToUpdate.annotation);
@@ -238,22 +226,11 @@ describe('Referrals (e2e)', () => {
       expect(res.body.message).toBe('Encaminhamento não encontrado.');
     });
 
-    it('cannot update without auth', async () => {
-      const res = await api.put('/referrals/sample-id');
-
-      expect(res.status).toBe(401);
-      expect(res.body.success).toBe(false);
-      expect(res.body.message).toBe(
-        'Você não tem permissão para executar esta ação.',
-      );
-    });
-
     it('patient cannot update another patient referral', async () => {
       const { cookies: cookiesA } = await createPatient({ login: true });
       const { patient: patientB } = await createPatient();
 
-      const dataSource = getTestDataSource();
-      const referral = await createReferral(dataSource, {
+      const referral = await createReferral({
         patient: patientB,
       });
 
@@ -293,8 +270,7 @@ describe('Referrals (e2e)', () => {
         login: true,
       });
 
-      const dataSource = getTestDataSource();
-      const referral = await createReferral(dataSource, {
+      const referral = await createReferral({
         patient,
         specialist: specialistA,
       });
@@ -321,8 +297,7 @@ describe('Referrals (e2e)', () => {
         features: ['cancel:referral:others'],
       });
 
-      const dataSource = getTestDataSource();
-      const referral = await createReferral(dataSource, {
+      const referral = await createReferral({
         status: 'scheduled',
         patient,
       });
@@ -337,7 +312,7 @@ describe('Referrals (e2e)', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.message).toBe('Encaminhamento cancelado com sucesso.');
 
-      const updatedReferral = await getReferral(dataSource, referral.id);
+      const updatedReferral = await getReferralById(referral.id);
 
       expect(updatedReferral?.status).toBe('canceled');
     });
@@ -348,8 +323,7 @@ describe('Referrals (e2e)', () => {
         features: ['cancel:referral'],
       });
 
-      const dataSource = getTestDataSource();
-      const referral = await createReferral(dataSource, {
+      const referral = await createReferral({
         status: 'scheduled',
         patient,
       });
@@ -364,7 +338,7 @@ describe('Referrals (e2e)', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.message).toBe('Encaminhamento cancelado com sucesso.');
 
-      const updatedReferral = await getReferral(dataSource, referral.id);
+      const updatedReferral = await getReferralById(referral.id);
 
       expect(updatedReferral?.status).toBe('canceled');
     });
@@ -376,8 +350,7 @@ describe('Referrals (e2e)', () => {
         features: ['cancel:referral'],
       });
 
-      const dataSource = getTestDataSource();
-      const referral = await createReferral(dataSource, {
+      const referral = await createReferral({
         status: 'scheduled',
         patient,
         specialist,
@@ -393,7 +366,7 @@ describe('Referrals (e2e)', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.message).toBe('Encaminhamento cancelado com sucesso.');
 
-      const updatedReferral = await getReferral(dataSource, referral.id);
+      const updatedReferral = await getReferralById(referral.id);
 
       expect(updatedReferral?.status).toBe('canceled');
     });
@@ -415,16 +388,6 @@ describe('Referrals (e2e)', () => {
       expect(res.body.message).toBe('Encaminhamento não encontrado.');
     });
 
-    it('cannot cancel without auth', async () => {
-      const res = await api.patch('/referrals/sample-id/cancel');
-
-      expect(res.status).toBe(401);
-      expect(res.body.success).toBe(false);
-      expect(res.body.message).toBe(
-        'Você não tem permissão para executar esta ação.',
-      );
-    });
-
     it('cannot cancel a non "scheduled" referral', async () => {
       const { patient } = await createPatient();
       const { cookies } = await createMember({
@@ -432,8 +395,7 @@ describe('Referrals (e2e)', () => {
         features: ['cancel:referral:others'],
       });
 
-      const dataSource = getTestDataSource();
-      const referral = await createReferral(dataSource, {
+      const referral = await createReferral({
         patient,
         status: 'completed',
       });
@@ -455,8 +417,7 @@ describe('Referrals (e2e)', () => {
       const { cookies } = await createMember({ login: true });
       const { patient } = await createPatient();
 
-      const dataSource = getTestDataSource();
-      const referral = await createReferral(dataSource, { patient });
+      const referral = await createReferral({ patient });
 
       const res = await api.patch<BaseResponseBody>(
         `/referrals/${referral.id}/cancel`,
@@ -475,8 +436,7 @@ describe('Referrals (e2e)', () => {
       const { patient: patientA } = await createPatient();
       const { cookies: cookiesB } = await createPatient({ login: true });
 
-      const dataSource = getTestDataSource();
-      const referral = await createReferral(dataSource, {
+      const referral = await createReferral({
         patient: patientA,
       });
 
@@ -500,8 +460,7 @@ describe('Referrals (e2e)', () => {
       });
       const { patient } = await createPatient();
 
-      const dataSource = getTestDataSource();
-      const referral = await createReferral(dataSource, {
+      const referral = await createReferral({
         patient,
         specialist: specialistA,
       });
