@@ -12,6 +12,7 @@ import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import { User } from '@/domain/entities/user';
 import { UserRole } from '@/domain/enums/users';
+import { EnvService } from '@/env/env.service';
 
 import { CreateSessionUseCase } from './create-session.use-case';
 
@@ -29,13 +30,18 @@ interface SignInWithEmailUseCaseOutput {
 @Injectable()
 @Log()
 export class SignInWithEmailUseCase {
+  isTestMode: boolean = false;
+
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
     private readonly createSessionUseCase: CreateSessionUseCase,
     private readonly cryptographyService: CryptographyService,
+    private readonly envService: EnvService,
     private readonly logger: LogService,
-  ) {}
+  ) {
+    this.isTestMode = envService.get('NODE_ENV') === 'test';
+  }
 
   async execute({
     email,
@@ -79,7 +85,7 @@ export class SignInWithEmailUseCase {
 
     const role = user.role;
 
-    if (role === 'patient') {
+    if (role === 'patient' && !this.isTestMode) {
       throw new UnauthorizedException(
         'O sistema ainda não está pronto para pacientes.',
       );

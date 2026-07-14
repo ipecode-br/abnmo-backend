@@ -50,10 +50,13 @@ export class CancelAppointmentUseCase {
       [appointment.patient?.id, appointment.specialist?.id || ''],
     );
 
-    if (appointment.status === 'canceled') {
-      throw new BadRequestException('Este atendimento já está cancelado.', {
-        cause: `Appointment with ID <${id}> is already canceled`,
-      });
+    if (appointment.status !== 'scheduled') {
+      throw new BadRequestException(
+        'Este atendimento não pode ser cancelado.',
+        {
+          cause: `Appointment with ID <${id}> has status <${appointment.status}>`,
+        },
+      );
     }
 
     await this.appointmentsRepository.update(id, { status: 'canceled' });
