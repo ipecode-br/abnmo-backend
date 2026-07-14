@@ -2,13 +2,16 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import { can } from '@/common/authorization/can';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
+import type { RequestUser } from '@/common/types';
 import { Token } from '@/domain/entities/token';
 import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
 
 interface CancelUserInviteUseCaseInput {
   id: string;
+  user: RequestUser;
 }
 
 @Injectable()
@@ -20,7 +23,9 @@ export class CancelUserInviteUseCase {
     private readonly logger: LogService,
   ) {}
 
-  async execute({ id }: CancelUserInviteUseCaseInput): Promise<void> {
+  async execute({ id, user }: CancelUserInviteUseCaseInput): Promise<void> {
+    can(user, 'delete:user_invite');
+
     const token = await this.tokensRepository.findOne({
       where: { id, type: AUTH_TOKENS_MAPPING.inviteUser },
       select: { id: true },

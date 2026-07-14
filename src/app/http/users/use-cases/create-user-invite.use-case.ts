@@ -4,8 +4,10 @@ import { DataSource, Repository } from 'typeorm';
 
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
 import { MailService } from '@/app/mail/mail.service';
+import { can } from '@/common/authorization/can';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
+import type { RequestUser } from '@/common/types';
 import { buildRegisterUserEmail } from '@/domain/email-templates/register-user-email';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
@@ -14,6 +16,7 @@ import type { UserRole } from '@/domain/enums/users';
 import { EnvService } from '@/env/env.service';
 
 interface CreateUserInviteUseCaseInput {
+  user: RequestUser;
   email: string;
   role: UserRole;
 }
@@ -33,7 +36,13 @@ export class CreateUserInviteUseCase {
     private readonly mailService: MailService,
   ) {}
 
-  async execute({ email, role }: CreateUserInviteUseCaseInput): Promise<void> {
+  async execute({
+    email,
+    role,
+    user,
+  }: CreateUserInviteUseCaseInput): Promise<void> {
+    can(user, 'create:user_invite');
+
     const [existingInviteUserToken, existingUser] = await Promise.all([
       this.tokensRepository.findOne({ where: { email } }),
       this.usersRepository.findOne({ where: { email }, select: { id: true } }),

@@ -1,12 +1,12 @@
 import {
   ConflictException,
-  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import { can } from '@/common/authorization/can';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import type { RequestUser } from '@/common/types';
@@ -27,14 +27,7 @@ export class ActivateUserUseCase {
   ) {}
 
   async execute({ id, user }: ActivateUserUseCaseInput): Promise<void> {
-    if (user.role !== 'admin') {
-      this.logger.log('Activate user failed: User does not have permission', {
-        id,
-      });
-      throw new ForbiddenException(
-        'Você não tem permissão para ativar usuários.',
-      );
-    }
+    can(user, 'activate:user');
 
     const userToActivate = await this.usersRepository.findOne({
       select: { id: true, status: true },

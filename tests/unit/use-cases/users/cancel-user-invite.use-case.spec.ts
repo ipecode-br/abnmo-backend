@@ -6,6 +6,7 @@ import { Repository } from 'typeorm';
 
 import { CancelUserInviteUseCase } from '@/app/http/users/use-cases/cancel-user-invite.use-case';
 import { LogService } from '@/common/log/log.service';
+import type { RequestUser } from '@/common/types';
 import { Token } from '@/domain/entities/token';
 
 type TokenStub = Pick<Token, 'id' | 'email' | 'expiresAt'> & { type: string };
@@ -24,6 +25,12 @@ describe('CancelUserInviteUseCase', () => {
   let tokensRepo: MockProxy<Repository<Token>>;
 
   const invite = makeToken();
+  const user: RequestUser = {
+    id: 'admin-id',
+    email: 'admin@test.com',
+    role: 'admin',
+    features: [],
+  };
 
   beforeEach(async () => {
     tokensRepo = mock<Repository<Token>>();
@@ -45,7 +52,7 @@ describe('CancelUserInviteUseCase', () => {
   it('cancels invite by removing the token', async () => {
     tokensRepo.findOne.mockResolvedValue(invite);
 
-    await useCase.execute({ id: invite.id });
+    await useCase.execute({ id: invite.id, user });
 
     expect(tokensRepo.findOne).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -59,9 +66,9 @@ describe('CancelUserInviteUseCase', () => {
     it('throws "NotFoundException" when token does not exist', async () => {
       tokensRepo.findOne.mockResolvedValue(null);
 
-      await expect(useCase.execute({ id: 'nonexistent' })).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        useCase.execute({ id: 'nonexistent', user }),
+      ).rejects.toThrow(NotFoundException);
 
       expect(tokensRepo.remove).not.toHaveBeenCalled();
     });

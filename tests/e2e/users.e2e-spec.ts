@@ -1,225 +1,635 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 
-import { CryptographyService } from '@/app/cryptography/cryptography.service';
-import { User } from '@/domain/entities/user';
+import type {
+  CreateUserInviteBody,
+  GetUserInvitesResponse,
+  GetUserResponse,
+  GetUsersResponse,
+  UpdateUserBody,
+  UpdateUserFeaturesBody,
+} from '@/app/http/users/users.dtos';
 
 import {
-  createAdminAndLogin,
-  createMemberAndLogin,
-} from '../config/auth-helper';
-import { userFactory } from '../config/factories/user.factory';
-import { getTestApp, getTestDataSource } from '../config/setup-e2e';
-
-const DEFAULT_PASSWORD = 'TestPassword123!';
+  ApiClient,
+  BaseResponseBody,
+  createApiClient,
+} from '../config/api-client';
+import { createAdmin, createMember } from '../config/helpers';
+import { getTestApp } from '../config/setup-e2e';
+import { createUserInvite, getUserInvites } from '../helpers/invites';
+import { createUser, getUser } from '../helpers/users';
 
 describe('Users (e2e)', () => {
   let app: INestApplication;
+  let api: ApiClient;
 
   beforeAll(() => {
     app = getTestApp();
+    api = createApiClient(app);
   });
 
   describe('GET /users', () => {
-    it('returns 401 without auth', async () => {
-      await request(app.getHttpServer())
-        .get('/users')
-        .query({ page: 1, perPage: 10 })
-        .expect(401);
+    it('paginates users properly', async () => {
+      const { cookies } = await createMember({
+        login: true,
+        features: ['read:user:others'],
+      });
+
+      const totalUsers = 15;
+      for (let i = 0; i < totalUsers; i++) {
+        await createUser({ role: 'specialist' });
+      }
+
+      const firstPage = await api.get<GetUsersResponse>(
+        '/users',
+        { page: 1, perPage: 10 },
+        { cookies },
+      );
+
+      expect(firstPage.status).toBe(200);
+      expect(firstPage.body.data.users).toHaveLength(10);
+      expect(firstPage.body.data.total).toBe(totalUsers + 1);
+
+      const secondPage = await api.get<GetUsersResponse>(
+        '/users',
+        { page: 2, perPage: 10 },
+        { cookies },
+      );
+
+      expect(secondPage.status).toBe(200);
+      expect(secondPage.body.data.users).toHaveLength(6);
+      expect(secondPage.body.data.total).toBe(totalUsers + 1);
     });
 
-    it('returns 200 + paginated users as admin', async () => {
-      const ds = getTestDataSource();
-      const cryptoService = app.get(CryptographyService);
-      const hashedPassword = await cryptoService.createHash(DEFAULT_PASSWORD);
+    it('cannot list users without "read:user:others"', async () => {
+      const { cookies } = await createMember({ login: true });
 
-      const repo = ds.getRepository(User);
-      const user1 = repo.create(
-        userFactory({
-          password: hashedPassword,
-          role: 'specialist',
-          email: 'spec1@example.com',
-        }),
+      const res = await api.get(
+        '/users',
+        { page: 1, perPage: 10 },
+        { cookies },
       );
-      const user2 = repo.create(
-        userFactory({
-          password: hashedPassword,
-          role: 'member',
-          email: 'mem1@example.com',
-        }),
+
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe(
+        'Você não tem permissão para executar esta ação.',
       );
-      await repo.save([user1, user2]);
+    });
+  });
 
-      const { cookies } = await createAdminAndLogin();
+  describe('GET /users/me', () => {
+    it('returns own profile', async () => {
+      const { member, cookies } = await createMember({
+        login: true,
+        features: ['read:user'],
+      });
 
-      const res = await request(app.getHttpServer())
-        .get('/users')
-        .set('Cookie', cookies)
-        .query({ page: 1, perPage: 10 })
-        .expect(200);
+      const res = await api.get<GetUserResponse>('/users/me', undefined, {
+        cookies,
+      });
 
+      expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.data).toBeDefined();
-      expect(res.body.data.users).toBeInstanceOf(Array);
-      expect(res.body.data.total).toBeGreaterThanOrEqual(2);
+      expect(res.body.message).toBe('Dados do usuário retornados com sucesso.');
+      expect(res.body.data.id).toBe(member.id);
+      expect(res.body.data.email).toBe(member.email);
     });
 
-    it('returns 200 + paginated users as member', async () => {
-      const ds = getTestDataSource();
-      const cryptoService = app.get(CryptographyService);
-      const hashedPassword = await cryptoService.createHash(DEFAULT_PASSWORD);
+    it('cannot get own profile without "read:user"', async () => {
+      const { cookies } = await createMember({ login: true, features: [] });
 
-      const repo = ds.getRepository(User);
-      const user1 = repo.create(
-        userFactory({
-          password: hashedPassword,
-          role: 'specialist',
-          email: 'spec2@example.com',
-        }),
+      const res = await api.get('/users/me', undefined, { cookies });
+
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe(
+        'Você não tem permissão para executar esta ação.',
       );
-      await repo.save(user1);
-
-      const { cookies } = await createMemberAndLogin();
-
-      const res = await request(app.getHttpServer())
-        .get('/users')
-        .set('Cookie', cookies)
-        .query({ page: 1, perPage: 10 })
-        .expect(200);
-
-      expect(res.body.success).toBe(true);
-      expect(res.body.data).toBeDefined();
-      expect(res.body.data.users).toBeInstanceOf(Array);
-      expect(res.body.data.total).toBeGreaterThanOrEqual(1);
     });
   });
 
   describe('GET /users/:id', () => {
-    it('returns 200 for existing user', async () => {
-      const ds = getTestDataSource();
-      const cryptoService = app.get(CryptographyService);
-      const hashedPassword = await cryptoService.createHash(DEFAULT_PASSWORD);
+    it('returns user by ID', async () => {
+      const { cookies } = await createMember({
+        login: true,
+        features: ['read:user:others'],
+      });
+      const target = await createUser({ name: 'Target User' });
 
-      const repo = ds.getRepository(User);
-      const target = repo.create(
-        userFactory({
-          password: hashedPassword,
-          role: 'specialist',
-          email: 'target@example.com',
-          name: 'Target User',
-        }),
+      const res = await api.get<GetUserResponse>(
+        `/users/${target.id}`,
+        undefined,
+        { cookies },
       );
-      await repo.save(target);
 
-      const { cookies } = await createAdminAndLogin();
-
-      const res = await request(app.getHttpServer())
-        .get(`/users/${target.id}`)
-        .set('Cookie', cookies)
-        .expect(200);
-
+      expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.data).toBeDefined();
       expect(res.body.data.id).toBe(target.id);
       expect(res.body.data.name).toBe(target.name);
+      expect(res.body.data.email).toBe(target.email);
+      expect(res.body.data.role).toBe(target.role);
     });
 
-    it('returns 404 for non-existent user', async () => {
-      const { cookies } = await createAdminAndLogin();
+    it('returns 404 for non-existent ID', async () => {
+      const { cookies } = await createAdmin({ login: true });
 
-      await request(app.getHttpServer())
-        .get('/users/00000000-0000-0000-0000-000000000000')
-        .set('Cookie', cookies)
-        .expect(404);
+      const res = await api.get<GetUserResponse>(
+        '/users/non-existent-id',
+        undefined,
+        { cookies },
+      );
+
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Usuário não encontrado.');
+    });
+
+    it('cannot get user without "read:user" or "read:user:others"', async () => {
+      const { cookies } = await createMember({ login: true });
+      const target = await createUser({ role: 'specialist' });
+
+      const res = await api.get<GetUserResponse>(
+        `/users/${target.id}`,
+        undefined,
+        { cookies },
+      );
+
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe(
+        'Você não tem permissão para executar esta ação.',
+      );
     });
   });
 
   describe('PUT /users/:id', () => {
-    it('returns 200 on successful update (admin)', async () => {
-      const ds = getTestDataSource();
-      const cryptoService = app.get(CryptographyService);
-      const hashedPassword = await cryptoService.createHash(DEFAULT_PASSWORD);
+    const dataToUpdate: UpdateUserBody = {
+      name: 'Updated Name',
+      specialty: 'neurology',
+      registrationId: 'CRM-UPDATED',
+    };
 
-      const repo = ds.getRepository(User);
-      const target = repo.create(
-        userFactory({
-          password: hashedPassword,
-          role: 'specialist',
-          email: 'update-user@example.com',
-          name: 'Old Name',
-        }),
+    it('updates own data', async () => {
+      const { member, cookies } = await createMember({
+        login: true,
+        features: ['update:user'],
+      });
+
+      const res = await api.put<BaseResponseBody, UpdateUserBody>(
+        `/users/${member.id}`,
+        dataToUpdate,
+        { cookies },
       );
-      await repo.save(target);
 
-      const { cookies } = await createAdminAndLogin();
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.message).toBe('Usuário atualizado com sucesso.');
 
-      await request(app.getHttpServer())
-        .put(`/users/${target.id}`)
-        .set('Cookie', cookies)
-        .send({
-          name: 'Updated Name',
-          specialty: 'neurology',
-          registrationId: 'CRM12345',
-        })
-        .expect(200);
+      const updatedUser = await getUser(member.id);
+
+      expect(updatedUser?.name).toBe(dataToUpdate.name);
+      expect(updatedUser?.specialty).toBe(dataToUpdate.specialty);
+      expect(updatedUser?.registrationId).toBe(dataToUpdate.registrationId);
+    });
+
+    it('can update another user with "update:user:others"', async () => {
+      const { cookies } = await createMember({
+        login: true,
+        features: ['update:user:others'],
+      });
+
+      const target = await createUser({ name: 'Old Name' });
+
+      const res = await api.put<BaseResponseBody, UpdateUserBody>(
+        `/users/${target.id}`,
+        dataToUpdate,
+        { cookies },
+      );
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.message).toBe('Usuário atualizado com sucesso.');
+
+      const updatedUser = await getUser(target.id);
+
+      expect(updatedUser?.name).toBe(dataToUpdate.name);
+    });
+
+    it('returns 404 for non-existent ID', async () => {
+      const { cookies } = await createAdmin({ login: true });
+
+      const res = await api.put<BaseResponseBody, UpdateUserBody>(
+        '/users/non-existent-id',
+        dataToUpdate,
+        { cookies },
+      );
+
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Usuário não encontrado.');
+    });
+
+    it('cannot update without "update:user" or "update:user:others"', async () => {
+      const { cookies } = await createMember({ login: true });
+
+      const res = await api.put<BaseResponseBody, UpdateUserBody>(
+        '/users/sample-id',
+        dataToUpdate,
+        { cookies },
+      );
+
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe(
+        'Você não tem permissão para executar esta ação.',
+      );
+    });
+
+    it('cannot update another user without "update:user:others"', async () => {
+      const { cookies } = await createMember({
+        login: true,
+        features: ['update:user'],
+      });
+      const target = await createUser();
+
+      const res = await api.put<BaseResponseBody, UpdateUserBody>(
+        `/users/${target.id}`,
+        dataToUpdate,
+        { cookies },
+      );
+
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe(
+        'Você não tem permissão para executar esta ação.',
+      );
+    });
+  });
+
+  describe('PATCH /users/:id/features', () => {
+    it('admin updates user features', async () => {
+      const { cookies } = await createAdmin({ login: true });
+      const target = await createUser({ features: [] });
+
+      const res = await api.patch<BaseResponseBody, UpdateUserFeaturesBody>(
+        `/users/${target.id}/features`,
+        { features: ['read:patient', 'deactivate:patient'] },
+        { cookies },
+      );
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.message).toBe('Permissões atualizadas com sucesso.');
+
+      const updatedUser = await getUser(target.id);
+
+      expect(updatedUser?.features).toContain('read:patient');
+      expect(updatedUser?.features).toContain('deactivate:patient');
+    });
+
+    it('returns 404 for non-existent ID', async () => {
+      const { cookies } = await createAdmin({ login: true });
+
+      const res = await api.patch<BaseResponseBody, UpdateUserFeaturesBody>(
+        '/users/non-existent-id/features',
+        { features: [] },
+        { cookies },
+      );
+
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Usuário não encontrado.');
+    });
+
+    it('cannot update features as non-admin', async () => {
+      const { cookies } = await createMember({ login: true });
+
+      const res = await api.patch<BaseResponseBody, UpdateUserFeaturesBody>(
+        `/users/sample-id/features`,
+        { features: [] },
+        { cookies },
+      );
+
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe(
+        'Você não tem permissão para executar esta ação.',
+      );
     });
   });
 
   describe('PATCH /users/:id/deactivate', () => {
-    it('returns 200 as admin', async () => {
-      const ds = getTestDataSource();
-      const cryptoService = app.get(CryptographyService);
-      const hashedPassword = await cryptoService.createHash(DEFAULT_PASSWORD);
+    it('deactivates a user', async () => {
+      const { cookies } = await createMember({
+        login: true,
+        features: ['deactivate:user'],
+      });
+      const target = await createUser({ status: 'active' });
 
-      const repo = ds.getRepository(User);
-      const target = repo.create(
-        userFactory({
-          password: hashedPassword,
-          role: 'member',
-          email: 'deact-user@example.com',
-          status: 'active',
-        }),
+      const res = await api.patch<BaseResponseBody>(
+        `/users/${target.id}/deactivate`,
+        undefined,
+        { cookies },
       );
-      await repo.save(target);
 
-      const { cookies } = await createAdminAndLogin();
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.message).toBe('Usuário inativado com sucesso.');
 
-      await request(app.getHttpServer())
-        .patch(`/users/${target.id}/deactivate`)
-        .set('Cookie', cookies)
-        .expect(200);
+      const updatedUser = await getUser(target.id);
 
-      const updated = await repo.findOne({ where: { id: target.id } });
-      expect(updated!.status).toBe('inactive');
+      expect(updatedUser?.status).toBe('inactive');
+    });
+
+    it('returns 404 for non-existent ID', async () => {
+      const { cookies } = await createAdmin({ login: true });
+
+      const res = await api.patch<BaseResponseBody>(
+        '/users/non-existent-id/deactivate',
+        undefined,
+        { cookies },
+      );
+
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Usuário não encontrado.');
+    });
+
+    it('cannot deactivate without "deactivate:user"', async () => {
+      const { cookies } = await createMember({ login: true });
+      const target = await createUser();
+
+      const res = await api.patch<BaseResponseBody>(
+        `/users/${target.id}/deactivate`,
+        undefined,
+        { cookies },
+      );
+
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe(
+        'Você não tem permissão para executar esta ação.',
+      );
+    });
+
+    it('cannot deactivate an inactive user', async () => {
+      const { cookies } = await createAdmin({ login: true });
+      const target = await createUser({ status: 'inactive' });
+
+      const res = await api.patch<BaseResponseBody>(
+        `/users/${target.id}/deactivate`,
+        undefined,
+        { cookies },
+      );
+
+      expect(res.status).toBe(409);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Este usuário já está inativo.');
     });
   });
 
   describe('PATCH /users/:id/activate', () => {
-    it('returns 200 as admin', async () => {
-      const ds = getTestDataSource();
-      const cryptoService = app.get(CryptographyService);
-      const hashedPassword = await cryptoService.createHash(DEFAULT_PASSWORD);
+    it('activates a user', async () => {
+      const { cookies } = await createMember({
+        login: true,
+        features: ['activate:user'],
+      });
+      const target = await createUser({ status: 'inactive' });
 
-      const repo = ds.getRepository(User);
-      const target = repo.create(
-        userFactory({
-          password: hashedPassword,
-          role: 'member',
-          email: 'act-user@example.com',
-          status: 'inactive',
-        }),
+      const res = await api.patch<BaseResponseBody>(
+        `/users/${target.id}/activate`,
+        undefined,
+        { cookies },
       );
-      await repo.save(target);
 
-      const { cookies } = await createAdminAndLogin();
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.message).toBe('Usuário ativado com sucesso.');
 
-      await request(app.getHttpServer())
-        .patch(`/users/${target.id}/activate`)
-        .set('Cookie', cookies)
-        .expect(200);
+      const updatedUser = await getUser(target.id);
 
-      const updated = await repo.findOne({ where: { id: target.id } });
-      expect(updated!.status).toBe('active');
+      expect(updatedUser?.status).toBe('active');
+    });
+
+    it('returns 404 for non-existent ID', async () => {
+      const { cookies } = await createAdmin({ login: true });
+
+      const res = await api.patch<BaseResponseBody>(
+        '/users/non-existent-id/activate',
+        undefined,
+        { cookies },
+      );
+
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Usuário não encontrado.');
+    });
+
+    it('cannot activate without "activate:user"', async () => {
+      const { cookies } = await createMember({ login: true });
+      const target = await createUser({ role: 'member' });
+
+      const res = await api.patch<BaseResponseBody>(
+        `/users/${target.id}/activate`,
+        undefined,
+        { cookies },
+      );
+
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe(
+        'Você não tem permissão para executar esta ação.',
+      );
+    });
+
+    it('cannot activate an active user', async () => {
+      const { cookies } = await createAdmin({ login: true });
+      const target = await createUser({ status: 'active' });
+
+      const res = await api.patch<BaseResponseBody>(
+        `/users/${target.id}/activate`,
+        undefined,
+        { cookies },
+      );
+
+      expect(res.status).toBe(409);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Este usuário já está ativo.');
+    });
+  });
+
+  describe('POST /users/invites', () => {
+    const inviteData: CreateUserInviteBody = {
+      email: 'invite@example.com',
+      role: 'member',
+    };
+
+    it('creates an invite', async () => {
+      const { cookies } = await createMember({
+        login: true,
+        features: ['create:user_invite'],
+      });
+
+      const res = await api.post<BaseResponseBody, CreateUserInviteBody>(
+        '/users/invites',
+        inviteData,
+        { cookies },
+      );
+
+      expect(res.status).toBe(201);
+      expect(res.body.success).toBe(true);
+      expect(res.body.message).toBe('Convite do usuário enviado com sucesso.');
+
+      const invites = await getUserInvites({ email: inviteData.email });
+
+      expect(invites.length).toBe(1);
+      expect(invites[0].email).toBe(inviteData.email);
+    });
+
+    it('cannot create invite without "create:user_invite"', async () => {
+      const { cookies } = await createMember({ login: true });
+
+      const res = await api.post<BaseResponseBody, CreateUserInviteBody>(
+        '/users/invites',
+        inviteData,
+        { cookies },
+      );
+
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe(
+        'Você não tem permissão para executar esta ação.',
+      );
+    });
+
+    it('cannot create invite for existing user email', async () => {
+      const { cookies } = await createMember({
+        login: true,
+        features: ['create:user_invite'],
+      });
+      const existingUser = await createUser({ email: 'existing@example.com' });
+
+      const res = await api.post<BaseResponseBody, CreateUserInviteBody>(
+        '/users/invites',
+        { email: existingUser.email, role: 'member' },
+        { cookies },
+      );
+
+      expect(res.status).toBe(409);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe(
+        'Este e-mail já está cadastrado no sistema.',
+      );
+    });
+  });
+
+  describe('GET /users/invites', () => {
+    it('paginates invites properly', async () => {
+      const { cookies } = await createMember({
+        login: true,
+        features: ['read:user_invite'],
+      });
+
+      const totalInvites = 15;
+      for (let i = 0; i < totalInvites; i++) {
+        await createUserInvite({ email: `invite-${i}@example.com` });
+      }
+
+      const firstPage = await api.get<GetUserInvitesResponse>(
+        '/users/invites',
+        { page: 1, perPage: 10 },
+        { cookies },
+      );
+
+      expect(firstPage.status).toBe(200);
+      expect(firstPage.body.data.invites).toHaveLength(10);
+      expect(firstPage.body.data.total).toBe(totalInvites);
+
+      const secondPage = await api.get<GetUserInvitesResponse>(
+        '/users/invites',
+        { page: 2, perPage: 10 },
+        { cookies },
+      );
+
+      expect(secondPage.status).toBe(200);
+      expect(secondPage.body.data.invites).toHaveLength(5);
+      expect(secondPage.body.data.total).toBe(totalInvites);
+    });
+
+    it('cannot list invites without "read:user_invite"', async () => {
+      const { cookies } = await createMember({ login: true });
+
+      const res = await api.get(
+        '/users/invites',
+        { page: 1, perPage: 10 },
+        { cookies },
+      );
+
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe(
+        'Você não tem permissão para executar esta ação.',
+      );
+    });
+  });
+
+  describe('DELETE /users/invites/:id', () => {
+    it('deletes an invite', async () => {
+      const { cookies } = await createMember({
+        login: true,
+        features: ['delete:user_invite'],
+      });
+      const email = 'test@example.com';
+
+      const invite = await createUserInvite({ email });
+      const savedInvites = await getUserInvites({ email });
+
+      expect(savedInvites.length).toBe(1);
+
+      const res = await api.delete<BaseResponseBody>(
+        `/users/invites/${invite.id}`,
+        { cookies },
+      );
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.message).toBe('Convite cancelado com sucesso.');
+
+      const invites = await getUserInvites({ email });
+
+      expect(invites.length).toBe(0);
+    });
+
+    it('returns 404 for non-existent ID', async () => {
+      const { cookies } = await createMember({
+        login: true,
+        features: ['delete:user_invite'],
+      });
+
+      const res = await api.delete<BaseResponseBody>(
+        '/users/invites/non-existent-id',
+        { cookies },
+      );
+
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Convite não encontrado.');
+    });
+
+    it('cannot delete invite without "delete:user_invite"', async () => {
+      const { cookies } = await createMember({ login: true });
+
+      const res = await api.delete<BaseResponseBody>(
+        '/users/invites/sample-id',
+        { cookies },
+      );
+
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe(
+        'Você não tem permissão para executar esta ação.',
+      );
     });
   });
 });

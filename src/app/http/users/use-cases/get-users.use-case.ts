@@ -10,12 +10,15 @@ import {
   type Repository,
 } from 'typeorm';
 
+import { can } from '@/common/authorization/can';
+import type { RequestUser } from '@/common/types';
 import { User } from '@/domain/entities/user';
 import type { QueryOrder } from '@/domain/enums/queries';
 import type { UserRole, UsersOrderBy, UserStatus } from '@/domain/enums/users';
 import { UserResponse } from '@/domain/schemas/users/responses';
 
 interface GetUsersUseCaseInput {
+  user: RequestUser;
   page: number;
   perPage: number;
   search?: string;
@@ -45,10 +48,10 @@ export class GetUsersUseCase {
     status,
     page,
     perPage,
+    user,
     ...props
   }: GetUsersUseCaseInput): Promise<GetUsersUseCaseOutput> {
-    const startDate = props.startDate ? new Date(props.startDate) : null;
-    const endDate = props.endDate ? new Date(props.endDate) : null;
+    can(user, 'read:user:others');
 
     const ORDER_BY_MAPPING: Record<UsersOrderBy, keyof User> = {
       name: 'name',
@@ -56,6 +59,9 @@ export class GetUsersUseCase {
       status: 'status',
       date: 'createdAt',
     };
+
+    const startDate = props.startDate ? new Date(props.startDate) : null;
+    const endDate = props.endDate ? new Date(props.endDate) : null;
 
     const where: FindOptionsWhere<User> = {
       role: Not('patient'),

@@ -1,12 +1,12 @@
 import {
   ConflictException,
-  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import { can } from '@/common/authorization/can';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import type { RequestUser } from '@/common/types';
@@ -30,15 +30,7 @@ export class DeactivateUserUseCase {
   ) {}
 
   async execute({ id, user }: DeactivateUserUseCaseInput): Promise<void> {
-    if (user.role !== 'admin') {
-      this.logger.warn(
-        'Deactivate user failed: User does not have permission',
-        { id },
-      );
-      throw new ForbiddenException(
-        'Você não tem permissão para inativar usuários.',
-      );
-    }
+    can(user, 'deactivate:user');
 
     const userToDeactivate = await this.usersRepository.findOne({
       select: { id: true, status: true },

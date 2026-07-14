@@ -9,6 +9,8 @@ import {
   type Repository,
 } from 'typeorm';
 
+import { can } from '@/common/authorization/can';
+import type { RequestUser } from '@/common/types';
 import { Token } from '@/domain/entities/token';
 import type { QueryOrder } from '@/domain/enums/queries';
 import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
@@ -16,6 +18,7 @@ import type { UserInvitesOrderBy } from '@/domain/enums/users';
 import type { UserInviteResponse } from '@/domain/schemas/users/responses';
 
 interface GetUserInvitesUseCaseInput {
+  user: RequestUser;
   page: number;
   perPage: number;
   search?: string;
@@ -41,15 +44,18 @@ export class GetUserInvitesUseCase {
     search,
     page,
     perPage,
+    user,
     ...props
   }: GetUserInvitesUseCaseInput): Promise<GetUserInvitesUseCaseOutput> {
-    const startDate = props.startDate ? new Date(props.startDate) : null;
-    const endDate = props.endDate ? new Date(props.endDate) : null;
+    can(user, 'read:user_invite');
 
     const ORDER_BY_MAPPING: Record<UserInvitesOrderBy, keyof Token> = {
       email: 'email',
       date: 'createdAt',
     };
+
+    const startDate = props.startDate ? new Date(props.startDate) : null;
+    const endDate = props.endDate ? new Date(props.endDate) : null;
 
     const where: FindOptionsWhere<Token> = {
       type: AUTH_TOKENS_MAPPING.inviteUser,

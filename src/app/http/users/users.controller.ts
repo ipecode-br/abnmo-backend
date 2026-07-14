@@ -67,8 +67,11 @@ export class UsersController {
   @RequireFeature('read:user:others')
   @ApiOperation({ summary: 'Lista todos os usuários' })
   @ZodResponse({ type: GetUsersResponse, status: 200 })
-  async getUsers(@Query() query: GetUsersQuery): Promise<GetUsersResponse> {
-    const data = await this.getUsersUseCase.execute(query);
+  async getUsers(
+    @Query() query: GetUsersQuery,
+    @User() user: RequestUser,
+  ): Promise<GetUsersResponse> {
+    const data = await this.getUsersUseCase.execute({ user, ...query });
 
     return {
       success: true,
@@ -81,8 +84,11 @@ export class UsersController {
   @RequireFeature('read:user_invite')
   @ApiOperation({ summary: 'Lista todos os convites de usuário' })
   @ZodResponse({ type: GetUserInvitesResponse, status: 200 })
-  async getUserInvites(@Query() query: GetUserInvitesQuery): Promise<any> {
-    const data = await this.getUserInvitesUseCase.execute(query);
+  async getUserInvites(
+    @Query() query: GetUserInvitesQuery,
+    @User() user: RequestUser,
+  ): Promise<any> {
+    const data = await this.getUserInvitesUseCase.execute({ user, ...query });
 
     return {
       success: true,
@@ -233,9 +239,10 @@ export class UsersController {
   @ApiOperation({ summary: 'Cria convite para registro de usuário' })
   @ZodResponse({ type: BaseResponse, status: 201 })
   async createUserInvite(
+    @User() user: RequestUser,
     @Body() body: CreateUserInviteBody,
   ): Promise<BaseResponse> {
-    await this.createUserInviteUseCase.execute(body);
+    await this.createUserInviteUseCase.execute({ user, ...body });
 
     return {
       success: true,
@@ -244,12 +251,15 @@ export class UsersController {
   }
 
   @Delete('invites/:id')
-  @Log('cancel_user_invite')
+  @Log('delete_user_invite')
   @RequireFeature('delete:user_invite')
-  @ApiOperation({ summary: 'Cancela convite de usuário' })
+  @ApiOperation({ summary: 'Exclui convite de usuário' })
   @ZodResponse({ type: BaseResponse, status: 200 })
-  async cancelUserInvite(@Param('id') id: string): Promise<BaseResponse> {
-    await this.cancelUserInviteUseCase.execute({ id });
+  async cancelUserInvite(
+    @Param('id') id: string,
+    @User() user: RequestUser,
+  ): Promise<BaseResponse> {
+    await this.cancelUserInviteUseCase.execute({ id, user });
 
     return {
       success: true,

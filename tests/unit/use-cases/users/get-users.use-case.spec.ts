@@ -6,6 +6,7 @@ import { Repository } from 'typeorm';
 import { GetUsersUseCase } from '@/app/http/users/use-cases/get-users.use-case';
 import { User } from '@/domain/entities/user';
 
+import { requestUserFactory } from '../../../config/factories/shared.factory';
 import {
   adminUserFactory,
   specialistUserFactory,
@@ -17,6 +18,7 @@ describe('GetUsersUseCase', () => {
 
   const admin = adminUserFactory({ name: 'Admin User' });
   const specialist = specialistUserFactory({ name: 'Dr. Specialist' });
+  const user = requestUserFactory({ role: 'admin' });
 
   beforeEach(async () => {
     usersRepo = mock<Repository<User>>();
@@ -38,7 +40,7 @@ describe('GetUsersUseCase', () => {
     usersRepo.count.mockResolvedValue(2);
     usersRepo.find.mockResolvedValue([admin, specialist]);
 
-    const result = await useCase.execute({ page: 1, perPage: 10 });
+    const result = await useCase.execute({ user, page: 1, perPage: 10 });
 
     expect(usersRepo.find).toHaveBeenCalledWith(
       expect.objectContaining({ skip: 0, take: 10 }),
@@ -74,6 +76,7 @@ describe('GetUsersUseCase', () => {
     usersRepo.find.mockResolvedValue([specialist]);
 
     const result = await useCase.execute({
+      user,
       page: 1,
       perPage: 10,
       role: 'specialist',
@@ -90,6 +93,7 @@ describe('GetUsersUseCase', () => {
     usersRepo.find.mockResolvedValue([inactiveAdmin]);
 
     const result = await useCase.execute({
+      user,
       page: 1,
       perPage: 10,
       status: 'inactive',
@@ -105,6 +109,7 @@ describe('GetUsersUseCase', () => {
     usersRepo.find.mockResolvedValue([john]);
 
     const result = await useCase.execute({
+      user,
       page: 1,
       perPage: 10,
       search: 'John',
@@ -119,6 +124,7 @@ describe('GetUsersUseCase', () => {
     usersRepo.find.mockResolvedValue([admin]);
 
     const result = await useCase.execute({
+      user,
       page: 1,
       perPage: 10,
       startDate: '2024-01-01',
@@ -133,7 +139,7 @@ describe('GetUsersUseCase', () => {
     usersRepo.count.mockResolvedValue(11);
     usersRepo.find.mockResolvedValue([admin]);
 
-    await useCase.execute({ page: 2, perPage: 10 });
+    await useCase.execute({ user, page: 2, perPage: 10 });
 
     expect(usersRepo.find).toHaveBeenCalledWith(
       expect.objectContaining({ skip: 10, take: 10 }),
@@ -145,6 +151,7 @@ describe('GetUsersUseCase', () => {
     usersRepo.find.mockResolvedValue([admin]);
 
     await useCase.execute({
+      user,
       page: 1,
       perPage: 10,
       orderBy: 'date',
@@ -161,7 +168,7 @@ describe('GetUsersUseCase', () => {
       usersRepo.count.mockResolvedValue(0);
       usersRepo.find.mockResolvedValue([]);
 
-      const result = await useCase.execute({ page: 1, perPage: 10 });
+      const result = await useCase.execute({ user, page: 1, perPage: 10 });
 
       expect(result.total).toBe(0);
       expect(result.users).toHaveLength(0);

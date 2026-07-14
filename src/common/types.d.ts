@@ -44,7 +44,7 @@ type ReferralsEvent = 'cancel_referral' | 'create_referral' | 'update_referral';
 
 type UsersEvent =
   | 'activate_user'
-  | 'cancel_user_invite'
+  | 'delete_user_invite'
   | 'create_user_invite'
   | 'deactivate_user'
   | 'update_user';

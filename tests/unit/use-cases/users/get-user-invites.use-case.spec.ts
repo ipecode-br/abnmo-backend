@@ -4,6 +4,7 @@ import { mock, MockProxy } from 'jest-mock-extended';
 import { Repository } from 'typeorm';
 
 import { GetUserInvitesUseCase } from '@/app/http/users/use-cases/get-user-invites.use-case';
+import type { RequestUser } from '@/common/types';
 import { Token } from '@/domain/entities/token';
 
 type TokenStub = Pick<Token, 'id' | 'email' | 'expiresAt' | 'createdAt'>;
@@ -24,6 +25,12 @@ describe('GetUserInvitesUseCase', () => {
 
   const invite1 = makeToken();
   const invite2 = makeToken({ id: 'token-2', email: 'two@test.com' });
+  const user: RequestUser = {
+    id: 'admin-id',
+    email: 'admin@test.com',
+    role: 'admin',
+    features: [],
+  };
 
   beforeEach(async () => {
     tokensRepo = mock<Repository<Token>>();
@@ -45,7 +52,7 @@ describe('GetUserInvitesUseCase', () => {
     tokensRepo.count.mockResolvedValue(2);
     tokensRepo.find.mockResolvedValue([invite1, invite2]);
 
-    const result = await useCase.execute({ page: 1, perPage: 10 });
+    const result = await useCase.execute({ user, page: 1, perPage: 10 });
 
     expect(tokensRepo.find).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -76,6 +83,7 @@ describe('GetUserInvitesUseCase', () => {
     tokensRepo.find.mockResolvedValue([invite]);
 
     const result = await useCase.execute({
+      user,
       page: 1,
       perPage: 10,
       search: 'john',
@@ -91,6 +99,7 @@ describe('GetUserInvitesUseCase', () => {
     tokensRepo.find.mockResolvedValue([invite1]);
 
     const result = await useCase.execute({
+      user,
       page: 1,
       perPage: 10,
       startDate: '2024-01-01',
@@ -105,7 +114,7 @@ describe('GetUserInvitesUseCase', () => {
     tokensRepo.count.mockResolvedValue(11);
     tokensRepo.find.mockResolvedValue([invite1]);
 
-    await useCase.execute({ page: 2, perPage: 10 });
+    await useCase.execute({ user, page: 2, perPage: 10 });
 
     expect(tokensRepo.find).toHaveBeenCalledWith(
       expect.objectContaining({ skip: 10, take: 10 }),
@@ -117,6 +126,7 @@ describe('GetUserInvitesUseCase', () => {
     tokensRepo.find.mockResolvedValue([invite1]);
 
     await useCase.execute({
+      user,
       page: 1,
       perPage: 10,
       orderBy: 'email',
@@ -133,7 +143,7 @@ describe('GetUserInvitesUseCase', () => {
       tokensRepo.count.mockResolvedValue(0);
       tokensRepo.find.mockResolvedValue([]);
 
-      const result = await useCase.execute({ page: 1, perPage: 10 });
+      const result = await useCase.execute({ user, page: 1, perPage: 10 });
 
       expect(result.total).toBe(0);
       expect(result.invites).toHaveLength(0);

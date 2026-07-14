@@ -8,6 +8,7 @@ import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.us
 import { CreateUserInviteUseCase } from '@/app/http/users/use-cases/create-user-invite.use-case';
 import { MailService } from '@/app/mail/mail.service';
 import { LogService } from '@/common/log/log.service';
+import type { RequestUser } from '@/common/types';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
@@ -21,6 +22,13 @@ describe('CreateUserInviteUseCase', () => {
   let dataSource: { transaction: jest.Mock };
   let envService: MockProxy<EnvService>;
   let mailService: MockProxy<MailService>;
+
+  const user: RequestUser = {
+    id: 'admin-id',
+    email: 'admin@test.com',
+    role: 'admin',
+    features: [],
+  };
 
   beforeEach(async () => {
     usersRepo = mock<Repository<User>>();
@@ -70,7 +78,7 @@ describe('CreateUserInviteUseCase', () => {
       expiresAt: new Date('2025-12-31'),
     });
 
-    await useCase.execute({ email: 'newuser@test.com', role: 'member' });
+    await useCase.execute({ user, email: 'newuser@test.com', role: 'member' });
 
     expect(usersRepo.findOne).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -102,7 +110,11 @@ describe('CreateUserInviteUseCase', () => {
       expiresAt: new Date('2025-12-31'),
     });
 
-    await useCase.execute({ email: 'expired@test.com', role: 'specialist' });
+    await useCase.execute({
+      user,
+      email: 'expired@test.com',
+      role: 'specialist',
+    });
 
     expect(createTokenUseCase.execute).toHaveBeenCalled();
     expect(mailService.send).toHaveBeenCalled();
@@ -117,7 +129,7 @@ describe('CreateUserInviteUseCase', () => {
       expiresAt: new Date('2025-12-31'),
     });
 
-    await useCase.execute({ email: 'newuser@test.com', role: 'admin' });
+    await useCase.execute({ user, email: 'newuser@test.com', role: 'admin' });
 
     expect(mailService.send).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -134,7 +146,7 @@ describe('CreateUserInviteUseCase', () => {
       usersRepo.findOne.mockResolvedValue({ id: 'existing-id' } as User);
 
       await expect(
-        useCase.execute({ email: 'existing@test.com', role: 'member' }),
+        useCase.execute({ user, email: 'existing@test.com', role: 'member' }),
       ).rejects.toThrow(ConflictException);
 
       expect(createTokenUseCase.execute).not.toHaveBeenCalled();
@@ -149,7 +161,7 @@ describe('CreateUserInviteUseCase', () => {
       } as Token);
 
       await expect(
-        useCase.execute({ email: 'invited@test.com', role: 'member' }),
+        useCase.execute({ user, email: 'invited@test.com', role: 'member' }),
       ).rejects.toThrow(ConflictException);
 
       expect(createTokenUseCase.execute).not.toHaveBeenCalled();
