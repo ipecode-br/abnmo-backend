@@ -50,10 +50,13 @@ export class CancelReferralUseCase {
       [referral.specialist?.id || '', referral.patient.id],
     );
 
-    if (referral.status === 'canceled') {
-      throw new BadRequestException('Este encaminhamento já está cancelado.', {
-        cause: `Referral with ID <${id}> is already canceled`,
-      });
+    if (referral.status !== 'scheduled') {
+      throw new BadRequestException(
+        'Este encaminhamento não pode ser cancelado.',
+        {
+          cause: `Referral with ID <${id}> has status <${referral.status}>`,
+        },
+      );
     }
 
     await this.referralsRepository.update(id, { status: 'canceled' });

@@ -145,7 +145,7 @@ describe('Appointments (e2e)', () => {
       );
     });
 
-    it('cannot list appointments without "read:appointment" or "read:appointment:others" feature', async () => {
+    it('cannot list appointments without "read:appointment" or "read:appointment:others"', async () => {
       const { cookies } = await createMember({ login: true });
 
       const res = await api.get(
@@ -273,7 +273,7 @@ describe('Appointments (e2e)', () => {
       );
     });
 
-    it('cannot update appointment without "update:appointment" feature', async () => {
+    it('cannot update appointment without "update:appointment"', async () => {
       const { cookies } = await createMember({ login: true });
 
       const res = await api.put<BaseResponseBody, UpdateAppointmentBody>(
