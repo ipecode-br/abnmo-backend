@@ -14,7 +14,10 @@
     "^.+\\.(t|j)s$": [
       "ts-jest",
       {
-        "tsconfig": { "skipLibCheck": true },
+        "tsconfig": {
+          "isolatedModules": true,
+          "skipLibCheck": true
+        },
         "transpileOnly": true
       }
     ]

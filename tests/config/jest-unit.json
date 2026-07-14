@@ -3,9 +3,7 @@
   "moduleFileExtensions": ["js", "json", "ts"],
   "rootDir": "../..",
   "testEnvironment": "node",
-  "testMatch": [
-    "<rootDir>/tests/**/*.spec.ts"
-  ],
+  "testMatch": ["<rootDir>/tests/**/*.spec.ts"],
   "moduleNameMapper": {
     "^@/(.*)$": "<rootDir>/src/$1",
     "^uuid$": "<rootDir>/src/__mocks__/uuid.ts",

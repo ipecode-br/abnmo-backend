@@ -38,10 +38,8 @@ export function getTypeOrmConfig(env: EnvService): TypeOrmModuleOptions {
       cache: false,
       extra: {
         ...baseConfig.extra,
-        acquireTimeout: 2000,
         charset: 'utf8mb4_unicode_ci',
         ssl: false,
-        timeout: 2000,
       },
     };
   }

@@ -43,21 +43,24 @@ import { StorageModule } from './storage/storage.module';
       imports: [EnvModule],
       inject: [EnvService],
       useFactory: (envService: EnvService) => {
+        const isTest = envService.get('NODE_ENV') === 'test';
         const usePinoPretty = envService.get('APP_ENVIRONMENT') !== 'lambda';
         return {
           pinoHttp: {
             autoLogging: false,
+            level: isTest ? 'silent' : 'info',
             formatters: { level: (label) => ({ level: label }) },
-            transport: usePinoPretty
-              ? {
-                  target: 'pino-pretty',
-                  options: {
-                    colorize: true,
-                    translateTime: 'UTC:yyyy-mm-dd HH:MM:ss.l',
-                    ignore: 'req,res',
-                  },
-                }
-              : undefined,
+            transport:
+              usePinoPretty && !isTest
+                ? {
+                    target: 'pino-pretty',
+                    options: {
+                      colorize: true,
+                      translateTime: 'UTC:yyyy-mm-dd HH:MM:ss.l',
+                      ignore: 'req,res',
+                    },
+                  }
+                : undefined,
           },
         };
       },
