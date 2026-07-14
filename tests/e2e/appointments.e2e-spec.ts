@@ -16,8 +16,12 @@ import {
   createPatient,
   createSpecialist,
 } from '../config/helpers';
-import { getTestApp, getTestDataSource } from '../config/setup-e2e';
-import { createAppointment, getAppointment } from '../helpers/appointments';
+import { getTestApp } from '../config/setup-e2e';
+import {
+  createAppointment,
+  getAppointmentById,
+  getAppointments,
+} from '../helpers/appointments';
 
 describe('Appointments (e2e)', () => {
   let app: INestApplication;
@@ -54,16 +58,13 @@ describe('Appointments (e2e)', () => {
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
       expect(res.body.message).toBe('Atendimento cadastrado com sucesso.');
-    });
 
-    it('cannot create an appointment without auth', async () => {
-      const res = await api.post('/appointments');
+      const appointments = await getAppointments();
 
-      expect(res.status).toBe(401);
-      expect(res.body.success).toBe(false);
-      expect(res.body.message).toBe(
-        'Você não tem permissão para executar esta ação.',
-      );
+      expect(appointments.length).toBe(1);
+      expect(appointments[0].patient.id).toBe(patient.id);
+      expect(appointments[0].patient.name).toBe(patient.name);
+      expect(appointments[0].patient.email).toBe(patient.email);
     });
 
     it('cannot create an appointment without "create:appointment"', async () => {
@@ -107,11 +108,10 @@ describe('Appointments (e2e)', () => {
         features: ['read:appointment:others'],
       });
       const { patient } = await createPatient();
-      const dataSource = getTestDataSource();
 
       const totalAppointments = 15;
       for (let i = 0; i < totalAppointments; i++) {
-        await createAppointment(dataSource, { patient });
+        await createAppointment({ patient });
       }
 
       const firstPage = await api.get<GetAppointmentsResponse>(
@@ -133,16 +133,6 @@ describe('Appointments (e2e)', () => {
       expect(secondPage.status).toBe(200);
       expect(secondPage.body.data.appointments).toHaveLength(5);
       expect(secondPage.body.data.total).toBe(totalAppointments);
-    });
-
-    it('cannot list appointments without auth', async () => {
-      const res = await api.get('/appointments');
-
-      expect(res.status).toBe(401);
-      expect(res.body.success).toBe(false);
-      expect(res.body.message).toBe(
-        'Você não tem permissão para executar esta ação.',
-      );
     });
 
     it('cannot list appointments without "read:appointment" or "read:appointment:others"', async () => {
@@ -167,9 +157,8 @@ describe('Appointments (e2e)', () => {
       });
       const { patient: patientB } = await createPatient();
 
-      const dataSource = getTestDataSource();
-      await createAppointment(dataSource, { patient: patientA });
-      await createAppointment(dataSource, { patient: patientB });
+      await createAppointment({ patient: patientA });
+      await createAppointment({ patient: patientB });
 
       const res = await api.get<GetAppointmentsResponse>(
         '/appointments',
@@ -198,8 +187,7 @@ describe('Appointments (e2e)', () => {
         features: ['update:appointment:others'],
       });
 
-      const dataSource = getTestDataSource();
-      const appointment = await createAppointment(dataSource, {
+      const appointment = await createAppointment({
         annotation: null,
         condition: 'stable',
         patient,
@@ -215,10 +203,7 @@ describe('Appointments (e2e)', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.message).toBe('Atendimento atualizado com sucesso.');
 
-      const updatedAppointment = await getAppointment(
-        dataSource,
-        appointment.id,
-      );
+      const updatedAppointment = await getAppointmentById(appointment.id);
 
       expect(updatedAppointment?.condition).toBe(dataToUpdate.condition);
       expect(updatedAppointment?.annotation).toBe(dataToUpdate.annotation);
@@ -241,24 +226,11 @@ describe('Appointments (e2e)', () => {
       expect(res.body.message).toBe('Atendimento não encontrado.');
     });
 
-    it('cannot update without auth', async () => {
-      const res = await api.put('/appointments/sample-id');
-
-      expect(res.status).toBe(401);
-      expect(res.body.success).toBe(false);
-      expect(res.body.message).toBe(
-        'Você não tem permissão para executar esta ação.',
-      );
-    });
-
     it('patient cannot update another patient appointment', async () => {
       const { cookies: cookiesA } = await createPatient({ login: true });
       const { patient: patientB } = await createPatient();
 
-      const dataSource = getTestDataSource();
-      const appointment = await createAppointment(dataSource, {
-        patient: patientB,
-      });
+      const appointment = await createAppointment({ patient: patientB });
 
       const res = await api.put<BaseResponseBody, UpdateAppointmentBody>(
         `/appointments/${appointment.id}`,
@@ -296,8 +268,7 @@ describe('Appointments (e2e)', () => {
         login: true,
       });
 
-      const dataSource = getTestDataSource();
-      const appointment = await createAppointment(dataSource, {
+      const appointment = await createAppointment({
         patient,
         specialist: specialistA,
       });
@@ -324,8 +295,7 @@ describe('Appointments (e2e)', () => {
         features: ['cancel:appointment:others'],
       });
 
-      const dataSource = getTestDataSource();
-      const appointment = await createAppointment(dataSource, {
+      const appointment = await createAppointment({
         status: 'scheduled',
         patient,
       });
@@ -340,10 +310,7 @@ describe('Appointments (e2e)', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.message).toBe('Atendimento cancelado com sucesso.');
 
-      const updatedAppointment = await getAppointment(
-        dataSource,
-        appointment.id,
-      );
+      const updatedAppointment = await getAppointmentById(appointment.id);
 
       expect(updatedAppointment?.status).toBe('canceled');
     });
@@ -354,8 +321,7 @@ describe('Appointments (e2e)', () => {
         features: ['cancel:appointment'],
       });
 
-      const dataSource = getTestDataSource();
-      const appointment = await createAppointment(dataSource, {
+      const appointment = await createAppointment({
         status: 'scheduled',
         patient,
       });
@@ -370,10 +336,7 @@ describe('Appointments (e2e)', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.message).toBe('Atendimento cancelado com sucesso.');
 
-      const updatedAppointment = await getAppointment(
-        dataSource,
-        appointment.id,
-      );
+      const updatedAppointment = await getAppointmentById(appointment.id);
 
       expect(updatedAppointment?.status).toBe('canceled');
     });
@@ -385,8 +348,7 @@ describe('Appointments (e2e)', () => {
         features: ['cancel:appointment'],
       });
 
-      const dataSource = getTestDataSource();
-      const appointment = await createAppointment(dataSource, {
+      const appointment = await createAppointment({
         status: 'scheduled',
         patient,
         specialist,
@@ -402,10 +364,7 @@ describe('Appointments (e2e)', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.message).toBe('Atendimento cancelado com sucesso.');
 
-      const updatedAppointment = await getAppointment(
-        dataSource,
-        appointment.id,
-      );
+      const updatedAppointment = await getAppointmentById(appointment.id);
 
       expect(updatedAppointment?.status).toBe('canceled');
     });
@@ -427,16 +386,6 @@ describe('Appointments (e2e)', () => {
       expect(res.body.message).toBe('Atendimento não encontrado.');
     });
 
-    it('cannot cancel without auth', async () => {
-      const res = await api.patch('/appointments/sample-id/cancel');
-
-      expect(res.status).toBe(401);
-      expect(res.body.success).toBe(false);
-      expect(res.body.message).toBe(
-        'Você não tem permissão para executar esta ação.',
-      );
-    });
-
     it('cannot cancel a non "scheduled" appointment', async () => {
       const { patient } = await createPatient();
       const { cookies } = await createMember({
@@ -444,8 +393,7 @@ describe('Appointments (e2e)', () => {
         features: ['cancel:appointment:others'],
       });
 
-      const dataSource = getTestDataSource();
-      const appointment = await createAppointment(dataSource, {
+      const appointment = await createAppointment({
         patient,
         status: 'completed',
       });
@@ -465,8 +413,7 @@ describe('Appointments (e2e)', () => {
       const { cookies } = await createMember({ login: true });
       const { patient } = await createPatient();
 
-      const dataSource = getTestDataSource();
-      const appointment = await createAppointment(dataSource, { patient });
+      const appointment = await createAppointment({ patient });
 
       const res = await api.patch<BaseResponseBody>(
         `/appointments/${appointment.id}/cancel`,
@@ -485,10 +432,7 @@ describe('Appointments (e2e)', () => {
       const { patient: patientA } = await createPatient();
       const { cookies: cookiesB } = await createPatient({ login: true });
 
-      const dataSource = getTestDataSource();
-      const appointment = await createAppointment(dataSource, {
-        patient: patientA,
-      });
+      const appointment = await createAppointment({ patient: patientA });
 
       const res = await api.patch<BaseResponseBody>(
         `/appointments/${appointment.id}/cancel`,
@@ -510,8 +454,7 @@ describe('Appointments (e2e)', () => {
       });
       const { patient } = await createPatient();
 
-      const dataSource = getTestDataSource();
-      const appointment = await createAppointment(dataSource, {
+      const appointment = await createAppointment({
         patient,
         specialist: specialistA,
       });

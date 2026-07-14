@@ -63,9 +63,6 @@ export class GetAppointmentsUseCase {
   }: GetAppointmentsUseCaseInput): Promise<GetAppointmentsUseCaseOutput> {
     can(user, ['read:appointment', 'read:appointment:others']);
 
-    const startDate = props.startDate ? new Date(props.startDate) : null;
-    const endDate = props.endDate ? new Date(props.endDate) : null;
-
     const ORDER_BY_MAPPING: Record<AppointmentsOrderBy, keyof Appointment> = {
       date: 'date',
       patient: 'patient',
@@ -74,6 +71,9 @@ export class GetAppointmentsUseCase {
       condition: 'condition',
       professional: 'professionalName',
     };
+
+    const startDate = props.startDate ? new Date(props.startDate) : null;
+    const endDate = props.endDate ? new Date(props.endDate) : null;
 
     const where: FindOptionsWhere<Appointment> = {};
 
