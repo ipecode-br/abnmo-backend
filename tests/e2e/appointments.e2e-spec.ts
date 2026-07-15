@@ -12,6 +12,7 @@ import {
   createApiClient,
 } from '../config/api-client';
 import {
+  createAdmin,
   createMember,
   createPatient,
   createSpecialist,
@@ -84,10 +85,7 @@ describe('Appointments (e2e)', () => {
     });
 
     it('cannot create an appointment for a non-existent patient', async () => {
-      const { cookies } = await createMember({
-        login: true,
-        features: ['create:appointment'],
-      });
+      const { cookies } = await createAdmin({ login: true });
 
       const res = await api.post<BaseResponseBody, CreateAppointmentBody>(
         '/appointments',
@@ -181,12 +179,12 @@ describe('Appointments (e2e)', () => {
     };
 
     it('updates an appointment', async () => {
-      const { patient } = await createPatient();
       const { cookies } = await createMember({
         login: true,
         features: ['update:appointment:others'],
       });
 
+      const { patient } = await createPatient();
       const appointment = await createAppointment({
         annotation: null,
         condition: 'stable',
@@ -210,10 +208,7 @@ describe('Appointments (e2e)', () => {
     });
 
     it('returns 404 for non-existent ID', async () => {
-      const { cookies } = await createMember({
-        login: true,
-        features: ['update:appointment:others'],
-      });
+      const { cookies } = await createAdmin({ login: true });
 
       const res = await api.put<BaseResponseBody, UpdateAppointmentBody>(
         '/appointments/non-existent-id',
@@ -370,10 +365,7 @@ describe('Appointments (e2e)', () => {
     });
 
     it('returns 404 for non-existent ID', async () => {
-      const { cookies } = await createMember({
-        login: true,
-        features: ['cancel:appointment:others'],
-      });
+      const { cookies } = await createAdmin({ login: true });
 
       const res = await api.patch<BaseResponseBody>(
         '/appointments/non-existent-id/cancel',
@@ -386,13 +378,10 @@ describe('Appointments (e2e)', () => {
       expect(res.body.message).toBe('Atendimento não encontrado.');
     });
 
-    it('cannot cancel a non "scheduled" appointment', async () => {
-      const { patient } = await createPatient();
-      const { cookies } = await createMember({
-        login: true,
-        features: ['cancel:appointment:others'],
-      });
+    it('cannot cancel a non-scheduled appointment', async () => {
+      const { cookies } = await createAdmin({ login: true });
 
+      const { patient } = await createPatient();
       const appointment = await createAppointment({
         patient,
         status: 'completed',

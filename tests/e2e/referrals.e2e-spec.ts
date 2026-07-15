@@ -12,6 +12,7 @@ import {
   createApiClient,
 } from '../config/api-client';
 import {
+  createAdmin,
   createMember,
   createPatient,
   createSpecialist,
@@ -84,10 +85,7 @@ describe('Referrals (e2e)', () => {
     });
 
     it('cannot create a referral for a non-existent patient', async () => {
-      const { cookies } = await createMember({
-        login: true,
-        features: ['create:referral'],
-      });
+      const { cookies } = await createAdmin({ login: true });
 
       const res = await api.post<BaseResponseBody, CreateReferralBody>(
         '/referrals',
@@ -181,12 +179,12 @@ describe('Referrals (e2e)', () => {
     };
 
     it('updates a referral', async () => {
-      const { patient } = await createPatient();
       const { cookies } = await createMember({
         login: true,
         features: ['update:referral:others'],
       });
 
+      const { patient } = await createPatient();
       const referral = await createReferral({
         annotation: null,
         condition: 'stable',
@@ -210,10 +208,7 @@ describe('Referrals (e2e)', () => {
     });
 
     it('returns 404 for non-existent ID', async () => {
-      const { cookies } = await createMember({
-        login: true,
-        features: ['update:referral:others'],
-      });
+      const { cookies } = await createAdmin({ login: true });
 
       const res = await api.put<BaseResponseBody, UpdateReferralBody>(
         '/referrals/non-existent-id',
@@ -344,12 +339,12 @@ describe('Referrals (e2e)', () => {
     });
 
     it('allows specialist to cancel its own referral with "cancel:referral"', async () => {
-      const { patient } = await createPatient();
       const { specialist, cookies } = await createSpecialist({
         login: true,
         features: ['cancel:referral'],
       });
 
+      const { patient } = await createPatient();
       const referral = await createReferral({
         status: 'scheduled',
         patient,
@@ -372,10 +367,7 @@ describe('Referrals (e2e)', () => {
     });
 
     it('returns 404 for non-existent ID', async () => {
-      const { cookies } = await createMember({
-        login: true,
-        features: ['cancel:referral:others'],
-      });
+      const { cookies } = await createAdmin({ login: true });
 
       const res = await api.patch<BaseResponseBody>(
         '/referrals/non-existent-id/cancel',
@@ -388,7 +380,7 @@ describe('Referrals (e2e)', () => {
       expect(res.body.message).toBe('Encaminhamento não encontrado.');
     });
 
-    it('cannot cancel a non "scheduled" referral', async () => {
+    it('cannot cancel a non-scheduled referral', async () => {
       const { patient } = await createPatient();
       const { cookies } = await createMember({
         login: true,

@@ -4,13 +4,14 @@ NestJS + TypeORM + MySQL + Zod API.
 
 ## Quick commands
 
-| Command                                    | What it does                                             |
-| ------------------------------------------ | -------------------------------------------------------- |
-| `npm run dev`                              | Docker up → wait for DB → migrate → `nest start --watch` |
-| `npm run validate`                         | ESLint **+** `tsc --noEmit` (both in one command)        |
-| `npm run lint:prettier:check`              | Prettier check only                                      |
-| `npm run lint:prettier:fix`                | Prettier fix only                                        |
-| `npm run test:prepare && npm run test:e2e` | Full E2E run                                             |
+| Command                                         | What it does                                                         |
+| ----------------------------------------------- | -------------------------------------------------------------------- |
+| `npm run dev`                                   | Docker up → wait for DB → migrate → `nest start --watch`             |
+| `npm run validate`                              | ESLint **+** `tsc --noEmit` (both in one command)                    |
+| `npm run lint:prettier:check`                   | Prettier check only                                                  |
+| `npm run lint:prettier:fix`                     | Prettier fix only                                                    |
+| `npm run lint:prettier:fix && npm run validate` | **Always run this before committing** — fix formatting then validate |
+| `npm run test:prepare && npm run test:e2e`      | Full E2E run                                                         |
 
 ## Architecture
 
