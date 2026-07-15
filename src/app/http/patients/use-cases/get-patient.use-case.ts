@@ -2,10 +2,13 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
+import { can } from '@/common/authorization/can';
+import { RequestUser } from '@/common/types';
 import { User } from '@/domain/entities/user';
 import { PatientDetailsResponse } from '@/domain/schemas/patients/responses';
 
 interface GetPatientUseCaseInput {
+  user: RequestUser;
   id: string;
 }
 
@@ -17,8 +20,11 @@ export class GetPatientUseCase {
   ) {}
 
   async execute({
+    user,
     id,
   }: GetPatientUseCaseInput): Promise<PatientDetailsResponse> {
+    can(user, ['read:patient', 'read:patient:others'], id);
+
     const patient = await this.usersRepository.findOne({
       where: { id, role: 'patient' },
       relations: { survey: true },

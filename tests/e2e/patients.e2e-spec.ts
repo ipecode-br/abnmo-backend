@@ -1,213 +1,419 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 
-import { Survey } from '@/domain/entities/survey';
-import { User } from '@/domain/entities/user';
+import type {
+  GetPatientOptionsResponse,
+  GetPatientResponse,
+  GetPatientsResponse,
+  UpdatePatientBody,
+} from '@/app/http/patients/patients.dtos';
 
 import {
-  createAdminAndLogin,
-  createMemberAndLogin,
-  createPatientAndLogin,
-} from '../config/auth-helper';
-import { surveyFactory } from '../config/factories/survey.factory';
-import { userFactory } from '../config/factories/user.factory';
-import { getTestApp, getTestDataSource } from '../config/setup-e2e';
+  ApiClient,
+  BaseResponseBody,
+  createApiClient,
+} from '../config/api-client';
+import { createAdmin, createMember, createPatient } from '../config/helpers';
+import { getTestApp } from '../config/setup-e2e';
+import { getPatientById } from '../helpers/patients';
+import { createSurvey } from '../helpers/surveys';
 
 describe('Patients (e2e)', () => {
   let app: INestApplication;
+  let api: ApiClient;
 
   beforeAll(() => {
     app = getTestApp();
+    api = createApiClient(app);
   });
-
-  async function createPatientWithSurvey(overrides: Partial<User> = {}) {
-    const ds = getTestDataSource();
-    const usersRepo = ds.getRepository(User);
-    const surveysRepo = ds.getRepository(Survey);
-
-    const patient = usersRepo.create(
-      userFactory({
-        role: 'patient',
-        ...overrides,
-      }),
-    );
-    await usersRepo.save(patient);
-
-    const survey = surveysRepo.create();
-    Object.assign(survey, surveyFactory(patient));
-    await surveysRepo.save(survey);
-
-    return patient;
-  }
 
   describe('GET /patients', () => {
-    it('returns 401 without auth', async () => {
-      await request(app.getHttpServer())
-        .get('/patients')
-        .query({ page: 1, perPage: 10 })
-        .expect(401);
+    it('paginates patients', async () => {
+      const { cookies } = await createMember({
+        login: true,
+        features: ['read:patient:others'],
+      });
+
+      const totalPatients = 15;
+      for (let i = 0; i < totalPatients; i++) {
+        await createPatient();
+      }
+
+      const firstPage = await api.get<GetPatientsResponse>(
+        '/patients',
+        { page: 1, perPage: 10 },
+        { cookies },
+      );
+
+      expect(firstPage.status).toBe(200);
+      expect(firstPage.body.data.patients).toHaveLength(10);
+      expect(firstPage.body.data.total).toBe(totalPatients);
+
+      const secondPage = await api.get<GetPatientsResponse>(
+        '/patients',
+        { page: 2, perPage: 10 },
+        { cookies },
+      );
+
+      expect(secondPage.status).toBe(200);
+      expect(secondPage.body.data.patients).toHaveLength(5);
+      expect(secondPage.body.data.total).toBe(totalPatients);
     });
 
-    it('returns 403 as patient (insufficient permissions)', async () => {
-      const { cookies } = await createPatientAndLogin();
+    it('filters by status', async () => {
+      const { cookies } = await createAdmin({ login: true });
 
-      await request(app.getHttpServer())
-        .get('/patients')
-        .set('Cookie', cookies)
-        .query({ page: 1, perPage: 10 })
-        .expect(403);
-    });
+      await createPatient({ status: 'active' });
+      await createPatient({ status: 'active' });
+      await createPatient({ status: 'inactive' });
 
-    it('returns 200 + paginated data as member with read:patient:others', async () => {
-      await createPatientWithSurvey({
-        name: 'Patient One',
-        email: 'p1@example.com',
-      });
-      await createPatientWithSurvey({
-        name: 'Patient Two',
-        email: 'p2@example.com',
-      });
+      const res = await api.get<GetPatientsResponse>(
+        '/patients',
+        { page: 1, perPage: 10, status: 'inactive' },
+        { cookies },
+      );
 
-      const { cookies } = await createMemberAndLogin();
-
-      const res = await request(app.getHttpServer())
-        .get('/patients')
-        .set('Cookie', cookies)
-        .query({ page: 1, perPage: 10 })
-        .expect(200);
-
-      expect(res.body.success).toBe(true);
-      expect(res.body.data).toBeDefined();
-      expect(res.body.data.patients).toBeInstanceOf(Array);
-      expect(res.body.data.total).toBeGreaterThanOrEqual(2);
-    });
-
-    it('GET /patients?search=xxx filters results', async () => {
-      await createPatientWithSurvey({
-        name: 'Alpha Patient',
-        email: 'alpha@example.com',
-      });
-      await createPatientWithSurvey({
-        name: 'Beta Patient',
-        email: 'beta@example.com',
-      });
-
-      const { cookies } = await createMemberAndLogin();
-
-      const res = await request(app.getHttpServer())
-        .get('/patients')
-        .set('Cookie', cookies)
-        .query({ page: 1, perPage: 10, search: 'Alpha' })
-        .expect(200);
-
+      expect(res.status).toBe(200);
       expect(res.body.data.patients).toHaveLength(1);
-      expect(res.body.data.patients[0].name).toBe('Alpha Patient');
+      expect(res.body.data.patients[0].status).toBe('inactive');
       expect(res.body.data.total).toBe(1);
     });
-  });
 
-  describe('GET /patients/:id', () => {
-    it('returns 200 for existing patient', async () => {
-      const patient = await createPatientWithSurvey({
-        name: 'Detail Patient',
-        email: 'detail@example.com',
-      });
-      const { cookies } = await createMemberAndLogin();
+    it('filters by search', async () => {
+      const { cookies } = await createAdmin({ login: true });
 
-      const res = await request(app.getHttpServer())
-        .get(`/patients/${patient.id}`)
-        .set('Cookie', cookies)
-        .expect(200);
+      await createPatient({ name: 'Alice Unique' });
+      await createPatient({ name: 'Bob Normal' });
 
-      expect(res.body.success).toBe(true);
-      expect(res.body.data).toBeDefined();
-      expect(res.body.data.id).toBe(patient.id);
-      expect(res.body.data.name).toBe(patient.name);
+      const res = await api.get<GetPatientsResponse>(
+        '/patients',
+        { page: 1, perPage: 10, search: 'uniqu' },
+        { cookies },
+      );
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.patients).toHaveLength(1);
+      expect(res.body.data.total).toBe(1);
+      expect(res.body.data.patients[0].name).toBe('Alice Unique');
     });
 
-    it('returns 404 for non-existent patient', async () => {
-      const { cookies } = await createMemberAndLogin();
+    it('filters by date range', async () => {
+      const { cookies } = await createAdmin({ login: true });
 
-      await request(app.getHttpServer())
-        .get('/patients/00000000-0000-0000-0000-000000000000')
-        .set('Cookie', cookies)
-        .expect(404);
-    });
-  });
+      await createPatient({ name: 'Range Patient' });
 
-  describe('PUT /patients/:id', () => {
-    it('returns 200 on successful update (admin)', async () => {
-      const patient = await createPatientWithSurvey({
-        name: 'Old Name',
-        email: 'update@example.com',
-      });
-      const { cookies } = await createAdminAndLogin();
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - 1);
+      const endDate = new Date();
+      endDate.setDate(endDate.getDate() + 1);
 
-      await request(app.getHttpServer())
-        .put(`/patients/${patient.id}`)
-        .set('Cookie', cookies)
-        .send({
-          name: 'Updated Name',
-          cpf: '12345678901',
-          phone: '11999999999',
-          susId: '123456789012345',
-          supportContacts: [
-            { name: 'Contact Name', kinship: 'parent', phone: '11988888888' },
-          ],
-        })
-        .expect(200);
-    });
-  });
+      const res = await api.get<GetPatientsResponse>(
+        '/patients',
+        { page: 1, perPage: 10, startDate, endDate },
+        { cookies },
+      );
 
-  describe('PATCH /patients/:id/deactivate', () => {
-    it('returns 200 on successful deactivate (admin)', async () => {
-      const patient = await createPatientWithSurvey({
-        name: 'To Deactivate',
-        email: 'deact@example.com',
-      });
-      const { cookies } = await createAdminAndLogin();
-
-      await request(app.getHttpServer())
-        .patch(`/patients/${patient.id}/deactivate`)
-        .set('Cookie', cookies)
-        .expect(200);
+      expect(res.status).toBe(200);
+      expect(res.body.data.total).toBe(1);
+      expect(res.body.data.patients[0].name).toBe('Range Patient');
     });
 
-    it('returns 409 for already inactive patient', async () => {
-      const patient = await createPatientWithSurvey({
-        name: 'Already Inactive',
-        email: 'inact@example.com',
-        status: 'inactive',
-      });
-      const { cookies } = await createAdminAndLogin();
+    it('blocks user without "read:patient:others"', async () => {
+      const { cookies } = await createMember({ login: true, features: [] });
 
-      await request(app.getHttpServer())
-        .patch(`/patients/${patient.id}/deactivate`)
-        .set('Cookie', cookies)
-        .expect(409);
+      const res = await api.get(
+        '/patients',
+        { page: 1, perPage: 10 },
+        { cookies },
+      );
+
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe(
+        'Você não tem permissão para executar esta ação.',
+      );
     });
   });
 
   describe('GET /patients/options', () => {
-    it('returns 200 with active patients', async () => {
-      await createPatientWithSurvey({
-        name: 'Opt Patient',
-        email: 'opt@example.com',
+    it('lists active patients', async () => {
+      const { cookies } = await createMember({
+        login: true,
+        features: ['read:patient:others'],
       });
-      const { cookies } = await createMemberAndLogin();
 
-      const res = await request(app.getHttpServer())
-        .get('/patients/options')
-        .set('Cookie', cookies)
-        .expect(200);
+      await createPatient({ status: 'active' });
+      await createPatient({ status: 'inactive' });
 
+      const res = await api.get<GetPatientOptionsResponse>(
+        '/patients/options',
+        undefined,
+        { cookies },
+      );
+
+      expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.data).toBeDefined();
       expect(res.body.data.patients).toBeInstanceOf(Array);
-      expect(res.body.data.total).toBeGreaterThanOrEqual(1);
-      expect(res.body.data.patients[0]).toHaveProperty('id');
-      expect(res.body.data.patients[0]).toHaveProperty('name');
-      expect(res.body.data.patients[0]).toHaveProperty('cpf');
+      expect(res.body.data.patients.length).toBe(1);
+    });
+
+    it('blocks user without "read:patient:others"', async () => {
+      const { cookies } = await createMember({ login: true, features: [] });
+
+      const res = await api.get('/patients/options', undefined, { cookies });
+
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe(
+        'Você não tem permissão para executar esta ação.',
+      );
+    });
+  });
+
+  describe('GET /patients/:id', () => {
+    it('returns patient detail', async () => {
+      const { cookies } = await createMember({
+        login: true,
+        features: ['read:patient:others'],
+      });
+
+      const { patient } = await createPatient();
+      await createSurvey(patient);
+
+      const res = await api.get<GetPatientResponse>(
+        `/patients/${patient.id}`,
+        undefined,
+        { cookies },
+      );
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.id).toBe(patient.id);
+      expect(res.body.data.name).toBe(patient.name);
+      expect(res.body.data.email).toBe(patient.email);
+    });
+
+    it('allows patient to see own data', async () => {
+      const { patient, cookies } = await createPatient({
+        login: true,
+        features: ['read:patient'],
+      });
+      await createSurvey(patient);
+
+      const res = await api.get<GetPatientResponse>(
+        `/patients/${patient.id}`,
+        undefined,
+        { cookies },
+      );
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.id).toBe(patient.id);
+    });
+
+    it('blocks patient to see other patient data', async () => {
+      const { cookies } = await createPatient({
+        login: true,
+        features: ['read:patient'],
+      });
+      const { patient } = await createPatient();
+
+      const res = await api.get(`/patients/${patient.id}`, undefined, {
+        cookies,
+      });
+
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe(
+        'Você não tem permissão para executar esta ação.',
+      );
+    });
+
+    it('returns not found for non-existent ID', async () => {
+      const { cookies } = await createAdmin({ login: true });
+
+      const res = await api.get('/patients/non-existent-id', undefined, {
+        cookies,
+      });
+
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Paciente não encontrado.');
+    });
+
+    it('blocks user without "read:patient" or "read:patient:others"', async () => {
+      const { cookies } = await createMember({ login: true, features: [] });
+      const { patient } = await createPatient();
+
+      const res = await api.get(`/patients/${patient.id}`, undefined, {
+        cookies,
+      });
+
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe(
+        'Você não tem permissão para executar esta ação.',
+      );
+    });
+  });
+
+  describe('PUT /patients/:id', () => {
+    const updateBody: UpdatePatientBody = {
+      name: 'Updated Patient',
+      susId: '112233',
+      cpf: '11122233344',
+      phone: '11222223333',
+      supportContacts: [
+        {
+          name: 'Contact Name',
+          kinship: 'parent',
+          phone: '11222223333',
+        },
+      ],
+    };
+
+    it('updates patient', async () => {
+      const { cookies } = await createMember({
+        login: true,
+        features: ['update:patient:others'],
+      });
+
+      const { patient } = await createPatient();
+
+      const res = await api.put<BaseResponseBody, UpdatePatientBody>(
+        `/patients/${patient.id}`,
+        updateBody,
+        { cookies },
+      );
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.message).toBe('Paciente atualizado com sucesso.');
+
+      const updatedPatient = await getPatientById(patient.id);
+
+      expect(updatedPatient?.name).toBe(updateBody.name);
+      expect(updatedPatient?.phone).toBe(updateBody.phone);
+      expect(updatedPatient?.cpf).toBe(updateBody.cpf);
+      expect(updatedPatient?.susId).toBe(updateBody.susId);
+    });
+
+    it('rejects duplicate "CPF"', async () => {
+      const { cookies } = await createAdmin({ login: true });
+
+      const duplicatedCPF = '11111111111';
+      await createPatient({ cpf: duplicatedCPF });
+      const { patient: patient } = await createPatient({ cpf: '22222222222' });
+
+      const res = await api.put<BaseResponseBody, UpdatePatientBody>(
+        `/patients/${patient.id}`,
+        { ...updateBody, cpf: duplicatedCPF },
+        { cookies },
+      );
+
+      expect(res.status).toBe(409);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('O CPF informado já está registrado.');
+    });
+
+    it('returns not found for non-existent ID', async () => {
+      const { cookies } = await createAdmin({ login: true });
+
+      const res = await api.put<BaseResponseBody, UpdatePatientBody>(
+        '/patients/non-existent-id',
+        updateBody,
+        { cookies },
+      );
+
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Paciente não encontrado.');
+    });
+
+    it('blocks user without "patients:update" feature', async () => {
+      const { cookies } = await createMember({ login: true, features: [] });
+      const { patient } = await createPatient();
+
+      const res = await api.put<BaseResponseBody, UpdatePatientBody>(
+        `/patients/${patient.id}`,
+        updateBody,
+        { cookies },
+      );
+
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe(
+        'Você não tem permissão para executar esta ação.',
+      );
+    });
+  });
+
+  describe('PATCH /patients/:id/deactivate', () => {
+    it('deactivates patient', async () => {
+      const { cookies } = await createMember({
+        login: true,
+        features: ['deactivate:patient'],
+      });
+      const { patient } = await createPatient({ status: 'active' });
+
+      const res = await api.patch(
+        `/patients/${patient.id}/deactivate`,
+        undefined,
+        { cookies },
+      );
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.message).toBe('Paciente inativado com sucesso.');
+
+      const updated = await getPatientById(patient.id);
+
+      expect(updated?.status).toBe('inactive');
+    });
+
+    it('rejects already inactive patient', async () => {
+      const { cookies } = await createAdmin({ login: true });
+      const { patient } = await createPatient({ status: 'inactive' });
+
+      const res = await api.patch(
+        `/patients/${patient.id}/deactivate`,
+        undefined,
+        { cookies },
+      );
+
+      expect(res.status).toBe(409);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Este paciente já está inativo.');
+    });
+
+    it('returns not found for non-existent ID', async () => {
+      const { cookies } = await createAdmin({ login: true });
+
+      const res = await api.patch(
+        '/patients/non-existent-id/deactivate',
+        undefined,
+        { cookies },
+      );
+
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Paciente não encontrado.');
+    });
+
+    it('blocks user without "deactivate:patient" feature', async () => {
+      const { cookies } = await createMember({ login: true, features: [] });
+      const { patient } = await createPatient();
+
+      const res = await api.patch(
+        `/patients/${patient.id}/deactivate`,
+        undefined,
+        { cookies },
+      );
+
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe(
+        'Você não tem permissão para executar esta ação.',
+      );
     });
   });
 });

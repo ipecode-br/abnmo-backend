@@ -10,6 +10,8 @@ import {
   type Repository,
 } from 'typeorm';
 
+import { can } from '@/common/authorization/can';
+import { RequestUser } from '@/common/types';
 import { User } from '@/domain/entities/user';
 import { PatientsOrderBy } from '@/domain/enums/patients';
 import type { QueryOrder } from '@/domain/enums/queries';
@@ -17,6 +19,7 @@ import type { UserStatus } from '@/domain/enums/users';
 import type { PatientResponse } from '@/domain/schemas/patients/responses';
 
 interface GetPatientsUseCaseInput {
+  user: RequestUser;
   page: number;
   perPage: number;
   search?: string;
@@ -32,13 +35,6 @@ interface GetPatientsUseCaseOutput {
   total: number;
 }
 
-const ORDER_BY_MAPPING: Record<PatientsOrderBy, keyof User> = {
-  name: 'name',
-  email: 'email',
-  status: 'status',
-  date: 'createdAt',
-};
-
 @Injectable()
 export class GetPatientsUseCase {
   constructor(
@@ -47,12 +43,22 @@ export class GetPatientsUseCase {
   ) {}
 
   async execute({
+    user,
     search,
     status,
     page,
     perPage,
     ...props
   }: GetPatientsUseCaseInput): Promise<GetPatientsUseCaseOutput> {
+    can(user, 'read:patient:others');
+
+    const ORDER_BY_MAPPING: Record<PatientsOrderBy, keyof User> = {
+      name: 'name',
+      email: 'email',
+      status: 'status',
+      date: 'createdAt',
+    };
+
     const startDate = props.startDate ? new Date(props.startDate) : null;
     const endDate = props.endDate ? new Date(props.endDate) : null;
 

@@ -38,7 +38,7 @@ export class UpdatePatientUseCase {
     cpf,
     ...props
   }: UpdatePatientUseCaseInput): Promise<void> {
-    can(user, 'update:patient', id);
+    can(user, ['update:patient', 'update:patient:others'], id);
 
     const patient = await this.usersRepository.findOne({
       select: { id: true, cpf: true },
