@@ -7,6 +7,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import { Log } from '@/common/log/log.decorator';
+import { LogService } from '@/common/log/log.service';
 import { MAGIC_BYTES } from '@/config/storage';
 import { Document } from '@/domain/entities/document';
 import type { DocumentMimeType } from '@/domain/enums/documents';
@@ -30,7 +32,9 @@ interface ValidateFileUseCaseOutput {
 }
 
 @Injectable()
+@Log()
 export class ValidateFileUseCase {
+  private readonly isEnabled: boolean;
   private readonly bucketName: string;
 
   constructor(
@@ -38,8 +42,10 @@ export class ValidateFileUseCase {
     @InjectRepository(Document)
     private readonly documentsRepository: Repository<Document>,
     private readonly envService: EnvService,
+    private readonly logger: LogService,
     private readonly s3Client: S3Client,
   ) {
+    this.isEnabled = this.envService.get('STORAGE_ENABLED');
     this.bucketName = this.envService.get('STORAGE_BUCKET_NAME');
   }
 
@@ -49,6 +55,24 @@ export class ValidateFileUseCase {
     maxSize,
     key,
   }: ValidateFileUseCaseInput): Promise<ValidateFileUseCaseOutput> {
+    if (!this.isEnabled) {
+      this.logger.log(
+        'Validate file skipped (STORAGE_ENABLED=false) — returning mock result',
+      );
+
+      if (documentId) {
+        await this.documentsRepository.update(documentId, {
+          status: 'confirmed',
+        });
+      }
+
+      return {
+        isValid: true,
+        message: 'O arquivo enviado é válido.',
+        cause: 'File validation skipped (STORAGE_ENABLED=false)',
+      };
+    }
+
     const head = await this.s3Client
       .send(new HeadObjectCommand({ Bucket: this.bucketName, Key: key }))
       .catch(() => null);

@@ -5,11 +5,16 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { v7 as uuidv7 } from 'uuid';
 
+import { MailService } from '@/app/mail/mail.service';
+import { can } from '@/common/authorization/can';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import type { RequestUser } from '@/common/types';
+import { buildCompleteSurveyEmail } from '@/domain/email-templates/complete-survey-email';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
+import { EnvService } from '@/env/env.service';
 
 interface ApproveSurveySubmissionUseCaseInput {
   id: string;
@@ -19,17 +24,26 @@ interface ApproveSurveySubmissionUseCaseInput {
 @Injectable()
 @Log()
 export class ApproveSurveySubmissionUseCase {
+  private readonly dashboardUrl: string;
+
   constructor(
     @InjectRepository(SurveySubmission)
     private readonly surveySubmissionsRepository: Repository<SurveySubmission>,
+    private readonly mailService: MailService,
+    private readonly envService: EnvService,
     private readonly logger: LogService,
-  ) {}
+  ) {
+    this.dashboardUrl = this.envService.get('DASHBOARD_URL');
+  }
 
   async execute({
     id,
     user,
   }: ApproveSurveySubmissionUseCaseInput): Promise<void> {
+    can(user, 'approve:survey');
+
     const submission = await this.surveySubmissionsRepository.findOne({
+      relations: { user: true },
       where: { id },
     });
 
@@ -48,9 +62,32 @@ export class ApproveSurveySubmissionUseCase {
       );
     }
 
+    const surveyToken = uuidv7();
+
     await this.surveySubmissionsRepository.update(submission.id, {
-      status: 'approved',
       updatedBy: { id: user.id },
+      status: 'approved',
+      surveyToken,
+    });
+
+    const completeSurveyUrl = `${this.dashboardUrl}/catalogacao/voce?token=${surveyToken}`;
+
+    const subject =
+      'Sua catalogação foi aprovada — preencha o questionário ABNMO';
+    const preheader =
+      'Sua submissão foi aprovada. Acesse o link para preencher o questionário completo.';
+
+    const emailHtml = buildCompleteSurveyEmail({
+      title: subject,
+      preheader,
+      completeSurveyUrl,
+    });
+
+    await this.mailService.send({
+      to: submission.user.email,
+      subject,
+      text: preheader,
+      html: emailHtml,
     });
 
     this.logger.log('Survey submission approved', { id });

@@ -1,4 +1,11 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  OneToOne,
+} from 'typeorm';
 
 import {
   SURVEY_SUBMISSION_STATUSES,
@@ -19,6 +26,10 @@ export class SurveySubmission extends BaseEntity {
 
   @Column({ type: 'varchar', length: 500, nullable: true })
   reason: string | null;
+
+  @Index()
+  @Column({ type: 'varchar', length: 36, nullable: true })
+  surveyToken: string | null;
 
   @OneToOne(() => User, (user) => user.surveySubmission)
   @JoinColumn()

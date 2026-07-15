@@ -29,6 +29,7 @@ export const envSchema = z.object({
   AWS_SECRET_ACCESS_KEY: z.string().optional().default(''),
 
   // Storage
+  STORAGE_ENABLED: z.enum(['true', 'false']).transform((val) => val === 'true'),
   STORAGE_BUCKET_NAME: z.string().min(1),
   CDN_URL: z.string().url(),
   CDN_PUBLIC_KEY_ID: z.string().min(1),

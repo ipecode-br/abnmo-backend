@@ -14,6 +14,7 @@ export function surveySubmissionFactory(
     ...baseEntityFactory(),
     status: faker.helpers.arrayElement(SURVEY_SUBMISSION_STATUSES),
     reason: null,
+    surveyToken: null,
     user: patient,
     document: null,
     updatedBy: null,

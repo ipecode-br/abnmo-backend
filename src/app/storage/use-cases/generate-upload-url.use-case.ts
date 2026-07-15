@@ -23,6 +23,7 @@ interface GenerateUploadUrlUseCaseOutput {
 @Injectable()
 @Log()
 export class GenerateUploadUrlUseCase {
+  private readonly isEnabled: boolean;
   private readonly bucketName: string;
 
   constructor(
@@ -30,6 +31,7 @@ export class GenerateUploadUrlUseCase {
     private readonly logger: LogService,
     private readonly s3Client: S3Client,
   ) {
+    this.isEnabled = this.envService.get('STORAGE_ENABLED');
     this.bucketName = this.envService.get('STORAGE_BUCKET_NAME');
   }
 
@@ -49,6 +51,18 @@ export class GenerateUploadUrlUseCase {
         `Formato de arquivo não permitido. Formatos aceitos: ${allowedExtensions}.`,
         { cause: `Invalid content type <${mimeType}>` },
       );
+    }
+
+    if (!this.isEnabled) {
+      this.logger.log(
+        'Generate upload URL skipped (STORAGE_ENABLED=false) — returning mock upload URL',
+        { key, mimeType },
+      );
+
+      return {
+        url: `https://${this.bucketName}.s3.amazonaws.com`,
+        fields: { key, 'Content-Type': mimeType, bucket: this.bucketName },
+      };
     }
 
     const { url, fields } = await createPresignedPost(this.s3Client, {
