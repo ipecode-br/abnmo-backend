@@ -1,221 +1,347 @@
 import { INestApplication } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import request from 'supertest';
 
-import { CryptographyService } from '@/app/cryptography/cryptography.service';
-import { Token } from '@/domain/entities/token';
-import { User } from '@/domain/entities/user';
+import type {
+  CreateUserBody,
+  SignInWithEmailResponse,
+} from '@/app/http/auth/auth.dtos';
+import { getTokenMaxAge } from '@/config/tokens';
 
-import { createMemberAndLogin } from '../config/auth-helper';
-import { userFactory } from '../config/factories/user.factory';
-import { getTestApp, getTestDataSource } from '../config/setup-e2e';
-
-const DEFAULT_PASSWORD = 'TestPassword123!';
+import {
+  ApiClient,
+  BaseResponseBody,
+  createApiClient,
+} from '../config/api-client';
+import {
+  createAdmin,
+  createMember,
+  TEST_DEFAULT_PASSWORD,
+} from '../config/helpers';
+import { getTestApp } from '../config/setup-e2e';
+import { restoreFakeTime, setFakeTime } from '../helpers/fake-time';
+import { createInviteToken, createPasswordResetToken } from '../helpers/tokens';
+import { createUser, getUserByEmail } from '../helpers/users';
 
 describe('Auth (e2e)', () => {
   let app: INestApplication;
+  let api: ApiClient;
 
   beforeAll(() => {
     app = getTestApp();
+    api = createApiClient(app);
   });
 
   describe('POST /login', () => {
-    it('returns 200 + role in data + set-cookie for valid credentials', async () => {
-      const ds = getTestDataSource();
-      const cryptoService = app.get(CryptographyService);
-      const hashedPassword = await cryptoService.createHash(DEFAULT_PASSWORD);
+    it('allows login with valid credentials', async () => {
+      const { member } = await createMember();
 
-      const repo = ds.getRepository(User);
-      const user = repo.create(
-        userFactory({
-          password: hashedPassword,
-          email: 'login-test@example.com',
-          role: 'member',
-        }),
-      );
-      await repo.save(user);
+      const res = await api.post<SignInWithEmailResponse>('/login', {
+        email: member.email,
+        password: TEST_DEFAULT_PASSWORD,
+      });
 
-      const res = await request(app.getHttpServer())
-        .post('/login')
-        .send({ email: user.email, password: DEFAULT_PASSWORD })
-        .expect(200);
-
+      expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.message).toBeDefined();
-      expect(res.body.data).toBeDefined();
-      expect(res.body.data.role).toBe(user.role);
-      expect(res.headers['set-cookie']).toBeDefined();
-      expect(res.headers['set-cookie'].length).toBeGreaterThan(0);
+      expect(res.body.data.role).toBe(member.role);
     });
 
-    it('returns 401 for invalid email', async () => {
-      await request(app.getHttpServer())
-        .post('/login')
-        .send({ email: 'nonexistent@example.com', password: DEFAULT_PASSWORD })
-        .expect(401);
-    });
+    it('rejects unknown email', async () => {
+      const res = await api.post('/login', {
+        email: 'unknown@example.com',
+        password: TEST_DEFAULT_PASSWORD,
+      });
 
-    it('returns 401 for wrong password', async () => {
-      const ds = getTestDataSource();
-      const cryptoService = app.get(CryptographyService);
-      const hashedPassword = await cryptoService.createHash(DEFAULT_PASSWORD);
-
-      const repo = ds.getRepository(User);
-      const user = repo.create(
-        userFactory({
-          password: hashedPassword,
-          email: 'wrong-pass-test@example.com',
-          role: 'member',
-        }),
+      expect(res.status).toBe(401);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe(
+        'Credenciais inválidas. Por favor, tente novamente.',
       );
-      await repo.save(user);
-
-      await request(app.getHttpServer())
-        .post('/login')
-        .send({ email: user.email, password: 'WrongPassword123!' })
-        .expect(401);
     });
 
-    it('returns 403 for inactive user', async () => {
-      const ds = getTestDataSource();
-      const cryptoService = app.get(CryptographyService);
-      const hashedPassword = await cryptoService.createHash(DEFAULT_PASSWORD);
+    it('rejects wrong password', async () => {
+      const { member } = await createMember();
 
-      const repo = ds.getRepository(User);
-      const user = repo.create(
-        userFactory({
-          password: hashedPassword,
-          email: 'inactive-test@example.com',
-          role: 'member',
-          status: 'inactive',
-        }),
+      const res = await api.post('/login', {
+        email: member.email,
+        password: 'WrongPassword123!',
+      });
+
+      expect(res.status).toBe(401);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe(
+        'Credenciais inválidas. Por favor, tente novamente.',
       );
-      await repo.save(user);
+    });
 
-      await request(app.getHttpServer())
-        .post('/login')
-        .send({ email: user.email, password: DEFAULT_PASSWORD })
-        .expect(403);
+    it('blocks inactive users', async () => {
+      const user = await createUser({ status: 'inactive' });
+
+      const res = await api.post('/login', {
+        email: user.email,
+        password: TEST_DEFAULT_PASSWORD,
+      });
+
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe(
+        'Permissão de acesso negada. Sua conta está inativa.',
+      );
+    });
+
+    it('rejects missing fields', async () => {
+      const res = await api.post('/login', {});
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Os dados enviados são inválidos.');
     });
   });
 
   describe('POST /register/user', () => {
-    it('returns 201 with valid invite token', async () => {
-      const ds = getTestDataSource();
-      const jwtService = app.get(JwtService);
+    it('registers user with valid invite token', async () => {
+      const email = 'register@example.com';
+      const invite = await createInviteToken({ email, role: 'member' });
 
-      const inviteToken = await jwtService.signAsync(
-        { role: 'member' },
-        { expiresIn: '8h' },
-      );
-      const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 8);
-
-      const tokensRepo = ds.getRepository(Token);
-      const tokenEntity = tokensRepo.create({
-        token: inviteToken,
-        type: 'invite_user',
-        email: 'register-test@example.com',
-        expiresAt,
-      });
-      await tokensRepo.save(tokenEntity);
-
-      const res = await request(app.getHttpServer())
-        .post('/register/user')
-        .send({
+      const res = await api.post<BaseResponseBody, CreateUserBody>(
+        '/register/user',
+        {
+          inviteToken: invite.token,
           name: 'Test User',
-          password: DEFAULT_PASSWORD,
-          inviteToken,
-        })
-        .expect(201);
+          password: TEST_DEFAULT_PASSWORD,
+          role: 'member',
+        },
+      );
 
+      expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
-      expect(res.body.message).toBeDefined();
+      expect(res.body.message).toBe('Sua conta foi cadastrada com sucesso.');
 
-      const usersRepo = ds.getRepository(User);
-      const created = await usersRepo.findOne({
-        where: { email: 'register-test@example.com' },
+      const user = await getUserByEmail(email);
+
+      expect(user!.email).toBe(email);
+      expect(user!.role).toBe('member');
+    });
+
+    it('rejects invalid invite token', async () => {
+      const res = await api.post<BaseResponseBody, CreateUserBody>(
+        '/register/user',
+        {
+          inviteToken: 'invalid-token',
+          name: 'Test User',
+          password: TEST_DEFAULT_PASSWORD,
+          role: 'member',
+        },
+      );
+
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Token de convite não encontrado.');
+    });
+
+    it('rejects expired invite token', async () => {
+      const expiryTime = getTokenMaxAge('invite_user');
+      setFakeTime(new Date(Date.now() - expiryTime));
+
+      const invite = await createInviteToken({
+        email: 'expired-token@example.com',
+        role: 'member',
       });
-      expect(created).not.toBeNull();
-      expect(created!.role).toBe('member');
+
+      restoreFakeTime();
+
+      const res = await api.post('/register/user', {
+        inviteToken: invite.token,
+        name: 'Test User',
+        password: TEST_DEFAULT_PASSWORD,
+        role: 'member',
+      });
+
+      expect(res.status).toBe(401);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Token de convite inválido ou expirado.');
+    });
+
+    it('rejects already registered email', async () => {
+      const user = await createUser();
+
+      const role = 'member';
+      const invite = await createInviteToken({ role, email: user.email });
+
+      const res = await api.post('/register/user', {
+        inviteToken: invite.token,
+        name: 'Test User',
+        password: TEST_DEFAULT_PASSWORD,
+        role,
+      });
+
+      expect(res.status).toBe(409);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe(
+        'Este e-mail já está cadastrado no sistema.',
+      );
     });
   });
 
   describe('POST /change-password', () => {
-    it('returns 200 as authenticated user', async () => {
-      const { cookies } = await createMemberAndLogin();
+    it('allows password change', async () => {
+      const { member, cookies } = await createMember({ login: true });
 
-      await request(app.getHttpServer())
-        .post('/change-password')
-        .set('Cookie', cookies)
-        .send({
-          password: DEFAULT_PASSWORD,
-          newPassword: 'NewPassword123!',
-        })
-        .expect(200);
+      const newPassword = 'NewPassword123!';
+      const res = await api.post(
+        '/change-password',
+        { password: TEST_DEFAULT_PASSWORD, newPassword },
+        { cookies },
+      );
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.message).toBe('Senha alterada com sucesso.');
+
+      const loginRes = await api.post('/login', {
+        email: member.email,
+        password: newPassword,
+      });
+
+      expect(loginRes.status).toBe(200);
+      expect(loginRes.body.success).toBe(true);
     });
 
-    it('returns 401 with wrong current password', async () => {
-      const { cookies } = await createMemberAndLogin();
+    it('rejects wrong current password', async () => {
+      const { cookies } = await createMember({ login: true });
 
-      await request(app.getHttpServer())
-        .post('/change-password')
-        .set('Cookie', cookies)
-        .send({
+      const res = await api.post(
+        '/change-password',
+        {
           password: 'WrongCurrentPassword123!',
           newPassword: 'NewPassword123!',
-        })
-        .expect(401);
+        },
+        { cookies },
+      );
+
+      expect(res.status).toBe(401);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Senha atual inválida.');
+    });
+
+    it('rejects same password', async () => {
+      const { cookies } = await createMember({ login: true });
+
+      const res = await api.post(
+        '/change-password',
+        { password: TEST_DEFAULT_PASSWORD, newPassword: TEST_DEFAULT_PASSWORD },
+        { cookies },
+      );
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe(
+        'A nova senha deve ser diferente da senha atual.',
+      );
     });
   });
 
   describe('POST /recover-password', () => {
-    it('returns 200 for existing email', async () => {
-      const ds = getTestDataSource();
-      const cryptoService = app.get(CryptographyService);
-      const hashedPassword = await cryptoService.createHash(DEFAULT_PASSWORD);
+    it('accepts existing email', async () => {
+      const user = await createUser({ email: 'recover@example.com' });
 
-      const repo = ds.getRepository(User);
-      const user = repo.create(
-        userFactory({
-          password: hashedPassword,
-          email: 'recover-test@example.com',
-          role: 'member',
-        }),
+      const res = await api.post('/recover-password', {
+        email: user.email,
+      });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.message).toBe(
+        'O link para redefinição de senha foi enviado ao e-mail informado.',
       );
-      await repo.save(user);
-
-      await request(app.getHttpServer())
-        .post('/recover-password')
-        .send({ email: user.email })
-        .expect(200);
     });
-  });
 
-  describe('POST /logout', () => {
-    it('clears session and subsequent request without cookie returns 401', async () => {
-      const { cookies } = await createMemberAndLogin();
+    it('silently accepts non-existing email', async () => {
+      const res = await api.post('/recover-password', {
+        email: 'ghost@example.com',
+      });
 
-      await request(app.getHttpServer())
-        .post('/logout')
-        .set('Cookie', cookies)
-        .expect(200);
-
-      await request(app.getHttpServer())
-        .get('/users')
-        .query({ page: 1, perPage: 10 })
-        .expect(401);
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.message).toBe(
+        'O link para redefinição de senha foi enviado ao e-mail informado.',
+      );
     });
   });
 
   describe('POST /reset-password', () => {
-    it('returns 404 for invalid token', async () => {
-      await request(app.getHttpServer())
-        .post('/reset-password')
-        .send({
-          password: DEFAULT_PASSWORD,
-          resetToken: 'invalid-token-12345',
-        })
-        .expect(404);
+    it('resets password with valid token', async () => {
+      const user = await createUser();
+      const reset = await createPasswordResetToken({ userId: user.id });
+
+      const password = 'NewStr0ng!Pass';
+      const res = await api.post('/reset-password', {
+        password,
+        resetToken: reset.token,
+      });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.message).toBe('Senha atualizada com sucesso.');
+
+      const loginRes = await api.post('/login', {
+        email: user.email,
+        password,
+      });
+
+      expect(loginRes.status).toBe(200);
+      expect(loginRes.body.success).toBe(true);
+    });
+
+    it('rejects invalid token', async () => {
+      const res = await api.post('/reset-password', {
+        password: TEST_DEFAULT_PASSWORD,
+        resetToken: 'invalid-token-12345',
+      });
+
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe(
+        'Token de redefinição de senha não encontrado.',
+      );
+    });
+
+    it('rejects expired token', async () => {
+      const expiryTime = getTokenMaxAge('password_reset');
+
+      setFakeTime(new Date(Date.now() - expiryTime));
+
+      const user = await createUser();
+      const reset = await createPasswordResetToken({ userId: user.id });
+
+      restoreFakeTime();
+
+      const res = await api.post('/reset-password', {
+        password: TEST_DEFAULT_PASSWORD,
+        resetToken: reset.token,
+      });
+
+      expect(res.status).toBe(401);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe(
+        'Token de redefinição de senha inválido ou expirado.',
+      );
+    });
+  });
+
+  describe('POST /logout', () => {
+    it('clears session and prevents further requests', async () => {
+      const { cookies } = await createAdmin({ login: true });
+
+      const logoutRes = await api.post('/logout', undefined, {
+        cookies,
+      });
+
+      expect(logoutRes.status).toBe(200);
+      expect(logoutRes.body.success).toBe(true);
+
+      const usersRes = await api.get('/users', { page: 1, perPage: 10 });
+
+      expect(usersRes.status).toBe(401);
+      expect(usersRes.body.success).toBe(false);
     });
   });
 });

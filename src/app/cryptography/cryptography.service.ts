@@ -34,7 +34,13 @@ export class CryptographyService {
     return createHash('sha256').update(token).digest('hex');
   }
 
-  async verifyToken<Payload extends object>(token: string): Promise<Payload> {
-    return this.jwtService.verifyAsync<Payload>(token);
+  async verifyToken<Payload extends object>(
+    token: string,
+  ): Promise<Payload | null> {
+    try {
+      return await this.jwtService.verifyAsync<Payload>(token);
+    } catch {
+      return null;
+    }
   }
 }
