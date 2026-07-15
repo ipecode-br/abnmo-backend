@@ -14,7 +14,7 @@ import { MailService } from '@/app/mail/mail.service';
 import { LogService } from '@/common/log/log.service';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
-import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
+import { TOKENS } from '@/domain/enums/tokens';
 
 jest.mock('@/domain/email-templates/reset-password-email', () => ({
   buildResetPasswordEmail: jest.fn().mockReturnValue('<html>reset</html>'),
@@ -34,7 +34,7 @@ describe('ResetPasswordUseCase', () => {
   const tokenEntity = {
     id: 'token-id',
     token: 'valid-reset-token',
-    type: AUTH_TOKENS_MAPPING.passwordReset,
+    type: TOKENS.passwordReset,
     expiresAt: new Date(Date.now() + 1000 * 60 * 60),
   };
 

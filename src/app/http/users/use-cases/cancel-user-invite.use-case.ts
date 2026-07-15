@@ -7,7 +7,7 @@ import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import type { RequestUser } from '@/common/types';
 import { Token } from '@/domain/entities/token';
-import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
+import { TOKENS } from '@/domain/enums/tokens';
 
 interface CancelUserInviteUseCaseInput {
   id: string;
@@ -27,7 +27,7 @@ export class CancelUserInviteUseCase {
     can(user, 'delete:user_invite');
 
     const token = await this.tokensRepository.findOne({
-      where: { id, type: AUTH_TOKENS_MAPPING.inviteUser },
+      where: { id, type: TOKENS.inviteUser },
       select: { id: true },
     });
 

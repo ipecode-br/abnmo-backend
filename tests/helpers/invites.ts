@@ -2,7 +2,7 @@ import { faker } from '@faker-js/faker';
 import { FindOptionsWhere } from 'typeorm';
 
 import { Token } from '@/domain/entities/token';
-import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
+import { TOKENS } from '@/domain/enums/tokens';
 
 import { idFactory } from '../config/factories/shared.factory';
 import { getTestDataSource } from '../config/setup-e2e';
@@ -19,7 +19,7 @@ export async function createUserInvite(
   const invite = repo.create({
     id: idFactory(),
     token: faker.string.alphanumeric(32),
-    type: AUTH_TOKENS_MAPPING.inviteUser,
+    type: TOKENS.inviteUser,
     email: faker.internet.email().toLowerCase(),
     expiresAt,
     ...overrides,
@@ -36,7 +36,7 @@ export async function getUserInvites(
   const dataSource = getTestDataSource();
   const repo = dataSource.getRepository(Token);
   const where: FindOptionsWhere<Token> = {
-    type: AUTH_TOKENS_MAPPING.inviteUser,
+    type: TOKENS.inviteUser,
   };
 
   if (options.email) where.email = options.email;

@@ -14,7 +14,7 @@ import { LogService } from '@/common/log/log.service';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import type { SpecialtyCategory } from '@/domain/enums/shared';
-import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
+import { TOKENS } from '@/domain/enums/tokens';
 import type { InviteUserPayload } from '@/domain/schemas/tokens';
 
 import { CreateSessionUseCase } from './create-session.use-case';
@@ -31,8 +31,6 @@ interface CreateUserUseCaseInput {
 @Injectable()
 @Log()
 export class CreateUserUseCase {
-  private readonly sessionMaxAge = 1000 * 60 * 60 * 8;
-
   constructor(
     @InjectRepository(Token)
     private readonly tokensRepository: Repository<Token>,
@@ -64,7 +62,7 @@ export class CreateUserUseCase {
     const email = token.email;
     const isExpired = token.expiresAt && token.expiresAt < new Date();
 
-    if (!email || token.type !== AUTH_TOKENS_MAPPING.inviteUser || isExpired) {
+    if (!email || token.type !== TOKENS.inviteUser || isExpired) {
       await this.tokensRepository.delete({ token: inviteToken });
       throw new UnauthorizedException('Token de convite inválido ou expirado.');
     }
@@ -94,7 +92,7 @@ export class CreateUserUseCase {
 
     const passwordHash = await this.cryptographyService.createHash(password);
 
-    const user = await this.usersRepository.save({
+    const user = this.usersRepository.create({
       name,
       email,
       password: passwordHash,
@@ -102,6 +100,7 @@ export class CreateUserUseCase {
       specialty,
       registrationId,
     });
+    await this.usersRepository.save(user);
 
     await this.tokensRepository.delete({ token: inviteToken });
 

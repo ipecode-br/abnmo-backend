@@ -6,7 +6,7 @@ import { requestUserFactory } from 'tests/config/factories/shared.factory';
 
 import { IS_PUBLIC_KEY } from '@/common/decorators/public.decorator';
 import { RolesGuard } from '@/common/guards/roles.guard';
-import { AllowedRole } from '@/domain/enums/tokens';
+import { AllowedRole } from '@/domain/enums/roles';
 import { UserRole } from '@/domain/enums/users';
 
 describe('RolesGuard', () => {

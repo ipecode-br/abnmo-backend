@@ -11,7 +11,7 @@ import { LogService } from '@/common/log/log.service';
 import type { RequestUser } from '@/common/types';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
-import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
+import { TOKENS } from '@/domain/enums/tokens';
 import { EnvService } from '@/env/env.service';
 
 describe('CreateUserInviteUseCase', () => {
@@ -90,7 +90,7 @@ describe('CreateUserInviteUseCase', () => {
       expect.objectContaining({ where: { email: 'newuser@test.com' } }),
     );
     expect(createTokenUseCase.execute).toHaveBeenCalledWith({
-      type: AUTH_TOKENS_MAPPING.inviteUser,
+      type: TOKENS.inviteUser,
       payload: { role: 'member' },
     });
     expect(mailService.send).toHaveBeenCalled();

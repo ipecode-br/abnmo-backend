@@ -17,7 +17,7 @@ import {
 import { createAdmin, createMember } from '../config/helpers';
 import { getTestApp } from '../config/setup-e2e';
 import { createUserInvite, getUserInvites } from '../helpers/invites';
-import { createUser, getUser } from '../helpers/users';
+import { createUser, getUserById } from '../helpers/users';
 
 describe('Users (e2e)', () => {
   let app: INestApplication;
@@ -186,7 +186,7 @@ describe('Users (e2e)', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.message).toBe('Usuário atualizado com sucesso.');
 
-      const updatedUser = await getUser(member.id);
+      const updatedUser = await getUserById(member.id);
 
       expect(updatedUser?.name).toBe(dataToUpdate.name);
       expect(updatedUser?.specialty).toBe(dataToUpdate.specialty);
@@ -211,7 +211,7 @@ describe('Users (e2e)', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.message).toBe('Usuário atualizado com sucesso.');
 
-      const updatedUser = await getUser(target.id);
+      const updatedUser = await getUserById(target.id);
 
       expect(updatedUser?.name).toBe(dataToUpdate.name);
     });
@@ -282,7 +282,7 @@ describe('Users (e2e)', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.message).toBe('Permissões atualizadas com sucesso.');
 
-      const updatedUser = await getUser(target.id);
+      const updatedUser = await getUserById(target.id);
 
       expect(updatedUser?.features).toContain('read:patient');
       expect(updatedUser?.features).toContain('deactivate:patient');
@@ -337,7 +337,7 @@ describe('Users (e2e)', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.message).toBe('Usuário inativado com sucesso.');
 
-      const updatedUser = await getUser(target.id);
+      const updatedUser = await getUserById(target.id);
 
       expect(updatedUser?.status).toBe('inactive');
     });
@@ -407,7 +407,7 @@ describe('Users (e2e)', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.message).toBe('Usuário ativado com sucesso.');
 
-      const updatedUser = await getUser(target.id);
+      const updatedUser = await getUserById(target.id);
 
       expect(updatedUser?.status).toBe('active');
     });

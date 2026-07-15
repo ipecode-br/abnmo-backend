@@ -21,7 +21,7 @@ describe('GetSurveySubmissionUseCase', () => {
     phone: '11999999999',
   });
 
-  const document = documentFactory(patient, {
+  const document = documentFactory({
     id: 'doc-1',
     key: 'path/file.pdf',
     url: 'https://cdn.example.com/file.pdf',
@@ -29,6 +29,7 @@ describe('GetSurveySubmissionUseCase', () => {
     filename: 'file.pdf',
     size: 1024,
     mimeType: 'application/pdf',
+    user: patient,
   });
 
   const updatedBy = patientUserFactory({

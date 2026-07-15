@@ -11,7 +11,7 @@ import type { RequestUser } from '@/common/types';
 import { buildRegisterUserEmail } from '@/domain/email-templates/register-user-email';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
-import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
+import { TOKENS } from '@/domain/enums/tokens';
 import type { UserRole } from '@/domain/enums/users';
 import { EnvService } from '@/env/env.service';
 
@@ -69,7 +69,7 @@ export class CreateUserInviteUseCase {
 
       const [{ token: inviteUserToken, expiresAt }] = await Promise.all([
         this.createTokenUseCase.execute({
-          type: AUTH_TOKENS_MAPPING.inviteUser,
+          type: TOKENS.inviteUser,
           payload: { role },
         }),
         // Delete all tokens for this email before creating a new one
@@ -77,9 +77,9 @@ export class CreateUserInviteUseCase {
       ]);
 
       const newInviteUserToken = tokensRepository.create({
-        type: AUTH_TOKENS_MAPPING.inviteUser,
+        type: TOKENS.inviteUser,
         token: inviteUserToken,
-        expiresAt: expiresAt,
+        expiresAt,
         email,
       });
 

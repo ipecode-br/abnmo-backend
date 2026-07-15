@@ -1,15 +1,7 @@
-import { USER_ROLES } from './users';
-
-export const AUTH_TOKENS_MAPPING = {
+export const TOKENS = {
   passwordReset: 'password_reset',
   inviteUser: 'invite_user',
 } as const;
-export type AuthTokenType = (typeof AUTH_TOKENS)[number];
+export type TokenType = (typeof TOKENS)[keyof typeof TOKENS];
 
-export const AUTH_TOKENS = [
-  AUTH_TOKENS_MAPPING.passwordReset,
-  AUTH_TOKENS_MAPPING.inviteUser,
-] as const;
-
-export const ALLOWED_ROLES = ['all', ...USER_ROLES] as const;
-export type AllowedRole = (typeof ALLOWED_ROLES)[number];
+export const TOKENS_ENUM = [TOKENS.passwordReset, TOKENS.inviteUser] as const;

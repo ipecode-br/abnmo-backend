@@ -171,8 +171,9 @@ Import the inferred schema type from `responses.ts`, use it as the return type, 
 
 - E2E only (no unit tests found). Run `test:prepare` first, then `test:e2e`
 - Uses `jest --runInBand --detectOpenHandles`
-- Test setup: `api(app).createAdminAndLogin()`, `.createNurseAndLogin()`, `.createSpecialistAndLogin()`, `.createManagerAndLogin()` — note `createPatientAndLogin` is currently commented out
+- Test auth helpers: `createAdmin()`, `createMember()`, `createSpecialist()`, `createPatient()` — pass `{ login: true }` to also log in
 - DB auto-clears between test files (via `setup.ts`)
+- `patient-requirements.e2e-spec.ts` is currently deleted — it will be re-created later; do not attempt to restore it
 
 ## Patterns
 

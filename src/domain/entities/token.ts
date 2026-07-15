@@ -6,11 +6,11 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-import { AUTH_TOKENS, type AuthTokenType } from '../enums/tokens';
-import type { AuthToken } from '../schemas/tokens';
+import { TOKENS_ENUM, type TokenType } from '../enums/tokens';
+import type { TokenSchema } from '../schemas/tokens';
 
 @Entity('tokens')
-export class Token implements AuthToken {
+export class Token implements TokenSchema {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -24,8 +24,8 @@ export class Token implements AuthToken {
   @Column({ type: 'varchar' })
   token: string;
 
-  @Column({ type: 'enum', enum: AUTH_TOKENS })
-  type: AuthTokenType;
+  @Column({ type: 'enum', enum: TOKENS_ENUM })
+  type: TokenType;
 
   @Column({ type: 'datetime', nullable: true })
   expiresAt: Date | null;

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import { baseResponseSchema } from '../base';
-import { authTokenSchema } from '../tokens';
+import { tokenSchema } from '../tokens';
 import { userSchema } from '.';
 
 export const userResponseSchema = userSchema.pick({
@@ -43,7 +43,7 @@ export const getUserResponseSchema = baseResponseSchema.extend({
   data: userDetailsResponseSchema,
 });
 
-export const userInviteResponseSchema = authTokenSchema.pick({
+export const userInviteResponseSchema = tokenSchema.pick({
   id: true,
   email: true,
   expiresAt: true,

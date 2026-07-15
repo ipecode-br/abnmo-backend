@@ -6,7 +6,7 @@ import { User } from '@/domain/entities/user';
 import { userFactory } from './factories/user.factory';
 import { getTestApp, getTestDataSource } from './setup-e2e';
 
-const DEFAULT_PASSWORD = 'TestPassword123!';
+export const TEST_DEFAULT_PASSWORD = 'TestPassword123!';
 
 interface CreateOptions extends Partial<User> {
   login?: boolean;
@@ -17,7 +17,7 @@ async function createUserInDb(overrides: Partial<User>): Promise<User> {
   const ds = getTestDataSource();
   const cryptoService = app.get(CryptographyService);
 
-  const hashedPassword = await cryptoService.createHash(DEFAULT_PASSWORD);
+  const hashedPassword = await cryptoService.createHash(TEST_DEFAULT_PASSWORD);
 
   const repo = ds.getRepository(User);
   const user = repo.create(
@@ -33,7 +33,7 @@ async function loginUser(user: User): Promise<string[]> {
 
   const res = await request(app.getHttpServer())
     .post('/login')
-    .send({ email: user.email, password: DEFAULT_PASSWORD })
+    .send({ email: user.email, password: TEST_DEFAULT_PASSWORD })
     .expect(200);
 
   const rawCookies = res.headers['set-cookie'];

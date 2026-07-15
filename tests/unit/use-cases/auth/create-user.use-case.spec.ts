@@ -16,7 +16,7 @@ import { CreateUserUseCase } from '@/app/http/auth/use-cases/create-user.use-cas
 import { LogService } from '@/common/log/log.service';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
-import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
+import { TOKENS } from '@/domain/enums/tokens';
 
 describe('CreateUserUseCase', () => {
   let useCase: CreateUserUseCase;
@@ -31,7 +31,7 @@ describe('CreateUserUseCase', () => {
     id: 'token-id',
     token: 'valid-invite-token',
     email: 'newuser@test.com',
-    type: AUTH_TOKENS_MAPPING.inviteUser,
+    type: TOKENS.inviteUser,
     expiresAt: new Date(Date.now() + 1000 * 60 * 60),
   };
 

@@ -18,8 +18,8 @@ export class FeatureGuard implements CanActivate {
     ]);
     const feature = this.reflector.get(RequireFeature, context.getHandler());
 
-    // Skip validation for public routes
-    if (isPublic) return true;
+    // Skip validation for public or featureless routes
+    if (isPublic || !feature) return true;
 
     const request = context.switchToHttp().getRequest<{ user: RequestUser }>();
 

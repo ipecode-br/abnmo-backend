@@ -14,7 +14,7 @@ import { LogService } from '@/common/log/log.service';
 import { buildResetPasswordEmail } from '@/domain/email-templates/reset-password-email';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
-import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
+import { TOKENS } from '@/domain/enums/tokens';
 import { UserRole } from '@/domain/enums/users';
 import type { ResetPasswordPayload } from '@/domain/schemas/tokens';
 
@@ -64,7 +64,7 @@ export class ResetPasswordUseCase {
 
     if (
       !payload ||
-      token.type !== AUTH_TOKENS_MAPPING.passwordReset ||
+      token.type !== TOKENS.passwordReset ||
       (token.expiresAt && token.expiresAt < new Date())
     ) {
       throw new UnauthorizedException(

@@ -22,9 +22,10 @@ describe('ConfirmSurveySubmissionUploadUseCase', () => {
     email: 'alice@example.com',
   });
 
-  const document = documentFactory(patient, {
+  const document = documentFactory({
     id: 'doc-1',
     key: 'path/file.pdf',
+    user: patient,
   });
 
   const submission = surveySubmissionFactory(patient, {

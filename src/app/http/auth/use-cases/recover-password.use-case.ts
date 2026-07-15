@@ -6,11 +6,10 @@ import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.us
 import { MailService } from '@/app/mail/mail.service';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
-import { COOKIES_MAPPING } from '@/domain/cookies';
 import { buildRecoverPasswordEmail } from '@/domain/email-templates/recover-password-email';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
-import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
+import { TOKENS } from '@/domain/enums/tokens';
 import type { PasswordResetToken } from '@/domain/schemas/tokens';
 import { EnvService } from '@/env/env.service';
 
@@ -47,16 +46,16 @@ export class RecoverPasswordUseCase {
 
     const [{ token, expiresAt }] = await Promise.all([
       this.createTokenUseCase.execute({
-        type: COOKIES_MAPPING.passwordReset,
+        type: TOKENS.passwordReset,
         payload: { sub: user.id },
       }),
       this.tokensRepository.delete({ entityId: user.id }),
     ]);
 
     await this.tokensRepository.save<PasswordResetToken>({
-      type: AUTH_TOKENS_MAPPING.passwordReset,
-      expiresAt: expiresAt,
+      type: TOKENS.passwordReset,
       entityId: user.id,
+      expiresAt,
       token,
     });
 

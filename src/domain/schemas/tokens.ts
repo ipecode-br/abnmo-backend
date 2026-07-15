@@ -1,30 +1,30 @@
 import { z } from 'zod';
 
-import { AUTH_TOKENS, type AUTH_TOKENS_MAPPING } from '../enums/tokens';
+import { type TOKENS, TOKENS_ENUM } from '../enums/tokens';
 import type { UserRole } from '../enums/users';
 
-export const authTokenSchema = z
+export const tokenSchema = z
   .object({
     id: z.string().uuid(),
     entityId: z.string().uuid().nullable(),
     email: z.string().email().nullable(),
     token: z.string().min(1),
-    type: z.enum(AUTH_TOKENS),
+    type: z.enum(TOKENS_ENUM),
     expiresAt: z.coerce.date().nullable(),
     createdAt: z.coerce.date(),
   })
   .strict();
-export type AuthToken = z.infer<typeof authTokenSchema>;
+export type TokenSchema = z.infer<typeof tokenSchema>;
 
 export type PasswordResetToken = Pick<
-  AuthToken,
+  TokenSchema,
   'entityId' | 'token' | 'expiresAt'
-> & { type: typeof AUTH_TOKENS_MAPPING.passwordReset };
+> & { type: typeof TOKENS.passwordReset };
 
 export type ResetPasswordPayload = { sub: string };
 export type InviteUserPayload = { role: UserRole };
 
 export type AuthTokenPayloads = {
-  [AUTH_TOKENS_MAPPING.passwordReset]: ResetPasswordPayload;
-  [AUTH_TOKENS_MAPPING.inviteUser]: InviteUserPayload;
+  [TOKENS.passwordReset]: ResetPasswordPayload;
+  [TOKENS.inviteUser]: InviteUserPayload;
 };
