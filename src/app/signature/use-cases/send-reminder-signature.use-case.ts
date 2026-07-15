@@ -28,30 +28,26 @@ export class SendReminderSignatureUseCase {
     this.isEnabled = this.envService.get('SIGNATURE_ENABLED');
   }
 
-  async execute(
-    input: SendReminderSignatureUseCaseInput,
-  ): Promise<SendReminderSignatureUseCaseOutput> {
+  async execute({
+    signatureId,
+    message,
+  }: SendReminderSignatureUseCaseInput): Promise<SendReminderSignatureUseCaseOutput> {
     if (!this.isEnabled) {
       this.logger.log('Signature disabled — reminder bypassed', {
-        signatureId: input.signatureId,
+        signatureId,
       });
       return { notified: false };
     }
 
-    await this.signatureService.api(
-      `/envelopes/${input.signatureId}/notifications`,
-      {
-        method: 'POST',
-        data: {
-          type: 'notifications',
-          attributes: { message: input.message },
-        },
+    await this.signatureService.api(`/envelopes/${signatureId}/notifications`, {
+      method: 'POST',
+      data: {
+        type: 'notifications',
+        attributes: { message },
       },
-    );
-
-    this.logger.log('Signature reminder sent', {
-      signatureId: input.signatureId,
     });
+
+    this.logger.log('Signature reminder sent', { signatureId });
 
     return { notified: true };
   }

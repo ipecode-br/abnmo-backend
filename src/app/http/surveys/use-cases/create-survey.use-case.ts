@@ -21,7 +21,7 @@ import { CreateSurveyBody } from '../surveys.dtos';
 @Injectable()
 @Log()
 export class CreateSurveyUseCase {
-  private readonly modelKey: string;
+  private readonly signatureModelKey: string;
 
   constructor(
     @InjectDataSource()
@@ -36,26 +36,26 @@ export class CreateSurveyUseCase {
     private readonly envService: EnvService,
     private readonly logger: LogService,
   ) {
-    this.modelKey = this.envService.get('SIGNATURE_MODEL_KEY');
+    this.signatureModelKey = this.envService.get('SIGNATURE_MODEL_KEY');
   }
 
   async execute(input: CreateSurveyBody): Promise<void> {
     const submission = await this.surveySubmissionsRepository.findOne({
-      where: { id: input.token },
+      where: { surveyToken: input.token },
       relations: { user: true },
     });
 
     if (!submission) {
-      throw new NotFoundException('Catalogação não encontrada.', {
-        cause: `Survey submission <${input.token}> not found`,
+      throw new NotFoundException('Token de catalogação inválido.', {
+        cause: `Survey submission with token <${input.token}> not found`,
       });
     }
 
-    if (submission.status !== 'pending_review') {
+    if (submission.status !== 'approved') {
       throw new BadRequestException(
-        'Esta catalogação já foi finalizada ou está em um estado inválido.',
+        'Esta catalogação não está aprovada para preenchimento.',
         {
-          cause: `Survey submission <${input.token}> status is "${submission.status}"`,
+          cause: `Survey submission <${input.token}> status is <${submission.status}>`,
         },
       );
     }
@@ -67,7 +67,7 @@ export class CreateSurveyUseCase {
       where: { cpf },
     });
 
-    if (userWithSameCpf?.cpf === submission.user.cpf) {
+    if (userWithSameCpf) {
       throw new ConflictException(
         'Já existe uma conta cadastrada com este CPF.',
         { cause: `CPF <${cpf}> already exists` },
@@ -134,7 +134,7 @@ export class CreateSurveyUseCase {
         cpf: formatCpfNumber(cpf),
       },
       template: {
-        key: this.modelKey,
+        key: this.signatureModelKey,
         data: { FULL_NAME: submission.user.name, CPF: cpf },
       },
     });

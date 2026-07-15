@@ -23,6 +23,7 @@ export class SendSurveyReminderUseCase {
 
   async execute(id: string): Promise<void> {
     const survey = await this.surveysRepository.findOne({
+      relations: { user: true },
       where: { id },
       select: {
         id: true,
