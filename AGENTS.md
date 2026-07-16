@@ -11,6 +11,8 @@ NestJS + TypeORM + MySQL + Zod API.
 | `npm run lint:prettier:check`                   | Prettier check only                                                  |
 | `npm run lint:prettier:fix`                     | Prettier fix only                                                    |
 | `npm run lint:prettier:fix && npm run validate` | **Always run this before committing** — fix formatting then validate |
+| `npm run test`                                  | Prepare DB → unit tests → e2e tests (full suite)                     |
+| `npm run test:unit`                             | Unit tests only (parallel, no DB)                                    |
 | `npm run test:prepare && npm run test:e2e`      | Full E2E run                                                         |
 
 ## Architecture
@@ -169,11 +171,47 @@ Import the inferred schema type from `responses.ts`, use it as the return type, 
 
 ## Testing
 
-- E2E only (no unit tests found). Run `test:prepare` first, then `test:e2e`
-- Uses `jest --runInBand --detectOpenHandles`
-- Test auth helpers: `createAdmin()`, `createMember()`, `createSpecialist()`, `createPatient()` — pass `{ login: true }` to also log in
-- DB auto-clears between test files (via `setup.ts`)
-- `patient-requirements.e2e-spec.ts` is currently deleted — it will be re-created later; do not attempt to restore it
+### Test structure
+
+| Layer     | Config                              | Pattern                      | Count | Parallel |
+| --------- | ----------------------------------- | ---------------------------- | ----- | -------- |
+| Unit      | `tests/config/jest-unit.json`       | `tests/**/*.spec.ts`         | ~50   | Yes      |
+| E2E       | `tests/config/jest-e2e.json`        | `tests/e2e/**/*.e2e-spec.ts` | 8     | No       |
+
+Unit tests use mocked repositories, no database. E2E tests run against a real Docker MySQL instance on port 3307 (see `.env.test`).
+
+### E2E infrastructure
+
+1. `test:prepare` — starts Docker MySQL container (`infra/docker/compose-test.yaml`), waits for it, runs TypeORM migrations
+2. `test:e2e` — `jest --config jest-e2e.json --runInBand` (single worker, `maxWorkers: 1`)
+3. Global `beforeAll` in `tests/config/setup-e2e.ts` creates the NestJS app once, caches it on `global.__E2E_APP__`
+4. Global `beforeEach` deletes all rows from every table via `DELETE FROM` (not `TRUNCATE`, which is slower DDL)
+5. Test files call `getTestApp()` and `createApiClient(app)` to get a supertest wrapper
+
+### Auth helpers
+
+`createAdmin()`, `createMember()`, `createSpecialist()`, `createPatient()` — pass `{ login: true }` to also log in and get cookies. These create users directly in the database (bypassing HTTP) then call `POST /login` for cookie-based sessions.
+
+### Factory functions
+
+`tests/config/factories/` — generate entity objects for test setup. `tests/helpers/` — wraps factory + DB persistence.
+
+**Important**: factories use `faker.helpers.arrayElement()` for random enum fields (e.g. `status` on referrals/appointments). When testing updates, always override `status` to a non-terminal value to avoid random failures:
+
+```ts
+const referral = await createReferral({
+  status: 'scheduled', // never rely on factory random default
+  patient,
+});
+```
+
+### Running a single test file
+
+```bash
+npm run test:prepare && npx jest --config tests/config/jest-e2e.json tests/e2e/referrals.e2e-spec.ts
+```
+
+`patient-requirements.e2e-spec.ts` is currently deleted — it will be re-created later; do not attempt to restore it.
 
 ## Patterns
 
@@ -293,7 +331,6 @@ Check existing utilities in `src/utils/` (cookies, date ranges, file names, vali
 ## Important constraints
 
 - **`patients` module**: queries `User` entity with `role: "patient"`
-- **Ignore tests** — broken and pending refactor; instructions will be added later
 - **Do NOT add comments** to code unless explicitly asked
 - Files: `kebab-case`, exports match file names (`create-appointment.use-case.ts` → `CreateAppointmentUseCase`)
 - `.npmrc` has `save-exact=true` — no `^` ranges
