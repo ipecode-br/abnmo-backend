@@ -10,7 +10,7 @@ import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
 import { Log } from '@/common/log/log.decorator';
 import type { RequestUser } from '@/common/types';
-import { COOKIES_MAPPING } from '@/domain/cookies';
+import { COOKIES } from '@/domain/cookies';
 
 import {
   ChangePasswordBody,
@@ -132,7 +132,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Encerra a sessão do usuário ou paciente' })
   @ZodResponse({ type: BaseResponse, status: 200 })
   async logout(
-    @Cookies(COOKIES_MAPPING.session) sessionToken: string,
+    @Cookies(COOKIES.session) sessionToken: string,
     @Res({ passthrough: true }) response: Response,
   ): Promise<BaseResponse> {
     await this.logoutUseCase.execute({ response, sessionToken });

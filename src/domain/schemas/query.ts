@@ -19,3 +19,24 @@ export const queryPercentageSchema = z.coerce
   .boolean()
   .optional()
   .default(false);
+
+export function validateEndDate(
+  data: {
+    startDate?: Date | string;
+    endDate?: Date | string;
+  },
+  ctx: z.RefinementCtx,
+) {
+  if (data.startDate && data.endDate) {
+    const startDate = new Date(data.startDate);
+    const endDate = new Date(data.endDate);
+
+    if (startDate >= endDate) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'It should be greater than <startDate>',
+        path: ['endDate'],
+      });
+    }
+  }
+}

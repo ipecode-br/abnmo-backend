@@ -10,7 +10,7 @@ import { GenerateCdnCookiesUseCase } from '@/app/storage/use-cases/generate-cdn-
 import { Log } from '@/common/log/log.decorator';
 import { ContextUser } from '@/common/types';
 import { SESSION_LONG_MAX_AGE, SESSION_SHORT_MAX_AGE } from '@/config';
-import { COOKIES_MAPPING } from '@/domain/cookies';
+import { COOKIES } from '@/domain/cookies';
 import { Session } from '@/domain/entities/session';
 import { EnvService } from '@/env/env.service';
 import { setCookie } from '@/utils/cookies';
@@ -52,7 +52,7 @@ export class CreateSessionUseCase {
 
     setCookie(response, this.envService, {
       expires: expiresAt,
-      name: COOKIES_MAPPING.session,
+      name: COOKIES.session,
       value: rawToken,
     });
 

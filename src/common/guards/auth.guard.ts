@@ -13,7 +13,7 @@ import { CryptographyService } from '@/app/cryptography/cryptography.service';
 import { ContextService } from '@/common/context/context.service';
 import type { RequestUser } from '@/common/types';
 import type { Cookie } from '@/domain/cookies';
-import { COOKIES_MAPPING } from '@/domain/cookies';
+import { COOKIES } from '@/domain/cookies';
 import { Session } from '@/domain/entities/session';
 import { User } from '@/domain/entities/user';
 import { EnvService } from '@/env/env.service';
@@ -115,6 +115,6 @@ export class AuthGuard implements CanActivate {
   }
 
   private clearCookies(response: Response) {
-    deleteCookie(response, this.envService, COOKIES_MAPPING.session);
+    deleteCookie(response, this.envService, COOKIES.session);
   }
 }

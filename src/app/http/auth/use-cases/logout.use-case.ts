@@ -4,7 +4,7 @@ import type { Response } from 'express';
 import { CryptographyService } from '@/app/cryptography/cryptography.service';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
-import { COOKIES_MAPPING } from '@/domain/cookies';
+import { COOKIES } from '@/domain/cookies';
 import { EnvService } from '@/env/env.service';
 import { deleteCookie } from '@/utils/cookies';
 
@@ -26,7 +26,7 @@ export class LogoutUseCase {
   ) {}
 
   async execute({ response, sessionToken }: LogoutUseCaseInput): Promise<void> {
-    deleteCookie(response, this.envService, COOKIES_MAPPING.session);
+    deleteCookie(response, this.envService, COOKIES.session);
 
     const cdnCookies = [
       'CloudFront-Key-Pair-Id',

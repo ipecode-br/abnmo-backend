@@ -6,7 +6,7 @@ import {
   nameSchema,
   passwordSchema,
   specialtySchema,
-  userRegistrationId,
+  userRegistrationIdSchema,
   userRoleSchema,
 } from './shared';
 
@@ -16,7 +16,7 @@ export const createUserSchema = z
     password: passwordSchema,
     role: userRoleSchema,
     specialty: specialtySchema.optional(),
-    registrationId: userRegistrationId.optional(),
+    registrationId: userRegistrationIdSchema.optional(),
     inviteToken: z.string().min(1),
   })
   .superRefine((data, ctx) => {

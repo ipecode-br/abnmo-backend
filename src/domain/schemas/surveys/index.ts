@@ -42,7 +42,7 @@ import {
 } from '@/domain/enums/surveys';
 
 import { baseEntitySchema } from '../base';
-import { cepSchema } from '../shared';
+import { cepSchema, dateSchema } from '../shared';
 
 export const surveySchema = baseEntitySchema.extend({
   // Base
@@ -97,7 +97,7 @@ export const surveySchema = baseEntitySchema.extend({
   diagnosisHospitalState: z.enum(BRAZIL_STATES).nullable(),
   diagnosisHospitalCity: z.string().nullable(),
   diagnosisHospitalStreet: z.string().nullable(),
-  diagnosisDate: z.coerce.date(),
+  diagnosisDate: dateSchema,
   diagnosisDocument: z.string().nullable(),
   currentNeurologist: z.string().nullable(),
   currentTreatmentHospital: z.string().nullable(),

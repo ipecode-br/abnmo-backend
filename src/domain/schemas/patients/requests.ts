@@ -9,17 +9,14 @@ import {
   queryPageSchema,
   queryPerPageSchema,
   querySearchSchema,
+  validateEndDate,
 } from '../query';
-import { cpfSchema, phoneSchema, supportContactSchema } from '../shared';
+import { supportContactSchema } from '../shared';
 import { patientSchema } from '.';
 
 export const updatePatientSchema = patientSchema
-  .pick({ name: true, susId: true })
-  .extend({
-    cpf: cpfSchema,
-    phone: phoneSchema,
-    supportContacts: z.array(supportContactSchema).min(1),
-  });
+  .pick({ name: true, phone: true, cpf: true, susId: true })
+  .extend({ supportContacts: z.array(supportContactSchema).min(1) });
 
 export const getPatientsQuerySchema = z
   .object({
@@ -32,15 +29,4 @@ export const getPatientsQuerySchema = z
     page: queryPageSchema,
     perPage: queryPerPageSchema,
   })
-  .refine(
-    (data) => {
-      if (data.startDate && data.endDate) {
-        return data.startDate < data.endDate;
-      }
-      return true;
-    },
-    {
-      message: 'It should be greater than <startDate>',
-      path: ['endDate'],
-    },
-  );
+  .superRefine(validateEndDate);

@@ -2,23 +2,24 @@ import { z } from 'zod';
 
 import { type TOKENS, TOKENS_ENUM } from '../enums/tokens';
 import type { UserRole } from '../enums/users';
+import { baseEntitySchema } from './base';
+import { dateSchema, emailSchema } from './shared';
+import { userSchema } from './users';
 
-export const tokenSchema = z
-  .object({
-    id: z.string().uuid(),
-    entityId: z.string().uuid().nullable(),
-    email: z.string().email().nullable(),
+export const tokenSchema = baseEntitySchema
+  .extend({
+    userId: userSchema.shape.id.nullable(),
+    email: emailSchema.nullable(),
     token: z.string().min(1),
     type: z.enum(TOKENS_ENUM),
-    expiresAt: z.coerce.date().nullable(),
-    createdAt: z.coerce.date(),
+    expiresAt: dateSchema.nullable(),
   })
   .strict();
 export type TokenSchema = z.infer<typeof tokenSchema>;
 
 export type PasswordResetToken = Pick<
   TokenSchema,
-  'entityId' | 'token' | 'expiresAt'
+  'userId' | 'token' | 'expiresAt'
 > & { type: typeof TOKENS.passwordReset };
 
 export type ResetPasswordPayload = { sub: string };

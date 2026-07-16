@@ -15,6 +15,7 @@ import {
   queryPageSchema,
   queryPerPageSchema,
   querySearchSchema,
+  validateEndDate,
 } from '../query';
 import { specialtySchema } from '../shared';
 import { appointmentSchema } from '.';
@@ -55,15 +56,4 @@ export const getAppointmentsQuerySchema = z
     perPage: queryPerPageSchema,
     limit: queryLimitSchema,
   })
-  .refine(
-    (data) => {
-      if (data.startDate && data.endDate) {
-        return data.startDate < data.endDate;
-      }
-      return true;
-    },
-    {
-      message: 'It should be greater than `startDate`',
-      path: ['endDate'],
-    },
-  );
+  .superRefine(validateEndDate);

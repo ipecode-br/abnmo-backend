@@ -13,6 +13,7 @@ import {
   queryPageSchema,
   queryPerPageSchema,
   querySearchSchema,
+  validateEndDate,
 } from '../query';
 import { userSchema } from '.';
 
@@ -43,18 +44,7 @@ export const getUsersQuerySchema = z
     page: queryPageSchema,
     perPage: queryPerPageSchema,
   })
-  .refine(
-    (data) => {
-      if (data.startDate && data.endDate) {
-        return data.startDate < data.endDate;
-      }
-      return true;
-    },
-    {
-      message: 'It should be greater than `startDate`',
-      path: ['endDate'],
-    },
-  );
+  .superRefine(validateEndDate);
 
 export const getUserInvitesQuerySchema = z
   .object({
@@ -66,15 +56,4 @@ export const getUserInvitesQuerySchema = z
     page: queryPageSchema,
     perPage: queryPerPageSchema,
   })
-  .refine(
-    (data) => {
-      if (data.startDate && data.endDate) {
-        return data.startDate < data.endDate;
-      }
-      return true;
-    },
-    {
-      message: 'It should be greater than `startDate`',
-      path: ['endDate'],
-    },
-  );
+  .superRefine(validateEndDate);
