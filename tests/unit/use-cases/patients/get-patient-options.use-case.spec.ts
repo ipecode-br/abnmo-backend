@@ -1,11 +1,14 @@
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { mock, MockProxy } from 'jest-mock-extended';
+import { requestUserFactory } from 'tests/config/factories/shared.factory';
 import { patientUserFactory } from 'tests/config/factories/user.factory';
 import { Repository } from 'typeorm';
 
 import { GetPatientOptionsUseCase } from '@/app/http/patients/use-cases/get-patient-options.use-case';
 import { User } from '@/domain/entities/user';
+
+const adminUser = requestUserFactory({ role: 'admin', features: [] });
 
 describe('GetPatientOptionsUseCase', () => {
   let useCase: GetPatientOptionsUseCase;
@@ -42,7 +45,7 @@ describe('GetPatientOptionsUseCase', () => {
     usersRepo.find.mockResolvedValue([patient1, patient2]);
     usersRepo.count.mockResolvedValue(2);
 
-    const result = await useCase.execute();
+    const result = await useCase.execute({ user: adminUser });
 
     expect(result.patients).toEqual([
       { id: patient1.id, name: patient1.name, cpf: patient1.cpf },
@@ -63,7 +66,7 @@ describe('GetPatientOptionsUseCase', () => {
     usersRepo.find.mockResolvedValue([]);
     usersRepo.count.mockResolvedValue(0);
 
-    const result = await useCase.execute();
+    const result = await useCase.execute({ user: adminUser });
 
     expect(result.patients).toEqual([]);
     expect(result.total).toBe(0);

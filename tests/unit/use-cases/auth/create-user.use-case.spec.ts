@@ -63,11 +63,11 @@ describe('CreateUserUseCase', () => {
     usersRepo.findOne.mockResolvedValue(null);
     cryptographyService.createHash.mockResolvedValue('hashed-password');
 
-    const newUser = memberUserFactory({
+    usersRepo.create.mockImplementation((data: any) => ({
+      ...data,
       id: 'new-user-id',
-      email: 'newuser@test.com',
-    });
-    usersRepo.save.mockResolvedValue(newUser);
+    }));
+    usersRepo.save.mockResolvedValue({} as User);
 
     await useCase.execute({
       name: 'New User',
@@ -91,7 +91,7 @@ describe('CreateUserUseCase', () => {
     });
     expect(createSessionUseCase.execute).toHaveBeenCalledWith(
       expect.objectContaining({
-        user: { id: newUser.id, email: newUser.email, role: newUser.role },
+        user: { id: 'new-user-id', email: 'newuser@test.com', role: 'member' },
         keepLoggedIn: false,
       }),
     );

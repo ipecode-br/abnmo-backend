@@ -1,6 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { mock, MockProxy } from 'jest-mock-extended';
+import { requestUserFactory } from 'tests/config/factories/shared.factory';
 import { patientUserFactory } from 'tests/config/factories/user.factory';
 import {
   Between,
@@ -12,6 +13,8 @@ import {
 
 import { GetPatientsUseCase } from '@/app/http/patients/use-cases/get-patients.use-case';
 import { User } from '@/domain/entities/user';
+
+const adminUser = requestUserFactory({ role: 'admin', features: [] });
 
 describe('GetPatientsUseCase', () => {
   let useCase: GetPatientsUseCase;
@@ -41,6 +44,7 @@ describe('GetPatientsUseCase', () => {
     usersRepo.count.mockResolvedValue(2);
 
     const result = await useCase.execute({
+      user: adminUser,
       page: 1,
       perPage: 10,
       order: 'ASC',
@@ -83,7 +87,12 @@ describe('GetPatientsUseCase', () => {
     usersRepo.find.mockResolvedValue([]);
     usersRepo.count.mockResolvedValue(0);
 
-    await useCase.execute({ page: 1, perPage: 10, status: 'inactive' });
+    await useCase.execute({
+      user: adminUser,
+      page: 1,
+      perPage: 10,
+      status: 'inactive',
+    });
 
     expect(usersRepo.count).toHaveBeenCalledWith({
       where: { role: 'patient', status: 'inactive' },
@@ -94,7 +103,12 @@ describe('GetPatientsUseCase', () => {
     usersRepo.find.mockResolvedValue([]);
     usersRepo.count.mockResolvedValue(0);
 
-    await useCase.execute({ page: 1, perPage: 10, search: 'Alice' });
+    await useCase.execute({
+      user: adminUser,
+      page: 1,
+      perPage: 10,
+      search: 'Alice',
+    });
 
     expect(usersRepo.count).toHaveBeenCalledWith({
       where: {
@@ -109,7 +123,11 @@ describe('GetPatientsUseCase', () => {
     usersRepo.find.mockResolvedValue([]);
     usersRepo.count.mockResolvedValue(0);
 
-    const result = await useCase.execute({ page: 1, perPage: 10 });
+    const result = await useCase.execute({
+      user: adminUser,
+      page: 1,
+      perPage: 10,
+    });
 
     expect(result.patients).toEqual([]);
     expect(result.total).toBe(0);
@@ -121,7 +139,13 @@ describe('GetPatientsUseCase', () => {
     usersRepo.find.mockResolvedValue([]);
     usersRepo.count.mockResolvedValue(0);
 
-    await useCase.execute({ page: 1, perPage: 10, startDate, endDate });
+    await useCase.execute({
+      user: adminUser,
+      page: 1,
+      perPage: 10,
+      startDate,
+      endDate,
+    });
 
     expect(usersRepo.count).toHaveBeenCalledWith({
       where: {
@@ -137,7 +161,7 @@ describe('GetPatientsUseCase', () => {
     usersRepo.find.mockResolvedValue([]);
     usersRepo.count.mockResolvedValue(0);
 
-    await useCase.execute({ page: 1, perPage: 10, startDate });
+    await useCase.execute({ user: adminUser, page: 1, perPage: 10, startDate });
 
     expect(usersRepo.count).toHaveBeenCalledWith({
       where: {
@@ -153,7 +177,7 @@ describe('GetPatientsUseCase', () => {
     usersRepo.find.mockResolvedValue([]);
     usersRepo.count.mockResolvedValue(0);
 
-    await useCase.execute({ page: 1, perPage: 10, endDate });
+    await useCase.execute({ user: adminUser, page: 1, perPage: 10, endDate });
 
     expect(usersRepo.count).toHaveBeenCalledWith({
       where: {

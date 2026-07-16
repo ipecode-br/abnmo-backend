@@ -43,7 +43,8 @@ describe('CreateSurveyUseCase', () => {
 
   const submission = surveySubmissionFactory(patient, {
     id: 'sub-1',
-    status: 'pending_review',
+    status: 'approved',
+    surveyToken: 'sub-1',
   });
 
   const createInput = () => ({
@@ -213,7 +214,7 @@ describe('CreateSurveyUseCase', () => {
 
       expect(submissionsRepo.findOne).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: 'sub-1' },
+          where: { surveyToken: 'sub-1' },
           relations: { user: true },
         }),
       );
@@ -230,7 +231,7 @@ describe('CreateSurveyUseCase', () => {
       );
     });
 
-    it('throws BadRequestException for non-pending_review status', async () => {
+    it('throws BadRequestException for non-approved status', async () => {
       const declinedSubmission = {
         ...submission,
         status: 'declined',

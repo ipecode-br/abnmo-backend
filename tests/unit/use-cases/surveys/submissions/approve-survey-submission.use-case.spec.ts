@@ -8,8 +8,10 @@ import { patientUserFactory } from 'tests/config/factories/user.factory';
 import { Repository } from 'typeorm';
 
 import { ApproveSurveySubmissionUseCase } from '@/app/http/surveys/submissions/use-cases/approve-survey-submission.use-case';
+import { MailService } from '@/app/mail/mail.service';
 import { LogService } from '@/common/log/log.service';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
+import { EnvService } from '@/env/env.service';
 
 describe('ApproveSurveySubmissionUseCase', () => {
   let useCase: ApproveSurveySubmissionUseCase;
@@ -28,6 +30,11 @@ describe('ApproveSurveySubmissionUseCase', () => {
       providers: [
         ApproveSurveySubmissionUseCase,
         { provide: getRepositoryToken(SurveySubmission), useValue: repo },
+        { provide: MailService, useValue: { send: jest.fn() } },
+        {
+          provide: EnvService,
+          useValue: { get: jest.fn().mockReturnValue('http://localhost') },
+        },
         { provide: LogService, useValue: { log: jest.fn() } },
       ],
     }).compile();
@@ -36,7 +43,7 @@ describe('ApproveSurveySubmissionUseCase', () => {
   });
 
   it('approves pending_review submission', async () => {
-    const user = requestUserFactory();
+    const user = requestUserFactory({ role: 'admin' });
     repo.findOne.mockResolvedValue(submission as unknown as SurveySubmission);
     repo.update.mockResolvedValue(undefined as any);
 
@@ -45,10 +52,13 @@ describe('ApproveSurveySubmissionUseCase', () => {
     expect(repo.findOne).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: 'sub-1' } }),
     );
-    expect(repo.update).toHaveBeenCalledWith('sub-1', {
-      status: 'approved',
-      updatedBy: { id: user.id },
-    });
+    expect(repo.update).toHaveBeenCalledWith(
+      'sub-1',
+      expect.objectContaining({
+        status: 'approved',
+        updatedBy: { id: user.id },
+      }),
+    );
   });
 
   describe('Error cases', () => {
@@ -56,7 +66,10 @@ describe('ApproveSurveySubmissionUseCase', () => {
       repo.findOne.mockResolvedValue(null);
 
       await expect(
-        useCase.execute({ id: 'nonexistent', user: requestUserFactory() }),
+        useCase.execute({
+          id: 'nonexistent',
+          user: requestUserFactory({ role: 'admin' }),
+        }),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -68,7 +81,10 @@ describe('ApproveSurveySubmissionUseCase', () => {
       repo.findOne.mockResolvedValue(approvedSubmission);
 
       await expect(
-        useCase.execute({ id: 'sub-1', user: requestUserFactory() }),
+        useCase.execute({
+          id: 'sub-1',
+          user: requestUserFactory({ role: 'admin' }),
+        }),
       ).rejects.toThrow(BadRequestException);
     });
   });

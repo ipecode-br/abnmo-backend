@@ -2,12 +2,15 @@ import { NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { mock, MockProxy } from 'jest-mock-extended';
+import { requestUserFactory } from 'tests/config/factories/shared.factory';
 import { surveyFactory } from 'tests/config/factories/survey.factory';
 import { patientUserFactory } from 'tests/config/factories/user.factory';
 import { Repository } from 'typeorm';
 
 import { GetPatientUseCase } from '@/app/http/patients/use-cases/get-patient.use-case';
 import { User } from '@/domain/entities/user';
+
+const adminUser = requestUserFactory({ role: 'admin', features: [] });
 
 describe('GetPatientUseCase', () => {
   let useCase: GetPatientUseCase;
@@ -64,7 +67,7 @@ describe('GetPatientUseCase', () => {
   it('returns patient details with survey data', async () => {
     usersRepo.findOne.mockResolvedValue(patient);
 
-    const result = await useCase.execute({ id: patient.id });
+    const result = await useCase.execute({ user: adminUser, id: patient.id });
 
     expect(result).toEqual({
       id: patient.id,
@@ -106,9 +109,9 @@ describe('GetPatientUseCase', () => {
     it('throws "NotFoundException" when patient not found', async () => {
       usersRepo.findOne.mockResolvedValue(null);
 
-      await expect(useCase.execute({ id: 'nonexistent' })).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        useCase.execute({ user: adminUser, id: 'nonexistent' }),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('throws "NotFoundException" when patient has no survey', async () => {
@@ -118,7 +121,7 @@ describe('GetPatientUseCase', () => {
       usersRepo.findOne.mockResolvedValue(patientWithoutSurvey);
 
       await expect(
-        useCase.execute({ id: patientWithoutSurvey.id }),
+        useCase.execute({ user: adminUser, id: patientWithoutSurvey.id }),
       ).rejects.toThrow(NotFoundException);
     });
   });

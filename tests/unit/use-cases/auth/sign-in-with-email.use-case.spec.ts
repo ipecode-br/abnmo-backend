@@ -14,6 +14,7 @@ import { CreateSessionUseCase } from '@/app/http/auth/use-cases/create-session.u
 import { SignInWithEmailUseCase } from '@/app/http/auth/use-cases/sign-in-with-email.use-case';
 import { LogService } from '@/common/log/log.service';
 import { User } from '@/domain/entities/user';
+import { EnvService } from '@/env/env.service';
 
 describe('SignInWithEmailUseCase', () => {
   let useCase: SignInWithEmailUseCase;
@@ -38,6 +39,10 @@ describe('SignInWithEmailUseCase', () => {
         { provide: getRepositoryToken(User), useValue: usersRepo },
         { provide: CreateSessionUseCase, useValue: createSessionUseCase },
         { provide: CryptographyService, useValue: cryptographyService },
+        {
+          provide: EnvService,
+          useValue: { get: jest.fn().mockReturnValue('production') },
+        },
         { provide: LogService, useValue: { log: jest.fn() } },
       ],
     }).compile();
