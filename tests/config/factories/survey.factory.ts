@@ -44,11 +44,15 @@ import {
   WALKING_DISTANCES,
 } from '@/domain/enums/surveys';
 
-import { baseEntityFactory, dateFactory, nameFactory } from './shared.factory';
+import {
+  baseEntityFactory,
+  dateFactory,
+  datetimeFactory,
+  nameFactory,
+} from './shared.factory';
 
 export function surveyFactory(
-  patient: User,
-  overrides: Partial<Survey> = {},
+  overrides: Partial<Survey> & { patient: User },
 ): Survey {
   const selectedState = faker.helpers.arrayElement(BRAZIL_STATES);
   const hasLivedElsewhere = faker.datatype.boolean();
@@ -65,8 +69,7 @@ export function surveyFactory(
 
   return {
     ...baseEntityFactory(),
-    createdAt: dateFactory(),
-    user: patient,
+    createdAt: datetimeFactory(),
     status: faker.helpers.arrayElement(SURVEY_STATUSES),
     signatureId: null,
     dateOfBirth: faker.date
@@ -154,7 +157,7 @@ export function surveyFactory(
     diagnosisHospitalStreet: faker.datatype.boolean()
       ? faker.location.streetAddress()
       : null,
-    diagnosisDate: faker.date.between({
+    diagnosisDate: dateFactory({
       from: new Date().setFullYear(new Date().getFullYear() - 4),
       to: new Date(),
     }),

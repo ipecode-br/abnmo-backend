@@ -66,7 +66,7 @@ export async function createPasswordResetToken({
 
   const entity = repo.create({
     type: TOKENS.passwordReset,
-    entityId: sub,
+    userId: sub,
     token,
     expiresAt,
   });

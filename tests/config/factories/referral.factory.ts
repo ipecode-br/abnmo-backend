@@ -7,7 +7,7 @@ import { SPECIALTY_CATEGORIES } from '@/domain/enums/shared';
 
 import {
   baseEntityFactory,
-  dateFactory,
+  datetimeFactory,
   idFactory,
   nameFactory,
 } from './shared.factory';
@@ -17,7 +17,7 @@ export function referralFactory(
 ): Referral {
   return {
     ...baseEntityFactory(),
-    date: dateFactory(4, 4),
+    date: datetimeFactory(4, 4),
     status: faker.helpers.arrayElement(REFERRAL_STATUSES),
     category: faker.helpers.arrayElement(SPECIALTY_CATEGORIES),
     condition: faker.helpers.arrayElement(PATIENT_CONDITIONS),

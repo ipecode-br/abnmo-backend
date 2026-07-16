@@ -117,9 +117,9 @@ async function main() {
       await usersRepository.save(user);
 
       const submission = generateFakeSurveySubmission({
-        user: { id: user.id },
+        patient: { id: user.id },
         status: isCompleted ? 'completed' : 'approved',
-        updatedBy: { id: ADMIN_USER.id },
+        updatedBy: ADMIN_USER.id,
       });
       await surveySubmissionRepository.save(submission);
 

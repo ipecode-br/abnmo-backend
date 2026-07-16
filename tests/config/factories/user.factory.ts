@@ -41,10 +41,7 @@ export function userFactory(overrides: Partial<User> = {}): User {
     avatarUrl,
     documents: [],
     surveySubmission: null,
-    surveySubmissionsUpdated: [],
     survey: null,
-    appointmentsAsSpecialist: [],
-    referralsAsSpecialist: [],
   };
 
   if (role === 'member') {

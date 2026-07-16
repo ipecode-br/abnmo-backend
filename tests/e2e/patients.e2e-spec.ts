@@ -177,7 +177,7 @@ describe('Patients (e2e)', () => {
       });
 
       const { patient } = await createPatient();
-      await createSurvey(patient);
+      await createSurvey({ patient });
 
       const res = await api.get<GetPatientResponse>(
         `/patients/${patient.id}`,
@@ -197,7 +197,7 @@ describe('Patients (e2e)', () => {
         login: true,
         features: ['read:patient'],
       });
-      await createSurvey(patient);
+      await createSurvey({ patient });
 
       const res = await api.get<GetPatientResponse>(
         `/patients/${patient.id}`,

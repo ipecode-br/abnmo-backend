@@ -34,8 +34,8 @@ export class PatientRequirement
   @Column({ type: 'datetime', nullable: true })
   submittedAt: Date | null;
 
-  @Column('uuid')
-  updatedBy: string;
+  @Column('uuid', { nullable: true })
+  updatedBy: string | null;
 
   @Column('uuid')
   createdBy: string;

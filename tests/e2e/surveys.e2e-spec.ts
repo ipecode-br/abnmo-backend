@@ -85,7 +85,7 @@ describe('Surveys (e2e)', () => {
         diagnosisHospitalState: null,
         diagnosisHospitalCity: null,
         diagnosisHospitalStreet: null,
-        diagnosisDate: new Date('2023-06-01'),
+        diagnosisDate: '2023-06-01',
         diagnosisDocument: null,
         currentNeurologist: null,
         currentTreatmentHospital: null,
@@ -154,9 +154,10 @@ describe('Surveys (e2e)', () => {
   describe('POST /surveys/complete', () => {
     it('completes survey and triggers signature request', async () => {
       const { patient } = await createPatient();
-      const submission = await createSurveySubmission(patient, {
+      const submission = await createSurveySubmission({
         status: 'approved',
         surveyToken: '550e8400-e29b-41d4-a716-446655440001',
+        patient,
       });
 
       const signatureUseCase = app.get(RequestSignatureUseCase);
@@ -206,9 +207,10 @@ describe('Surveys (e2e)', () => {
 
     it('cannot complete non-approved submission', async () => {
       const { patient } = await createPatient();
-      const submission = await createSurveySubmission(patient, {
+      const submission = await createSurveySubmission({
         status: 'pending_review',
         surveyToken: '550e8400-e29b-41d4-a716-446655440002',
+        patient,
       });
 
       const res = await api.post<BaseResponseBody, CreateSurveyBody>(
@@ -225,9 +227,10 @@ describe('Surveys (e2e)', () => {
 
     it('cannot complete already completed submission', async () => {
       const { patient } = await createPatient();
-      const submission = await createSurveySubmission(patient, {
+      const submission = await createSurveySubmission({
         status: 'completed',
         surveyToken: '550e8400-e29b-41d4-a716-446655440003',
+        patient,
       });
 
       const res = await api.post<BaseResponseBody, CreateSurveyBody>(
@@ -246,9 +249,10 @@ describe('Surveys (e2e)', () => {
       await createPatient({ cpf: '52998224725' });
 
       const { patient } = await createPatient();
-      const submission = await createSurveySubmission(patient, {
+      const submission = await createSurveySubmission({
         status: 'approved',
         surveyToken: '550e8400-e29b-41d4-a716-446655440005',
+        patient,
       });
 
       const res = await api.post<BaseResponseBody, CreateSurveyBody>(
@@ -274,7 +278,7 @@ describe('Surveys (e2e)', () => {
       const totalSurveys = 15;
       for (let i = 0; i < totalSurveys; i++) {
         const { patient } = await createPatient();
-        await createSurvey(patient, { status: 'completed' });
+        await createSurvey({ status: 'completed', patient });
       }
 
       const firstPage = await api.get<GetSurveysResponse>(
@@ -302,10 +306,10 @@ describe('Surveys (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const { patient: patientA } = await createPatient();
-      await createSurvey(patientA, { status: 'completed' });
+      await createSurvey({ status: 'completed', patient: patientA });
 
       const { patient: patientB } = await createPatient();
-      await createSurvey(patientB, { status: 'pending_signature' });
+      await createSurvey({ status: 'pending_signature', patient: patientB });
 
       const res = await api.get<GetSurveysResponse>(
         '/surveys',
@@ -323,9 +327,10 @@ describe('Surveys (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const { patient } = await createPatient();
-      await createSurvey(patient, {
+      await createSurvey({
         status: 'completed',
         createdAt: new Date(),
+        patient,
       });
 
       const startDate = new Date();
@@ -349,12 +354,12 @@ describe('Surveys (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const { patient: patientA } = await createPatient();
-      await createSurvey(patientA, { status: 'completed' });
+      await createSurvey({ status: 'completed', patient: patientA });
 
       const { patient: patientB } = await createPatient({
         name: 'Search Survey',
       });
-      await createSurvey(patientB, { status: 'completed' });
+      await createSurvey({ status: 'completed', patient: patientB });
 
       const res = await api.get<GetSurveysResponse>(
         '/surveys',
@@ -394,7 +399,7 @@ describe('Surveys (e2e)', () => {
       });
 
       const { patient } = await createPatient();
-      const survey = await createSurvey(patient, { status: 'completed' });
+      const survey = await createSurvey({ status: 'completed', patient });
 
       const res = await api.get<GetSurveyResponse>(
         `/surveys/${survey.id}`,
@@ -406,15 +411,15 @@ describe('Surveys (e2e)', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.data.id).toBe(survey.id);
       expect(res.body.data.status).toBe('completed');
-      expect(res.body.data.user.name).toBe(patient.name);
-      expect(res.body.data.user.email).toBe(patient.email);
+      expect(res.body.data.patient.name).toBe(patient.name);
+      expect(res.body.data.patient.email).toBe(patient.email);
     });
 
     it('cannot access without "read:survey" or "read:survey:others"', async () => {
       const { cookies } = await createMember({ login: true, features: [] });
 
       const { patient } = await createPatient();
-      const survey = await createSurvey(patient);
+      const survey = await createSurvey({ patient });
 
       const res = await api.get(`/surveys/${survey.id}`, undefined, {
         cookies,
@@ -449,9 +454,10 @@ describe('Surveys (e2e)', () => {
 
       const signatureId = 'sig-123';
       const { patient } = await createPatient();
-      const survey = await createSurvey(patient, {
+      const survey = await createSurvey({
         status: 'pending_signature',
         signatureId,
+        patient,
       });
 
       const sendReminderUseCase = app.get(SendReminderSignatureUseCase);
@@ -478,8 +484,9 @@ describe('Surveys (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const { patient } = await createPatient();
-      const survey = await createSurvey(patient, {
+      const survey = await createSurvey({
         status: 'pending_signature',
+        patient,
       });
 
       const res = await api.post(
@@ -499,9 +506,10 @@ describe('Surveys (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const { patient } = await createPatient();
-      const survey = await createSurvey(patient, {
+      const survey = await createSurvey({
         status: 'completed',
         signatureId: 'sig-123',
+        patient,
       });
 
       const res = await api.post(

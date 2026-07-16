@@ -35,6 +35,6 @@ export class SurveySubmission
   @OneToOne(() => Document, (document) => document.submission)
   document: Document | null;
 
-  @Column('uuid')
-  updatedBy: string;
+  @Column('uuid', { nullable: true })
+  updatedBy: string | null;
 }

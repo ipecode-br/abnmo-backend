@@ -99,8 +99,9 @@ describe('Survey Submissions (e2e)', () => {
   describe('POST /survey-submissions/:id/confirm-upload', () => {
     it('confirms upload and updates status to "pending_review"', async () => {
       const { patient } = await createPatient();
-      const submission = await createSurveySubmission(patient, {
+      const submission = await createSurveySubmission({
         status: 'pending_document',
+        patient,
       });
 
       await createDocument({ user: patient, submission });
@@ -138,7 +139,7 @@ describe('Survey Submissions (e2e)', () => {
       const totalSubmissions = 15;
       for (let i = 0; i < totalSubmissions; i++) {
         const { patient } = await createPatient();
-        await createSurveySubmission(patient);
+        await createSurveySubmission({ patient });
       }
 
       const firstPage = await api.get<GetSurveySubmissionsResponse>(
@@ -166,10 +167,13 @@ describe('Survey Submissions (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const { patient: patientA } = await createPatient();
-      await createSurveySubmission(patientA, { status: 'pending_review' });
+      await createSurveySubmission({
+        status: 'pending_review',
+        patient: patientA,
+      });
 
       const { patient: patientB } = await createPatient();
-      await createSurveySubmission(patientB, { status: 'approved' });
+      await createSurveySubmission({ status: 'approved', patient: patientB });
 
       const res = await api.get<GetSurveySubmissionsResponse>(
         '/survey-submissions',
@@ -187,7 +191,7 @@ describe('Survey Submissions (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const { patient } = await createPatient();
-      await createSurveySubmission(patient, { status: 'pending_review' });
+      await createSurveySubmission({ status: 'pending_review', patient });
 
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - 1);
@@ -221,8 +225,8 @@ describe('Survey Submissions (e2e)', () => {
         email: 'other@example.com',
       });
 
-      await createSurveySubmission(patientA);
-      await createSurveySubmission(patientB);
+      await createSurveySubmission({ patient: patientA });
+      await createSurveySubmission({ patient: patientB });
 
       const res = await api.get<GetSurveySubmissionsResponse>(
         '/survey-submissions',
@@ -262,8 +266,11 @@ describe('Survey Submissions (e2e)', () => {
       const { patient: patientA } = await createPatient();
       const { patient: patientB } = await createPatient();
 
-      await createSurveySubmission(patientA, { status: 'pending_review' });
-      await createSurveySubmission(patientB, { status: 'approved' });
+      await createSurveySubmission({
+        status: 'pending_review',
+        patient: patientA,
+      });
+      await createSurveySubmission({ status: 'approved', patient: patientB });
 
       const res = await api.get<GetTotalSurveySubmissionsResponse>(
         '/survey-submissions/total',
@@ -281,8 +288,11 @@ describe('Survey Submissions (e2e)', () => {
       const { patient: patientA } = await createPatient();
       const { patient: patientB } = await createPatient();
 
-      await createSurveySubmission(patientA, { status: 'pending_review' });
-      await createSurveySubmission(patientB, { status: 'approved' });
+      await createSurveySubmission({
+        status: 'pending_review',
+        patient: patientA,
+      });
+      await createSurveySubmission({ status: 'approved', patient: patientB });
 
       const res = await api.get<GetTotalSurveySubmissionsResponse>(
         '/survey-submissions/total',
@@ -317,7 +327,7 @@ describe('Survey Submissions (e2e)', () => {
       });
 
       const { patient } = await createPatient();
-      const submission = await createSurveySubmission(patient);
+      const submission = await createSurveySubmission({ patient });
 
       const res = await api.get<GetSurveySubmissionResponse>(
         `/survey-submissions/${submission.id}`,
@@ -337,7 +347,7 @@ describe('Survey Submissions (e2e)', () => {
       const { cookies } = await createMember({ login: true, features: [] });
 
       const { patient } = await createPatient();
-      const submission = await createSurveySubmission(patient);
+      const submission = await createSurveySubmission({ patient });
 
       const res = await api.get(
         `/survey-submissions/${submission.id}`,
@@ -375,8 +385,9 @@ describe('Survey Submissions (e2e)', () => {
       });
 
       const { patient } = await createPatient();
-      const submission = await createSurveySubmission(patient, {
+      const submission = await createSurveySubmission({
         status: 'pending_review',
+        patient,
       });
 
       const mailService = app.get(MailService);
@@ -415,8 +426,9 @@ describe('Survey Submissions (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const { patient } = await createPatient();
-      const submission = await createSurveySubmission(patient, {
+      const submission = await createSurveySubmission({
         status: 'approved',
+        patient,
       });
 
       const res = await api.patch(
@@ -471,8 +483,9 @@ describe('Survey Submissions (e2e)', () => {
       });
 
       const { patient } = await createPatient();
-      const submission = await createSurveySubmission(patient, {
+      const submission = await createSurveySubmission({
         status: 'pending_review',
+        patient,
       });
 
       const res = await api.patch(
@@ -508,8 +521,9 @@ describe('Survey Submissions (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const { patient } = await createPatient();
-      const submission = await createSurveySubmission(patient, {
+      const submission = await createSurveySubmission({
         status: 'approved',
+        patient,
       });
 
       const res = await api.patch(

@@ -28,7 +28,18 @@ export function phoneFactory(): string {
   return faker.string.numeric(11);
 }
 
-export function dateFactory(monthsBefore = 4, monthsAhead = 0): Date {
+export function dateFactory({
+  from,
+  to,
+}: {
+  from: string | Date | number;
+  to: string | Date | number;
+}): string {
+  const date = faker.date.between({ from, to });
+  return date.toISOString().split('T')[0];
+}
+
+export function datetimeFactory(monthsBefore = 4, monthsAhead = 0): Date {
   return faker.date.between({
     from: new Date().setMonth(new Date().getMonth() - monthsBefore),
     to: new Date().setMonth(new Date().getMonth() + monthsAhead),

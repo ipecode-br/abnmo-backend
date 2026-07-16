@@ -5,12 +5,11 @@ import { surveyFactory } from '../config/factories/survey.factory';
 import { getTestDataSource } from '../config/setup-e2e';
 
 export async function createSurvey(
-  patient: User,
-  overrides: Partial<Survey> = {},
+  overrides: Partial<Survey> & { patient: User },
 ): Promise<Survey> {
   const dataSource = getTestDataSource();
   const repo = dataSource.getRepository(Survey);
-  const survey = repo.create(surveyFactory(patient, overrides));
+  const survey = repo.create(surveyFactory(overrides));
 
   await repo.save(survey);
 
@@ -21,10 +20,10 @@ export async function getSurveyById(id: string): Promise<Survey | null> {
   const dataSource = getTestDataSource();
   const repo = dataSource.getRepository(Survey);
   return await repo.findOne({
-    relations: { user: true },
+    relations: { patient: true },
     where: { id },
     select: {
-      user: {
+      patient: {
         id: true,
         name: true,
         phone: true,
@@ -40,9 +39,9 @@ export async function getSurveys(): Promise<Survey[]> {
   const dataSource = getTestDataSource();
   const repo = dataSource.getRepository(Survey);
   return await repo.find({
-    relations: { user: true },
+    relations: { patient: true },
     select: {
-      user: { id: true, name: true, phone: true, email: true },
+      patient: { id: true, name: true, phone: true, email: true },
     },
   });
 }

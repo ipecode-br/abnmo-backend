@@ -7,28 +7,20 @@ import {
   PATIENT_REQUIREMENT_TYPES,
 } from '@/domain/enums/patient-requirements';
 
-import { idFactory } from './shared.factory';
+import { baseEntityFactory, idFactory } from './shared.factory';
 
 export function patientRequirementFactory(
-  patient: User,
-  overrides: Partial<PatientRequirement> = {},
+  overrides: Partial<PatientRequirement> & { patient: User },
 ): PatientRequirement {
   const data: PatientRequirement = {
-    id: idFactory(),
-    patientId: patient.id,
-    type: faker.helpers.arrayElement(PATIENT_REQUIREMENT_TYPES),
+    ...baseEntityFactory(),
     title: 'Solicitação de documento',
     description: faker.datatype.boolean() ? faker.lorem.sentence() : null,
+    type: faker.helpers.arrayElement(PATIENT_REQUIREMENT_TYPES),
     status: faker.helpers.arrayElement(PATIENT_REQUIREMENT_STATUSES),
     submittedAt: null,
-    approvedBy: null,
-    approvedAt: null,
-    declinedBy: null,
-    declinedAt: null,
+    updatedBy: null,
     createdBy: idFactory(),
-    patient,
-    createdAt: new Date(),
-    updatedAt: new Date(),
     ...overrides,
   };
 
@@ -36,12 +28,10 @@ export function patientRequirementFactory(
     data.submittedAt = faker.date.recent();
   }
   if (data.status === 'approved') {
-    data.approvedBy = idFactory();
-    data.approvedAt = faker.date.recent();
+    data.updatedBy = idFactory();
   }
   if (data.status === 'declined') {
-    data.declinedBy = idFactory();
-    data.declinedAt = faker.date.recent();
+    data.updatedBy = idFactory();
   }
 
   return data;

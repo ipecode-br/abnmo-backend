@@ -5,12 +5,11 @@ import { surveySubmissionFactory } from '../config/factories/survey-submission.f
 import { getTestDataSource } from '../config/setup-e2e';
 
 export async function createSurveySubmission(
-  patient: User,
-  overrides: Partial<SurveySubmission> = {},
+  overrides: Partial<SurveySubmission> & { patient: User },
 ): Promise<SurveySubmission> {
   const dataSource = getTestDataSource();
   const repo = dataSource.getRepository(SurveySubmission);
-  const submission = repo.create(surveySubmissionFactory(patient, overrides));
+  const submission = repo.create(surveySubmissionFactory(overrides));
 
   await repo.save(submission);
 
@@ -23,7 +22,7 @@ export async function getSurveySubmissionById(
   const dataSource = getTestDataSource();
   const repo = dataSource.getRepository(SurveySubmission);
   return await repo.findOne({
-    relations: { user: true, document: true, updatedBy: true },
+    relations: { patient: true, document: true },
     where: { id },
   });
 }
@@ -34,7 +33,7 @@ export async function getSurveySubmissionByToken(
   const dataSource = getTestDataSource();
   const repo = dataSource.getRepository(SurveySubmission);
   return await repo.findOne({
-    relations: { user: true, document: true, updatedBy: true },
+    relations: { patient: true, document: true },
     where: { surveyToken: token },
   });
 }
@@ -43,7 +42,7 @@ export async function getSurveySubmissions(): Promise<SurveySubmission[]> {
   const dataSource = getTestDataSource();
   const repo = dataSource.getRepository(SurveySubmission);
   return await repo.find({
-    relations: { user: true, document: true },
-    select: { user: { id: true, name: true, email: true } },
+    relations: { patient: true, document: true },
+    select: { patient: { id: true, name: true, email: true } },
   });
 }

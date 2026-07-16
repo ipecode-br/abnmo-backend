@@ -7,15 +7,13 @@ import { SURVEY_SUBMISSION_STATUSES } from '@/domain/enums/survey-submissions';
 import { baseEntityFactory } from './shared.factory';
 
 export function surveySubmissionFactory(
-  patient: User,
-  overrides: Partial<SurveySubmission> = {},
+  overrides: Partial<SurveySubmission> & { patient: User },
 ): SurveySubmission {
   const data: SurveySubmission = {
     ...baseEntityFactory(),
     status: faker.helpers.arrayElement(SURVEY_SUBMISSION_STATUSES),
     reason: null,
     surveyToken: null,
-    user: patient,
     document: null,
     updatedBy: null,
     ...overrides,
