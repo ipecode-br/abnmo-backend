@@ -44,7 +44,7 @@ export class CreateSessionUseCase {
     const expiresAt = new Date(Date.now() + maxAge);
 
     const session = this.sessionsRepository.create({
-      userId: user.id,
+      user,
       tokenHash,
       expiresAt,
     });

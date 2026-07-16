@@ -24,13 +24,13 @@ export class GetSurveySubmissionUseCase {
     id,
   }: GetSurveySubmissionUseCaseInput): Promise<SurveySubmissionDetailsResponse> {
     const submission = await this.surveySubmissionsRepository.findOne({
-      relations: { user: true, document: true, updatedBy: true },
+      relations: { patient: true, document: true },
       where: { id },
       select: {
         id: true,
         status: true,
         reason: true,
-        user: { id: true, name: true, email: true, phone: true },
+        patient: { id: true, name: true, email: true, phone: true },
         document: {
           key: true,
           url: true,
@@ -39,7 +39,6 @@ export class GetSurveySubmissionUseCase {
           size: true,
           mimeType: true,
         },
-        updatedBy: { id: true, name: true, email: true, avatarUrl: true },
         updatedAt: true,
         createdAt: true,
       },
@@ -51,13 +50,13 @@ export class GetSurveySubmissionUseCase {
       });
     }
 
-    can(user, ['read:survey', 'read:survey:others'], submission.user.id);
+    can(user, ['read:survey', 'read:survey:others'], submission.patient.id);
 
     return {
       id: submission.id,
-      name: submission.user.name,
-      email: submission.user.email,
-      phone: submission.user.phone || '',
+      name: submission.patient.name,
+      email: submission.patient.email,
+      phone: submission.patient.phone || '',
       status: submission.status,
       reason: submission.reason,
       document: submission.document
@@ -68,14 +67,6 @@ export class GetSurveySubmissionUseCase {
             filename: submission.document.filename,
             size: submission.document.size,
             mimeType: submission.document.mimeType,
-          }
-        : null,
-      updatedBy: submission.updatedBy
-        ? {
-            id: submission.updatedBy.id,
-            name: submission.updatedBy.name,
-            email: submission.updatedBy.email,
-            avatarUrl: submission.updatedBy.avatarUrl,
           }
         : null,
       updatedAt: submission.updatedAt,

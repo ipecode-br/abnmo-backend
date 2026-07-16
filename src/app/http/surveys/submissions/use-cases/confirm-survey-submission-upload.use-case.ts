@@ -31,8 +31,8 @@ export class ConfirmSurveySubmissionUploadUseCase {
     id,
   }: ConfirmSurveySubmissionUploadUseCaseInput): Promise<void> {
     const submission = await this.surveySubmissionsRepository.findOne({
-      select: { id: true, status: true, user: { id: true, email: true } },
-      relations: { user: true, document: true },
+      select: { id: true, status: true, patient: { id: true, email: true } },
+      relations: { patient: true, document: true },
       where: { id },
     });
 
@@ -50,8 +50,8 @@ export class ConfirmSurveySubmissionUploadUseCase {
     }
 
     this.logger.setUser({
-      id: submission.user.id,
-      email: submission.user.email,
+      id: submission.patient.id,
+      email: submission.patient.email,
       role: 'patient',
     });
 

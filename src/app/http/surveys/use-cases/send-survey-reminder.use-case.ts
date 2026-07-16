@@ -32,13 +32,13 @@ export class SendSurveyReminderUseCase {
     can(user, 'read:survey:others');
 
     const survey = await this.surveysRepository.findOne({
-      relations: { user: true },
+      relations: { patient: true },
       where: { id },
       select: {
         id: true,
         status: true,
         signatureId: true,
-        user: { name: true, email: true, phone: true, cpf: true },
+        patient: { name: true, email: true, phone: true, cpf: true },
       },
     });
 
@@ -70,10 +70,10 @@ export class SendSurveyReminderUseCase {
       id: survey.id,
       signatureId: survey.signatureId,
       patient: {
-        name: survey.user.name,
-        email: survey.user.email,
-        phone: survey.user.phone,
-        cpf: survey.user.cpf,
+        name: survey.patient.name,
+        email: survey.patient.email,
+        phone: survey.patient.phone,
+        cpf: survey.patient.cpf,
       },
     });
   }

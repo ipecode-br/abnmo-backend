@@ -57,7 +57,7 @@ export class GetPatientRequirementsUseCase {
       patient: 'patient',
       type: 'type',
       status: 'status',
-      approvedAt: 'approvedAt',
+      approvedAt: 'updatedAt',
       submittedAt: 'submittedAt',
       date: 'createdAt',
     };

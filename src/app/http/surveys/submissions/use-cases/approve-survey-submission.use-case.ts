@@ -43,7 +43,7 @@ export class ApproveSurveySubmissionUseCase {
     can(user, 'approve:survey');
 
     const submission = await this.surveySubmissionsRepository.findOne({
-      relations: { user: true },
+      relations: { patient: true },
       where: { id },
     });
 
@@ -65,7 +65,7 @@ export class ApproveSurveySubmissionUseCase {
     const surveyToken = uuidv7();
 
     await this.surveySubmissionsRepository.update(submission.id, {
-      updatedBy: { id: user.id },
+      updatedBy: user.id,
       status: 'approved',
       surveyToken,
     });
@@ -84,7 +84,7 @@ export class ApproveSurveySubmissionUseCase {
     });
 
     await this.mailService.send({
-      to: submission.user.email,
+      to: submission.patient.email,
       subject,
       text: preheader,
       html: emailHtml,

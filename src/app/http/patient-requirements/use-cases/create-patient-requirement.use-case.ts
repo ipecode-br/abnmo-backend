@@ -45,7 +45,7 @@ export class CreatePatientRequirementUseCase {
     }
 
     const patientRequirement = this.patientRequirementsRepository.create({
-      patientId,
+      patient,
       type,
       title,
       description,

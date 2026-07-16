@@ -54,9 +54,9 @@ export class DeclineSurveySubmissionUseCase {
     }
 
     await this.surveySubmissionsRepository.update(submission.id, {
-      status: 'declined',
       reason,
-      updatedBy: { id: user.id },
+      status: 'declined',
+      updatedBy: user.id,
     });
 
     this.logger.log('Survey submission declined', { id, reason });

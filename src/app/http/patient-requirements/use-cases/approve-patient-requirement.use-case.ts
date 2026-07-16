@@ -46,8 +46,7 @@ export class ApprovePatientRequirementUseCase {
 
     await this.patientRequirementsRepository.update(id, {
       status: 'approved',
-      approvedBy: user.id,
-      approvedAt: new Date(),
+      updatedBy: user.id,
     });
 
     this.logger.log('Patient requirement approved', { id });

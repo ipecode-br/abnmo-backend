@@ -24,7 +24,7 @@ export class GetSurveyUseCase {
     id,
   }: GetSurveyUseCaseInput): Promise<SurveyDetailsResponse> {
     const survey = await this.surveysRepository.findOne({
-      relations: { user: true },
+      relations: { patient: true },
       where: { id },
       select: {
         id: true,
@@ -126,7 +126,7 @@ export class GetSurveyUseCase {
         additionalInfo: true,
         updatedAt: true,
         createdAt: true,
-        user: {
+        patient: {
           id: true,
           name: true,
           phone: true,
@@ -141,7 +141,7 @@ export class GetSurveyUseCase {
       throw new NotFoundException('Catalogação não encontrada.');
     }
 
-    can(user, ['read:survey', 'read:survey:others'], survey.user.id);
+    can(user, ['read:survey', 'read:survey:others'], survey.patient.id);
 
     return {
       id: survey.id,
@@ -243,13 +243,13 @@ export class GetSurveyUseCase {
       additionalInfo: survey.additionalInfo,
       updatedAt: survey.updatedAt,
       createdAt: survey.createdAt,
-      user: {
-        id: survey.user.id,
-        name: survey.user.name,
-        phone: survey.user.phone,
-        email: survey.user.email,
-        cpf: survey.user.cpf,
-        susId: survey.user.susId,
+      patient: {
+        id: survey.patient.id,
+        name: survey.patient.name,
+        phone: survey.patient.phone,
+        email: survey.patient.email,
+        cpf: survey.patient.cpf,
+        susId: survey.patient.susId,
       },
     };
   }

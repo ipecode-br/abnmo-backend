@@ -49,12 +49,12 @@ export class RecoverPasswordUseCase {
         type: TOKENS.passwordReset,
         payload: { sub: user.id },
       }),
-      this.tokensRepository.delete({ entityId: user.id }),
+      this.tokensRepository.delete({ userId: user.id }),
     ]);
 
     await this.tokensRepository.save<PasswordResetToken>({
       type: TOKENS.passwordReset,
-      entityId: user.id,
+      userId: user.id,
       expiresAt,
       token,
     });

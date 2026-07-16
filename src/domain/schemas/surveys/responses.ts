@@ -21,7 +21,7 @@ export const getSurveysResponseSchema = baseResponseSchema.extend({
 
 export const surveyDetailsResponseSchema = surveySchema
   .extend({
-    user: userSchema.pick({
+    patient: userSchema.pick({
       id: true,
       name: true,
       phone: true,

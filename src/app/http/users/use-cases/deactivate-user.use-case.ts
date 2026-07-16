@@ -47,7 +47,7 @@ export class DeactivateUserUseCase {
 
     await this.usersRepository.update({ id }, { status: 'inactive' });
 
-    await this.tokensRepository.delete({ entityId: id });
+    await this.tokensRepository.delete({ userId: id });
 
     this.logger.log('User deactivated', { id });
   }

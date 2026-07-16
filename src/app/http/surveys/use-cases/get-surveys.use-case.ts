@@ -86,22 +86,22 @@ export class GetSurveysUseCase {
     }
 
     if (search) {
-      where.user = { name: ILike(`%${search}%`) };
+      where.patient = { name: ILike(`%${search}%`) };
     }
 
     const total = await this.surveysRepository.count({
-      relations: { user: true },
+      relations: { patient: true },
       where,
     });
 
     const surveys = await this.surveysRepository.find({
-      relations: { user: true },
+      relations: { patient: true },
       where,
       select: {
         id: true,
         status: true,
         createdAt: true,
-        user: { name: true, phone: true, email: true },
+        patient: { name: true, phone: true, email: true },
       },
       order: { [orderBy]: props.order },
       skip: (page - 1) * perPage,
@@ -111,9 +111,9 @@ export class GetSurveysUseCase {
     return {
       surveys: surveys.map((survey) => ({
         id: survey.id,
-        name: survey.user.name,
-        phone: survey.user.phone || '',
-        email: survey.user.email,
+        name: survey.patient.name,
+        phone: survey.patient.phone || '',
+        email: survey.patient.email,
         status: survey.status,
         createdAt: survey.createdAt,
       })),

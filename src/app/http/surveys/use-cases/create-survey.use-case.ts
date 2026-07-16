@@ -42,7 +42,7 @@ export class CreateSurveyUseCase {
   async execute(input: CreateSurveyBody): Promise<void> {
     const submission = await this.surveySubmissionsRepository.findOne({
       where: { surveyToken: input.token },
-      relations: { user: true },
+      relations: { patient: true },
     });
 
     if (!submission) {
@@ -90,7 +90,7 @@ export class CreateSurveyUseCase {
       const surveysRepository = manager.getRepository(Survey);
       const submissionsRepository = manager.getRepository(SurveySubmission);
 
-      await usersRepository.update(submission.user.id, {
+      await usersRepository.update(submission.patient.id, {
         cpf,
         susId,
         supportContacts: input.supportContacts,
@@ -111,15 +111,15 @@ export class CreateSurveyUseCase {
 
       this.logger.log('Survey submitted', {
         id: submission.id,
-        userId: submission.user.id,
-        email: submission.user.email,
+        userId: submission.patient.id,
+        email: submission.patient.email,
         cpf,
       });
     });
 
     const { signatureId } = await this.requestSignatureUseCase.execute({
       config: {
-        name: `Catalogação ABNMO - ${submission.user.name}`,
+        name: `Catalogação ABNMO - ${submission.patient.name}`,
         filename: 'termo-de-aceite-catalogacao-abnmo',
         subject: 'Termo de aceite para tratamento de dados - ABNMO',
         message:
@@ -128,14 +128,14 @@ export class CreateSurveyUseCase {
         key: 'catalogacao-abnmo',
       },
       signer: {
-        fullName: submission.user.name,
-        email: submission.user.email,
-        phone: submission.user.phone!,
+        fullName: submission.patient.name,
+        email: submission.patient.email,
+        phone: submission.patient.phone!,
         cpf: formatCpfNumber(cpf),
       },
       template: {
         key: this.signatureModelKey,
-        data: { FULL_NAME: submission.user.name, CPF: cpf },
+        data: { FULL_NAME: submission.patient.name, CPF: cpf },
       },
     });
 

@@ -86,11 +86,11 @@ export class GetSurveySubmissionsUseCase {
     }
 
     if (search) {
-      where.user = { name: ILike(`%${search}%`) };
+      where.patient = { name: ILike(`%${search}%`) };
     }
 
     const total = await this.surveySubmissionsRepository.count({
-      relations: { user: true },
+      relations: { patient: true },
       where,
     });
 
@@ -98,17 +98,17 @@ export class GetSurveySubmissionsUseCase {
     const shouldOrderByUser = orderBy === 'name' || orderBy === 'email';
 
     const result = await this.surveySubmissionsRepository.find({
-      relations: { user: true, document: true },
+      relations: { patient: true, document: true },
       select: {
         id: true,
         status: true,
         reason: true,
         createdAt: true,
-        user: { id: true, name: true, email: true, phone: true },
+        patient: { id: true, name: true, email: true, phone: true },
         document: { name: true, url: true },
       },
       order: shouldOrderByUser
-        ? { user: { [orderBy]: props.order } }
+        ? { patient: { [orderBy]: props.order } }
         : { [orderBy]: props.order },
       skip: (page - 1) * perPage,
       take: perPage,
@@ -118,9 +118,9 @@ export class GetSurveySubmissionsUseCase {
     return {
       submissions: result.map((submission) => ({
         id: submission.id,
-        name: submission.user.name,
-        email: submission.user.email,
-        phone: submission.user.phone || '',
+        name: submission.patient.name,
+        email: submission.patient.email,
+        phone: submission.patient.phone || '',
         status: submission.status,
         reason: submission.reason,
         createdAt: submission.createdAt,

@@ -92,7 +92,7 @@ export class ResetPasswordUseCase {
       password: passwordHash,
     });
 
-    await this.tokensRepository.delete({ entityId: user.id });
+    await this.tokensRepository.delete({ userId: user.id });
 
     await this.expireSessionUseCase.execute({ userId: user.id });
 

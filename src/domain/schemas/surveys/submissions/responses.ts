@@ -3,7 +3,6 @@ import { z } from 'zod';
 import { baseResponseSchema } from '../../base';
 import { documentSchema } from '../../documents';
 import { emailSchema, nameSchema, phoneSchema } from '../../shared';
-import { userSchema } from '../../users';
 import { surveySubmissionSchema } from '.';
 
 export const createSurveySubmissionResponseSchema = baseResponseSchema.extend({
@@ -58,9 +57,6 @@ export const surveySubmissionDetailsResponseSchema = surveySubmissionSchema
         size: true,
         mimeType: true,
       })
-      .nullable(),
-    updatedBy: userSchema
-      .pick({ id: true, name: true, email: true, avatarUrl: true })
       .nullable(),
   })
   .strict();

@@ -63,7 +63,7 @@ export class AuthGuard implements CanActivate {
 
     const session = await this.sessionsRepository.findOne({
       where: { tokenHash, expiresAt: MoreThan(new Date()) },
-      select: { id: true, userId: true },
+      select: { id: true, user: true },
     });
 
     if (!session) {
@@ -73,7 +73,7 @@ export class AuthGuard implements CanActivate {
       });
     }
 
-    const user = await this.getUserById(session.userId);
+    const user = await this.getUserById(session.user.id);
 
     if (!user) {
       this.clearCookies(response);

@@ -42,7 +42,7 @@ export class GetPatientOptionsUseCase {
       patients: result.map((patient) => ({
         id: patient.id,
         name: patient.name,
-        cpf: patient.cpf,
+        cpf: patient.cpf || '',
       })),
       total,
     };

@@ -112,7 +112,7 @@ export class GetPatientsUseCase {
         id: patient.id,
         name: patient.name,
         email: patient.email,
-        phone: patient.phone,
+        phone: patient.phone || '',
         status: patient.status,
         avatarUrl: patient.avatarUrl,
         createdAt: patient.createdAt,
