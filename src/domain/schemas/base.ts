@@ -1,12 +1,12 @@
 import { z } from 'zod';
 
-import { dateSchema } from './shared';
+import { datetimeSchema } from './shared';
 
 export const baseEntitySchema = z
   .object({
     id: z.string().uuid(),
-    updatedAt: dateSchema,
-    createdAt: dateSchema,
+    updatedAt: datetimeSchema,
+    createdAt: datetimeSchema,
   })
   .strict();
 export type BaseEntitySchema = z.infer<typeof baseEntitySchema>;

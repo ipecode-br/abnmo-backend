@@ -4,7 +4,7 @@ import { APPOINTMENT_STATUSES } from '@/domain/enums/appointments';
 
 import { baseEntitySchema } from '../base';
 import {
-  dateSchema,
+  datetimeSchema,
   nameSchema,
   patientConditionSchema,
   specialtySchema,
@@ -12,7 +12,7 @@ import {
 
 export const appointmentSchema = baseEntitySchema
   .extend({
-    date: dateSchema,
+    date: datetimeSchema,
     status: z.enum(APPOINTMENT_STATUSES).default('scheduled'),
     category: specialtySchema,
     condition: patientConditionSchema,

@@ -1,11 +1,12 @@
 import { z } from 'zod';
 
 import { QUERY_ORDERS, QUERY_PERIODS } from '../enums/queries';
+import { dateSchema } from './shared';
 
 export const querySearchSchema = z.string();
 export const queryOrderSchema = z.enum(QUERY_ORDERS);
 export const queryPeriodSchema = z.enum(QUERY_PERIODS);
-export const queryDateSchema = z.string().datetime();
+export const queryDateSchema = dateSchema;
 
 export const queryLimitSchema = z.coerce.number().min(1).optional().default(10);
 export const queryPageSchema = z.coerce.number().min(1).optional().default(1);

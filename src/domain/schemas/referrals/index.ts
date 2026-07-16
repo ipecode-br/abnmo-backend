@@ -4,7 +4,7 @@ import { REFERRAL_STATUSES } from '@/domain/enums/referrals';
 
 import { baseEntitySchema } from '../base';
 import {
-  dateSchema,
+  datetimeSchema,
   nameSchema,
   patientConditionSchema,
   specialtySchema,
@@ -12,7 +12,7 @@ import {
 
 export const referralSchema = baseEntitySchema
   .extend({
-    date: dateSchema,
+    date: datetimeSchema,
     status: z.enum(REFERRAL_STATUSES).default('scheduled'),
     category: specialtySchema,
     condition: patientConditionSchema,

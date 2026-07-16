@@ -18,7 +18,9 @@ export const userRoleSchema = z.enum(USER_ROLES);
 
 export const userRegistrationIdSchema = z.string().max(32);
 
-export const dateSchema = z.string().datetime();
+export const datetimeSchema = z.coerce.date();
+
+export const dateSchema = z.string().date();
 
 export const cpfSchema = z
   .string()

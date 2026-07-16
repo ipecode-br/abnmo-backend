@@ -1,14 +1,12 @@
 import { z } from 'zod';
 
 import { baseEntitySchema } from './base';
-import { dateSchema } from './shared';
-import { userSchema } from './users';
+import { datetimeSchema } from './shared';
 
 export const sessionSchema = baseEntitySchema
   .extend({
-    userId: userSchema.shape.id,
     tokenHash: z.string().length(64),
-    expiresAt: dateSchema,
+    expiresAt: datetimeSchema,
   })
   .strict();
 export type SessionSchema = z.infer<typeof sessionSchema>;

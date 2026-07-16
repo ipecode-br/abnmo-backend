@@ -1,4 +1,11 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  OneToOne,
+} from 'typeorm';
 
 import {
   DOCUMENT_CATEGORIES,
@@ -42,12 +49,15 @@ export class Document extends BaseEntity implements DocumentSchema {
   })
   status: DocumentStatus;
 
-  @ManyToOne(() => User, (user) => user.documents)
+  @Index()
+  @ManyToOne(() => User, (user) => user.documents, { nullable: false })
+  @JoinColumn({ name: 'userId' })
   user: User;
 
   @OneToOne(() => SurveySubmission, (submission) => submission.document, {
     nullable: true,
+    onDelete: 'SET NULL',
   })
-  @JoinColumn({ name: 'submission_id' })
+  @JoinColumn({ name: 'surveySubmissionId' })
   submission: SurveySubmission | null;
 }

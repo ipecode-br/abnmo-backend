@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 
 import {
   APPOINTMENT_STATUSES,
@@ -33,11 +33,13 @@ export class Appointment extends BaseEntity implements AppointmentSchema {
   @Column('uuid')
   createdBy: string;
 
-  @ManyToOne(() => User)
-  @JoinColumn()
+  @Index()
+  @ManyToOne(() => User, { nullable: false })
+  @JoinColumn({ name: 'patientId' })
   patient: User;
 
-  @ManyToOne(() => User, { nullable: true })
-  @JoinColumn()
+  @Index()
+  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'specialistId' })
   specialist: User | null;
 }

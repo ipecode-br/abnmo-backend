@@ -1,22 +1,19 @@
-import {
-  Column,
-  Entity,
-  Index,
-  JoinColumn,
-  ManyToOne,
-  OneToOne,
-} from 'typeorm';
+import { Column, Entity, Index, JoinColumn, OneToOne } from 'typeorm';
 
 import {
   SURVEY_SUBMISSION_STATUSES,
-  SurveySubmissionStatus,
+  type SurveySubmissionStatus,
 } from '../enums/survey-submissions';
+import type { SurveySubmissionSchema } from '../schemas/surveys/submissions';
 import { BaseEntity } from './base';
 import { Document } from './document';
 import { User } from './user';
 
 @Entity('survey_submissions')
-export class SurveySubmission extends BaseEntity {
+export class SurveySubmission
+  extends BaseEntity
+  implements SurveySubmissionSchema
+{
   @Column({
     type: 'enum',
     enum: SURVEY_SUBMISSION_STATUSES,
@@ -32,13 +29,12 @@ export class SurveySubmission extends BaseEntity {
   surveyToken: string | null;
 
   @OneToOne(() => User, (user) => user.surveySubmission)
-  @JoinColumn()
-  user: User;
+  @JoinColumn({ name: 'patientId' })
+  patient: User;
 
   @OneToOne(() => Document, (document) => document.submission)
   document: Document | null;
 
-  @ManyToOne(() => User, { onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'updated_by_id' })
-  updatedBy: User | null;
+  @Column('uuid')
+  updatedBy: string;
 }

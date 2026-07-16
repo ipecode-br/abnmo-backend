@@ -1,4 +1,4 @@
-import { Column, Entity, OneToMany, OneToOne } from 'typeorm';
+import { Column, Entity, Index, OneToMany, OneToOne } from 'typeorm';
 
 import { SPECIALTY_CATEGORIES, type SpecialtyCategory } from '../enums/shared';
 import {
@@ -10,19 +10,19 @@ import {
 } from '../enums/users';
 import type { SupportContact } from '../schemas/shared';
 import type { UserSchema } from '../schemas/users';
-import { Appointment } from './appointment';
 import { BaseEntity } from './base';
 import { Document } from './document';
-import { Referral } from './referral';
 import { Survey } from './survey';
 import { SurveySubmission } from './survey-submission';
 
 @Entity('users')
 export class User extends BaseEntity implements UserSchema {
+  @Index()
   @Column({ type: 'varchar', length: 64 })
   name: string;
 
   // Maximum email length is 254 characters.
+  @Index()
   @Column({ type: 'varchar', length: 254, unique: true })
   email: string;
 
@@ -62,18 +62,11 @@ export class User extends BaseEntity implements UserSchema {
   @OneToMany(() => Document, (document) => document.user)
   documents: Document[];
 
-  @OneToOne(() => SurveySubmission, (submission) => submission.user)
+  @OneToOne(() => SurveySubmission, (submission) => submission.patient, {
+    onDelete: 'SET NULL',
+  })
   surveySubmission: SurveySubmission | null;
 
-  @OneToMany(() => SurveySubmission, (submission) => submission.updatedBy)
-  surveySubmissionsUpdated: SurveySubmission[];
-
-  @OneToOne(() => Survey, (survey) => survey.user)
+  @OneToOne(() => Survey, (survey) => survey.patient, { onDelete: 'SET NULL' })
   survey: Survey | null;
-
-  @OneToMany(() => Appointment, (appointment) => appointment.specialist)
-  appointmentsAsSpecialist: Appointment[];
-
-  @OneToMany(() => Referral, (referral) => referral.specialist)
-  referralsAsSpecialist: Referral[];
 }

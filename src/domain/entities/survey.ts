@@ -84,6 +84,10 @@ export class Survey extends BaseEntity implements SurveySchema {
   @Column({ type: 'enum', enum: SURVEY_STATUSES, default: 'pending_signature' })
   status: SurveyStatus;
 
+  @OneToOne(() => User, { nullable: false })
+  @JoinColumn({ name: 'patientId' })
+  patient: User;
+
   // About
 
   @Column({ type: 'date' })
@@ -226,7 +230,7 @@ export class Survey extends BaseEntity implements SurveySchema {
   diagnosisHospitalStreet: string | null;
 
   @Column({ type: 'date' })
-  diagnosisDate: Date;
+  diagnosisDate: string;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   diagnosisDocument: string | null;
@@ -381,8 +385,4 @@ export class Survey extends BaseEntity implements SurveySchema {
 
   @Column({ type: 'varchar', length: 800 })
   additionalInfo: string;
-
-  @OneToOne(() => User)
-  @JoinColumn()
-  user: User;
 }
