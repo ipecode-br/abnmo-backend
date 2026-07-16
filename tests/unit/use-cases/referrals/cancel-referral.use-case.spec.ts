@@ -74,11 +74,11 @@ describe('CancelReferralUseCase', () => {
   });
 
   describe('Specialist', () => {
-    it('allows with "cancel:referral"', async () => {
+    it('allows with "cancel:referral:others"', async () => {
       const user = requestUserFactory({
         id: specialist.id,
         role: specialist.role,
-        features: ['cancel:referral'],
+        features: ['cancel:referral:others'],
       });
       referralsRepo.findOne.mockResolvedValue(referral);
 

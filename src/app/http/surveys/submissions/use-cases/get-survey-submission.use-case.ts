@@ -2,8 +2,15 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import { can } from '@/common/authorization/can';
+import { RequestUser } from '@/common/types';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
 import { SurveySubmissionDetailsResponse } from '@/domain/schemas/surveys/submissions/responses';
+
+interface GetSurveySubmissionUseCaseInput {
+  user: RequestUser;
+  id: string;
+}
 
 @Injectable()
 export class GetSurveySubmissionUseCase {
@@ -12,7 +19,10 @@ export class GetSurveySubmissionUseCase {
     private readonly surveySubmissionsRepository: Repository<SurveySubmission>,
   ) {}
 
-  async execute(id: string): Promise<SurveySubmissionDetailsResponse> {
+  async execute({
+    user,
+    id,
+  }: GetSurveySubmissionUseCaseInput): Promise<SurveySubmissionDetailsResponse> {
     const submission = await this.surveySubmissionsRepository.findOne({
       relations: { user: true, document: true, updatedBy: true },
       where: { id },
@@ -40,6 +50,8 @@ export class GetSurveySubmissionUseCase {
         cause: `Survey submission with ID <${id}> not found`,
       });
     }
+
+    can(user, ['read:survey', 'read:survey:others'], submission.user.id);
 
     return {
       id: submission.id,

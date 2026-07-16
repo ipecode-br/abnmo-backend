@@ -83,11 +83,11 @@ describe('UpdateReferralUseCase', () => {
   });
 
   describe('Specialist', () => {
-    it('allows with "update:referral"', async () => {
+    it('allows with "update:referral:others"', async () => {
       const user = requestUserFactory({
         id: specialist.id,
         role: specialist.role,
-        features: ['update:referral'],
+        features: ['update:referral:others'],
       });
       referralsRepo.findOne.mockResolvedValue(referral);
 

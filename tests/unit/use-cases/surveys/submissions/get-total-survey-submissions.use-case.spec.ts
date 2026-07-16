@@ -1,10 +1,13 @@
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { mock, MockProxy } from 'jest-mock-extended';
+import { requestUserFactory } from 'tests/config/factories/shared.factory';
 import { Between, LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
 
 import { GetTotalSurveySubmissionsUseCase } from '@/app/http/surveys/submissions/use-cases/get-total-survey-submissions.use-case';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
+
+const adminUser = requestUserFactory({ role: 'admin', features: [] });
 
 describe('GetTotalSurveySubmissionsUseCase', () => {
   let useCase: GetTotalSurveySubmissionsUseCase;
@@ -29,7 +32,7 @@ describe('GetTotalSurveySubmissionsUseCase', () => {
   it('returns count of submissions', async () => {
     repo.count.mockResolvedValue(42);
 
-    const result = await useCase.execute();
+    const result = await useCase.execute({ user: adminUser });
 
     expect(result).toBe(42);
   });
@@ -37,7 +40,7 @@ describe('GetTotalSurveySubmissionsUseCase', () => {
   it('returns 0 when no submissions exist', async () => {
     repo.count.mockResolvedValue(0);
 
-    const result = await useCase.execute();
+    const result = await useCase.execute({ user: adminUser });
 
     expect(result).toBe(0);
   });
@@ -46,7 +49,10 @@ describe('GetTotalSurveySubmissionsUseCase', () => {
     it('filters by status', async () => {
       repo.count.mockResolvedValue(5);
 
-      await useCase.execute({ status: 'pending_review' });
+      await useCase.execute({
+        user: adminUser,
+        status: 'pending_review',
+      });
 
       expect(repo.count).toHaveBeenCalledWith(
         expect.objectContaining({ where: { status: 'pending_review' } }),
@@ -56,7 +62,10 @@ describe('GetTotalSurveySubmissionsUseCase', () => {
     it('filters by period', async () => {
       repo.count.mockResolvedValue(10);
 
-      await useCase.execute({ period: 'last-month' });
+      await useCase.execute({
+        user: adminUser,
+        period: 'last-month',
+      });
 
       expect(repo.count).toHaveBeenCalledWith(
         expect.objectContaining({ where: { createdAt: expect.any(Object) } }),
@@ -68,7 +77,11 @@ describe('GetTotalSurveySubmissionsUseCase', () => {
       const startDate = '2024-01-01';
       const endDate = '2024-12-31';
 
-      await useCase.execute({ startDate, endDate });
+      await useCase.execute({
+        user: adminUser,
+        startDate,
+        endDate,
+      });
 
       expect(repo.count).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -80,7 +93,10 @@ describe('GetTotalSurveySubmissionsUseCase', () => {
     it('filters by startDate only', async () => {
       repo.count.mockResolvedValue(7);
 
-      await useCase.execute({ startDate: '2024-01-01' });
+      await useCase.execute({
+        user: adminUser,
+        startDate: '2024-01-01',
+      });
 
       expect(repo.count).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -92,7 +108,10 @@ describe('GetTotalSurveySubmissionsUseCase', () => {
     it('filters by endDate only', async () => {
       repo.count.mockResolvedValue(5);
 
-      await useCase.execute({ endDate: '2024-12-31' });
+      await useCase.execute({
+        user: adminUser,
+        endDate: '2024-12-31',
+      });
 
       expect(repo.count).toHaveBeenCalledWith(
         expect.objectContaining({

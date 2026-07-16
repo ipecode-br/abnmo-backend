@@ -1,12 +1,15 @@
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { mock, MockProxy } from 'jest-mock-extended';
+import { requestUserFactory } from 'tests/config/factories/shared.factory';
 import { surveyFactory } from 'tests/config/factories/survey.factory';
 import { patientUserFactory } from 'tests/config/factories/user.factory';
 import { Between, LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
 
 import { GetSurveysUseCase } from '@/app/http/surveys/use-cases/get-surveys.use-case';
 import { Survey } from '@/domain/entities/survey';
+
+const adminUser = requestUserFactory({ role: 'admin', features: [] });
 
 describe('GetSurveysUseCase', () => {
   let useCase: GetSurveysUseCase;
@@ -41,7 +44,11 @@ describe('GetSurveysUseCase', () => {
     repo.find.mockResolvedValue([survey as unknown as Survey]);
     repo.count.mockResolvedValue(1);
 
-    const result = await useCase.execute({ page: 1, perPage: 10 });
+    const result = await useCase.execute({
+      user: adminUser,
+      page: 1,
+      perPage: 10,
+    });
 
     expect(result.total).toBe(1);
     expect(result.surveys).toEqual([
@@ -60,7 +67,11 @@ describe('GetSurveysUseCase', () => {
     repo.find.mockResolvedValue([]);
     repo.count.mockResolvedValue(0);
 
-    const result = await useCase.execute({ page: 1, perPage: 10 });
+    const result = await useCase.execute({
+      user: adminUser,
+      page: 1,
+      perPage: 10,
+    });
 
     expect(result.surveys).toEqual([]);
     expect(result.total).toBe(0);
@@ -71,7 +82,12 @@ describe('GetSurveysUseCase', () => {
       repo.find.mockResolvedValue([]);
       repo.count.mockResolvedValue(0);
 
-      await useCase.execute({ page: 1, perPage: 10, status: 'completed' });
+      await useCase.execute({
+        user: adminUser,
+        page: 1,
+        perPage: 10,
+        status: 'completed',
+      });
 
       expect(repo.count).toHaveBeenCalledWith(
         expect.objectContaining({ where: { status: 'completed' } }),
@@ -82,7 +98,12 @@ describe('GetSurveysUseCase', () => {
       repo.find.mockResolvedValue([]);
       repo.count.mockResolvedValue(0);
 
-      await useCase.execute({ page: 1, perPage: 10, search: 'Alice' });
+      await useCase.execute({
+        user: adminUser,
+        page: 1,
+        perPage: 10,
+        search: 'Alice',
+      });
 
       expect(repo.count).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -102,7 +123,12 @@ describe('GetSurveysUseCase', () => {
       repo.find.mockResolvedValue([]);
       repo.count.mockResolvedValue(0);
 
-      await useCase.execute({ page: 1, perPage: 10, period: 'last-month' });
+      await useCase.execute({
+        user: adminUser,
+        page: 1,
+        perPage: 10,
+        period: 'last-month',
+      });
 
       expect(repo.count).toHaveBeenCalledWith(
         expect.objectContaining({ where: { createdAt: expect.any(Object) } }),
@@ -115,7 +141,13 @@ describe('GetSurveysUseCase', () => {
       const startDate = '2024-01-01';
       const endDate = '2024-12-31';
 
-      await useCase.execute({ page: 1, perPage: 10, startDate, endDate });
+      await useCase.execute({
+        user: adminUser,
+        page: 1,
+        perPage: 10,
+        startDate,
+        endDate,
+      });
 
       expect(repo.count).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -129,6 +161,7 @@ describe('GetSurveysUseCase', () => {
       repo.count.mockResolvedValue(0);
 
       await useCase.execute({
+        user: adminUser,
         page: 1,
         perPage: 10,
         startDate: '2024-01-01',
@@ -145,7 +178,12 @@ describe('GetSurveysUseCase', () => {
       repo.find.mockResolvedValue([]);
       repo.count.mockResolvedValue(0);
 
-      await useCase.execute({ page: 1, perPage: 10, endDate: '2024-12-31' });
+      await useCase.execute({
+        user: adminUser,
+        page: 1,
+        perPage: 10,
+        endDate: '2024-12-31',
+      });
 
       expect(repo.count).toHaveBeenCalledWith(
         expect.objectContaining({

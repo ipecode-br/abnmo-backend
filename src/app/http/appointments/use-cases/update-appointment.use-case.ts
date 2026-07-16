@@ -57,7 +57,7 @@ export class UpdateAppointmentUseCase {
     can(
       user,
       ['update:appointment', 'update:appointment:others'],
-      [appointment.specialist?.id || '', appointment.patient.id],
+      [appointment.patient.id || appointment.specialist?.id || ''],
     );
 
     if (appointment.status === 'canceled') {

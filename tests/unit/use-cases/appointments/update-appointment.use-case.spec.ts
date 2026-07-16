@@ -80,11 +80,11 @@ describe('UpdateAppointmentUseCase', () => {
   });
 
   describe('Specialist', () => {
-    it('allows with "update:appointment" when specialist owns the appointment', async () => {
+    it('allows with "update:appointment:others" when specialist does not own the appointment', async () => {
       const user = requestUserFactory({
         id: specialist.id,
         role: specialist.role,
-        features: ['update:appointment'],
+        features: ['update:appointment:others'],
       });
       appointmentsRepo.findOne.mockResolvedValue(appointment);
 

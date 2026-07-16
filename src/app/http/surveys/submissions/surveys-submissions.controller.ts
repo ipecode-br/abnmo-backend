@@ -87,8 +87,12 @@ export class SurveysSubmissionsController {
   @ZodResponse({ type: GetSurveySubmissionsResponse, status: 200 })
   async getSurveySubmissions(
     @Query() query: GetSurveySubmissionsQuery,
+    @User() user: RequestUser,
   ): Promise<GetSurveySubmissionsResponse> {
-    const data = await this.getSurveySubmissionsUseCase.execute(query);
+    const data = await this.getSurveySubmissionsUseCase.execute({
+      ...query,
+      user,
+    });
 
     return {
       success: true,
@@ -104,8 +108,12 @@ export class SurveysSubmissionsController {
   @ZodResponse({ type: GetTotalSurveySubmissionsResponse, status: 200 })
   async getTotalSurveySubmissions(
     @Query() query: GetTotalSurveySubmissionsQuery,
+    @User() user: RequestUser,
   ): Promise<GetTotalSurveySubmissionsResponse> {
-    const total = await this.getTotalSurveySubmissionsUseCase.execute(query);
+    const total = await this.getTotalSurveySubmissionsUseCase.execute({
+      ...query,
+      user,
+    });
 
     return {
       success: true,
@@ -120,8 +128,9 @@ export class SurveysSubmissionsController {
   @ZodResponse({ type: GetSurveySubmissionResponse, status: 200 })
   async getSurveySubmissionDetails(
     @Param('id') id: string,
+    @User() user: RequestUser,
   ): Promise<GetSurveySubmissionResponse> {
-    const data = await this.getSurveySubmissionUseCase.execute(id);
+    const data = await this.getSurveySubmissionUseCase.execute({ id, user });
 
     return {
       success: true,

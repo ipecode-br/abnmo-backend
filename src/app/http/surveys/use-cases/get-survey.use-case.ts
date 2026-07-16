@@ -2,8 +2,15 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import { can } from '@/common/authorization/can';
+import { RequestUser } from '@/common/types';
 import { Survey } from '@/domain/entities/survey';
 import type { SurveyDetailsResponse } from '@/domain/schemas/surveys/responses';
+
+interface GetSurveyUseCaseInput {
+  user: RequestUser;
+  id: string;
+}
 
 @Injectable()
 export class GetSurveyUseCase {
@@ -12,7 +19,10 @@ export class GetSurveyUseCase {
     private readonly surveysRepository: Repository<Survey>,
   ) {}
 
-  async execute(id: string): Promise<SurveyDetailsResponse> {
+  async execute({
+    user,
+    id,
+  }: GetSurveyUseCaseInput): Promise<SurveyDetailsResponse> {
     const survey = await this.surveysRepository.findOne({
       relations: { user: true },
       where: { id },
@@ -130,6 +140,8 @@ export class GetSurveyUseCase {
     if (!survey) {
       throw new NotFoundException('Catalogação não encontrada.');
     }
+
+    can(user, ['read:survey', 'read:survey:others'], survey.user.id);
 
     return {
       id: survey.id,

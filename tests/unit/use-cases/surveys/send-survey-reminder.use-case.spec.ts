@@ -2,6 +2,7 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { mock, MockProxy } from 'jest-mock-extended';
+import { requestUserFactory } from 'tests/config/factories/shared.factory';
 import { surveyFactory } from 'tests/config/factories/survey.factory';
 import { patientUserFactory } from 'tests/config/factories/user.factory';
 import { Repository } from 'typeorm';
@@ -10,6 +11,8 @@ import { SendSurveyReminderUseCase } from '@/app/http/surveys/use-cases/send-sur
 import { SendReminderSignatureUseCase } from '@/app/signature/use-cases/send-reminder-signature.use-case';
 import { LogService } from '@/common/log/log.service';
 import { Survey } from '@/domain/entities/survey';
+
+const adminUser = requestUserFactory({ role: 'admin', features: [] });
 
 describe('SendSurveyReminderUseCase', () => {
   let useCase: SendSurveyReminderUseCase;
@@ -52,7 +55,7 @@ describe('SendSurveyReminderUseCase', () => {
     repo.findOne.mockResolvedValue(survey as unknown as Survey);
     sendReminderSignatureUseCase.execute.mockResolvedValue({ notified: true });
 
-    await useCase.execute('sur-1');
+    await useCase.execute({ user: adminUser, id: 'sur-1' });
 
     expect(repo.findOne).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: 'sur-1' } }),
@@ -66,9 +69,9 @@ describe('SendSurveyReminderUseCase', () => {
     it('throws NotFoundException when survey not found', async () => {
       repo.findOne.mockResolvedValue(null);
 
-      await expect(useCase.execute('nonexistent')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        useCase.execute({ user: adminUser, id: 'nonexistent' }),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('throws BadRequestException when survey is not pending_signature', async () => {
@@ -78,9 +81,9 @@ describe('SendSurveyReminderUseCase', () => {
       } as unknown as Survey;
       repo.findOne.mockResolvedValue(completedSurvey);
 
-      await expect(useCase.execute('sur-1')).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(
+        useCase.execute({ user: adminUser, id: 'sur-1' }),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('throws BadRequestException when survey has no signatureId', async () => {
@@ -90,9 +93,9 @@ describe('SendSurveyReminderUseCase', () => {
       } as unknown as Survey;
       repo.findOne.mockResolvedValue(noSignatureSurvey);
 
-      await expect(useCase.execute('sur-1')).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(
+        useCase.execute({ user: adminUser, id: 'sur-1' }),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });

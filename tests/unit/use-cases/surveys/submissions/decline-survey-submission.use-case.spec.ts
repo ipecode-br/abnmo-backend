@@ -36,7 +36,7 @@ describe('DeclineSurveySubmissionUseCase', () => {
   });
 
   it('declines pending_review submission with reason', async () => {
-    const user = requestUserFactory();
+    const user = requestUserFactory({ role: 'admin' });
     repo.findOne.mockResolvedValue(submission as unknown as SurveySubmission);
     repo.update.mockResolvedValue(undefined as any);
 
@@ -64,7 +64,7 @@ describe('DeclineSurveySubmissionUseCase', () => {
         useCase.execute({
           id: 'nonexistent',
           reason: 'N/A',
-          user: requestUserFactory(),
+          user: requestUserFactory({ role: 'admin' }),
         }),
       ).rejects.toThrow(NotFoundException);
     });
@@ -80,7 +80,7 @@ describe('DeclineSurveySubmissionUseCase', () => {
         useCase.execute({
           id: 'sub-1',
           reason: 'N/A',
-          user: requestUserFactory(),
+          user: requestUserFactory({ role: 'admin' }),
         }),
       ).rejects.toThrow(BadRequestException);
     });

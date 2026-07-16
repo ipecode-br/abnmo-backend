@@ -7,9 +7,16 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { SendReminderSignatureUseCase } from '@/app/signature/use-cases/send-reminder-signature.use-case';
+import { can } from '@/common/authorization/can';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
+import { RequestUser } from '@/common/types';
 import { Survey } from '@/domain/entities/survey';
+
+interface SendSurveyReminderUseCaseInput {
+  user: RequestUser;
+  id: string;
+}
 
 @Injectable()
 @Log()
@@ -21,7 +28,9 @@ export class SendSurveyReminderUseCase {
     private readonly logger: LogService,
   ) {}
 
-  async execute(id: string): Promise<void> {
+  async execute({ user, id }: SendSurveyReminderUseCaseInput): Promise<void> {
+    can(user, 'read:survey:others');
+
     const survey = await this.surveysRepository.findOne({
       relations: { user: true },
       where: { id },

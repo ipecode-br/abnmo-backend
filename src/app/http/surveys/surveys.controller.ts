@@ -5,8 +5,10 @@ import { ZodResponse } from 'nestjs-zod';
 import { Public } from '@/common/decorators/public.decorator';
 import { RequireFeature } from '@/common/decorators/require-feature.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
+import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
 import { Log } from '@/common/log/log.decorator';
+import { RequestUser } from '@/common/types';
 
 import {
   CreateSurveyBody,
@@ -50,8 +52,9 @@ export class SurveysController {
   @ZodResponse({ type: GetSurveysResponse, status: 200 })
   async getSurveys(
     @Query() query: GetSurveysQuery,
+    @User() user: RequestUser,
   ): Promise<GetSurveysResponse> {
-    const data = await this.getSurveysUseCase.execute(query);
+    const data = await this.getSurveysUseCase.execute({ ...query, user });
 
     return {
       success: true,
@@ -64,8 +67,11 @@ export class SurveysController {
   @RequireFeature(['read:survey', 'read:survey:others'])
   @ApiOperation({ summary: 'Detalhes de uma catalogação' })
   @ZodResponse({ type: GetSurveyResponse, status: 200 })
-  async getSurvey(@Param('id') id: string): Promise<GetSurveyResponse> {
-    const data = await this.getSurveyUseCase.execute(id);
+  async getSurvey(
+    @Param('id') id: string,
+    @User() user: RequestUser,
+  ): Promise<GetSurveyResponse> {
+    const data = await this.getSurveyUseCase.execute({ id, user });
 
     return {
       success: true,
@@ -79,8 +85,11 @@ export class SurveysController {
   @Log('send_survey_reminder')
   @ApiOperation({ summary: 'Envia lembrete de assinatura ao paciente' })
   @ZodResponse({ type: BaseResponse, status: 200 })
-  async sendSignRemind(@Param('id') id: string): Promise<BaseResponse> {
-    await this.sendSurveyReminderUseCase.execute(id);
+  async sendSignRemind(
+    @Param('id') id: string,
+    @User() user: RequestUser,
+  ): Promise<BaseResponse> {
+    await this.sendSurveyReminderUseCase.execute({ id, user });
 
     return {
       success: true,

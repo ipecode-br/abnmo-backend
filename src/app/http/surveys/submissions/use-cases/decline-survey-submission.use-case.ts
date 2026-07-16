@@ -6,6 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import { can } from '@/common/authorization/can';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import type { RequestUser } from '@/common/types';
@@ -31,6 +32,8 @@ export class DeclineSurveySubmissionUseCase {
     user,
     reason,
   }: DeclineSurveySubmissionUseCaseInput): Promise<void> {
+    can(user, 'approve:survey');
+
     const submission = await this.surveySubmissionsRepository.findOne({
       where: { id },
     });

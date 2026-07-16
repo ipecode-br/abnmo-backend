@@ -9,6 +9,8 @@ import {
   type Repository,
 } from 'typeorm';
 
+import { can } from '@/common/authorization/can';
+import { RequestUser } from '@/common/types';
 import { Survey } from '@/domain/entities/survey';
 import type { QueryOrder, QueryPeriod } from '@/domain/enums/queries';
 import type { SurveysOrderBy, SurveyStatus } from '@/domain/enums/surveys';
@@ -16,6 +18,7 @@ import type { ListSurveyResponse } from '@/domain/schemas/surveys/responses';
 import { getDateRangeForPeriod } from '@/utils/get-date-range-for-period';
 
 interface GetSurveysUseCaseInput {
+  user: RequestUser;
   page: number;
   perPage: number;
   search?: string;
@@ -32,11 +35,6 @@ interface GetSurveysUseCaseOutput {
   total: number;
 }
 
-const ORDER_BY_MAPPING: Record<SurveysOrderBy, keyof Survey> = {
-  status: 'status',
-  date: 'createdAt',
-};
-
 @Injectable()
 export class GetSurveysUseCase {
   constructor(
@@ -45,6 +43,7 @@ export class GetSurveysUseCase {
   ) {}
 
   async execute({
+    user,
     search,
     status,
     period,
@@ -52,6 +51,13 @@ export class GetSurveysUseCase {
     perPage,
     ...props
   }: GetSurveysUseCaseInput): Promise<GetSurveysUseCaseOutput> {
+    can(user, 'read:survey:others');
+
+    const ORDER_BY_MAPPING: Record<SurveysOrderBy, keyof Survey> = {
+      status: 'status',
+      date: 'createdAt',
+    };
+
     const startDate = props.startDate ? new Date(props.startDate) : null;
     const endDate = props.endDate ? new Date(props.endDate) : null;
     const orderBy = ORDER_BY_MAPPING[props.orderBy || 'date'];

@@ -3,12 +3,15 @@ import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { mock, MockProxy } from 'jest-mock-extended';
 import { documentFactory } from 'tests/config/factories/document.factory';
+import { requestUserFactory } from 'tests/config/factories/shared.factory';
 import { surveySubmissionFactory } from 'tests/config/factories/survey-submission.factory';
 import { patientUserFactory } from 'tests/config/factories/user.factory';
 import { Repository } from 'typeorm';
 
 import { GetSurveySubmissionUseCase } from '@/app/http/surveys/submissions/use-cases/get-survey-submission.use-case';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
+
+const adminUser = requestUserFactory({ role: 'admin', features: [] });
 
 describe('GetSurveySubmissionUseCase', () => {
   let useCase: GetSurveySubmissionUseCase;
@@ -62,7 +65,7 @@ describe('GetSurveySubmissionUseCase', () => {
   it('returns submission details with document and updatedBy', async () => {
     repo.findOne.mockResolvedValue(submission as unknown as SurveySubmission);
 
-    const result = await useCase.execute('sub-1');
+    const result = await useCase.execute({ user: adminUser, id: 'sub-1' });
 
     expect(repo.findOne).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: 'sub-1' } }),
@@ -93,8 +96,8 @@ describe('GetSurveySubmissionUseCase', () => {
   it('throws NotFoundException when submission not found', async () => {
     repo.findOne.mockResolvedValue(null);
 
-    await expect(useCase.execute('nonexistent')).rejects.toThrow(
-      NotFoundException,
-    );
+    await expect(
+      useCase.execute({ user: adminUser, id: 'nonexistent' }),
+    ).rejects.toThrow(NotFoundException);
   });
 });

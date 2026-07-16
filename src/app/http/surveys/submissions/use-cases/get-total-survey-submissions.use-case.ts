@@ -8,12 +8,15 @@ import {
   type Repository,
 } from 'typeorm';
 
+import { can } from '@/common/authorization/can';
+import { RequestUser } from '@/common/types';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
 import type { QueryPeriod } from '@/domain/enums/queries';
 import type { SurveySubmissionStatus } from '@/domain/enums/survey-submissions';
 import { getDateRangeForPeriod } from '@/utils/get-date-range-for-period';
 
 interface GetTotalSurveySubmissionsUseCaseInput {
+  user: RequestUser;
   status?: SurveySubmissionStatus;
   period?: QueryPeriod;
   startDate?: string;
@@ -28,11 +31,14 @@ export class GetTotalSurveySubmissionsUseCase {
   ) {}
 
   async execute({
+    user,
     status,
     period,
     startDate,
     endDate,
-  }: GetTotalSurveySubmissionsUseCaseInput = {}): Promise<number> {
+  }: GetTotalSurveySubmissionsUseCaseInput): Promise<number> {
+    can(user, 'read:survey:others');
+
     const where: FindOptionsWhere<SurveySubmission> = {};
 
     if (status) {

@@ -9,6 +9,8 @@ import {
   type Repository,
 } from 'typeorm';
 
+import { can } from '@/common/authorization/can';
+import { RequestUser } from '@/common/types';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
 import { User } from '@/domain/entities/user';
 import { QueryOrder } from '@/domain/enums/queries';
@@ -19,6 +21,7 @@ import type {
 import { SurveySubmissionResponse } from '@/domain/schemas/surveys/submissions/responses';
 
 interface GetSurveySubmissionsUseCaseInput {
+  user: RequestUser;
   page: number;
   perPage: number;
   search?: string;
@@ -34,16 +37,6 @@ interface GetSurveySubmissionsUseCaseOutput {
   total: number;
 }
 
-const ORDER_BY_MAPPING: Record<
-  SurveySubmissionOrderBy,
-  keyof SurveySubmission | keyof User
-> = {
-  name: 'name',
-  email: 'email',
-  status: 'status',
-  date: 'createdAt',
-};
-
 @Injectable()
 export class GetSurveySubmissionsUseCase {
   constructor(
@@ -52,12 +45,25 @@ export class GetSurveySubmissionsUseCase {
   ) {}
 
   async execute({
+    user,
     search,
     status,
     page,
     perPage,
     ...props
   }: GetSurveySubmissionsUseCaseInput): Promise<GetSurveySubmissionsUseCaseOutput> {
+    can(user, 'read:survey:others');
+
+    const ORDER_BY_MAPPING: Record<
+      SurveySubmissionOrderBy,
+      keyof SurveySubmission | keyof User
+    > = {
+      name: 'name',
+      email: 'email',
+      status: 'status',
+      date: 'createdAt',
+    };
+
     const startDate = props.startDate ? new Date(props.startDate) : null;
     const endDate = props.endDate ? new Date(props.endDate) : null;
 

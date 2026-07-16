@@ -34,7 +34,7 @@ describe('Referrals (e2e)', () => {
   });
 
   describe('POST /referrals', () => {
-    const referralData: CreateReferralBody = {
+    const referralBody: CreateReferralBody = {
       annotation: null,
       category: 'nursing',
       condition: 'stable',
@@ -52,7 +52,7 @@ describe('Referrals (e2e)', () => {
 
       const res = await api.post<BaseResponseBody, CreateReferralBody>(
         '/referrals',
-        { ...referralData, patientId: patient.id },
+        { ...referralBody, patientId: patient.id },
         { cookies },
       );
 
@@ -73,7 +73,7 @@ describe('Referrals (e2e)', () => {
 
       const res = await api.post<BaseResponseBody, CreateReferralBody>(
         '/referrals',
-        referralData,
+        referralBody,
         { cookies },
       );
 
@@ -89,7 +89,7 @@ describe('Referrals (e2e)', () => {
 
       const res = await api.post<BaseResponseBody, CreateReferralBody>(
         '/referrals',
-        referralData,
+        referralBody,
         { cookies },
       );
 
@@ -172,7 +172,7 @@ describe('Referrals (e2e)', () => {
   });
 
   describe('PUT /referrals/:id', () => {
-    const dataToUpdate: UpdateReferralBody = {
+    const updateBody: UpdateReferralBody = {
       date: new Date(),
       condition: 'in_crisis',
       annotation: 'Eu dolor eu dolor culpa est mollit.',
@@ -193,7 +193,7 @@ describe('Referrals (e2e)', () => {
 
       const res = await api.put<BaseResponseBody, UpdateReferralBody>(
         `/referrals/${referral.id}`,
-        dataToUpdate,
+        updateBody,
         { cookies },
       );
 
@@ -203,8 +203,8 @@ describe('Referrals (e2e)', () => {
 
       const updatedReferral = await getReferralById(referral.id);
 
-      expect(updatedReferral?.condition).toBe(dataToUpdate.condition);
-      expect(updatedReferral?.annotation).toBe(dataToUpdate.annotation);
+      expect(updatedReferral?.condition).toBe(updateBody.condition);
+      expect(updatedReferral?.annotation).toBe(updateBody.annotation);
     });
 
     it('returns 404 for non-existent ID', async () => {
@@ -212,7 +212,7 @@ describe('Referrals (e2e)', () => {
 
       const res = await api.put<BaseResponseBody, UpdateReferralBody>(
         '/referrals/non-existent-id',
-        dataToUpdate,
+        updateBody,
         { cookies },
       );
 
@@ -231,7 +231,7 @@ describe('Referrals (e2e)', () => {
 
       const res = await api.put<BaseResponseBody, UpdateReferralBody>(
         `/referrals/${referral.id}`,
-        dataToUpdate,
+        updateBody,
         { cookies: cookiesA },
       );
 
@@ -247,7 +247,7 @@ describe('Referrals (e2e)', () => {
 
       const res = await api.put<BaseResponseBody, UpdateReferralBody>(
         `/referrals/sample-id`,
-        dataToUpdate,
+        updateBody,
         { cookies },
       );
 
@@ -272,7 +272,7 @@ describe('Referrals (e2e)', () => {
 
       const res = await api.put<BaseResponseBody, UpdateReferralBody>(
         `/referrals/${referral.id}`,
-        dataToUpdate,
+        updateBody,
         { cookies: specialistBCookies },
       );
 
