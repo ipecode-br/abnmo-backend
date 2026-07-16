@@ -12,14 +12,25 @@ interface CreateOptions extends Partial<User> {
   login?: boolean;
 }
 
-async function createUserInDb(overrides: Partial<User>): Promise<User> {
+let precomputedHash: string | null = null;
+
+async function getHashedPassword(): Promise<string> {
+  if (precomputedHash) return precomputedHash;
+
   const app = getTestApp();
-  const ds = getTestDataSource();
   const cryptoService = app.get(CryptographyService);
 
-  const hashedPassword = await cryptoService.createHash(TEST_DEFAULT_PASSWORD);
+  precomputedHash = await cryptoService.createHash(TEST_DEFAULT_PASSWORD);
 
-  const repo = ds.getRepository(User);
+  return precomputedHash;
+}
+
+async function createUserInDb(overrides: Partial<User>): Promise<User> {
+  const dataSource = getTestDataSource();
+
+  const hashedPassword = await getHashedPassword();
+
+  const repo = dataSource.getRepository(User);
   const user = repo.create(
     userFactory({ password: hashedPassword, ...overrides }),
   );

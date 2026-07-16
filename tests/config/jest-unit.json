@@ -13,6 +13,7 @@
     "^.+\\.(t|j)s$": [
       "ts-jest",
       {
+        "transpileOnly": true,
         "tsconfig": {
           "isolatedModules": true,
           "strictNullChecks": true,

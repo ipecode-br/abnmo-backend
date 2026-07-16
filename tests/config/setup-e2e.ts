@@ -32,24 +32,26 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  const ds = global.__E2E_DATASOURCE__;
-  if (!ds?.isInitialized) return;
+  const dataSource = global.__E2E_DATASOURCE__;
+  if (!dataSource?.isInitialized) return;
 
-  await ds.query('SET FOREIGN_KEY_CHECKS = 0');
+  const queryRunner = dataSource.createQueryRunner();
+  await queryRunner.query('SET FOREIGN_KEY_CHECKS = 0');
 
-  for (const entity of ds.entityMetadatas) {
-    await ds.query(`TRUNCATE TABLE \`${entity.tableName}\``);
+  for (const entity of dataSource.entityMetadatas) {
+    await queryRunner.query(`DELETE FROM \`${entity.tableName}\``);
   }
 
-  await ds.query('SET FOREIGN_KEY_CHECKS = 1');
+  await queryRunner.query('SET FOREIGN_KEY_CHECKS = 1');
+  await queryRunner.release();
 });
 
 afterAll(async () => {
   const app = global.__E2E_APP__;
-  const ds = global.__E2E_DATASOURCE__;
+  const dataSource = global.__E2E_DATASOURCE__;
 
   if (app) await app.close();
-  if (ds?.isInitialized) await ds.destroy();
+  if (dataSource?.isInitialized) await dataSource.destroy();
 });
 
 export const getTestApp = (): INestApplication => {

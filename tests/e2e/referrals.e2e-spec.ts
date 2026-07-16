@@ -188,6 +188,7 @@ describe('Referrals (e2e)', () => {
       const referral = await createReferral({
         annotation: null,
         condition: 'stable',
+        status: 'scheduled',
         patient,
       });
 

@@ -188,6 +188,7 @@ describe('Appointments (e2e)', () => {
       const appointment = await createAppointment({
         annotation: null,
         condition: 'stable',
+        status: 'scheduled',
         patient,
       });
 
