@@ -1,6 +1,6 @@
 import { ForbiddenException } from '@nestjs/common';
 
-import { RequestUser } from '@/common/types';
+import type { RequestUser } from '@/common/types';
 import { USER_FEATURES, UserFeature } from '@/domain/enums/users';
 
 export function can(

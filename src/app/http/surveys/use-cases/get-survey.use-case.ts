@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { can } from '@/common/authorization/can';
-import { RequestUser } from '@/common/types';
+import type { RequestUser } from '@/common/types';
 import { Survey } from '@/domain/entities/survey';
 import type { SurveyDetailsResponse } from '@/domain/schemas/surveys/responses';
 

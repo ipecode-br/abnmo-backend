@@ -57,7 +57,7 @@ export class UpdateReferralUseCase {
     can(
       user,
       ['update:referral', 'update:referral:others'],
-      [referral.patient.id || referral.specialist?.id || ''],
+      [referral.patient.id, referral.specialist?.id || ''],
     );
 
     if (referral.status === 'canceled') {

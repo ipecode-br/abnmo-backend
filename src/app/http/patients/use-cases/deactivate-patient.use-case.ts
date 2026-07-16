@@ -9,7 +9,7 @@ import type { Repository } from 'typeorm';
 import { can } from '@/common/authorization/can';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
-import { RequestUser } from '@/common/types';
+import type { RequestUser } from '@/common/types';
 import { User } from '@/domain/entities/user';
 
 interface DeactivatePatientUseCaseInput {

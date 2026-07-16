@@ -47,7 +47,7 @@ export class CancelReferralUseCase {
     can(
       user,
       ['cancel:referral', 'cancel:referral:others'],
-      [referral.patient.id || referral.specialist?.id || ''],
+      [referral.patient.id, referral.specialist?.id || ''],
     );
 
     if (referral.status !== 'scheduled') {

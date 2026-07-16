@@ -9,7 +9,7 @@ import {
 } from 'typeorm';
 
 import { can } from '@/common/authorization/can';
-import { RequestUser } from '@/common/types';
+import type { RequestUser } from '@/common/types';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
 import type { QueryPeriod } from '@/domain/enums/queries';
 import type { SurveySubmissionStatus } from '@/domain/enums/survey-submissions';

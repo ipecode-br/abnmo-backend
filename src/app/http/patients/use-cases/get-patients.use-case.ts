@@ -11,7 +11,7 @@ import {
 } from 'typeorm';
 
 import { can } from '@/common/authorization/can';
-import { RequestUser } from '@/common/types';
+import type { RequestUser } from '@/common/types';
 import { User } from '@/domain/entities/user';
 import { PatientsOrderBy } from '@/domain/enums/patients';
 import type { QueryOrder } from '@/domain/enums/queries';

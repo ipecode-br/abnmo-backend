@@ -8,7 +8,7 @@ import { Roles } from '@/common/decorators/roles.decorator';
 import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
 import { Log } from '@/common/log/log.decorator';
-import { RequestUser } from '@/common/types';
+import type { RequestUser } from '@/common/types';
 
 import {
   CreateSurveyBody,

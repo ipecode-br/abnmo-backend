@@ -297,7 +297,7 @@ describe('Referrals (e2e)', () => {
         patient,
       });
 
-      const res = await api.patch<BaseResponseBody>(
+      const res = await api.patch(
         `/referrals/${referral.id}/cancel`,
         undefined,
         { cookies },
@@ -323,7 +323,7 @@ describe('Referrals (e2e)', () => {
         patient,
       });
 
-      const res = await api.patch<BaseResponseBody>(
+      const res = await api.patch(
         `/referrals/${referral.id}/cancel`,
         undefined,
         { cookies },
@@ -338,7 +338,7 @@ describe('Referrals (e2e)', () => {
       expect(updatedReferral?.status).toBe('canceled');
     });
 
-    it('allows specialist to cancel its own referral with "cancel:referral"', async () => {
+    it('allows specialist to cancel its own referral with "cancel:referral" feature', async () => {
       const { specialist, cookies } = await createSpecialist({
         login: true,
         features: ['cancel:referral'],
@@ -351,7 +351,7 @@ describe('Referrals (e2e)', () => {
         specialist,
       });
 
-      const res = await api.patch<BaseResponseBody>(
+      const res = await api.patch(
         `/referrals/${referral.id}/cancel`,
         undefined,
         { cookies },
@@ -369,7 +369,7 @@ describe('Referrals (e2e)', () => {
     it('returns 404 for non-existent ID', async () => {
       const { cookies } = await createAdmin({ login: true });
 
-      const res = await api.patch<BaseResponseBody>(
+      const res = await api.patch(
         '/referrals/non-existent-id/cancel',
         undefined,
         { cookies },
@@ -392,7 +392,7 @@ describe('Referrals (e2e)', () => {
         status: 'completed',
       });
 
-      const res = await api.patch<BaseResponseBody>(
+      const res = await api.patch(
         `/referrals/${referral.id}/cancel`,
         undefined,
         { cookies },
@@ -411,7 +411,7 @@ describe('Referrals (e2e)', () => {
 
       const referral = await createReferral({ patient });
 
-      const res = await api.patch<BaseResponseBody>(
+      const res = await api.patch(
         `/referrals/${referral.id}/cancel`,
         undefined,
         { cookies },
@@ -432,7 +432,7 @@ describe('Referrals (e2e)', () => {
         patient: patientA,
       });
 
-      const res = await api.patch<BaseResponseBody>(
+      const res = await api.patch(
         `/referrals/${referral.id}/cancel`,
         undefined,
         { cookies: cookiesB },
@@ -457,7 +457,7 @@ describe('Referrals (e2e)', () => {
         specialist: specialistA,
       });
 
-      const res = await api.patch<BaseResponseBody>(
+      const res = await api.patch(
         `/referrals/${referral.id}/cancel`,
         undefined,
         { cookies: cookiesB },

@@ -10,7 +10,7 @@ import {
 } from 'typeorm';
 
 import { can } from '@/common/authorization/can';
-import { RequestUser } from '@/common/types';
+import type { RequestUser } from '@/common/types';
 import { Survey } from '@/domain/entities/survey';
 import type { QueryOrder, QueryPeriod } from '@/domain/enums/queries';
 import type { SurveysOrderBy, SurveyStatus } from '@/domain/enums/surveys';

@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker';
 
-import { RequestUser } from '@/common/types';
+import type { RequestUser } from '@/common/types';
 
 export function baseEntityFactory() {
   return {
