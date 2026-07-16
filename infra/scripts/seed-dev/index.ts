@@ -130,7 +130,7 @@ async function main() {
       await documentRepository.save(document);
 
       const survey = generateFakeSurvey({
-        user: { id: user.id },
+        patient: { id: user.id },
         status: surveyStatus,
       });
       await surveyRepository.save(survey);
@@ -155,7 +155,7 @@ async function main() {
       await usersRepository.save(user);
 
       const submission = generateFakeSurveySubmission({
-        user: { id: user.id },
+        patient: { id: user.id },
         status: faker.helpers.arrayElement(submissionStatuses),
       });
       await surveySubmissionRepository.save(submission);

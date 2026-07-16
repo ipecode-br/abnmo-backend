@@ -28,7 +28,8 @@ describe('GetPatientUseCase', () => {
       { name: 'Bob', phone: '11888888888', kinship: 'spouse' as const },
     ],
   });
-  const survey = surveyFactory(patient, {
+  const survey = surveyFactory({
+    patient,
     dateOfBirth: '1990-06-15',
     gender: 'female_cis',
     race: 'mixed_race',

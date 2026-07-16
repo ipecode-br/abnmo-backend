@@ -181,10 +181,14 @@ export function generateFakeSurvey(data: DeepPartial<Survey>): Survey {
     diagnosisHospitalStreet: faker.datatype.boolean()
       ? faker.location.streetAddress()
       : null,
-    diagnosisDate: faker.date.between({
-      from: today.setFullYear(today.getFullYear() - 4),
-      to: today,
-    }),
+    diagnosisDate: new Date(
+      faker.date.between({
+        from: today.setFullYear(today.getFullYear() - 4),
+        to: today,
+      }),
+    )
+      .toISOString()
+      .split('T')[0],
     diagnosisDocument: faker.datatype.boolean()
       ? faker.string.alphanumeric(20)
       : null,

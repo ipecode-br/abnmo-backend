@@ -59,7 +59,7 @@ describe('DeactivateUserUseCase', () => {
       { status: 'inactive' },
     );
     expect(tokensRepo.delete).toHaveBeenCalledWith({
-      entityId: activeUser.id,
+      userId: activeUser.id,
     });
   });
 

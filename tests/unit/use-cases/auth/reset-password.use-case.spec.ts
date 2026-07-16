@@ -82,7 +82,7 @@ describe('ResetPasswordUseCase', () => {
       password: 'new-hashed',
     });
     expect(tokensRepo.delete).toHaveBeenCalledWith({
-      entityId: existingUser.id,
+      userId: existingUser.id,
     });
     expect(expireSessionUseCase.execute).toHaveBeenCalledWith({
       userId: existingUser.id,

@@ -93,7 +93,7 @@ export class CreateSurveySubmissionUseCase {
       this.logger.log('User created');
 
       const submission = submissionsRepository.create({
-        user: { id: user.id },
+        patient: { id: user.id },
       });
       await submissionsRepository.save(submission);
 

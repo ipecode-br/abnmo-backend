@@ -41,7 +41,8 @@ describe('CreateSurveyUseCase', () => {
     cpf: null,
   });
 
-  const submission = surveySubmissionFactory(patient, {
+  const submission = surveySubmissionFactory({
+    patient,
     id: 'sub-1',
     status: 'approved',
     surveyToken: 'sub-1',
@@ -215,7 +216,7 @@ describe('CreateSurveyUseCase', () => {
       expect(submissionsRepo.findOne).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { surveyToken: 'sub-1' },
-          relations: { user: true },
+          relations: { patient: true },
         }),
       );
       expect(requestSignatureUseCase.execute).toHaveBeenCalled();
@@ -246,7 +247,7 @@ describe('CreateSurveyUseCase', () => {
     it('throws ConflictException for duplicate CPF', async () => {
       const submissionWithCpf = {
         ...submission,
-        user: { ...patient, cpf: '12345678901' },
+        patient: { ...patient, cpf: '12345678901' },
       } as SurveySubmission;
       submissionsRepo.findOne.mockResolvedValue(submissionWithCpf);
       usersRepo.findOne.mockResolvedValue({

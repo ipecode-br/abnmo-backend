@@ -18,7 +18,8 @@ describe('ApproveSurveySubmissionUseCase', () => {
   let repo: MockProxy<Repository<SurveySubmission>>;
 
   const patient = patientUserFactory();
-  const submission = surveySubmissionFactory(patient, {
+  const submission = surveySubmissionFactory({
+    patient,
     id: 'sub-1',
     status: 'pending_review',
   });
@@ -56,7 +57,7 @@ describe('ApproveSurveySubmissionUseCase', () => {
       'sub-1',
       expect.objectContaining({
         status: 'approved',
-        updatedBy: { id: user.id },
+        updatedBy: user.id,
       }),
     );
   });

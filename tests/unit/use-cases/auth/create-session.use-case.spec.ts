@@ -65,7 +65,7 @@ describe('CreateSessionUseCase', () => {
 
     expect(sessionsRepo.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        userId: user.id,
+        user: { id: user.id, email: user.email, role: user.role },
         tokenHash: 'hashed-token',
         expiresAt: expect.any(Date),
       }),

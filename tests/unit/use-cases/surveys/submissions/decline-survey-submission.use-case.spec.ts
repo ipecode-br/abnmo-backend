@@ -16,7 +16,8 @@ describe('DeclineSurveySubmissionUseCase', () => {
   let repo: MockProxy<Repository<SurveySubmission>>;
 
   const patient = patientUserFactory();
-  const submission = surveySubmissionFactory(patient, {
+  const submission = surveySubmissionFactory({
+    patient,
     id: 'sub-1',
     status: 'pending_review',
   });
@@ -52,7 +53,7 @@ describe('DeclineSurveySubmissionUseCase', () => {
     expect(repo.update).toHaveBeenCalledWith('sub-1', {
       status: 'declined',
       reason: 'Incomplete document',
-      updatedBy: { id: user.id },
+      updatedBy: user.id,
     });
   });
 

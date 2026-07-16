@@ -26,7 +26,8 @@ describe('SendSurveyReminderUseCase', () => {
     cpf: '12345678901',
   });
 
-  const survey = surveyFactory(patient, {
+  const survey = surveyFactory({
+    patient,
     id: 'sur-1',
     status: 'pending_signature',
     signatureId: 'sig-1',

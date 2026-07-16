@@ -5,6 +5,7 @@ import {
   PATIENT_REQUIREMENTS_ORDER_BY,
 } from '@/domain/enums/patient-requirements';
 
+import { patientSchema } from '../patients';
 import {
   queryDateSchema,
   queryLimitSchema,
@@ -12,15 +13,17 @@ import {
   queryPageSchema,
   queryPerPageSchema,
   querySearchSchema,
+  validateEndDate,
 } from '../query';
 import { patientRequirementSchema } from '.';
 
-export const createPatientRequirementSchema = patientRequirementSchema.pick({
-  patientId: true,
-  type: true,
-  title: true,
-  description: true,
-});
+export const createPatientRequirementSchema = patientRequirementSchema
+  .pick({
+    type: true,
+    title: true,
+    description: true,
+  })
+  .extend({ patientId: patientSchema.shape.id });
 
 export const getPatientRequirementsQuerySchema = z
   .object({
@@ -33,18 +36,7 @@ export const getPatientRequirementsQuerySchema = z
     page: queryPageSchema,
     perPage: queryPerPageSchema,
   })
-  .refine(
-    (data) => {
-      if (data.startDate && data.endDate) {
-        return data.startDate < data.endDate;
-      }
-      return true;
-    },
-    {
-      message: 'It should be greater than `startDate`',
-      path: ['endDate'],
-    },
-  );
+  .superRefine(validateEndDate);
 
 export const getPatientRequirementsByPatientIdQuerySchema = z
   .object({
@@ -55,15 +47,4 @@ export const getPatientRequirementsByPatientIdQuerySchema = z
     perPage: queryPerPageSchema,
     limit: queryLimitSchema,
   })
-  .refine(
-    (data) => {
-      if (data.startDate && data.endDate) {
-        return data.startDate < data.endDate;
-      }
-      return true;
-    },
-    {
-      message: 'It should be greater than `startDate`',
-      path: ['endDate'],
-    },
-  );
+  .superRefine(validateEndDate);

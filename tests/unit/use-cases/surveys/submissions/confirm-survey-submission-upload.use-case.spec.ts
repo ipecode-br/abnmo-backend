@@ -28,7 +28,8 @@ describe('ConfirmSurveySubmissionUploadUseCase', () => {
     user: patient,
   });
 
-  const submission = surveySubmissionFactory(patient, {
+  const submission = surveySubmissionFactory({
+    patient,
     id: 'sub-1',
     status: 'pending_document',
     document,
@@ -83,7 +84,8 @@ describe('ConfirmSurveySubmissionUploadUseCase', () => {
     });
 
     it('throws BadRequestException when submission has no document', async () => {
-      const submissionWithoutDoc = surveySubmissionFactory(patient, {
+      const submissionWithoutDoc = surveySubmissionFactory({
+        patient,
         id: 'sub-1',
         status: 'pending_document',
         document: null,

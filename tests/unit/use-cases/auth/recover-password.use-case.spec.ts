@@ -65,7 +65,7 @@ describe('RecoverPasswordUseCase', () => {
     );
     expect(createTokenUseCase.execute).toHaveBeenCalled();
     expect(tokensRepo.delete).toHaveBeenCalledWith({
-      entityId: existingUser.id,
+      userId: existingUser.id,
     });
     expect(tokensRepo.save).toHaveBeenCalled();
     expect(mailService.send).toHaveBeenCalledWith(

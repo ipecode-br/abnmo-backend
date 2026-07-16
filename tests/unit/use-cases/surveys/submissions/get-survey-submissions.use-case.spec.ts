@@ -22,7 +22,8 @@ describe('GetSurveySubmissionsUseCase', () => {
     phone: '11999999999',
   });
 
-  const submission = surveySubmissionFactory(patient, {
+  const submission = surveySubmissionFactory({
+    patient,
     id: 'sub-1',
     status: 'pending_document',
   });
@@ -110,7 +111,7 @@ describe('GetSurveySubmissionsUseCase', () => {
       expect(repo.count).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {
-            user: expect.objectContaining({
+            patient: expect.objectContaining({
               name: expect.objectContaining({
                 _value: '%Alice%',
                 _type: 'ilike',

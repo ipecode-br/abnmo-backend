@@ -152,8 +152,8 @@ describe('AuthGuard', () => {
     it('throws and clears the session cookie when the session references a user that no longer exists', async () => {
       sessionsRepo.findOne.mockResolvedValue({
         id: 'session-1',
-        userId: 'user-1',
-      } as Session);
+        user: { id: 'user-1' },
+      } as unknown as Session);
       usersRepo.findOne.mockResolvedValue(null);
 
       const { ctx, res } = makeContext({ token: 'some-raw-token' });
@@ -171,8 +171,8 @@ describe('AuthGuard', () => {
     it('throws and clears the session cookie when the user is inactive', async () => {
       sessionsRepo.findOne.mockResolvedValue({
         id: 'session-1',
-        userId: 'user-1',
-      } as Session);
+        user: { id: 'user-1' },
+      } as unknown as Session);
       usersRepo.findOne.mockResolvedValue({
         id: 'user-1',
         status: 'inactive',
@@ -189,7 +189,10 @@ describe('AuthGuard', () => {
 
   describe('Authenticated users', () => {
     it('sets request.user and context.user, and returns "true" for a valid, active session', async () => {
-      const session = { id: 'session-1', userId: 'user-1' } as Session;
+      const session = {
+        id: 'session-1',
+        user: { id: 'user-1' },
+      } as unknown as Session;
       const user = {
         id: 'user-1',
         email: 'test@test.com',
@@ -207,7 +210,7 @@ describe('AuthGuard', () => {
 
       expect(result).toBe(true);
       expect(usersRepo.findOne).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { id: session.userId } }),
+        expect.objectContaining({ where: { id: session.user.id } }),
       );
       expect(req.user).toEqual({
         id: user.id,

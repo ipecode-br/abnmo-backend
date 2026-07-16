@@ -25,7 +25,8 @@ describe('GetSurveyUseCase', () => {
     susId: '987654321012345',
   });
 
-  const survey = surveyFactory(patient, {
+  const survey = surveyFactory({
+    patient,
     id: 'sur-1',
     status: 'completed',
     dateOfBirth: '1990-06-15',
@@ -58,7 +59,7 @@ describe('GetSurveyUseCase', () => {
       status: 'completed',
       dateOfBirth: '1990-06-15',
       gender: 'female_cis',
-      user: {
+      patient: {
         id: 'pat-1',
         name: 'Alice',
         phone: '11999999999',

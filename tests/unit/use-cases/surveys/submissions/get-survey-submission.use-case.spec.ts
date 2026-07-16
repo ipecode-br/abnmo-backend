@@ -35,18 +35,12 @@ describe('GetSurveySubmissionUseCase', () => {
     user: patient,
   });
 
-  const updatedBy = patientUserFactory({
-    id: 'admin-1',
-    name: 'Admin',
-    email: 'admin@example.com',
-    avatarUrl: null,
-  });
-
-  const submission = surveySubmissionFactory(patient, {
+  const submission = surveySubmissionFactory({
+    patient,
     id: 'sub-1',
     status: 'pending_review',
     document,
-    updatedBy,
+    updatedBy: 'admin-1',
   });
 
   beforeEach(async () => {
@@ -62,7 +56,7 @@ describe('GetSurveySubmissionUseCase', () => {
     useCase = module.get(GetSurveySubmissionUseCase);
   });
 
-  it('returns submission details with document and updatedBy', async () => {
+  it('returns submission details with document', async () => {
     repo.findOne.mockResolvedValue(submission as unknown as SurveySubmission);
 
     const result = await useCase.execute({ user: adminUser, id: 'sub-1' });
@@ -83,12 +77,6 @@ describe('GetSurveySubmissionUseCase', () => {
         filename: 'file.pdf',
         size: 1024,
         mimeType: 'application/pdf',
-      },
-      updatedBy: {
-        id: 'admin-1',
-        name: 'Admin',
-        email: 'admin@example.com',
-        avatarUrl: null,
       },
     });
   });
