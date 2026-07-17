@@ -16,6 +16,7 @@
         "transpileOnly": true,
         "tsconfig": {
           "isolatedModules": true,
+          "allowJs": true,
           "strictNullChecks": true,
           "emitDecoratorMetadata": true,
           "experimentalDecorators": true,
@@ -24,6 +25,9 @@
       }
     ]
   },
+  "transformIgnorePatterns": [
+    "node_modules/(?!@faker-js).+"
+  ],
   "testTimeout": 5000,
   "maxWorkers": "50%",
   "clearMocks": true,

@@ -16,12 +16,16 @@
       {
         "tsconfig": {
           "isolatedModules": true,
+          "allowJs": true,
           "skipLibCheck": true
         },
         "transpileOnly": true
       }
     ]
   },
+  "transformIgnorePatterns": [
+    "node_modules/(?!@faker-js).+"
+  ],
   "testTimeout": 30000,
   "forceExit": true,
   "clearMocks": true,
