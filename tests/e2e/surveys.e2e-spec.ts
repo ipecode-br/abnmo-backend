@@ -340,7 +340,12 @@ describe('Surveys (e2e)', () => {
 
       const res = await api.get<GetSurveysResponse>(
         '/surveys',
-        { page: 1, perPage: 10, startDate, endDate },
+        {
+          page: 1,
+          perPage: 10,
+          startDate: startDate.toISOString().split('T')[0],
+          endDate: endDate.toISOString().split('T')[0],
+        },
         { cookies },
       );
 
@@ -415,7 +420,7 @@ describe('Surveys (e2e)', () => {
       expect(res.body.data.patient.email).toBe(patient.email);
     });
 
-    it('cannot access without "read:survey" or "read:survey:others"', async () => {
+    it('blocks user without "read:survey" or "read:survey:others" feature', async () => {
       const { cookies } = await createMember({ login: true, features: [] });
 
       const { patient } = await createPatient();
@@ -435,9 +440,13 @@ describe('Surveys (e2e)', () => {
     it('returns 404 for non-existent ID', async () => {
       const { cookies } = await createAdmin({ login: true });
 
-      const res = await api.get('/surveys/non-existent-id', undefined, {
-        cookies,
-      });
+      const res = await api.get(
+        '/surveys/00000000-0000-0000-0000-000000000000',
+        undefined,
+        {
+          cookies,
+        },
+      );
 
       expect(res.status).toBe(404);
       expect(res.body.success).toBe(false);
@@ -502,7 +511,7 @@ describe('Surveys (e2e)', () => {
       );
     });
 
-    it('cannot send reminder for non-pending_signature survey', async () => {
+    it('cannot send reminder for non-pending signature survey', async () => {
       const { cookies } = await createAdmin({ login: true });
 
       const { patient } = await createPatient();
@@ -525,7 +534,7 @@ describe('Surveys (e2e)', () => {
       );
     });
 
-    it('cannot send reminder without "read:survey:others"', async () => {
+    it('blocks user without "read:survey:others" feature', async () => {
       const { cookies } = await createMember({ login: true, features: [] });
 
       const res = await api.post(
@@ -545,7 +554,7 @@ describe('Surveys (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const res = await api.post(
-        '/surveys/non-existent-id/send-reminder',
+        '/surveys/00000000-0000-0000-0000-000000000000/send-reminder',
         undefined,
         { cookies },
       );

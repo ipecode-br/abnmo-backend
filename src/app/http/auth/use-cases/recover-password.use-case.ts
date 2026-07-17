@@ -10,7 +10,6 @@ import { buildRecoverPasswordEmail } from '@/domain/email-templates/recover-pass
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { TOKENS } from '@/domain/enums/tokens';
-import type { PasswordResetToken } from '@/domain/schemas/tokens';
 import { EnvService } from '@/env/env.service';
 
 interface RecoverPasswordUseCaseInput {
@@ -52,12 +51,13 @@ export class RecoverPasswordUseCase {
       this.tokensRepository.delete({ userId: user.id }),
     ]);
 
-    await this.tokensRepository.save<PasswordResetToken>({
+    const tokenEntity = this.tokensRepository.create({
       type: TOKENS.passwordReset,
       userId: user.id,
       expiresAt,
       token,
     });
+    await this.tokensRepository.save(tokenEntity);
 
     this.logger.log('Password reset token generated', { id: user.id, email });
 

@@ -28,7 +28,7 @@ describe('Survey Submissions (e2e)', () => {
   });
 
   describe('POST /survey-submissions', () => {
-    const surveySubmissionData: CreateSurveySubmissionBody = {
+    const createBody: CreateSurveySubmissionBody = {
       name: 'Test User',
       email: 'test@example.com',
       phone: '11999999999',
@@ -40,7 +40,7 @@ describe('Survey Submissions (e2e)', () => {
       const res = await api.post<
         CreateSurveySubmissionResponse,
         CreateSurveySubmissionBody
-      >('/survey-submissions', surveySubmissionData);
+      >('/survey-submissions', createBody);
 
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
@@ -54,7 +54,7 @@ describe('Survey Submissions (e2e)', () => {
       const { member } = await createMember();
 
       const res = await api.post('/survey-submissions', {
-        ...surveySubmissionData,
+        ...createBody,
         email: member.email,
       });
 
@@ -67,7 +67,7 @@ describe('Survey Submissions (e2e)', () => {
 
     it('cannot create survey submission when "fileSize" exceeds limit', async () => {
       const res = await api.post('/survey-submissions', {
-        ...surveySubmissionData,
+        ...createBody,
         fileSize: 7000000,
       });
 
@@ -78,7 +78,7 @@ describe('Survey Submissions (e2e)', () => {
 
     it('cannot create survey submission when "mimeType" is invalid', async () => {
       const res = await api.post('/survey-submissions', {
-        ...surveySubmissionData,
+        ...createBody,
         mimeType: 'application/zip',
       });
 
@@ -120,7 +120,7 @@ describe('Survey Submissions (e2e)', () => {
 
     it('returns 404 for non-existent ID', async () => {
       const res = await api.post(
-        '/survey-submissions/non-existent-id/confirm-upload',
+        '/survey-submissions/00000000-0000-0000-0000-000000000000/confirm-upload',
       );
 
       expect(res.status).toBe(404);
@@ -203,8 +203,8 @@ describe('Survey Submissions (e2e)', () => {
         {
           page: 1,
           perPage: 10,
-          startDate: startDate.toISOString(),
-          endDate: endDate.toISOString(),
+          startDate: startDate.toISOString().split('T')[0],
+          endDate: endDate.toISOString().split('T')[0],
         },
         { cookies },
       );
@@ -240,7 +240,7 @@ describe('Survey Submissions (e2e)', () => {
       expect(res.body.data.total).toBe(1);
     });
 
-    it('cannot list submissions without "read:survey:others"', async () => {
+    it('blocks user without "read:survey:others" feature', async () => {
       const { cookies } = await createMember({ login: true });
 
       const res = await api.get(
@@ -304,7 +304,7 @@ describe('Survey Submissions (e2e)', () => {
       expect(res.body.data.total).toBe(1);
     });
 
-    it('cannot count submissions without "read:survey:others"', async () => {
+    it('blocks user without "read:survey:others" feature', async () => {
       const { cookies } = await createMember({ login: true, features: [] });
 
       const res = await api.get('/survey-submissions/total', undefined, {
@@ -343,7 +343,7 @@ describe('Survey Submissions (e2e)', () => {
       expect(res.body.data.status).toBe(submission.status);
     });
 
-    it('cannot access without "read:survey" or "read:survey:others"', async () => {
+    it('blocks user without "read:survey" or "read:survey:others" feature', async () => {
       const { cookies } = await createMember({ login: true, features: [] });
 
       const { patient } = await createPatient();
@@ -366,7 +366,7 @@ describe('Survey Submissions (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const res = await api.get(
-        '/survey-submissions/non-existent-id',
+        '/survey-submissions/00000000-0000-0000-0000-000000000000',
         undefined,
         { cookies },
       );
@@ -444,11 +444,11 @@ describe('Survey Submissions (e2e)', () => {
       );
     });
 
-    it('cannot approve submission without "approve:survey"', async () => {
+    it('blocks user without "approve:survey" feature', async () => {
       const { cookies } = await createMember({ login: true, features: [] });
 
       const res = await api.patch(
-        '/survey-submissions/sample-id/approve',
+        '/survey-submissions/00000000-0000-0000-0000-000000000000/approve',
         undefined,
         { cookies },
       );
@@ -464,7 +464,7 @@ describe('Survey Submissions (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const res = await api.patch(
-        '/survey-submissions/sample-id/approve',
+        '/survey-submissions/00000000-0000-0000-0000-000000000000/approve',
         undefined,
         { cookies },
       );
@@ -507,7 +507,7 @@ describe('Survey Submissions (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const res = await api.patch(
-        '/survey-submissions/sample-id/decline',
+        '/survey-submissions/00000000-0000-0000-0000-000000000000/decline',
         {},
         { cookies },
       );
@@ -539,11 +539,11 @@ describe('Survey Submissions (e2e)', () => {
       );
     });
 
-    it('cannot decline submission without "approve:survey"', async () => {
+    it('blocks user without "approve:survey" feature', async () => {
       const { cookies } = await createMember({ login: true, features: [] });
 
       const res = await api.patch(
-        '/survey-submissions/sample-id/decline',
+        '/survey-submissions/00000000-0000-0000-0000-000000000000/decline',
         { reason: 'Documento invalido' },
         { cookies },
       );
@@ -559,7 +559,7 @@ describe('Survey Submissions (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const res = await api.patch(
-        '/survey-submissions/sample-id/decline',
+        '/survey-submissions/00000000-0000-0000-0000-000000000000/decline',
         { reason: 'Documento inválido' },
         { cookies },
       );

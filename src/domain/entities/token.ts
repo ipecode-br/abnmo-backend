@@ -20,6 +20,6 @@ export class Token extends BaseEntity implements TokenSchema {
   @Column({ type: 'enum', enum: TOKENS_ENUM })
   type: TokenType;
 
-  @Column({ type: 'datetime' })
+  @Column({ type: 'timestamp' })
   expiresAt: Date;
 }

@@ -63,7 +63,7 @@ export class AuthGuard implements CanActivate {
 
     const session = await this.sessionsRepository.findOne({
       where: { tokenHash, expiresAt: MoreThan(new Date()) },
-      select: { id: true, user: true },
+      relations: { user: true },
     });
 
     if (!session) {

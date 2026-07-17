@@ -9,7 +9,7 @@ import { User } from './user';
 
 @Entity('referrals')
 export class Referral extends BaseEntity implements ReferralSchema {
-  @Column({ type: 'datetime' })
+  @Column({ type: 'timestamp' })
   date: Date;
 
   @Column({ type: 'enum', enum: REFERRAL_STATUSES, default: 'scheduled' })

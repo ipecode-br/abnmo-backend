@@ -12,7 +12,7 @@ import { User } from './user';
 
 @Entity('appointments')
 export class Appointment extends BaseEntity implements AppointmentSchema {
-  @Column({ type: 'datetime' })
+  @Column({ type: 'timestamp' })
   date: Date;
 
   @Column({ type: 'enum', enum: APPOINTMENT_STATUSES, default: 'scheduled' })

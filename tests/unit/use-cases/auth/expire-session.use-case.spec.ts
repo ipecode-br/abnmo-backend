@@ -25,7 +25,7 @@ describe('ExpireSessionUseCase', () => {
     useCase = module.get(ExpireSessionUseCase);
   });
 
-  it('expires session by tokenHash', async () => {
+  it('expires session by "tokenHash"', async () => {
     await useCase.execute({ tokenHash: 'some-hash' });
 
     expect(sessionsRepo.update).toHaveBeenCalledWith(
@@ -34,11 +34,11 @@ describe('ExpireSessionUseCase', () => {
     );
   });
 
-  it('expires session by userId', async () => {
+  it('expires session by "userId"', async () => {
     await useCase.execute({ userId: 'user-1' });
 
     expect(sessionsRepo.update).toHaveBeenCalledWith(
-      expect.objectContaining({ userId: 'user-1' }),
+      expect.objectContaining({ user: { id: 'user-1' } }),
       { expiresAt: expect.any(Date) },
     );
   });

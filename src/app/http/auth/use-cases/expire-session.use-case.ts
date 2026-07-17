@@ -24,12 +24,26 @@ export class ExpireSessionUseCase {
     tokenHash,
     userId,
   }: ExpireSessionUseCaseInput): Promise<void> {
-    const where = tokenHash ? { tokenHash } : { userId: userId! };
+    if (!tokenHash && !userId) {
+      this.logger.log(
+        'Expire session skipped: no <tokenHash> and <userId> provided',
+      );
+      return;
+    }
+
+    const WHERE_MAPPING = {
+      tokenHash: { tokenHash },
+      userId: { user: { id: userId! } },
+    };
+
+    const where = WHERE_MAPPING[tokenHash ? 'tokenHash' : 'userId'];
 
     await this.sessionsRepository.update(where, {
       expiresAt: new Date(Date.now() - 1000),
     });
 
-    this.logger.log(`Session expired by ${tokenHash ? 'tokenHash' : 'userId'}`);
+    this.logger.log(
+      `Session expired by <${tokenHash ? 'tokenHash' : 'userId'}>`,
+    );
   }
 }

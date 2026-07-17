@@ -36,13 +36,11 @@ beforeEach(async () => {
   if (!dataSource?.isInitialized) return;
 
   const queryRunner = dataSource.createQueryRunner();
-  await queryRunner.query('SET FOREIGN_KEY_CHECKS = 0');
+  const tableNames = dataSource.entityMetadatas
+    .map((e) => `"${e.tableName}"`)
+    .join(', ');
 
-  for (const entity of dataSource.entityMetadatas) {
-    await queryRunner.query(`DELETE FROM \`${entity.tableName}\``);
-  }
-
-  await queryRunner.query('SET FOREIGN_KEY_CHECKS = 1');
+  await queryRunner.query(`TRUNCATE TABLE ${tableNames} CASCADE`);
   await queryRunner.release();
 });
 

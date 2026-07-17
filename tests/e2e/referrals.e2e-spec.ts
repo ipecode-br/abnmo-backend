@@ -68,7 +68,7 @@ describe('Referrals (e2e)', () => {
       expect(referrals[0].patient.email).toBe(patient.email);
     });
 
-    it('cannot create a referral without "create:referral"', async () => {
+    it('blocks user without "create:referral" feature', async () => {
       const { cookies } = await createMember({ login: true });
 
       const res = await api.post<BaseResponseBody, CreateReferralBody>(
@@ -133,7 +133,7 @@ describe('Referrals (e2e)', () => {
       expect(secondPage.body.data.total).toBe(totalReferrals);
     });
 
-    it('cannot list referrals without "read:referral" or "read:referral:others"', async () => {
+    it('blocks user without "read:referral" or "read:referral:others" feature', async () => {
       const { cookies } = await createMember({ login: true });
 
       const res = await api.get(
@@ -212,7 +212,7 @@ describe('Referrals (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const res = await api.put<BaseResponseBody, UpdateReferralBody>(
-        '/referrals/non-existent-id',
+        '/referrals/00000000-0000-0000-0000-000000000000',
         updateBody,
         { cookies },
       );
@@ -243,7 +243,7 @@ describe('Referrals (e2e)', () => {
       );
     });
 
-    it('cannot update referral without "update:referral"', async () => {
+    it('blocks user without "update:referral" feature', async () => {
       const { cookies } = await createMember({ login: true });
 
       const res = await api.put<BaseResponseBody, UpdateReferralBody>(
@@ -259,7 +259,7 @@ describe('Referrals (e2e)', () => {
       );
     });
 
-    it('specialist cannot update another specialist referral without "update:referral:others"', async () => {
+    it('specialist cannot update another specialist referral without "update:referral:others" feature', async () => {
       const { patient } = await createPatient();
       const { specialist: specialistA } = await createSpecialist();
       const { cookies: specialistBCookies } = await createSpecialist({
@@ -313,7 +313,7 @@ describe('Referrals (e2e)', () => {
       expect(updatedReferral?.status).toBe('canceled');
     });
 
-    it('allows patient to cancel its own referral with "cancel:referral"', async () => {
+    it('allows patient to cancel its own referral with "cancel:referral" feature', async () => {
       const { patient, cookies } = await createPatient({
         login: true,
         features: ['cancel:referral'],
@@ -371,7 +371,7 @@ describe('Referrals (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const res = await api.patch(
-        '/referrals/non-existent-id/cancel',
+        '/referrals/00000000-0000-0000-0000-000000000000/cancel',
         undefined,
         { cookies },
       );
@@ -406,7 +406,7 @@ describe('Referrals (e2e)', () => {
       );
     });
 
-    it('cannot cancel referral without "cancel:referral" or "cancel:referral:others"', async () => {
+    it('blocks user without "cancel:referral" or "cancel:referral:others" feature', async () => {
       const { cookies } = await createMember({ login: true });
       const { patient } = await createPatient();
 
@@ -446,7 +446,7 @@ describe('Referrals (e2e)', () => {
       );
     });
 
-    it('specialist cannot cancel other referrals without "cancel:referral:others"', async () => {
+    it('specialist cannot cancel other referrals without "cancel:referral:others" feature', async () => {
       const { specialist: specialistA } = await createSpecialist();
       const { cookies: cookiesB } = await createSpecialist({
         login: true,

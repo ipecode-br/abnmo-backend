@@ -34,7 +34,7 @@ describe('Appointments (e2e)', () => {
   });
 
   describe('POST /appointments', () => {
-    const appointmentData: CreateAppointmentBody = {
+    const createBody: CreateAppointmentBody = {
       annotation: null,
       category: 'nursing',
       condition: 'stable',
@@ -52,7 +52,7 @@ describe('Appointments (e2e)', () => {
 
       const res = await api.post<BaseResponseBody, CreateAppointmentBody>(
         '/appointments',
-        { ...appointmentData, patientId: patient.id },
+        { ...createBody, patientId: patient.id },
         { cookies },
       );
 
@@ -68,12 +68,12 @@ describe('Appointments (e2e)', () => {
       expect(appointments[0].patient.email).toBe(patient.email);
     });
 
-    it('cannot create an appointment without "create:appointment"', async () => {
+    it('blocks user without "create:appointment" feature', async () => {
       const { cookies } = await createMember({ login: true });
 
       const res = await api.post<BaseResponseBody, CreateAppointmentBody>(
         '/appointments',
-        appointmentData,
+        createBody,
         { cookies },
       );
 
@@ -89,7 +89,7 @@ describe('Appointments (e2e)', () => {
 
       const res = await api.post<BaseResponseBody, CreateAppointmentBody>(
         '/appointments',
-        appointmentData,
+        createBody,
         { cookies },
       );
 
@@ -133,7 +133,7 @@ describe('Appointments (e2e)', () => {
       expect(secondPage.body.data.total).toBe(totalAppointments);
     });
 
-    it('cannot list appointments without "read:appointment" or "read:appointment:others"', async () => {
+    it('blocks user without "read:appointment" or "read:appointment:others" feature', async () => {
       const { cookies } = await createMember({ login: true });
 
       const res = await api.get(
@@ -172,7 +172,7 @@ describe('Appointments (e2e)', () => {
   });
 
   describe('PUT /appointments/:id', () => {
-    const dataToUpdate: UpdateAppointmentBody = {
+    const updateBody: UpdateAppointmentBody = {
       date: new Date(),
       condition: 'in_crisis',
       annotation: 'Eu dolor eu dolor culpa est mollit.',
@@ -194,7 +194,7 @@ describe('Appointments (e2e)', () => {
 
       const res = await api.put<BaseResponseBody, UpdateAppointmentBody>(
         `/appointments/${appointment.id}`,
-        dataToUpdate,
+        updateBody,
         { cookies },
       );
 
@@ -204,16 +204,16 @@ describe('Appointments (e2e)', () => {
 
       const updatedAppointment = await getAppointmentById(appointment.id);
 
-      expect(updatedAppointment?.condition).toBe(dataToUpdate.condition);
-      expect(updatedAppointment?.annotation).toBe(dataToUpdate.annotation);
+      expect(updatedAppointment?.condition).toBe(updateBody.condition);
+      expect(updatedAppointment?.annotation).toBe(updateBody.annotation);
     });
 
     it('returns 404 for non-existent ID', async () => {
       const { cookies } = await createAdmin({ login: true });
 
       const res = await api.put<BaseResponseBody, UpdateAppointmentBody>(
-        '/appointments/non-existent-id',
-        dataToUpdate,
+        '/appointments/00000000-0000-0000-0000-000000000000',
+        updateBody,
         { cookies },
       );
 
@@ -230,7 +230,7 @@ describe('Appointments (e2e)', () => {
 
       const res = await api.put<BaseResponseBody, UpdateAppointmentBody>(
         `/appointments/${appointment.id}`,
-        dataToUpdate,
+        updateBody,
         { cookies: cookiesA },
       );
 
@@ -241,12 +241,12 @@ describe('Appointments (e2e)', () => {
       );
     });
 
-    it('cannot update appointment without "update:appointment"', async () => {
+    it('blocks user without "update:appointment" feature', async () => {
       const { cookies } = await createMember({ login: true });
 
       const res = await api.put<BaseResponseBody, UpdateAppointmentBody>(
         `/appointments/sample-id`,
-        dataToUpdate,
+        updateBody,
         { cookies },
       );
 
@@ -257,7 +257,7 @@ describe('Appointments (e2e)', () => {
       );
     });
 
-    it('specialist cannot update another specialist appointment without "update:appointment:others"', async () => {
+    it('specialist cannot update another specialist appointment without "update:appointment:others" feature', async () => {
       const { patient } = await createPatient();
       const { specialist: specialistA } = await createSpecialist();
       const { cookies: specialistBCookies } = await createSpecialist({
@@ -271,7 +271,7 @@ describe('Appointments (e2e)', () => {
 
       const res = await api.put<BaseResponseBody, UpdateAppointmentBody>(
         `/appointments/${appointment.id}`,
-        dataToUpdate,
+        updateBody,
         { cookies: specialistBCookies },
       );
 
@@ -296,7 +296,7 @@ describe('Appointments (e2e)', () => {
         patient,
       });
 
-      const res = await api.patch<BaseResponseBody>(
+      const res = await api.patch(
         `/appointments/${appointment.id}/cancel`,
         undefined,
         { cookies },
@@ -311,7 +311,7 @@ describe('Appointments (e2e)', () => {
       expect(updatedAppointment?.status).toBe('canceled');
     });
 
-    it('allows patient to cancel its own appointment with "cancel:appointment"', async () => {
+    it('allows patient to cancel its own appointment with "cancel:appointment" feature', async () => {
       const { patient, cookies } = await createPatient({
         login: true,
         features: ['cancel:appointment'],
@@ -322,7 +322,7 @@ describe('Appointments (e2e)', () => {
         patient,
       });
 
-      const res = await api.patch<BaseResponseBody>(
+      const res = await api.patch(
         `/appointments/${appointment.id}/cancel`,
         undefined,
         { cookies },
@@ -337,7 +337,7 @@ describe('Appointments (e2e)', () => {
       expect(updatedAppointment?.status).toBe('canceled');
     });
 
-    it('allows specialist to cancel its own appointment with "cancel:appointment"', async () => {
+    it('allows specialist to cancel its own appointment with "cancel:appointment" feature', async () => {
       const { patient } = await createPatient();
       const { specialist, cookies } = await createSpecialist({
         login: true,
@@ -350,7 +350,7 @@ describe('Appointments (e2e)', () => {
         specialist,
       });
 
-      const res = await api.patch<BaseResponseBody>(
+      const res = await api.patch(
         `/appointments/${appointment.id}/cancel`,
         undefined,
         { cookies },
@@ -368,8 +368,8 @@ describe('Appointments (e2e)', () => {
     it('returns 404 for non-existent ID', async () => {
       const { cookies } = await createAdmin({ login: true });
 
-      const res = await api.patch<BaseResponseBody>(
-        '/appointments/non-existent-id/cancel',
+      const res = await api.patch(
+        '/appointments/00000000-0000-0000-0000-000000000000/cancel',
         undefined,
         { cookies },
       );
@@ -388,7 +388,7 @@ describe('Appointments (e2e)', () => {
         status: 'completed',
       });
 
-      const res = await api.patch<BaseResponseBody>(
+      const res = await api.patch(
         `/appointments/${appointment.id}/cancel`,
         undefined,
         { cookies },
@@ -399,13 +399,13 @@ describe('Appointments (e2e)', () => {
       expect(res.body.message).toBe('Este atendimento não pode ser cancelado.');
     });
 
-    it('cannot cancel appointment without "cancel:appointment" or "cancel:appointment:others"', async () => {
+    it('blocks user without "cancel:appointment" or "cancel:appointment:others" feature', async () => {
       const { cookies } = await createMember({ login: true });
       const { patient } = await createPatient();
 
       const appointment = await createAppointment({ patient });
 
-      const res = await api.patch<BaseResponseBody>(
+      const res = await api.patch(
         `/appointments/${appointment.id}/cancel`,
         undefined,
         { cookies },
@@ -424,7 +424,7 @@ describe('Appointments (e2e)', () => {
 
       const appointment = await createAppointment({ patient: patientA });
 
-      const res = await api.patch<BaseResponseBody>(
+      const res = await api.patch(
         `/appointments/${appointment.id}/cancel`,
         undefined,
         { cookies: cookiesB },
@@ -437,7 +437,7 @@ describe('Appointments (e2e)', () => {
       );
     });
 
-    it('specialist cannot cancel other appointments without "cancel:appointment:others"', async () => {
+    it('specialist cannot cancel other appointments without "cancel:appointment:others" feature', async () => {
       const { specialist: specialistA } = await createSpecialist();
       const { cookies: cookiesB } = await createSpecialist({
         login: true,
@@ -449,7 +449,7 @@ describe('Appointments (e2e)', () => {
         specialist: specialistA,
       });
 
-      const res = await api.patch<BaseResponseBody>(
+      const res = await api.patch(
         `/appointments/${appointment.id}/cancel`,
         undefined,
         { cookies: cookiesB },

@@ -173,10 +173,10 @@ Import the inferred schema type from `responses.ts`, use it as the return type, 
 
 ### Test structure
 
-| Layer     | Config                              | Pattern                      | Count | Parallel |
-| --------- | ----------------------------------- | ---------------------------- | ----- | -------- |
-| Unit      | `tests/config/jest-unit.json`       | `tests/**/*.spec.ts`         | ~50   | Yes      |
-| E2E       | `tests/config/jest-e2e.json`        | `tests/e2e/**/*.e2e-spec.ts` | 8     | No       |
+| Layer | Config                        | Pattern                      | Count | Parallel |
+| ----- | ----------------------------- | ---------------------------- | ----- | -------- |
+| Unit  | `tests/config/jest-unit.json` | `tests/**/*.spec.ts`         | ~50   | Yes      |
+| E2E   | `tests/config/jest-e2e.json`  | `tests/e2e/**/*.e2e-spec.ts` | 8     | No       |
 
 Unit tests use mocked repositories, no database. E2E tests run against a real Docker MySQL instance on port 3307 (see `.env.test`).
 

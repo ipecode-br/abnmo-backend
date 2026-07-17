@@ -100,6 +100,7 @@ export class CreateSurveyUseCase {
       const survey = surveysRepository.create({
         ...surveyData,
         status: 'pending_signature',
+        patient: submission.patient,
       });
       await surveysRepository.save(survey);
 

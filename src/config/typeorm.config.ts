@@ -8,7 +8,7 @@ export function getTypeOrmConfig(env: EnvService): TypeOrmModuleOptions {
   const isTestEnv = env.get('NODE_ENV') === 'test';
 
   const baseConfig: TypeOrmModuleOptions = {
-    type: 'mysql',
+    type: 'postgres',
     host: env.get('DB_HOST'),
     port: env.get('DB_PORT'),
     database: env.get('DB_DATABASE'),
@@ -25,10 +25,8 @@ export function getTypeOrmConfig(env: EnvService): TypeOrmModuleOptions {
     retryAttempts: 1,
     retryDelay: 500,
     extra: {
-      connectionLimit: 2,
-      connectTimeout: 2000,
-      enableKeepAlive: true,
-      keepAliveInitialDelay: 0,
+      max: 20,
+      connectionTimeoutMillis: 2000,
     },
   };
 
@@ -38,8 +36,6 @@ export function getTypeOrmConfig(env: EnvService): TypeOrmModuleOptions {
       cache: false,
       extra: {
         ...baseConfig.extra,
-        charset: 'utf8mb4_unicode_ci',
-        ssl: false,
       },
     };
   }

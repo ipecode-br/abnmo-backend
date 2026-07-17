@@ -61,7 +61,7 @@ describe('Users (e2e)', () => {
       expect(secondPage.body.data.total).toBe(totalUsers + 1);
     });
 
-    it('cannot list users without "read:user:others"', async () => {
+    it('blocks user without "read:user:others" feature', async () => {
       const { cookies } = await createMember({ login: true });
 
       const res = await api.get(
@@ -135,7 +135,7 @@ describe('Users (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const res = await api.get<GetUserResponse>(
-        '/users/non-existent-id',
+        '/users/00000000-0000-0000-0000-000000000000',
         undefined,
         { cookies },
       );
@@ -145,7 +145,7 @@ describe('Users (e2e)', () => {
       expect(res.body.message).toBe('Usuário não encontrado.');
     });
 
-    it('cannot get user without "read:user" or "read:user:others"', async () => {
+    it('blocks user without "read:user" or "read:user:others" feature', async () => {
       const { cookies } = await createMember({ login: true });
       const target = await createUser({ role: 'specialist' });
 
@@ -164,7 +164,7 @@ describe('Users (e2e)', () => {
   });
 
   describe('PUT /users/:id', () => {
-    const dataToUpdate: UpdateUserBody = {
+    const updateBody: UpdateUserBody = {
       name: 'Updated Name',
       specialty: 'neurology',
       registrationId: 'CRM-UPDATED',
@@ -178,7 +178,7 @@ describe('Users (e2e)', () => {
 
       const res = await api.put<BaseResponseBody, UpdateUserBody>(
         `/users/${member.id}`,
-        dataToUpdate,
+        updateBody,
         { cookies },
       );
 
@@ -188,12 +188,12 @@ describe('Users (e2e)', () => {
 
       const updatedUser = await getUserById(member.id);
 
-      expect(updatedUser?.name).toBe(dataToUpdate.name);
-      expect(updatedUser?.specialty).toBe(dataToUpdate.specialty);
-      expect(updatedUser?.registrationId).toBe(dataToUpdate.registrationId);
+      expect(updatedUser?.name).toBe(updateBody.name);
+      expect(updatedUser?.specialty).toBe(updateBody.specialty);
+      expect(updatedUser?.registrationId).toBe(updateBody.registrationId);
     });
 
-    it('can update another user with "update:user:others"', async () => {
+    it('can update another user with "update:user:others" feature', async () => {
       const { cookies } = await createMember({
         login: true,
         features: ['update:user:others'],
@@ -203,7 +203,7 @@ describe('Users (e2e)', () => {
 
       const res = await api.put<BaseResponseBody, UpdateUserBody>(
         `/users/${target.id}`,
-        dataToUpdate,
+        updateBody,
         { cookies },
       );
 
@@ -213,15 +213,15 @@ describe('Users (e2e)', () => {
 
       const updatedUser = await getUserById(target.id);
 
-      expect(updatedUser?.name).toBe(dataToUpdate.name);
+      expect(updatedUser?.name).toBe(updateBody.name);
     });
 
     it('returns 404 for non-existent ID', async () => {
       const { cookies } = await createAdmin({ login: true });
 
       const res = await api.put<BaseResponseBody, UpdateUserBody>(
-        '/users/non-existent-id',
-        dataToUpdate,
+        '/users/00000000-0000-0000-0000-000000000000',
+        updateBody,
         { cookies },
       );
 
@@ -235,7 +235,7 @@ describe('Users (e2e)', () => {
 
       const res = await api.put<BaseResponseBody, UpdateUserBody>(
         '/users/sample-id',
-        dataToUpdate,
+        updateBody,
         { cookies },
       );
 
@@ -255,7 +255,7 @@ describe('Users (e2e)', () => {
 
       const res = await api.put<BaseResponseBody, UpdateUserBody>(
         `/users/${target.id}`,
-        dataToUpdate,
+        updateBody,
         { cookies },
       );
 
@@ -292,7 +292,7 @@ describe('Users (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const res = await api.patch<BaseResponseBody, UpdateUserFeaturesBody>(
-        '/users/non-existent-id/features',
+        '/users/00000000-0000-0000-0000-000000000000/features',
         { features: [] },
         { cookies },
       );
@@ -302,7 +302,7 @@ describe('Users (e2e)', () => {
       expect(res.body.message).toBe('Usuário não encontrado.');
     });
 
-    it('cannot update features as non-admin', async () => {
+    it('blocks non-admin user', async () => {
       const { cookies } = await createMember({ login: true });
 
       const res = await api.patch<BaseResponseBody, UpdateUserFeaturesBody>(
@@ -346,7 +346,7 @@ describe('Users (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const res = await api.patch<BaseResponseBody>(
-        '/users/non-existent-id/deactivate',
+        '/users/00000000-0000-0000-0000-000000000000/deactivate',
         undefined,
         { cookies },
       );
@@ -356,7 +356,7 @@ describe('Users (e2e)', () => {
       expect(res.body.message).toBe('Usuário não encontrado.');
     });
 
-    it('cannot deactivate without "deactivate:user"', async () => {
+    it('blocks user without "deactivate:user" feature', async () => {
       const { cookies } = await createMember({ login: true });
       const target = await createUser();
 
@@ -416,7 +416,7 @@ describe('Users (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const res = await api.patch<BaseResponseBody>(
-        '/users/non-existent-id/activate',
+        '/users/00000000-0000-0000-0000-000000000000/activate',
         undefined,
         { cookies },
       );
@@ -426,7 +426,7 @@ describe('Users (e2e)', () => {
       expect(res.body.message).toBe('Usuário não encontrado.');
     });
 
-    it('cannot activate without "activate:user"', async () => {
+    it('blocks user without "activate:user" feature', async () => {
       const { cookies } = await createMember({ login: true });
       const target = await createUser({ role: 'member' });
 
@@ -460,7 +460,7 @@ describe('Users (e2e)', () => {
   });
 
   describe('POST /users/invites', () => {
-    const inviteData: CreateUserInviteBody = {
+    const inviteBody: CreateUserInviteBody = {
       email: 'invite@example.com',
       role: 'member',
     };
@@ -473,7 +473,7 @@ describe('Users (e2e)', () => {
 
       const res = await api.post<BaseResponseBody, CreateUserInviteBody>(
         '/users/invites',
-        inviteData,
+        inviteBody,
         { cookies },
       );
 
@@ -481,18 +481,18 @@ describe('Users (e2e)', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.message).toBe('Convite do usuário enviado com sucesso.');
 
-      const invites = await getUserInvites({ email: inviteData.email });
+      const invites = await getUserInvites({ email: inviteBody.email });
 
       expect(invites.length).toBe(1);
-      expect(invites[0].email).toBe(inviteData.email);
+      expect(invites[0].email).toBe(inviteBody.email);
     });
 
-    it('cannot create invite without "create:user_invite"', async () => {
+    it('blocks user without "create:user_invite" feature', async () => {
       const { cookies } = await createMember({ login: true });
 
       const res = await api.post<BaseResponseBody, CreateUserInviteBody>(
         '/users/invites',
-        inviteData,
+        inviteBody,
         { cookies },
       );
 
@@ -557,7 +557,7 @@ describe('Users (e2e)', () => {
       expect(secondPage.body.data.total).toBe(totalInvites);
     });
 
-    it('cannot list invites without "read:user_invite"', async () => {
+    it('blocks user without "read:user_invite" feature', async () => {
       const { cookies } = await createMember({ login: true });
 
       const res = await api.get(
@@ -608,7 +608,7 @@ describe('Users (e2e)', () => {
       });
 
       const res = await api.delete<BaseResponseBody>(
-        '/users/invites/non-existent-id',
+        '/users/invites/00000000-0000-0000-0000-000000000000',
         { cookies },
       );
 
@@ -617,7 +617,7 @@ describe('Users (e2e)', () => {
       expect(res.body.message).toBe('Convite não encontrado.');
     });
 
-    it('cannot delete invite without "delete:user_invite"', async () => {
+    it('blocks user without "delete:user_invite" feature', async () => {
       const { cookies } = await createMember({ login: true });
 
       const res = await api.delete<BaseResponseBody>(

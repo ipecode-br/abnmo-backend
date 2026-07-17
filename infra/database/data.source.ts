@@ -8,7 +8,7 @@ const envFile = process.env.NODE_ENV === 'test' ? '.env.test' : '.env';
 config({ path: envFile });
 
 const dataSource = new DataSource({
-  type: 'mysql',
+  type: 'postgres',
   host: process.env.DB_HOST,
   port: Number(process.env.DB_PORT),
   username: process.env.DB_USERNAME,

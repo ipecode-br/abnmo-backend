@@ -31,7 +31,7 @@ export class PatientRequirement
   })
   status: PatientRequirementStatus;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   submittedAt: Date | null;
 
   @Column('uuid', { nullable: true })

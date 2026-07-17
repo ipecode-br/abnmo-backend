@@ -9,7 +9,7 @@ export class Session extends BaseEntity implements SessionSchema {
   @Column({ type: 'varchar', length: 64, unique: true })
   tokenHash: string;
 
-  @Column({ type: 'datetime' })
+  @Column({ type: 'timestamp' })
   expiresAt: Date;
 
   @Index()

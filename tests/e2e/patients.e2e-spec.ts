@@ -108,7 +108,12 @@ describe('Patients (e2e)', () => {
 
       const res = await api.get<GetPatientsResponse>(
         '/patients',
-        { page: 1, perPage: 10, startDate, endDate },
+        {
+          page: 1,
+          perPage: 10,
+          startDate: startDate.toISOString().split('T')[0],
+          endDate: endDate.toISOString().split('T')[0],
+        },
         { cookies },
       );
 
@@ -117,7 +122,7 @@ describe('Patients (e2e)', () => {
       expect(res.body.data.patients[0].name).toBe('Range Patient');
     });
 
-    it('blocks user without "read:patient:others"', async () => {
+    it('blocks user without "read:patient:others" feature', async () => {
       const { cookies } = await createMember({ login: true, features: [] });
 
       const res = await api.get(
@@ -156,7 +161,7 @@ describe('Patients (e2e)', () => {
       expect(res.body.data.patients.length).toBe(1);
     });
 
-    it('blocks user without "read:patient:others"', async () => {
+    it('blocks user without "read:patient:others" feature', async () => {
       const { cookies } = await createMember({ login: true, features: [] });
 
       const res = await api.get('/patients/options', undefined, { cookies });
@@ -231,16 +236,20 @@ describe('Patients (e2e)', () => {
     it('returns not found for non-existent ID', async () => {
       const { cookies } = await createAdmin({ login: true });
 
-      const res = await api.get('/patients/non-existent-id', undefined, {
-        cookies,
-      });
+      const res = await api.get(
+        '/patients/00000000-0000-0000-0000-000000000000',
+        undefined,
+        {
+          cookies,
+        },
+      );
 
       expect(res.status).toBe(404);
       expect(res.body.success).toBe(false);
       expect(res.body.message).toBe('Paciente não encontrado.');
     });
 
-    it('blocks user without "read:patient" or "read:patient:others"', async () => {
+    it('blocks user without "read:patient" or "read:patient:others" feature', async () => {
       const { cookies } = await createMember({ login: true, features: [] });
       const { patient } = await createPatient();
 
@@ -319,7 +328,7 @@ describe('Patients (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const res = await api.put<BaseResponseBody, UpdatePatientBody>(
-        '/patients/non-existent-id',
+        '/patients/00000000-0000-0000-0000-000000000000',
         updateBody,
         { cookies },
       );
@@ -389,7 +398,7 @@ describe('Patients (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const res = await api.patch(
-        '/patients/non-existent-id/deactivate',
+        '/patients/00000000-0000-0000-0000-000000000000/deactivate',
         undefined,
         { cookies },
       );
