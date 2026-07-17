@@ -39,7 +39,7 @@ describe('Referrals (e2e)', () => {
       category: 'nursing',
       condition: 'stable',
       date: new Date(),
-      patientId: '00000000-0000-0000-0000-000000000000',
+      patientId: '01900000-0000-7000-8000-000000000000',
       professionalName: null,
     };
 

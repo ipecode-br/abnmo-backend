@@ -156,7 +156,7 @@ describe('Surveys (e2e)', () => {
       const { patient } = await createPatient();
       const submission = await createSurveySubmission({
         status: 'approved',
-        surveyToken: '550e8400-e29b-41d4-a716-446655440001',
+        surveyToken: '01900000-0000-7000-8000-000000000001',
         patient,
       });
 
@@ -197,7 +197,7 @@ describe('Surveys (e2e)', () => {
     it('cannot complete survey with invalid token', async () => {
       const res = await api.post<BaseResponseBody, CreateSurveyBody>(
         '/surveys/complete',
-        buildCompleteSurveyBody('00000000-0000-0000-0000-000000000000'),
+        buildCompleteSurveyBody('01900000-0000-7000-8000-000000000000'),
       );
 
       expect(res.status).toBe(404);
@@ -209,7 +209,7 @@ describe('Surveys (e2e)', () => {
       const { patient } = await createPatient();
       const submission = await createSurveySubmission({
         status: 'pending_review',
-        surveyToken: '550e8400-e29b-41d4-a716-446655440002',
+        surveyToken: '01900000-0000-7000-8000-000000000002',
         patient,
       });
 
@@ -229,7 +229,7 @@ describe('Surveys (e2e)', () => {
       const { patient } = await createPatient();
       const submission = await createSurveySubmission({
         status: 'completed',
-        surveyToken: '550e8400-e29b-41d4-a716-446655440003',
+        surveyToken: '01900000-0000-7000-8000-000000000003',
         patient,
       });
 
@@ -251,7 +251,7 @@ describe('Surveys (e2e)', () => {
       const { patient } = await createPatient();
       const submission = await createSurveySubmission({
         status: 'approved',
-        surveyToken: '550e8400-e29b-41d4-a716-446655440005',
+        surveyToken: '01900000-0000-7000-8000-000000000005',
         patient,
       });
 

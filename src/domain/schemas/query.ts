@@ -1,12 +1,18 @@
 import { z } from 'zod';
 
 import { QUERY_ORDERS, QUERY_PERIODS } from '../enums/queries';
-import { datetimeSchema } from './shared';
 
 export const querySearchSchema = z.string();
 export const queryOrderSchema = z.enum(QUERY_ORDERS);
 export const queryPeriodSchema = z.enum(QUERY_PERIODS);
-export const queryDateSchema = datetimeSchema;
+export const queryDateSchema = z.codec(
+  z.union([z.iso.datetime(), z.iso.date()]),
+  z.date(),
+  {
+    decode: (value) => new Date(value),
+    encode: (date) => date.toISOString(),
+  },
+);
 
 export const queryLimitSchema = z.coerce.number().min(1).optional().default(10);
 export const queryPageSchema = z.coerce.number().min(1).optional().default(1);
