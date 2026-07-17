@@ -1,101 +1,75 @@
 # Camada de domínio
 
-A camada de domínio (`/src/domain`) é o núcleo do sistema, contendo as definições centrais que as demais camadas consumem: **Entities**, **Enums** e **Schemas**. Nenhuma lógica de negócio vive aqui — apenas contratos e estruturas de dados.
+A camada de domínio (`src/domain`) contém as definições centrais do sistema: **Entities**, **Enums** e **Schemas**. Nenhuma lógica de negócio vive aqui — apenas contratos e estruturas de dados.
 
 ```
 src/domain/
-├── entities/    # Entidades TypeORM (mapeamento para tabelas)
-├── enums/       # Constantes tipadas (arrays as const + tipos derivados)
-└── schemas/     # Schemas Zod (validação e contratos de request/response)
+├── entities/    # Entidades TypeORM (todas estendem BaseEntity)
+├── enums/       # Constantes `as const` + tipos derivados
+└── schemas/     # Schemas Zod (entidade, request, response)
 ```
 
 ---
 
 ## Entities
 
-Entities são classes TypeORM que representam tabelas no banco de dados. Cada entidade implementa o schema Zod correspondente para garantir consistência entre a validação e o modelo de dados.
+Entities são classes TypeORM que representam tabelas no banco. Todas estendem `BaseEntity`, que fornece `id` (UUID v7), `createdAt` e `updatedAt`. Todas implementam os schemas Zod correspondentes.
 
 ### Padrão
 
 ```typescript
 // src/domain/entities/appointment.ts
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
-import {
-  APPOINTMENT_STATUSES,
-  type AppointmentStatus,
-} from '../enums/appointments';
 import type { AppointmentSchema } from '../schemas/appointments';
-import { Patient } from './patient';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { BaseEntity } from './base';
+import { User } from './user';
 
 @Entity('appointments')
-export class Appointment implements AppointmentSchema {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  @Column('uuid')
-  patientId: string;
-
+export class Appointment extends BaseEntity implements AppointmentSchema {
   @Column({ type: 'datetime' })
   date: Date;
 
-  @Column({ type: 'enum', enum: APPOINTMENT_STATUSES, default: 'scheduled' })
-  status: AppointmentStatus;
+  @Column({ type: 'varchar', length: 255 })
+  status: string;
 
   @Column({ type: 'varchar', length: 500, nullable: true })
   annotation: string | null;
 
+  @Column({ type: 'varchar', length: 64, nullable: true })
+  professionalName: string | null;
+
   @Column('uuid')
   createdBy: string;
 
-  @CreateDateColumn({ type: 'datetime' })
-  createdAt: Date;
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'patient_id' })
+  patient: User;
 
-  @UpdateDateColumn({ type: 'datetime' })
-  updatedAt: Date;
-
-  @ManyToOne(() => Patient, (patient) => patient.appointments)
-  patient: Patient;
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'specialist_id' })
+  specialist: User | null;
 }
 ```
 
 ### Regras
 
-- Sempre use `@PrimaryGeneratedColumn('uuid')` como chave primária.
-- Campos enum referenciam o array `as const` do enum correspondente: `enum: APPOINTMENT_STATUSES`.
-- Campos opcionais usam `nullable: true` no `@Column` e `| null` no tipo TypeScript.
-- Relacionamentos são declarados com `@ManyToOne`, `@OneToMany`, etc.
-- A entidade deve implementar o schema Zod: `implements AppointmentSchema`.
+- Sempre estender `BaseEntity` — nunca declarar `id`, `createdAt` ou `updatedAt` manualmente.
+- Sempre implementar os schemas Zod correspondentes.
+- Campos enum referenciam o array `as const`: `default: 'scheduled'`.
+- Campos opcionais usam `nullable: true` no `@Column` e `| null` no tipo.
+- Relacionamentos declarados com `@ManyToOne`, `@OneToMany`, etc.
+- Não existe entidade `Patient` dedicada — pacientes são `User` com `role: 'patient'`.
+- Dados anônimos de saúde (diagnóstico, demografia) ficam na entidade `Survey` (`@OneToOne` com `User`).
 
-### Registro global
+### Registro de entidades
 
-Todas as entidades são exportadas em um array centralizado (`/src/domain/entities/index.ts`) registrado no `DatabaseModule`:
-
-```typescript
-export const DATABASE_ENTITIES = [
-  User,
-  Patient,
-  Appointment,
-  Referral,
-  PatientSupport,
-  PatientRequirement,
-  Token,
-];
-```
-
-Nas features, cada módulo registra apenas as entidades que usa via `TypeOrmModule.forFeature([...])`.
+Entidades são registradas centralmente em `src/domain/entities/database.ts` no array `DATABASE_ENTITIES`. Nos módulos, use `TypeOrmModule.forFeature([...])` apenas com as entidades necessárias.
 
 ---
 
 ## Enums
 
-Enums são arrays `as const` com tipos derivados. Esse padrão permite usar os valores como `enum` no TypeORM e como tipo TypeScript ao mesmo tempo, sem duplicação.
+Enums são arrays `as const` com tipos derivados. Permitem usar os valores no TypeORM e como tipo TypeScript sem duplicação.
 
 ### Padrão
 
@@ -109,13 +83,14 @@ export const APPOINTMENT_STATUSES = [
 ] as const;
 
 export type AppointmentStatus = (typeof APPOINTMENT_STATUSES)[number];
-// → 'scheduled' | 'canceled' | 'completed' | 'no_show'
 
 export const APPOINTMENTS_ORDER_BY = [
   'date',
   'patient',
   'status',
   'category',
+  'condition',
+  'professional',
 ] as const;
 
 export type AppointmentsOrderBy = (typeof APPOINTMENTS_ORDER_BY)[number];
@@ -123,132 +98,119 @@ export type AppointmentsOrderBy = (typeof APPOINTMENTS_ORDER_BY)[number];
 
 ### Regras
 
-- Nomes no formato `SCREAMING_SNAKE_CASE` para arrays de constantes.
-- Tipos derivados no formato `PascalCase`.
-- Tipos de status no sufixo `Status` (ex: `AppointmentStatus`, `PatientStatus`).
-- Tipos de ordenação no sufixo `OrderBy` (ex: `AppointmentsOrderBy`).
+- Nomes no formato `SCREAMING_SNAKE_CASE` para arrays, `PascalCase` para tipos.
 - Um arquivo por domínio: `appointments.ts`, `patients.ts`, `users.ts`, etc.
-
-### Enums disponíveis
-
-| Arquivo                   | Exports Principais                                                                                      |
-| ------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `appointments.ts`         | `APPOINTMENT_STATUSES`, `APPOINTMENTS_ORDER_BY`                                                         |
-| `patients.ts`             | `PATIENT_STATUSES`, `PATIENT_GENDERS`, `PATIENT_RACES`, `PATIENT_CONDITIONS`, `PATIENT_NMO_DIAGNOSTICS` |
-| `users.ts`                | `USER_ROLES`, `USER_STATUSES`                                                                           |
-| `shared.ts`               | `SPECIALTY_CATEGORIES`                                                                                  |
-| `referrals.ts`            | `REFERRAL_STATUSES`, `REFERRALS_ORDER_BY`                                                               |
-| `patient-requirements.ts` | `PATIENT_REQUIREMENT_TYPES`, `PATIENT_REQUIREMENT_STATUSES`                                             |
-| `tokens.ts`               | `AUTH_TOKENS_MAPPING`, `AUTH_TOKEN_ROLES`, `ALLOWED_ROLES`                                              |
-| `queries.ts`              | `QUERY_ORDERS`, `QUERY_PERIODS`                                                                         |
+- Nunca use o keyword `enum` do TypeScript.
 
 ---
 
-## Schemas (Zod)
+## Schemas Zod
 
-Schemas Zod são a fonte de verdade para validação de dados. DTOs são derivados diretamente de schemas — nunca são escritos manualmente.
+Schemas Zod são a fonte de verdade para validação. DTOs são derivados diretamente deles — nunca escritos manualmente.
 
 ### Estrutura de pastas
 
 ```
 src/domain/schemas/
-├── base.ts            # baseResponseSchema
-├── query.ts           # baseQuerySchema e schemas primitivos de query
-├── shared.ts          # Schemas primitivos reutilizáveis (name, email, phone...)
+├── base.ts            # baseEntitySchema, baseResponseSchema
+├── query.ts           # Schemas reutilizáveis de query (queryDateSchema, queryPageSchema, etc.)
+├── shared.ts          # Schemas primitivos (uuidSchema, nameSchema, emailSchema, datetimeSchema...)
 ├── appointments/
 │   ├── index.ts       # appointmentSchema (schema completo da entidade)
-│   ├── requests.ts    # createAppointmentSchema, updateAppointmentSchema, getAppointmentsQuerySchema
-│   └── responses.ts   # getAppointmentsResponseSchema
-├── patients/
-│   ├── index.ts
-│   ├── requests.ts
-│   └── responses.ts
-└── ...                # Mesmo padrão para cada domínio
+│   ├── requests.ts    # Schemas de request (body + query)
+│   └── responses.ts   # Schemas de response
+└── ...
 ```
 
 ### Schema da entidade (`index.ts`)
 
-Define a estrutura completa da entidade como um objeto Zod estrito:
+Define a estrutura completa da entidade. Campos de data usam `z.date()` — o TypeORM retorna objetos `Date` nativos:
 
 ```typescript
-// src/domain/schemas/appointments/index.ts
 import { z } from 'zod';
+import { baseEntitySchema } from '../base';
+import { uuidSchema, nameSchema, specialtySchema, patientConditionSchema } from '../shared';
 
-export const appointmentSchema = z
-  .object({
-    id: z.string().uuid(),
-    patientId: z.string().uuid(),
-    date: z.coerce.date(),
-    status: z.enum(APPOINTMENT_STATUSES),
-    category: z.enum(SPECIALTY_CATEGORIES),
-    condition: z.enum(PATIENT_CONDITIONS),
-    annotation: z.string().max(500).nullable(),
-    professionalName: z.string().max(64).nullable(),
-    userId: z.string().uuid().nullable(),
-    createdBy: z.string().uuid(),
-    createdAt: z.coerce.date(),
-    updatedAt: z.coerce.date(),
-  })
-  .strict();
-
-export type AppointmentSchema = z.infer<typeof appointmentSchema>;
+export const appointmentSchema = z.strictObject({
+  ...baseEntitySchema.shape,   // id, updatedAt, createdAt
+  date: z.date(),
+  status: z.enum(APPOINTMENT_STATUSES).default('scheduled'),
+  category: specialtySchema,
+  condition: patientConditionSchema,
+  annotation: z.string().max(500).nullable(),
+  professionalName: nameSchema.nullable(),
+  createdBy: uuidSchema,
+});
 ```
 
 ### Schemas de request (`requests.ts`)
 
-Derivados do schema da entidade com `.pick()`, `.omit()` ou `.extend()`:
+Schemas de body para criação/atualização usam `datetimeSchema` (codec que aceita ISO string, produz `Date`) para campos de data — **não** fazem `.pick({ date: true })` da entidade, pois o schema da entidade usa `z.date()` (aceita apenas objetos `Date` nativos):
 
 ```typescript
-// src/domain/schemas/appointments/requests.ts
 import { z } from 'zod';
+import { datetimeSchema, specialtySchema } from '../shared';
+import { appointmentSchema } from '.';
+import { patientSchema } from '../patients';
 
-export const createAppointmentSchema = appointmentSchema
-  .pick({
-    patientId: true,
-    date: true,
+export const createAppointmentSchema = z.strictObject({
+  patientId: patientSchema.shape.id,
+  category: specialtySchema.optional(),
+  date: datetimeSchema,       // ISO string → Date
+  ...appointmentSchema.pick({
     condition: true,
     annotation: true,
     professionalName: true,
-  })
-  .extend({ category: specialtySchema.optional() })
-  .strict();
-
-export const updateAppointmentSchema = appointmentSchema.pick({
-  date: true,
-  condition: true,
-  annotation: true,
+  }).shape,
 });
 
-export const getAppointmentsQuerySchema = z.object({
-  patientId: z.string().optional(),
-  status: z.enum(APPOINTMENT_STATUSES).optional(),
-  orderBy: z.enum(APPOINTMENTS_ORDER_BY).default('date'),
-  order: queryOrderSchema.default('DESC'),
-  page: queryPageSchema,
-  perPage: queryPerPageSchema,
-}).refine(...);
+export const updateAppointmentSchema = z.strictObject({
+  date: datetimeSchema,
+  ...appointmentSchema.pick({
+    condition: true,
+    annotation: true,
+  }).shape,
+});
+```
+
+Schemas de query usam `queryDateSchema` (aceita ISO date e datetime):
+
+```typescript
+export const getAppointmentsQuerySchema = z
+  .object({
+    patientId: z.string().optional(),
+    search: querySearchSchema.optional(),
+    status: z.enum(APPOINTMENT_STATUSES).optional(),
+    orderBy: z.enum(APPOINTMENTS_ORDER_BY).default('date'),
+    order: queryOrderSchema.default('DESC'),
+    startDate: queryDateSchema.optional(),
+    endDate: queryDateSchema.optional(),
+    page: queryPageSchema,
+    perPage: queryPerPageSchema,
+    limit: queryLimitSchema,
+  })
+  .superRefine(validateEndDate);
 ```
 
 ### Schemas de response (`responses.ts`)
 
-Definem o formato exato da resposta da API:
+Definem o formato exato da resposta. `.pick()` da entidade e estendem `baseResponseSchema`:
 
 ```typescript
-// src/domain/schemas/appointments/responses.ts
-import { z } from 'zod';
-import { baseResponseSchema } from '../base';
+export const appointmentResponseSchema = appointmentSchema
+  .pick({
+    id: true, date: true, status: true, category: true,
+    condition: true, annotation: true, professionalName: true,
+    updatedAt: true, createdAt: true,
+  })
+  .extend({
+    patient: patientSchema.pick({ id: true, name: true, email: true, avatarUrl: true }),
+    specialist: userSchema.pick({ id: true, name: true, email: true, avatarUrl: true }).nullable(),
+  });
 
 export const getAppointmentsResponseSchema = baseResponseSchema.extend({
   data: z.object({
-    appointments: z.array(
-      appointmentSchema.extend({
-        patient: z.object({
-          name: z.string(),
-          email: z.string(),
-          avatarUrl: z.string().nullable(),
-        }),
-      }),
-    ),
+    appointments: z.array(appointmentResponseSchema),
     total: z.number(),
   }),
 });
@@ -259,18 +221,22 @@ export const getAppointmentsResponseSchema = baseResponseSchema.extend({
 Primitivos reutilizáveis entre múltiplos schemas:
 
 ```typescript
-// src/domain/schemas/shared.ts
+export const uuidSchema = z.uuid({ version: 'v7' });
 export const nameSchema = z.string().min(3).max(64);
-export const emailSchema = z.string().min(1).max(64).email();
-export const passwordSchema = z.string().min(8).max(64);
+export const emailSchema = z.email().min(1).max(254);
 export const phoneSchema = z.string().min(10).max(11).regex(ONLY_NUMBERS_REGEX);
-export const specialtySchema = z.enum(SPECIALTY_CATEGORIES);
+export const dateSchema = z.iso.date();           // "YYYY-MM-DD"
+export const datetimeSchema = z.codec(
+  z.iso.datetime(), z.date(),
+  { decode: (iso) => new Date(iso), encode: (date) => date.toISOString() },
+);
 ```
 
 ### Regras
 
-- Use sempre `.strict()` nos schemas de request para rejeitar campos desconhecidos.
-- Use `z.coerce.date()` para campos de data vindos de query strings.
+- Schemas de entidade usam `z.date()` para campos de data (TypeORM retorna objetos `Date`).
+- Schemas de request body usam `datetimeSchema` (codec) para campos de data — **nunca** fazem `.pick({ date: true })` da entidade.
+- Schemas de query usam `queryDateSchema` (aceita tanto `YYYY-MM-DD` quanto ISO datetime completo).
 - Use `z.coerce.number()` e `z.coerce.boolean()` para campos numéricos/booleanos em query strings.
-- Exporte o tipo inferido quando necessário: `export type CreateAppointmentInput = z.infer<typeof createAppointmentSchema>`.
-- Valide regras de negócio complexas com `.refine()` ou `.superRefine()` diretamente no schema.
+- Regras de negócio complexas use `.superRefine()`.
+- Exporte o tipo inferido quando necessário via `z.infer<typeof schema>`.

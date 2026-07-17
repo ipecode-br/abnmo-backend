@@ -2,261 +2,285 @@
 
 ## O que é um use-case
 
-Um use-case encapsula uma única operação de negócio. É a camada onde vive toda a lógica da aplicação: validações de regras de negócio, consultas ao banco, transformações de dados e lançamento de exceções.
+Um use-case encapsula uma única operação de negócio. É onde vive toda a lógica da aplicação: validações, acesso ao banco, autorização com `can()` e transformações de dados.
 
-Cada use-case é responsável por **uma única ação** — criar, buscar, atualizar, cancelar, etc. A regra é: um arquivo, uma responsabilidade.
+**Um arquivo, uma responsabilidade.** Um use-case nunca mistura criar com buscar ou atualizar com cancelar.
 
 ---
 
 ## Estrutura padrão
 
 ```typescript
-// src/app/http/appointments/use-cases/create-appointment.use-case.ts
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+// src/app/http/appointments/use-cases/get-appointments.use-case.ts
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import type { Repository } from 'typeorm';
+import { FindOptionsWhere, ILike, MoreThanOrEqual, LessThanOrEqual, Between, Repository } from 'typeorm';
 
-import { Logger } from '@/common/log/logger.decorator';
-import { AppLogger } from '@/common/log/logger.service';
-import type { AuthUser } from '@/common/types';
+import { can } from '@/common/authorization/can';
+import { Log } from '@/common/log/log.decorator';
+import { LogService } from '@/common/log/log.service';
+import type { RequestUser } from '@/common/types';
 import { Appointment } from '@/domain/entities/appointment';
-import { Patient } from '@/domain/entities/patient';
-import type { PatientCondition } from '@/domain/enums/patients';
-import type { SpecialtyCategory } from '@/domain/enums/shared';
 
-interface CreateAppointmentUseCaseInput {
-  user: AuthUser;
-  patientId: string;
-  date: Date;
-  condition: PatientCondition;
-  annotation: string | null;
-  professionalName: string | null;
-  category?: SpecialtyCategory;
+interface GetAppointmentsUseCaseInput {
+  user: RequestUser;
+  page: number;
+  perPage: number;
+  status?: AppointmentStatus;
+  search?: string;
+  startDate?: Date;
+  endDate?: Date;
+  order?: QueryOrder;
+  orderBy?: AppointmentsOrderBy;
 }
 
-@Logger()
+interface GetAppointmentsUseCaseOutput {
+  appointments: AppointmentResponseSchema[];
+  total: number;
+}
+
 @Injectable()
-export class CreateAppointmentUseCase {
+@Log()
+export class GetAppointmentsUseCase {
   constructor(
     @InjectRepository(Appointment)
     private readonly appointmentsRepository: Repository<Appointment>,
-    @InjectRepository(Patient)
-    private readonly patientsRepository: Repository<Patient>,
-    private readonly logger: AppLogger,
+    private readonly logger: LogService,
   ) {}
 
-  async execute(input: CreateAppointmentUseCaseInput): Promise<void> {
-    this.logger.setEvent('create_appointment');
+  async execute({
+    user,
+    page,
+    perPage,
+    status,
+    search,
+    startDate,
+    endDate,
+    orderBy,
+    order,
+  }: GetAppointmentsUseCaseInput): Promise<GetAppointmentsUseCaseOutput> {
+    can(user, ['read:appointment', 'read:appointment:others']);
 
-    const patient = await this.patientsRepository.findOne({
-      where: { id: input.patientId },
-      select: { id: true },
-    });
+    const where: FindOptionsWhere<Appointment> = {};
 
-    if (!patient) {
-      throw new NotFoundException('Paciente não encontrado.');
+    if (user.role === 'patient') {
+      where.patient = { id: user.id };
     }
 
-    await this.appointmentsRepository.save({
-      ...input,
-      status: 'scheduled',
-      createdBy: input.user.id,
+    if (status) where.status = status;
+    if (search) where.professionalName = ILike(`%${search}%`);
+
+    if (startDate && endDate) {
+      where.date = Between(startDate, endDate);
+    } else if (startDate) {
+      where.date = MoreThanOrEqual(startDate);
+    } else if (endDate) {
+      where.date = LessThanOrEqual(endDate);
+    }
+
+    const total = await this.appointmentsRepository.count({ where });
+
+    const appointments = await this.appointmentsRepository.find({
+      select: { id: true, date: true, status: true, /* ... */ },
+      relations: { patient: true, specialist: true },
+      skip: (page - 1) * perPage,
+      take: perPage,
+      order: { [ORDER_BY_MAPPING[orderBy || 'date']]: order || 'DESC' },
+      where,
     });
 
-    this.logger.log('Appointment created', {
-      patientId: input.patientId,
-      createdBy: input.user.id,
-    });
+    return {
+      appointments: appointments.map((a) => ({
+        id: a.id,
+        date: a.date,
+        status: a.status,
+        patient: { id: a.patient.id, name: a.patient.name, /* ... */ },
+        specialist: a.specialist ? { id: a.specialist.id, /* ... */ } : null,
+      })),
+      total,
+    };
   }
 }
 ```
 
 ---
 
-## Interfaces de input e output
+## Interfaces
 
-Defina interfaces TypeScript explícitas para entrada e saída diretamente no arquivo do use-case. Nunca use `any` ou objetos genéricos:
+Defina interfaces `Input` e `Output` explícitas no próprio arquivo do use-case:
 
 ```typescript
-// Input sem dados retornados (mutação)
 interface CancelAppointmentUseCaseInput {
   id: string;
-  user: AuthUser;
+  user: RequestUser;
 }
-// → execute retorna Promise<void>
-
-// Input com dados retornados (consulta)
-interface GetAppointmentsUseCaseInput {
-  user: AuthUser;
-  page: number;
-  perPage: number;
-  status?: AppointmentStatus;
-  search?: string;
-}
+// → execute(): Promise<void>
 
 interface GetAppointmentsUseCaseOutput {
-  appointments: Appointment[];
+  appointments: AppointmentResponseSchema[];
   total: number;
 }
-// → execute retorna Promise<GetAppointmentsUseCaseOutput>
+// → execute(): Promise<GetAppointmentsUseCaseOutput>
 ```
+
+Use os tipos inferidos dos response schemas como tipo de output (`z.infer<typeof schema>`).
 
 ---
 
 ## Injeção de repositórios
 
-Os repositórios são injetados diretamente no use-case via `@InjectRepository(Entity)`. Não existe camada de repositório separada:
+Repositórios são injetados diretamente no use-case via `@InjectRepository(Entity)`. Não existe camada de repositório separada:
 
 ```typescript
 constructor(
   @InjectRepository(Appointment)
   private readonly appointmentsRepository: Repository<Appointment>,
-  @InjectRepository(Patient)
-  private readonly patientsRepository: Repository<Patient>,
-  private readonly logger: AppLogger,
+  private readonly logger: LogService,
 ) {}
 ```
 
-> As entidades injetadas no use-case devem estar registradas no `TypeOrmModule.forFeature([...])` do módulo pai. Veja [módulos](modules.md).
+> As entidades injetadas devem estar registradas no `TypeOrmModule.forFeature([...])` do módulo pai.
 
 ---
 
-## Consultas ao banco
+## Operações de escrita
 
-Sempre selecione apenas os campos necessários para evitar over-fetching:
+Sempre use o padrão `.create()` seguido de `.save()` — **nunca** use `repository.save()` diretamente:
 
 ```typescript
-// Busca com campos específicos
-const patient = await this.patientsRepository.findOne({
-  where: { id: patientId },
-  select: { id: true, name: true, status: true },
+const appointment = this.appointmentsRepository.create({
+  patient: { id: patientId },
+  specialist: specialistId ? { id: specialistId } : undefined,
+  date,
+  status: 'scheduled',
+  category,
+  condition,
+  createdBy: user.id,
 });
+await this.appointmentsRepository.save(appointment);
 
-// Contagem — seleciona apenas id para performance
-const [appointments, total] = await this.appointmentsRepository.findAndCount({
+this.logger.log('Appointment created', { appointmentId: appointment.id });
+```
+
+---
+
+## Consultas
+
+Sempre selecione apenas os campos necessários:
+
+```typescript
+const appointments = await this.appointmentsRepository.find({
+  select: {
+    id: true,
+    date: true,
+    status: true,
+    patient: { id: true, name: true, email: true },
+    specialist: { id: true, name: true, email: true },
+  },
+  relations: { patient: true, specialist: true },
   where,
-  select: { id: true },
-  take: perPage,
-  skip: (page - 1) * perPage,
+  order,
+  skip,
+  take,
 });
 ```
 
-Para filtros dinâmicos, construa o objeto `where` incrementalmente com os operadores do TypeORM:
+Para filtros dinâmicos, construa o `where` incrementalmente:
 
 ```typescript
-import { Between, ILike, type FindOptionsWhere } from 'typeorm';
-
 const where: FindOptionsWhere<Appointment> = {};
-
-if (user.role === 'patient') {
-  where.patientId = user.id; // pacientes só veem os próprios dados
-}
-
-if (search) {
-  where.professionalName = ILike(`%${search}%`);
-}
-
-if (startDate && endDate) {
-  where.date = Between(startDate, endDate);
-}
+if (status) where.status = status;
+if (search) where.patient = { name: ILike(`%${search}%`) };
+if (startDate && endDate) where.createdAt = Between(startDate, endDate);
 ```
 
 ---
 
 ## Transações
 
-Use `DataSource` com `dataSource.transaction()` quando precisar salvar em múltiplas tabelas de forma atômica:
+Use `DataSource.transaction()` para operações atômicas em múltiplas tabelas:
 
 ```typescript
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+await this.dataSource.transaction(async (manager) => {
+  const usersRepo = manager.getRepository(User);
+  const surveysRepo = manager.getRepository(Survey);
 
-@Injectable()
-export class CreatePatientUseCase {
-  constructor(
-    @InjectRepository(Patient)
-    private readonly patientsRepository: Repository<Patient>,
-    @InjectDataSource()
-    private readonly dataSource: DataSource,
-    private readonly logger: AppLogger,
-  ) {}
+  const user = usersRepo.create({ name, email, role: 'patient', ... });
+  await usersRepo.save(user);
 
-  async execute(input: CreatePatientUseCaseInput): Promise<void> {
-    this.logger.setEvent('create_patient');
-
-    await this.dataSource.transaction(async (manager) => {
-      const patient = await manager.save(Patient, { ...patientData });
-
-      if (input.supports?.length) {
-        await manager.save(
-          PatientSupport,
-          input.supports.map((s) => ({ ...s, patientId: patient.id })),
-        );
-      }
-    });
-
-    this.logger.log('Patient created', { email: input.email });
-  }
-}
+  const survey = surveysRepo.create({ user: { id: user.id }, status: 'pending_signature' });
+  await surveysRepo.save(survey);
+});
 ```
+
+---
+
+## Mapeamento de resposta
+
+**Nunca** retorne entidades TypeORM diretamente. O `ZodSerializerInterceptor` valida respostas com `.strict()` — qualquer campo extra causa erro. Mapeie para objetos planos contendo apenas os campos do schema de response:
+
+```typescript
+return {
+  appointments: appointments.map((a) => ({
+    id: a.id,
+    date: a.date,
+    status: a.status,
+    patient: { id: a.patient.id, name: a.patient.name, email: a.patient.email },
+    specialist: a.specialist
+      ? { id: a.specialist.id, name: a.specialist.name, email: a.specialist.email }
+      : null,
+  })),
+  total,
+};
+```
+
+---
+
+## `can()` — autorização
+
+Use `can()` para verificar features e ownership. Deve ser chamado no início do `execute()`, antes de qualquer operação:
+
+```typescript
+can(user, ['read:appointment', 'read:appointment:others']);
+can(user, 'update:user', targetUserId);
+can(user, ['update:appointment', 'update:appointment:others'], appointment.specialist?.id);
+```
+
+Ver [autenticação](authentication.md) para documentação completa do `can()`.
 
 ---
 
 ## Logging
 
-Todo use-case com o decorator `@Logger()` deve chamar `this.logger.setEvent()` como primeira linha do `execute()`. Veja [logging](logging.md) para detalhes completos.
+Use-cases possuem o decorator `@Log()` (class-level). O `LogService` é injetado no construtor. Os eventos são registrados via `@Log('event_name')` no controller — o use-case apenas chama `this.logger.log()` / `.error()` para registrar operações:
 
 ```typescript
-async execute(input: CreateAppointmentUseCaseInput): Promise<void> {
-  this.logger.setEvent('create_appointment');  // sempre na primeira linha
-  // ...
-}
+this.logger.log('Appointment created', { appointmentId: appointment.id });
+this.logger.error('Create appointment failed: patient not found', { patientId });
 ```
+
+Ver [logging](logging.md) para documentação completa.
 
 ---
 
-## Tratamento de erros
-
-Exceções NestJS são lançadas diretamente no use-case com mensagens em português (pt-BR) para o usuário. Erros internos são logados em inglês. Veja [tratamento de erros](error-handling.md).
-
-```typescript
-const appointment = await this.appointmentsRepository.findOne({
-  where: { id },
-});
-
-if (!appointment) {
-  throw new NotFoundException('Atendimento não encontrado.');
-}
-
-if (appointment.status === 'canceled') {
-  this.logger.warn('Cancel appointment failed: already canceled', { id });
-  throw new BadRequestException('Este atendimento já foi cancelado.');
-}
-```
-
----
-
-## Convenções de nomenclatura
+## Convenções
 
 | Item                | Padrão                           | Exemplo                          |
 | ------------------- | -------------------------------- | -------------------------------- |
 | Arquivo             | `{action}-{feature}.use-case.ts` | `create-appointment.use-case.ts` |
 | Classe              | `{Action}{Feature}UseCase`       | `CreateAppointmentUseCase`       |
-| Interface de input  | `{Action}{Feature}UseCaseInput`  | `CreateAppointmentUseCaseInput`  |
-| Interface de output | `{Action}{Feature}UseCaseOutput` | `GetAppointmentsUseCaseOutput`   |
+| Input               | `{Action}{Feature}UseCaseInput`  | `CreateAppointmentUseCaseInput`  |
+| Output              | `{Action}{Feature}UseCaseOutput` | `GetAppointmentsUseCaseOutput`   |
 
 ---
 
 ## Regras
 
-- Um use-case por arquivo — nunca combinar múltiplas ações em um só use-case.
-- Interfaces `Input` e `Output` definidas no mesmo arquivo do use-case.
-- Repositórios injetados diretamente — nunca importar serviços ou use-cases de outras features.
-- `@Logger()` e `@Injectable()` sempre presentes, nesta ordem.
-- `this.logger.setEvent()` sempre como primeira linha do `execute()`.
-- Mensagens de exceção em português (pt-BR); mensagens de log em inglês.
-- Selecionar apenas os campos necessários nas queries (`select: { id: true, ... }`).
+- Um use-case por arquivo — uma ação por use-case.
+- `@Log()` e `@Injectable()` sempre presentes, nesta ordem.
+- Repositórios injetados diretamente — nunca importar serviços de outras features.
+- Sempre chamar `can()` no início do `execute()` quando necessário.
+- Sempre usar `.create()` + `.save()` — nunca `repository.save()` diretamente.
+- Sempre mapear entidades para objetos planos antes de retornar.
+- Selecionar apenas os campos necessários nas queries (`select: { ... }`).
+- Mensagens de exceção em **português (pt-BR)**; mensagens de log em **inglês**.

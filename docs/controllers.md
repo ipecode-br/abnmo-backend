@@ -2,46 +2,41 @@
 
 ## O que é um controller
 
-O controller é responsável por receber as requisições HTTP, extrair os parâmetros (body, query, params, usuário autenticado) e delegar a execução para o use-case correspondente. Após receber o resultado, ele formata e retorna a resposta.
+O controller recebe requisições HTTP, extrai parâmetros (body, query, params, usuário) e delega a execução para o use-case. Após receber o resultado, formata e retorna a resposta.
 
-**Controllers não contêm lógica de negócio.** Toda validação de regras de negócio, acesso ao banco e tratamento de erros fica nos use-cases.
+**Controllers não contêm lógica de negócio.** Toda validação, acesso ao banco e tratamento de erros fica nos use-cases.
 
 ---
 
-## Estrutura
+## Exemplo real
 
 ```typescript
 // src/app/http/appointments/appointments.controller.ts
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Patch,
-  Post,
-  Put,
-  Query,
-} from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, Param, Patch, Post, Put, Query } from '@nestjs/common';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ZodResponse } from 'nestjs-zod';
 
+import { RequireFeature } from '@/common/decorators/require-feature.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
-import type { AuthUser } from '@/common/types';
+import { Log } from '@/common/log/log.decorator';
+import type { RequestUser } from '@/common/types';
 
 import {
-  CreateAppointmentDto,
+  CreateAppointmentBody,
   GetAppointmentsQuery,
   GetAppointmentsResponse,
-  UpdateAppointmentDto,
+  UpdateAppointmentBody,
 } from './appointments.dtos';
-import { CancelAppointmentUseCase } from './use-cases/cancel-appointment.use-case';
-import { CreateAppointmentUseCase } from './use-cases/create-appointment.use-case';
 import { GetAppointmentsUseCase } from './use-cases/get-appointments.use-case';
+import { CreateAppointmentUseCase } from './use-cases/create-appointment.use-case';
 import { UpdateAppointmentUseCase } from './use-cases/update-appointment.use-case';
+import { CancelAppointmentUseCase } from './use-cases/cancel-appointment.use-case';
 
 @ApiTags('Atendimentos')
 @Controller('appointments')
+@Roles(['all'])
 export class AppointmentsController {
   constructor(
     private readonly getAppointmentsUseCase: GetAppointmentsUseCase,
@@ -51,65 +46,54 @@ export class AppointmentsController {
   ) {}
 
   @Get()
-  @Roles(['all'])
+  @RequireFeature(['read:appointment', 'read:appointment:others'])
   @ApiOperation({ summary: 'Lista todos os atendimentos' })
-  @ApiResponse({ type: GetAppointmentsResponse })
+  @ZodResponse({ type: GetAppointmentsResponse, status: 200 })
   async getAppointments(
     @Query() query: GetAppointmentsQuery,
-    @User() user: AuthUser,
+    @User() user: RequestUser,
   ): Promise<GetAppointmentsResponse> {
     const data = await this.getAppointmentsUseCase.execute({ user, ...query });
-
-    return {
-      success: true,
-      message: 'Lista de atendimentos retornada com sucesso.',
-      data,
-    };
+    return { success: true, message: 'Lista de atendimentos retornada com sucesso.', data };
   }
 
   @Post()
-  @Roles(['manager', 'nurse', 'specialist'])
+  @Log('create_appointment')
+  @RequireFeature('create:appointment')
   @ApiOperation({ summary: 'Cadastra um novo atendimento' })
-  @ApiResponse({ type: BaseResponse })
+  @ZodResponse({ type: BaseResponse, status: 201 })
   async create(
-    @User() user: AuthUser,
-    @Body() createAppointmentDto: CreateAppointmentDto,
+    @User() user: RequestUser,
+    @Body() body: CreateAppointmentBody,
   ): Promise<BaseResponse> {
-    await this.createAppointmentUseCase.execute({
-      user,
-      ...createAppointmentDto,
-    });
-
-    return {
-      success: true,
-      message: 'Atendimento cadastrado com sucesso.',
-    };
+    await this.createAppointmentUseCase.execute({ user, ...body });
+    return { success: true, message: 'Atendimento cadastrado com sucesso.' };
   }
 
   @Put(':id')
-  @Roles(['manager', 'nurse', 'specialist'])
+  @Log('update_appointment')
+  @RequireFeature(['update:appointment', 'update:appointment:others'])
+  @ApiOperation({ summary: 'Atualiza os dados do atendimento' })
+  @ZodResponse({ type: BaseResponse, status: 200 })
   async update(
     @Param('id') id: string,
-    @User() user: AuthUser,
-    @Body() updateAppointmentDto: UpdateAppointmentDto,
+    @User() user: RequestUser,
+    @Body() body: UpdateAppointmentBody,
   ): Promise<BaseResponse> {
-    await this.updateAppointmentUseCase.execute({
-      id,
-      user,
-      ...updateAppointmentDto,
-    });
-
+    await this.updateAppointmentUseCase.execute({ id, user, ...body });
     return { success: true, message: 'Atendimento atualizado com sucesso.' };
   }
 
   @Patch(':id/cancel')
-  @Roles(['manager', 'nurse'])
+  @Log('cancel_appointment')
+  @RequireFeature(['cancel:appointment', 'cancel:appointment:others'])
+  @ApiOperation({ summary: 'Cancela o atendimento' })
+  @ZodResponse({ type: BaseResponse, status: 200 })
   async cancel(
     @Param('id') id: string,
-    @User() user: AuthUser,
+    @User() user: RequestUser,
   ): Promise<BaseResponse> {
     await this.cancelAppointmentUseCase.execute({ id, user });
-
     return { success: true, message: 'Atendimento cancelado com sucesso.' };
   }
 }
@@ -124,12 +108,12 @@ export class AppointmentsController {
 Define o prefixo de todas as rotas do controller. O path segue `kebab-case`:
 
 ```typescript
-@Controller('patient-requirements')
+@Controller('appointments')
 ```
 
 ### `@Get()`, `@Post()`, `@Put()`, `@Patch()`, `@Delete()`
 
-Métodos HTTP. Aceitam um path relativo opcional:
+Métodos HTTP. Aceitam path relativo opcional:
 
 ```typescript
 @Get()              // GET /appointments
@@ -139,25 +123,28 @@ Métodos HTTP. Aceitam um path relativo opcional:
 
 ### `@Roles([...roles])`
 
-Restringe o acesso ao handler por perfil. Ver [autenticação](authentication.md) para detalhes completos.
+Restringe o acesso por perfil. Admin sempre passa. Ver [autenticação](authentication.md).
 
-```typescript
-@Roles(['manager', 'nurse'])           // apenas manager e nurse
-@Roles(['all'])                        // qualquer usuário autenticado
-@Roles(['manager', 'nurse', 'patient']) // múltiplos papéis
-```
+### `@RequireFeature(feature)`
 
-> Admin sempre tem acesso, independentemente do `@Roles` declarado.
+Restringe por feature. OR lógico com array. Ver [autenticação](authentication.md).
 
 ### `@Public()`
 
-Marca o endpoint como público — ignora `AuthGuard` e `RolesGuard`:
+Pula `AuthGuard` — endpoint público.
 
-```typescript
-@Public()
-@Post('/login')
-async login(@Body() dto: SignInWithEmailDto) { ... }
-```
+### `@Log('event_name')`
+
+Registra um evento auditável na requisição. Aplicado nos métodos dos controllers que realizam mutações. Ver [logging](logging.md).
+
+### `@ZodResponse({ type, status })`
+
+**Obrigatório** em todos os endpoints. Valida e serializa a resposta contra o schema Zod em runtime. **Nunca** use `@ApiResponse` para validação de resposta.
+
+| HTTP  | Quando                                                      |
+| ----- | ----------------------------------------------------------- |
+| `200` | GET que retorna dados, ações que retornam confirmação        |
+| `201` | POST que cria um recurso                                     |
 
 ---
 
@@ -165,17 +152,15 @@ async login(@Body() dto: SignInWithEmailDto) { ... }
 
 ### `@User()`
 
-Injeta o usuário autenticado da requisição como `AuthUser`:
+Injeta o `RequestUser` autenticado:
 
 ```typescript
-async create(@User() user: AuthUser) {
-  // user.id, user.email, user.role
-}
+async create(@User() user: RequestUser) { ... }
 ```
 
 ### `@Query()`
 
-Injeta os parâmetros de query string, validados pelo DTO:
+Injeta parâmetros de query string validados pelo DTO:
 
 ```typescript
 async list(@Query() query: GetAppointmentsQuery) { ... }
@@ -183,10 +168,10 @@ async list(@Query() query: GetAppointmentsQuery) { ... }
 
 ### `@Body()`
 
-Injeta o corpo da requisição, validado pelo DTO:
+Injeta o corpo da requisição validado pelo DTO:
 
 ```typescript
-async create(@Body() dto: CreateAppointmentDto) { ... }
+async create(@Body() body: CreateAppointmentBody) { ... }
 ```
 
 ### `@Param('name')`
@@ -199,7 +184,7 @@ async cancel(@Param('id') id: string) { ... }
 
 ### `@Cookies('cookie_name')`
 
-Injeta um cookie assinado da requisição. Usado principalmente no módulo de autenticação:
+Injeta um cookie assinado:
 
 ```typescript
 async logout(@Cookies('refresh_token') refreshToken: string) { ... }
@@ -209,9 +194,11 @@ async logout(@Cookies('refresh_token') refreshToken: string) { ... }
 
 ## Regras
 
-- Sempre tipar o retorno dos métodos: `Promise<BaseResponse>`, `Promise<GetAppointmentsResponse>`, etc.
-- Mensagens de resposta em português (pt-BR).
-- Nunca retornar dados brutos — sempre retornar `{ success: true, message: '...', data: ... }`.
+- Sempre tipar o retorno: `Promise<BaseResponse>`, `Promise<GetAppointmentsResponse>`, etc.
+- Toda rota de mutação deve ter `@Log('event_name')`.
+- Toda rota deve ter `@ZodResponse({ type, status })` — nunca `@ApiResponse`.
+- `@ApiOperation` é usado apenas para o sumário no Swagger.
+- Mensagens de resposta em **português (pt-BR)**.
+- Nunca injetar `@Res()` diretamente — use retornos + exceções HTTP.
+- Injetar use-cases via `constructor` com `private readonly`.
 - Nunca acessar repositórios ou aplicar lógica de negócio no controller.
-- Injetar todos os use-cases via `constructor` com `private readonly`.
-- Adicionar `@ApiTags`, `@ApiOperation` e `@ApiResponse` para documentação Swagger.

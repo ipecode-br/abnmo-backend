@@ -1,87 +1,56 @@
-# Sistema Viver Melhor (SVM) - ABNMO - Back-End
+# ABNMO — Backend
 
-Aplicação Back-End do Sistema Viver Melhor (SVM), desenvolvida para a ABNMO. Este sistema foi projetado para equipes multidisciplinares de saúde, proporcionando uma plataforma centralizada para acompanhamento de pacientes, gerenciamento de encaminhamentos e consolidação de informações clínicas.
+API do Sistema Viver Melhor (SVM) para a ABNMO. Plataforma centralizada para acompanhamento de pacientes, gerenciamento de encaminhamentos e consolidação de dados clínicos por equipes multidisciplinares de saúde.
 
-O sistema otimiza o fluxo de atendimento com integração de dados em uma interface responsiva, acessível e adaptável a diversos dispositivos.
+## Stack
 
----
-
-## Tecnologias utilizadas
-
-- Node.js
-- NestJS
-- TypeORM
-- MySQL
-- Jest (testes)
-- ESLint + Prettier (linting e formatação)
-- Zod (schemas e validação)
-- Swagger (documentação)
-- Docker (containers com banco de dados e app de desenvolvimento)
-
----
+Node.js · NestJS · TypeORM · PostgreSQL · Zod · Docker
 
 ## Instalação
-
-Clone o repositório e instale as dependências:
 
 ```bash
 git clone https://github.com/ipecode-br/abnmo-backend.git
 cd abnmo-backend
 npm install
-```
-
----
-
-## Ambiente de desenvolvimento
-
-### Executando pela primeira vez
-
-1. Copie o arquivo `.env.example` e renomeie para `.env` ou execute o comando:
-
-```bash
 cp .env.example .env
 ```
 
-2. Com o Docker em execução, inicie a instância do banco de dados:
+## Desenvolvimento
 
 ```bash
-npm run services:up
+npm run dev
 ```
 
-3. Execute as migrações do banco de dados:
+Sobe o banco via Docker, executa as migrations pendentes e inicia o servidor com hot-reload em `http://localhost:3333`.
 
-```bash
-npm run db:migrate
-```
-
-4. Popule o banco de dados com dados de exemplo:
+### Seed (dados de exemplo)
 
 ```bash
 npm run db:seed-dev
 ```
 
-5. Inicie a aplicação em modo de desenvolvimento:
+### Validação (formatação + lint + tipos)
 
 ```bash
-npm run dev
+npm run lint:prettier:fix && npm run validate
 ```
 
-### Executando a aplicação
-
-Para iniciar a aplicação novamente, execute o comando abaixo com o Docker em funcionamento:
+## Testes
 
 ```bash
-npm run dev
+npm run test              # suíte completa (unit + e2e)
+npm run test:unit          # apenas unitários (paralelo, sem banco)
+npm run test:prepare && npm run test:e2e  # apenas e2e
 ```
 
----
+Para rodar um único arquivo e2e:
 
-## Scripts úteis
+```bash
+npm run test:prepare && npx jest --config tests/config/jest-e2e.json tests/e2e/appointments.e2e-spec.ts
+```
 
-- `npm run dev`: Inicia o container do banco de dados (Docker), aguarda a conexão estar disponível, executa as migrações (se houver pendências) e inicia o app em desenvolvimento
-- `npm run start:dev`: Inicia apenas o app em desenvolvimento
-- `npm run services:stop`: Interrompe a execução do container do banco de dados (Docker)
-- `npm run services:down`: Exclui o container do banco de dados (Docker)
-- `npm run lint:eslint:check`: Verifica problemas de lint
-- `npm run lint:prettier:check`: Verifica problemas de formatação
-- `npm run lint:prettier:fix`: Corrige problemas de formatação
+Testes unitários usam repositórios mockados. Testes e2e executam contra o mesmo banco de desenvolvimento, em um schema `test` isolado via `search_path` do PostgreSQL.
+
+## Documentação
+
+Consulte [`docs/index.md`](docs/index.md) para detalhes de arquitetura, autenticação, permissões, DTOs, controllers e uso de schemas Zod.

@@ -2,23 +2,26 @@
 
 ## Visão geral
 
-A autenticação é baseada em **JWT armazenado em cookies HTTP-only assinados**. Não há header `Authorization` — todos os tokens trafegam via cookies, o que protege contra ataques XSS.
+Autenticação baseada em **JWT armazenado em cookies HTTP-only assinados**. Não há header `Authorization` — os tokens trafegam via cookies, protegendo contra XSS.
 
-Dois guards globais são registrados em `AuthModule` como `APP_GUARD` e aplicados em toda a aplicação:
+Três guards globais são registrados em `AuthModule` como `APP_GUARD`, avaliados em ordem:
 
-- **`AuthGuard`** — verifica autenticação (token válido).
-- **`RolesGuard`** — verifica autorização (perfil permitido).
+1. **`AuthGuard`** — valida o token JWT e popula o contexto da requisição.
+2. **`RolesGuard`** — verifica restrições de perfil (`@Roles`). Admin sempre passa.
+3. **`FeatureGuard`** — verifica features (`@RequireFeature`). Não valida ownership.
+
+A validação de ownership é feita nos use-cases via `can()`.
 
 ---
 
 ## Cookies e tokens
 
-| Cookie          | Duração | Finalidade                                |
-| --------------- | ------- | ----------------------------------------- |
-| `access_token`  | 8 horas | Autenticação principal em cada requisição |
-| `refresh_token` | 30 dias | Renovação silenciosa do `access_token`    |
+| Cookie          | Duração | Finalidade                                  |
+| --------------- | ------- | ------------------------------------------- |
+| `access_token`  | 8 horas | Autenticação principal em cada requisição   |
+| `refresh_token` | 30 dias | Renovação silenciosa do `access_token`      |
 
-Além dos cookies, dois tipos de token são armazenados na tabela `tokens` no banco:
+Tokens armazenados na tabela `tokens`:
 
 | Tipo             | Duração | Finalidade              |
 | ---------------- | ------- | ----------------------- |
@@ -27,148 +30,130 @@ Além dos cookies, dois tipos de token são armazenados na tabela `tokens` no ba
 
 ---
 
-## Fluxo de autenticação
+## `RequestUser`
 
-```
-Requisição
-  → AuthGuard
-      ├── acesso_token válido → autentica e continua
-      ├── access_token ausente/expirado + refresh_token válido
-      │     → valida refresh no banco
-      │     → emite novo access_token (silent refresh)
-      │     → continua
-      └── nenhum token válido → UnauthorizedException (401)
-  → RolesGuard
-      ├── @Public() → pula verificação
-      ├── role === 'admin' → always allowed
-      ├── role está em @Roles([...]) → continua
-      └── role not allowed → ForbiddenException (403)
-```
-
-O `AuthGuard` também popula o contexto da requisição:
-
-- `request.user` com o `AuthUser` autenticado.
-- `ContextService.setUser(user)` para enriquecer os logs.
-
----
-
-## `AuthUser`
-
-O tipo do usuário autenticado disponível em toda a aplicação:
+O usuário autenticado é injetado via `@User()` com o tipo:
 
 ```typescript
-// src/common/types.d.ts
-type AuthUser = {
+type RequestUser = {
   id: string;
   email: string;
-  role: UserRolse; // 'admin' | 'member' 'specialist' | 'patient'
+  role: UserRole;         // 'admin' | 'member' | 'specialist' | 'patient'
+  features: UserFeature[]; // lista de features atribuídas
 };
 ```
+
+Perfis disponíveis (`USER_ROLES`):
+
+| Perfil       | Valor          | Descrição                          |
+| ------------ | -------------- | ---------------------------------- |
+| `admin`      | `'admin'`      | Acesso total, bypass de guards     |
+| `member`     | `'member'`     | Gestão operacional do sistema      |
+| `specialist` | `'specialist'` | Especialistas (médicos, psicólogos, etc.) |
+| `patient`    | `'patient'`    | Pacientes — acesso restrito aos próprios dados |
 
 ---
 
 ## Decorators
 
-### `@Roles([...roles])`
-
-Restringe o acesso ao handler ou controller por perfil. Aceita um array de `AllowedRole`:
-
-```typescript
-@Roles(['manager', 'nurse'])           // apenas manager e nurse
-@Roles(['all'])                        // qualquer usuário autenticado
-@Roles(['manager', 'nurse', 'patient']) // múltiplos perfis
-```
-
-Pode ser aplicado no nível do controller (afeta todas as rotas) ou no nível do método (sobrepõe o controller):
-
-```typescript
-@Roles(['manager', 'nurse', 'specialist'])  // padrão do controller
-@Controller('appointments')
-export class AppointmentsController {
-
-  @Get()
-  @Roles(['all'])  // sobrepõe — qualquer autenticado pode listar
-  async getAppointments() { ... }
-
-  @Post()  // usa o @Roles do controller
-  async create() { ... }
-}
-```
-
-> **Admin bypass:** o `RolesGuard` permite acesso de usuários com `role === 'admin'` independentemente do `@Roles` declarado.
-
 ### `@Public()`
 
-Marca um endpoint como público — os guards são ignorados completamente:
+Pula `AuthGuard` — endpoint acessível sem autenticação:
 
 ```typescript
 @Public()
 @Post('/login')
-async login(@Body() dto: SignInWithEmailDto) { ... }
+async login(@Body() body: SignInWithEmailBody): Promise<BaseResponse> { ... }
+```
 
-@Public()
-@Post('/register/patient')
-async registerPatient(@Body() dto: RegisterPatientDto) { ... }
+### `@Roles([...roles])`
+
+Restringe o acesso por perfil. Admin sempre passa, independentemente do valor declarado:
+
+```typescript
+@Roles(['member', 'specialist'])  // apenas member e specialist (+ admin)
+@Roles(['all'])                    // qualquer usuário autenticado
+```
+
+Pode ser aplicado no controller (afeta todas as rotas) ou no método (sobrepõe o controller).
+
+### `@RequireFeature(feature)`
+
+Restringe o acesso por feature. Aceita uma feature única ou array (OR lógico). O guard **não** verifica ownership — isso é feito separadamente nos use-cases via `can()`:
+
+```typescript
+@RequireFeature('create:appointment')
+@RequireFeature(['read:appointment', 'read:appointment:others'])
 ```
 
 ### `@User()`
 
-Decorator de parâmetro que injeta o `AuthUser` da requisição atual:
+Injeta o `RequestUser` da sessão atual:
 
 ```typescript
-async create(
-  @User() user: AuthUser,
-  @Body() dto: CreateAppointmentDto,
-): Promise<BaseResponse> {
-  await this.createAppointmentUseCase.execute({ user, ...dto });
-  // ...
-}
+async create(@User() user: RequestUser, @Body() body: CreateAppointmentBody) { ... }
 ```
 
-### `@Cookies('nome')`
+### `@Cookies('name')`
 
-Decorator de parâmetro que lê um cookie assinado da requisição. Usado principalmente no módulo de autenticação:
+Injeta o valor bruto de um cookie assinado:
 
 ```typescript
-async logout(
-  @Cookies('refresh_token') refreshToken: string,
-  @User() user: AuthUser,
-): Promise<BaseResponse> {
-  await this.logoutUseCase.execute({ refreshToken, user });
-  // ...
-}
+async logout(@Cookies('refresh_token') refreshToken: string, @User() user: RequestUser) { ... }
 ```
 
 ---
 
-## Perfis e permissões
+## `can()` — autorização no use-case
 
-| Perfil       | Valor          | Descrição                                       |
-| ------------ | -------------- | ----------------------------------------------- |
-| `admin`      | `'admin'`      | Acesso total, bypass de todos os guards de role |
-| `manager`    | `'manager'`    | Gestão geral do sistema                         |
-| `nurse`      | `'nurse'`      | Operações clínicas                              |
-| `specialist` | `'specialist'` | Especialistas (médicos, psicólogos, etc.)       |
-| `patient`    | `'patient'`    | Pacientes — acesso restrito aos próprios dados  |
+Importado de `@/common/authorization/can`. Usado dentro dos use-cases para verificar **features e ownership**:
 
-Para a matriz completa de permissões por endpoint, veja [permissões](permissions.md).
+```typescript
+import { can } from '@/common/authorization/can';
+
+// Feature única + ownership: usuário precisa da feature E ter o mesmo ID
+can(user, 'update:user', targetId);
+
+// Múltiplas features (OR): basta ter UMA feature e passar ownership
+can(user, ['update:appointment', 'update:appointment:others'], appointment.specialist?.id);
+
+// Múltiplos owners: deve ter feature E bater com PELO MENOS UM owner
+can(
+  user,
+  ['update:appointment', 'update:appointment:others'],
+  [appointment.patient.id, appointment.specialist?.id || ''],
+);
+```
+
+`compareToId` aceita `string | string[]`. Features com sufixo `:others` **ignoram** a verificação de ownership. `undefined` como `compareToId` pula a verificação de ownership.
 
 ---
 
-## Restrições de ownership em use-cases
+## Features padrão por perfil
 
-Alguns perfis têm acesso restrito aos próprios dados. Essas verificações são feitas nos use-cases, não nos guards:
+Cada perfil recebe um conjunto base de features ao ser criado:
+
+| Perfil       | Features                                                                 |
+| ------------ | ------------------------------------------------------------------------ |
+| Todos        | `read:user`, `update:user`                                               |
+| `member`     | + `read:patient`, `read:patient:others`                                   |
+| `specialist` | + `create:appointment`, `read/update/cancel:appointment`, `read/update/cancel:referral` |
+| `patient`    | + `read/update:patient`, `read:survey`, `read/update/cancel:appointment`, `read/update/cancel:referral` |
+
+Para a lista completa de features disponíveis, veja [permissoes](permissions.md).
+
+---
+
+## Restrições de ownership nos use-cases
+
+Além dos guards globais, use-cases aplicam `can()` para restringir acesso a recursos:
 
 ```typescript
-// Pacientes só visualizam os próprios atendimentos
+// Paciente só vê os próprios atendimentos
 if (user.role === 'patient') {
-  where.patientId = user.id;
+  where.patient = { id: user.id };
 }
 
-// Usuários só atualizam o próprio perfil (exceto admin)
-if (user.id !== targetId && user.role !== 'admin') {
-  throw new ForbiddenException(
-    'Você não tem permissão para atualizar este usuário.',
-  );
-}
+// Especialista só edita os próprios atendimentos (exceto se tiver :others)
+can(user, ['update:appointment', 'update:appointment:others'], appointment.specialist?.id);
 ```

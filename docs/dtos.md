@@ -2,13 +2,29 @@
 
 ## O que é um DTO
 
-DTO (Data Transfer Object) é a classe que representa os dados de entrada ou saída de uma rota. No ABNMO, todos os DTOs são derivados diretamente dos schemas Zod definidos em `/src/domain/schemas`. Nunca são escritos manualmente — a definição dos campos, tipos e validações vive no schema.
+DTO (Data Transfer Object) é a classe que representa os dados de entrada ou saída de uma rota. Todos os DTOs são derivados de schemas Zod via `createZodDto()` — **nunca** são escritos manualmente.
+
+A validação é automática: o `nestjs-zod` intercepta todo `@Body()` e `@Query()` cujo tipo foi criado com `createZodDto()` e valida contra o schema.
+
+---
+
+## Convenção de nomenclatura
+
+| Tipo                 | Padrão                  | Exemplo                       |
+| -------------------- | ----------------------- | ----------------------------- |
+| Body de criação      | `Create{Entity}Body`     | `CreateAppointmentBody`       |
+| Body de atualização  | `Update{Entity}Body`     | `UpdateAppointmentBody`       |
+| Query de listagem    | `Get{Entities}Query`    | `GetAppointmentsQuery`        |
+| Response de listagem | `Get{Entities}Response` | `GetAppointmentsResponse`     |
+| Response de detalhe  | `Get{Entity}Response`   | `GetPatientResponse`          |
+
+> Nunca use o sufixo `Dto` — a convenção é `Body`, `Query` ou `Response`.
 
 ---
 
 ## Criando DTOs
 
-Todos os DTOs de uma feature ficam em um único arquivo `{feature}.dtos.ts`. Use `createZodDto()` da biblioteca `nestjs-zod` para derivar a classe do schema correspondente:
+Todos os DTOs de uma feature ficam em um único arquivo `{feature}.dtos.ts`. Use `createZodDto()` para derivar a classe do schema:
 
 ```typescript
 // src/app/http/appointments/appointments.dtos.ts
@@ -24,59 +40,63 @@ import { getAppointmentsResponseSchema } from '@/domain/schemas/appointments/res
 export class GetAppointmentsQuery extends createZodDto(
   getAppointmentsQuerySchema,
 ) {}
+
 export class GetAppointmentsResponse extends createZodDto(
   getAppointmentsResponseSchema,
 ) {}
-export class CreateAppointmentDto extends createZodDto(
+
+export class CreateAppointmentBody extends createZodDto(
   createAppointmentSchema,
 ) {}
-export class UpdateAppointmentDto extends createZodDto(
+
+export class UpdateAppointmentBody extends createZodDto(
   updateAppointmentSchema,
 ) {}
 ```
 
-O `createZodDto()` cria uma classe com o schema Zod anexado como propriedade estática `.schema`. O `GlobalZodValidationPipe` detecta essa propriedade automaticamente e valida os dados de entrada a cada requisição.
+Uso nos controllers:
+
+```typescript
+@Get()
+async getAppointments(
+  @Query() query: GetAppointmentsQuery,    // validado automaticamente
+  @User() user: RequestUser,
+): Promise<GetAppointmentsResponse> { ... }
+
+@Post()
+async create(
+  @User() user: RequestUser,
+  @Body() body: CreateAppointmentBody,     // validado automaticamente
+): Promise<BaseResponse> { ... }
+```
 
 ---
 
 ## Como funciona a validação
 
-O `GlobalZodValidationPipe` é registrado globalmente em `main.ts`. Ele intercepta todos os parâmetros decorados com `@Body()` e `@Query()`, e:
-
-1. Verifica se o metatipo possui a propriedade `.schema` (ou seja, foi criado com `createZodDto()`).
-2. Chama `schema.parse(value)` no dado recebido.
-3. Em caso de erro, lança `BadRequestException` com o formato padronizado:
+1. O `@Body()` ou `@Query()` recebe o tipo do DTO.
+2. O nestjs-zod detecta que a classe foi criada com `createZodDto()` (possui `.schema`).
+3. Chama `schema.parse(value)` nos dados recebidos.
+4. Em caso de erro, retorna `400` com formato padronizado:
 
 ```json
 {
   "success": false,
   "message": "Os dados enviados são inválidos.",
   "fields": [
-    { "field": "date", "error": "Invalid date" },
-    { "field": "patientId", "error": "Invalid uuid" }
+    { "field": "date", "error": "Invalid input: expected string, received Date" },
+    { "field": "patientId", "error": "Invalid UUID" }
   ]
 }
 ```
 
-Não há necessidade de adicionar pipes manualmente nos controllers — a validação é automática para qualquer DTO criado com `createZodDto()`.
-
----
-
-## Convenção de nomenclatura
-
-| Tipo                 | Padrão                  | Exemplo                   |
-| -------------------- | ----------------------- | ------------------------- |
-| Criação              | `Create{Entity}Dto`     | `CreateAppointmentDto`    |
-| Atualização          | `Update{Entity}Dto`     | `UpdateAppointmentDto`    |
-| Query de listagem    | `Get{Entities}Query`    | `GetAppointmentsQuery`    |
-| Response de listagem | `Get{Entities}Response` | `GetAppointmentsResponse` |
-| Response de detalhe  | `Get{Entity}Response`   | `GetPatientResponse`      |
+**Não é necessário adicionar pipes manualmente** — a validação é automática para qualquer DTO criado com `createZodDto()`.
 
 ---
 
 ## `BaseResponse`
 
-Resposta padrão para rotas que não retornam dados (ex: criação, atualização, cancelamento):
+Resposta padrão para rotas que não retornam dados (criação, atualização, cancelamento):
 
 ```typescript
 // src/common/dtos.ts
@@ -87,11 +107,12 @@ export class BaseResponse extends createZodDto(baseResponseSchema) {}
 // → { success: boolean; message: string }
 ```
 
-Use `BaseResponse` como tipo de retorno de qualquer rota que não precise de `data`:
+Uso:
 
 ```typescript
-async create(@Body() dto: CreateAppointmentDto): Promise<BaseResponse> {
-  await this.createAppointmentUseCase.execute(dto);
+@Post()
+async create(@Body() body: CreateAppointmentBody): Promise<BaseResponse> {
+  await this.createAppointmentUseCase.execute(body);
   return { success: true, message: 'Atendimento cadastrado com sucesso.' };
 }
 ```
@@ -102,5 +123,6 @@ async create(@Body() dto: CreateAppointmentDto): Promise<BaseResponse> {
 
 - Um único arquivo `{feature}.dtos.ts` por feature — nunca criar arquivos separados por DTO.
 - Nunca definir campos manualmente na classe DTO — toda validação vem do schema Zod.
-- Nunca importar schemas de outros domínios para criar DTOs — cada feature usa apenas seus próprios schemas.
-- Para respostas tipadas com `data`, crie um schema de response em `/src/domain/schemas/{feature}/responses.ts` e derive o DTO a partir dele.
+- Nunca importar schemas de outros domínios para criar DTOs — cada feature usa apenas seus schemas.
+- Para respostas tipadas com `data`, crie um schema de response em `responses.ts` e derive o DTO.
+- Nomes seguem `PascalCase` com sufixo funcional: `Body`, `Query` ou `Response`.
