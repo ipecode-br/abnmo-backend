@@ -10,7 +10,7 @@ import { USER_ROLES } from '../enums/users';
 export const nameSchema = z.string().min(3).max(64);
 
 // Maximum email length is 254 characters.
-export const emailSchema = z.string().min(1).max(254).email();
+export const emailSchema = z.email().min(1).max(254);
 
 export const passwordSchema = z.string().min(8).max(64);
 

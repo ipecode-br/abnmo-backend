@@ -23,14 +23,14 @@ export const createUserSchema = z
     if (data.role === 'specialist') {
       if (!data.specialty) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: 'custom',
           path: ['specialty'],
           message: 'Specialty is required when registering a specialist',
         });
       }
       if (!data.registrationId) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: 'custom',
           path: ['registrationId'],
           message:
             'Professional registration is required when registering a specialist',

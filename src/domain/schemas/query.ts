@@ -34,7 +34,7 @@ export function validateEndDate(
 
     if (startDate >= endDate) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: 'It should be greater than <startDate>',
         path: ['endDate'],
       });

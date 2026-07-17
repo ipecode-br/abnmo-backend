@@ -10,15 +10,14 @@ import {
   specialtySchema,
 } from '../shared';
 
-export const appointmentSchema = baseEntitySchema
-  .extend({
-    date: datetimeSchema,
-    status: z.enum(APPOINTMENT_STATUSES).default('scheduled'),
-    category: specialtySchema,
-    condition: patientConditionSchema,
-    annotation: z.string().max(500).nullable(),
-    professionalName: nameSchema.nullable(),
-    createdBy: z.string().uuid(),
-  })
-  .strict();
+export const appointmentSchema = z.strictObject({
+  ...baseEntitySchema.shape,
+  date: datetimeSchema,
+  status: z.enum(APPOINTMENT_STATUSES).default('scheduled'),
+  category: specialtySchema,
+  condition: patientConditionSchema,
+  annotation: z.string().max(500).nullable(),
+  professionalName: nameSchema.nullable(),
+  createdBy: z.uuid(),
+});
 export type AppointmentSchema = z.infer<typeof appointmentSchema>;

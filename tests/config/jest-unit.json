@@ -25,9 +25,7 @@
       }
     ]
   },
-  "transformIgnorePatterns": [
-    "node_modules/(?!@faker-js).+"
-  ],
+  "transformIgnorePatterns": ["node_modules/(?!@faker-js).+"],
   "testTimeout": 5000,
   "maxWorkers": "50%",
   "clearMocks": true,

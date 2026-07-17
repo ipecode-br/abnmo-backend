@@ -20,7 +20,7 @@ import { followUpSurveySchema } from './follow-up';
 import { journeySurveySchema } from './journey';
 
 export const createSurveySchema = z.object({
-  token: z.string().uuid(),
+  token: z.uuid(),
   aboutYou: aboutYouSurveySchema,
   family: familySurveySchema,
   journey: journeySurveySchema,

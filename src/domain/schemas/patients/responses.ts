@@ -36,7 +36,7 @@ export const getPatientOptionsResponseSchema = baseResponseSchema.extend({
   }),
 });
 
-export const patientDetailsResponseSchema = patientSchema.merge(
+export const patientDetailsResponseSchema = patientSchema.extend(
   surveySchema.pick({
     dateOfBirth: true,
     gender: true,
@@ -54,7 +54,7 @@ export const patientDetailsResponseSchema = patientSchema.merge(
     usesVisualCane: true,
     usesWheelchair: true,
     hasMotorSequelae: true,
-  }),
+  }).shape,
 );
 export type PatientDetailsResponse = z.infer<
   typeof patientDetailsResponseSchema

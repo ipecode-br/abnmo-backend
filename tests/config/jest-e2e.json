@@ -23,9 +23,7 @@
       }
     ]
   },
-  "transformIgnorePatterns": [
-    "node_modules/(?!@faker-js).+"
-  ],
+  "transformIgnorePatterns": ["node_modules/(?!@faker-js).+"],
   "testTimeout": 30000,
   "forceExit": true,
   "clearMocks": true,

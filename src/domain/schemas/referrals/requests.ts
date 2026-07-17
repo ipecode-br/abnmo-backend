@@ -20,20 +20,16 @@ import {
 import { specialtySchema } from '../shared';
 import { referralSchema } from '.';
 
-export const createReferralSchema = z
-  .object({
-    patientId: patientSchema.shape.id,
-    category: specialtySchema.optional(),
-  })
-  .merge(
-    referralSchema.pick({
-      date: true,
-      condition: true,
-      annotation: true,
-      professionalName: true,
-    }),
-  )
-  .strict();
+export const createReferralSchema = z.strictObject({
+  patientId: patientSchema.shape.id,
+  category: specialtySchema.optional(),
+  ...referralSchema.pick({
+    date: true,
+    condition: true,
+    annotation: true,
+    professionalName: true,
+  }).shape,
+});
 
 export const updateReferralSchema = referralSchema.pick({
   date: true,
