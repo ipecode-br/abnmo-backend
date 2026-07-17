@@ -53,8 +53,23 @@ import {
 
 export function surveyFactory(
   overrides: Partial<Survey> & { patient: User },
+  options?: { citiesByState?: Record<string, string[]> },
 ): Survey {
-  const selectedState = faker.helpers.arrayElement(BRAZIL_STATES);
+  const { citiesByState } = options ?? {};
+
+  const availableStates = citiesByState
+    ? (Object.keys(citiesByState) as (typeof BRAZIL_STATES)[number][])
+    : BRAZIL_STATES;
+  const selectedState = faker.helpers.arrayElement(availableStates);
+
+  const getRandomCity = (): string => {
+    if (citiesByState) {
+      const cities = citiesByState[selectedState] || [];
+      return faker.helpers.arrayElement(cities);
+    }
+    return faker.location.city();
+  };
+
   const hasLivedElsewhere = faker.datatype.boolean();
   const numberOfChildren = faker.number.int({ min: 0, max: 5 });
   const employmentStatus = faker.helpers.arrayElement(EMPLOYMENT_STATUSES);
@@ -81,7 +96,7 @@ export function surveyFactory(
     maritalStatus: faker.helpers.arrayElement(MARITAL_STATUSES),
     addressCep: faker.string.numeric(8),
     addressState: selectedState,
-    addressCity: faker.location.city(),
+    addressCity: getRandomCity(),
     addressStreet: faker.location.street(),
     addressNumber: faker.datatype.boolean()
       ? faker.number.int({ min: 1, max: 9999 }).toString()
@@ -151,9 +166,7 @@ export function surveyFactory(
         ? faker.string.numeric(8)
         : null,
     diagnosisHospitalState: faker.datatype.boolean() ? selectedState : null,
-    diagnosisHospitalCity: faker.datatype.boolean()
-      ? faker.location.city()
-      : null,
+    diagnosisHospitalCity: faker.datatype.boolean() ? getRandomCity() : null,
     diagnosisHospitalStreet: faker.datatype.boolean()
       ? faker.location.streetAddress()
       : null,
