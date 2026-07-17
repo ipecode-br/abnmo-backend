@@ -4,13 +4,11 @@ import { join } from 'node:path';
 import { DocumentBuilder, OpenAPIObject, SwaggerModule } from '@nestjs/swagger';
 import { cleanupOpenApiDoc } from 'nestjs-zod';
 
-import { applyZodOpenApiPatch } from '@/config/zod-openapi-patch';
 import { EnvService } from '@/env/env.service';
 
 import { createNestApp } from './app';
 
 async function bootstrap(): Promise<void> {
-  applyZodOpenApiPatch();
   const app = await createNestApp();
 
   const config = new DocumentBuilder()

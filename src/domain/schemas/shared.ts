@@ -18,7 +18,17 @@ export const userRoleSchema = z.enum(USER_ROLES);
 
 export const userRegistrationIdSchema = z.string().max(32);
 
-export const datetimeSchema = z.coerce.date();
+export const datetimeSchema = (() => {
+  const schema = z.coerce.date();
+  schema._zod.processJSONSchema = (
+    _ctx: unknown,
+    json: Record<string, string>,
+  ) => {
+    json.type = 'string';
+    json.format = 'date-time';
+  };
+  return schema;
+})();
 
 export const dateSchema = z.string().date();
 
