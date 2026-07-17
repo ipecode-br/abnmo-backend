@@ -37,7 +37,7 @@ describe('DeactivatePatientUseCase', () => {
     useCase = module.get(DeactivatePatientUseCase);
   });
 
-  it('allows with "deactivate:patient"', async () => {
+  it('allows with "deactivate:patient" feature', async () => {
     const user = requestUserFactory({
       role: 'member',
       features: ['deactivate:patient'],
@@ -67,7 +67,7 @@ describe('DeactivatePatientUseCase', () => {
     });
   });
 
-  it('throws "ForbiddenException" without "deactivate:patient"', async () => {
+  it('throws "ForbiddenException" without "deactivate:patient" feature', async () => {
     const user = requestUserFactory({ features: [] });
     usersRepo.findOne.mockResolvedValue(patient);
 

@@ -57,7 +57,7 @@ describe('CreateAppointmentUseCase', () => {
     useCase = module.get(CreateAppointmentUseCase);
   });
 
-  it('allows with "create:appointment"', async () => {
+  it('allows with "create:appointment" feature', async () => {
     usersRepo.findOne.mockResolvedValue({ id: patient.id } as User);
 
     const appointment = appointmentFactory({ patient, category: 'nursing' });
@@ -84,7 +84,7 @@ describe('CreateAppointmentUseCase', () => {
     expect(appointmentsRepo.save).toHaveBeenCalled();
   });
 
-  it('throws "ForbiddenException" without "create:appointment"', async () => {
+  it('throws "ForbiddenException" without "create:appointment" feature', async () => {
     await expect(() =>
       useCase.execute({
         ...dataToCreate,

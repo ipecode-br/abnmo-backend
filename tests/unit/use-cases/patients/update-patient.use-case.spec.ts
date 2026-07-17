@@ -37,7 +37,7 @@ describe('UpdatePatientUseCase', () => {
     useCase = module.get(UpdatePatientUseCase);
   });
 
-  it('allows with "update:patient"', async () => {
+  it('allows with "update:patient" feature', async () => {
     const user = requestUserFactory({
       id: patient.id,
       role: 'member',
@@ -86,7 +86,7 @@ describe('UpdatePatientUseCase', () => {
     expect(usersRepo.update).toHaveBeenCalled();
   });
 
-  it('throws "ForbiddenException" without "update:patient"', async () => {
+  it('throws "ForbiddenException" without "update:patient" feature', async () => {
     const user = requestUserFactory({ features: [] });
     usersRepo.findOne.mockResolvedValue(patient);
 

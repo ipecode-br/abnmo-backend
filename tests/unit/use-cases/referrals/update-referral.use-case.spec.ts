@@ -54,7 +54,7 @@ describe('UpdateReferralUseCase', () => {
     useCase = module.get(UpdateReferralUseCase);
   });
 
-  it('allows with "update:referral:others"', async () => {
+  it('allows with "update:referral:others" feature', async () => {
     const user = requestUserFactory({
       role: 'member',
       features: ['update:referral:others'],
@@ -73,7 +73,7 @@ describe('UpdateReferralUseCase', () => {
     });
   });
 
-  it('throws ForbiddenException without "update:referral" or "update:referral:others"', async () => {
+  it('throws ForbiddenException without "update:referral" or "update:referral:others" feature', async () => {
     const user = requestUserFactory({ features: [] });
     referralsRepo.findOne.mockResolvedValue(referral);
 
@@ -83,7 +83,7 @@ describe('UpdateReferralUseCase', () => {
   });
 
   describe('Specialist', () => {
-    it('allows with "update:referral:others"', async () => {
+    it('allows with "update:referral:others" feature', async () => {
       const user = requestUserFactory({
         id: specialist.id,
         role: specialist.role,
@@ -103,7 +103,7 @@ describe('UpdateReferralUseCase', () => {
       });
     });
 
-    it('allows with "update:referral:others"', async () => {
+    it('allows with "update:referral:others" feature', async () => {
       const user = requestUserFactory({
         id: 'other-id',
         role: specialist.role,
@@ -122,7 +122,7 @@ describe('UpdateReferralUseCase', () => {
   });
 
   describe('Patient', () => {
-    it('allows with "update:referral" to update its own referral', async () => {
+    it('allows with "update:referral" feature to update its own referral', async () => {
       const user = requestUserFactory({
         id: patient.id,
         role: patient.role,
@@ -139,7 +139,7 @@ describe('UpdateReferralUseCase', () => {
       });
     });
 
-    it('throws ForbiddenException without "update:referral"', async () => {
+    it('throws ForbiddenException without "update:referral" feature', async () => {
       const user = requestUserFactory({
         id: patient.id,
         role: patient.role,

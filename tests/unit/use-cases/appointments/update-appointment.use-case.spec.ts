@@ -53,7 +53,7 @@ describe('UpdateAppointmentUseCase', () => {
     useCase = module.get(UpdateAppointmentUseCase);
   });
 
-  it('allows with "update:appointment:others"', async () => {
+  it('allows with "update:appointment:others" feature', async () => {
     const user = requestUserFactory({
       features: ['update:appointment:others'],
     });
@@ -70,7 +70,7 @@ describe('UpdateAppointmentUseCase', () => {
     );
   });
 
-  it('throws "ForbiddenException" without "update:appointment" or "update:appointment:others"', async () => {
+  it('throws "ForbiddenException" without "update:appointment" or "update:appointment:others" feature', async () => {
     const user = requestUserFactory({ features: [] });
     appointmentsRepo.findOne.mockResolvedValue(appointment);
 
@@ -80,7 +80,7 @@ describe('UpdateAppointmentUseCase', () => {
   });
 
   describe('Specialist', () => {
-    it('allows with "update:appointment:others" when specialist does not own the appointment', async () => {
+    it('allows with "update:appointment:others" feature when specialist does not own the appointment', async () => {
       const user = requestUserFactory({
         id: specialist.id,
         role: specialist.role,
@@ -99,7 +99,7 @@ describe('UpdateAppointmentUseCase', () => {
       );
     });
 
-    it('throws "ForbiddenException" when specialist does not own or have "update:appointment:others"', async () => {
+    it('throws "ForbiddenException" when specialist does not own or have "update:appointment:others" feature', async () => {
       const user = requestUserFactory({
         role: specialist.role,
         features: ['update:appointment'],
@@ -113,7 +113,7 @@ describe('UpdateAppointmentUseCase', () => {
   });
 
   describe('Patient', () => {
-    it('allows with "update:appointment" when patient owns the appointment', async () => {
+    it('allows with "update:appointment" feature when patient owns the appointment', async () => {
       const user = requestUserFactory({
         id: patient.id,
         role: patient.role,

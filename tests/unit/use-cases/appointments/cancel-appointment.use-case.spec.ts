@@ -47,7 +47,7 @@ describe('CancelAppointmentUseCase', () => {
     useCase = module.get(CancelAppointmentUseCase);
   });
 
-  it('allows with "cancel:appointment:others"', async () => {
+  it('allows with "cancel:appointment:others" feature', async () => {
     const user = requestUserFactory({
       role: 'member',
       features: ['cancel:appointment:others'],
@@ -64,7 +64,7 @@ describe('CancelAppointmentUseCase', () => {
     });
   });
 
-  it('throws "ForbiddenException" without "cancel:appointment" or "cancel:appointment:others"', async () => {
+  it('throws "ForbiddenException" without "cancel:appointment" or "cancel:appointment:others" feature', async () => {
     const user = requestUserFactory({ features: [] });
     appointmentsRepo.findOne.mockResolvedValue(appointment);
 
@@ -74,7 +74,7 @@ describe('CancelAppointmentUseCase', () => {
   });
 
   describe('Specialist', () => {
-    it('allows with "cancel:appointment"', async () => {
+    it('allows with "cancel:appointment" feature', async () => {
       const user = requestUserFactory({
         id: specialist.id,
         role: specialist.role,
@@ -92,7 +92,7 @@ describe('CancelAppointmentUseCase', () => {
       });
     });
 
-    it('allows with "cancel:appointment:others"', async () => {
+    it('allows with "cancel:appointment:others" feature', async () => {
       const user = requestUserFactory({
         id: 'other-id',
         role: specialist.role,
@@ -109,7 +109,7 @@ describe('CancelAppointmentUseCase', () => {
   });
 
   describe('Patient', () => {
-    it('allows with "cancel:appointment" to cancel its own appointment', async () => {
+    it('allows with "cancel:appointment" feature to cancel its own appointment', async () => {
       const user = requestUserFactory({
         id: patient.id,
         role: patient.role,
@@ -124,7 +124,7 @@ describe('CancelAppointmentUseCase', () => {
       });
     });
 
-    it('throws "ForbiddenException" without "cancel:appointment"', async () => {
+    it('throws "ForbiddenException" without "cancel:appointment" feature', async () => {
       const user = requestUserFactory({
         id: patient.id,
         role: patient.role,

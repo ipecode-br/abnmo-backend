@@ -96,7 +96,7 @@ describe('Users (e2e)', () => {
       expect(res.body.data.email).toBe(member.email);
     });
 
-    it('cannot get own profile without "read:user"', async () => {
+    it('cannot get own profile without "read:user" feature', async () => {
       const { cookies } = await createMember({ login: true, features: [] });
 
       const res = await api.get('/users/me', undefined, { cookies });
@@ -230,7 +230,7 @@ describe('Users (e2e)', () => {
       expect(res.body.message).toBe('Usuário não encontrado.');
     });
 
-    it('cannot update without "update:user" or "update:user:others"', async () => {
+    it('blocks user without "update:user" or "update:user:others" feature', async () => {
       const { cookies } = await createMember({ login: true });
 
       const res = await api.put<BaseResponseBody, UpdateUserBody>(
@@ -246,7 +246,7 @@ describe('Users (e2e)', () => {
       );
     });
 
-    it('cannot update another user without "update:user:others"', async () => {
+    it('cannot update another user without "update:user:others" feature', async () => {
       const { cookies } = await createMember({
         login: true,
         features: ['update:user'],

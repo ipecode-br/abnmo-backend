@@ -379,7 +379,7 @@ describe('Surveys (e2e)', () => {
       expect(res.body.data.surveys[0].email).toBe(patientB.email);
     });
 
-    it('cannot list surveys without "read:survey:others"', async () => {
+    it('blocks user without "read:survey:others" feature', async () => {
       const { cookies } = await createMember({ login: true, features: [] });
 
       const res = await api.get(

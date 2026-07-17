@@ -47,7 +47,7 @@ describe('CancelReferralUseCase', () => {
     useCase = module.get(CancelReferralUseCase);
   });
 
-  it('allows with "cancel:referral:others"', async () => {
+  it('allows with "cancel:referral:others" feature', async () => {
     const user = requestUserFactory({
       role: 'member',
       features: ['cancel:referral:others'],
@@ -64,7 +64,7 @@ describe('CancelReferralUseCase', () => {
     });
   });
 
-  it('throws "ForbiddenException" without "cancel:referral" or "cancel:referral:others"', async () => {
+  it('throws "ForbiddenException" without "cancel:referral" or "cancel:referral:others" feature', async () => {
     const user = requestUserFactory({ features: [] });
     referralsRepo.findOne.mockResolvedValue(referral);
 
@@ -74,7 +74,7 @@ describe('CancelReferralUseCase', () => {
   });
 
   describe('Specialist', () => {
-    it('allows with "cancel:referral:others"', async () => {
+    it('allows with "cancel:referral:others" feature', async () => {
       const user = requestUserFactory({
         id: specialist.id,
         role: specialist.role,
@@ -92,7 +92,7 @@ describe('CancelReferralUseCase', () => {
       });
     });
 
-    it('allows with "cancel:referral:others"', async () => {
+    it('allows with "cancel:referral:others" feature', async () => {
       const user = requestUserFactory({
         id: 'other-id',
         role: specialist.role,
@@ -109,7 +109,7 @@ describe('CancelReferralUseCase', () => {
   });
 
   describe('Patient', () => {
-    it('allows with "cancel:referral" to cancel its own referral', async () => {
+    it('allows with "cancel:referral" feature to cancel its own referral', async () => {
       const user = requestUserFactory({
         id: patient.id,
         role: patient.role,
@@ -124,7 +124,7 @@ describe('CancelReferralUseCase', () => {
       });
     });
 
-    it('throws ForbiddenException without "cancel:referral"', async () => {
+    it('throws ForbiddenException without "cancel:referral" feature', async () => {
       const user = requestUserFactory({
         id: patient.id,
         role: patient.role,

@@ -47,7 +47,7 @@ describe('GetAppointmentsUseCase', () => {
     useCase = module.get(GetAppointmentsUseCase);
   });
 
-  it('allows with "read:appointment" or "read:appointment:others"', async () => {
+  it('allows with "read:appointment" or "read:appointment:others" feature', async () => {
     appointmentsRepo.count.mockResolvedValue(0);
     appointmentsRepo.find.mockResolvedValue([]);
 
@@ -121,7 +121,7 @@ describe('GetAppointmentsUseCase', () => {
     );
   });
 
-  it('throws "ForbiddenException" without "read:appointment" or "read:appointment:others"', async () => {
+  it('throws "ForbiddenException" without "read:appointment" or "read:appointment:others" feature', async () => {
     const notAllowedUser = requestUserFactory({ features: [] });
 
     await expect(() =>
