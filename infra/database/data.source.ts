@@ -1,7 +1,7 @@
 import { config } from 'dotenv';
 import { DataSource } from 'typeorm';
-import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
+import { SnakeNamingStrategy } from '@/config/snake-naming.strategy';
 import { DATABASE_ENTITIES } from '@/domain/entities/database';
 
 const envFile = process.env.NODE_ENV === 'test' ? '.env.test' : '.env';

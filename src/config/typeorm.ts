@@ -1,8 +1,9 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
 import { DATABASE_ENTITIES } from '@/domain/entities/database';
 import { EnvService } from '@/env/env.service';
+
+import { SnakeNamingStrategy } from './snake-naming.strategy';
 
 export function getTypeOrmConfig(env: EnvService): TypeOrmModuleOptions {
   const isLambda = env.get('APP_ENVIRONMENT') === 'lambda';
