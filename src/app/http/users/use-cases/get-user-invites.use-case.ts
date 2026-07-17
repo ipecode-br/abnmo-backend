@@ -22,8 +22,8 @@ interface GetUserInvitesUseCaseInput {
   page: number;
   perPage: number;
   search?: string;
-  startDate?: string;
-  endDate?: string;
+  startDate?: Date;
+  endDate?: Date;
   order?: QueryOrder;
   orderBy?: UserInvitesOrderBy;
 }

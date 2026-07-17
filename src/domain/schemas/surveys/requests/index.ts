@@ -11,7 +11,7 @@ import {
   querySearchSchema,
   validateEndDate,
 } from '../../query';
-import { supportContactSchema } from '../../shared';
+import { supportContactSchema, uuidSchema } from '../../shared';
 import { aboutYouSurveySchema } from './about-you';
 import { dailyLifeSurveySchema } from './daily-life';
 import { diagnosisSurveySchema } from './diagnosis';
@@ -20,7 +20,7 @@ import { followUpSurveySchema } from './follow-up';
 import { journeySurveySchema } from './journey';
 
 export const createSurveySchema = z.object({
-  token: z.uuid(),
+  token: uuidSchema,
   aboutYou: aboutYouSurveySchema,
   family: familySurveySchema,
   journey: journeySurveySchema,

@@ -17,8 +17,8 @@ interface GetPatientRequirementsByPatientIdUseCaseInput {
   page: number;
   perPage: number;
   status?: PatientRequirementStatus;
-  startDate?: string;
-  endDate?: string;
+  startDate?: Date;
+  endDate?: Date;
 }
 
 interface GetPatientRequirementsByPatientIdUseCaseOutput {

@@ -25,7 +25,7 @@ interface GetAppointmentsUseCaseInput {
   user: RequestUser;
   category?: SpecialtyCategory;
   condition?: PatientCondition;
-  endDate?: string;
+  endDate?: Date;
   limit?: number;
   order?: QueryOrder;
   orderBy?: AppointmentsOrderBy;
@@ -33,7 +33,7 @@ interface GetAppointmentsUseCaseInput {
   patientId?: string;
   perPage: number;
   search?: string;
-  startDate?: string;
+  startDate?: Date;
   status?: AppointmentStatus;
 }
 

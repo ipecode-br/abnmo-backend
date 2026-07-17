@@ -19,8 +19,8 @@ interface GetTotalSurveySubmissionsUseCaseInput {
   user: RequestUser;
   status?: SurveySubmissionStatus;
   period?: QueryPeriod;
-  startDate?: string;
-  endDate?: string;
+  startDate?: Date;
+  endDate?: Date;
 }
 
 @Injectable()

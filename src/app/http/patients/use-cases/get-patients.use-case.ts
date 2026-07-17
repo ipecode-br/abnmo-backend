@@ -26,8 +26,8 @@ interface GetPatientsUseCaseInput {
   order?: QueryOrder;
   orderBy?: PatientsOrderBy;
   status?: UserStatus;
-  startDate?: string;
-  endDate?: string;
+  startDate?: Date;
+  endDate?: Date;
 }
 
 interface GetPatientsUseCaseOutput {

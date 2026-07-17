@@ -24,8 +24,8 @@ interface GetSurveysUseCaseInput {
   search?: string;
   status?: SurveyStatus;
   period?: QueryPeriod;
-  startDate?: string;
-  endDate?: string;
+  startDate?: Date;
+  endDate?: Date;
   order?: QueryOrder;
   orderBy?: SurveysOrderBy;
 }

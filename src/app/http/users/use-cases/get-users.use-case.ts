@@ -24,8 +24,8 @@ interface GetUsersUseCaseInput {
   search?: string;
   role?: UserRole;
   status?: UserStatus;
-  startDate?: string;
-  endDate?: string;
+  startDate?: Date;
+  endDate?: Date;
   order?: QueryOrder;
   orderBy?: UsersOrderBy;
 }

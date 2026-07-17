@@ -7,6 +7,8 @@ import { SPECIALTY_CATEGORIES } from '../enums/shared';
 import { KINSHIP_TYPES } from '../enums/surveys';
 import { USER_ROLES } from '../enums/users';
 
+export const uuidSchema = z.uuid({ version: 'v7' });
+
 export const nameSchema = z.string().min(3).max(64);
 
 // Maximum email length is 254 characters.
@@ -18,19 +20,16 @@ export const userRoleSchema = z.enum(USER_ROLES);
 
 export const userRegistrationIdSchema = z.string().max(32);
 
-export const datetimeSchema = (() => {
-  const schema = z.coerce.date();
-  schema._zod.processJSONSchema = (
-    _ctx: unknown,
-    json: Record<string, string>,
-  ) => {
-    json.type = 'string';
-    json.format = 'date-time';
-  };
-  return schema;
-})();
+export const dateSchema = z.iso.date();
 
-export const dateSchema = z.string().date();
+export const datetimeSchema = z.codec(
+  z.iso.datetime(), // input schema: ISO date string
+  z.date(), // output schema: Date object
+  {
+    decode: (isoString) => new Date(isoString), // ISO string → Date
+    encode: (date) => date.toISOString(), // Date → ISO string
+  },
+);
 
 export const cpfSchema = z
   .string()

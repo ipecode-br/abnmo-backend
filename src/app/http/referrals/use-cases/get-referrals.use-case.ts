@@ -25,7 +25,7 @@ interface GetReferralsUseCaseInput {
   user: RequestUser;
   category?: SpecialtyCategory;
   condition?: PatientCondition;
-  endDate?: string;
+  endDate?: Date;
   limit?: number;
   order?: QueryOrder;
   orderBy?: ReferralsOrderBy;
@@ -33,7 +33,7 @@ interface GetReferralsUseCaseInput {
   patientId?: string;
   perPage: number;
   search?: string;
-  startDate?: string;
+  startDate?: Date;
   status?: ReferralStatus;
 }
 

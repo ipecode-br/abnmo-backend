@@ -12,7 +12,7 @@ export function baseEntityFactory() {
 }
 
 export function idFactory(): string {
-  return faker.string.uuid();
+  return faker.string.uuid({ version: 7 });
 }
 
 export function nameFactory(): string {
