@@ -38,7 +38,7 @@ export class User extends BaseEntity implements UserSchema {
   @Column({ type: 'enum', enum: USER_ROLES })
   role: UserRole;
 
-  @Column({ type: 'json' })
+  @Column({ type: 'text', array: true, default: [] })
   features: UserFeature[] = [];
 
   @Column({ type: 'enum', enum: USER_STATUSES, default: 'active' })
@@ -56,7 +56,7 @@ export class User extends BaseEntity implements UserSchema {
   @Column({ type: 'varchar', length: 15, nullable: true })
   susId: string | null;
 
-  @Column({ type: 'json', nullable: true })
+  @Column({ type: 'jsonb', nullable: true })
   supportContacts: SupportContact[] | null;
 
   @OneToMany(() => Document, (document) => document.user)

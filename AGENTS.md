@@ -157,6 +157,7 @@ Import the inferred schema type from `responses.ts`, use it as the return type, 
 ## Database
 
 - **synchronize: false** — migrations only
+- **Migration file naming**: kebab-case only, e.g. `add-x-column-to-users.ts` — never CamelCase like `AddXColumnToUsers`
 - Naming: `SnakeNamingStrategy` (columns auto-convert to snake_case)
 - Inject `Repository<T>` directly in use-cases (no repository layer). For multi-table transactions, inject `DataSource`.
 - Always use `.create()` then `.save()` (two steps), never `repository.save()` directly.

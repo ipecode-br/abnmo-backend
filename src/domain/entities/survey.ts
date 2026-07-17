@@ -131,7 +131,7 @@ export class Survey extends BaseEntity implements SurveySchema {
   @Column({ type: 'int', default: 0 })
   numberOfChildren: number;
 
-  @Column({ type: 'json', nullable: true })
+  @Column({ type: 'int', array: true, nullable: true })
   childrenAges: number[] | null;
 
   @Column({
@@ -159,8 +159,8 @@ export class Survey extends BaseEntity implements SurveySchema {
   @Column({ type: 'enum', enum: HOME_ACCESS_LEVELS })
   homeAccessLevel: HomeAccessLevel;
 
-  @Column({ type: 'json' })
-  transportModes: TransportMode[];
+  @Column({ type: 'text', array: true, default: [] })
+  transportModes: TransportMode[] = [];
 
   // Journey
 
@@ -205,11 +205,11 @@ export class Survey extends BaseEntity implements SurveySchema {
   @Column({ type: 'enum', enum: DIAGNOSIS_TYPES })
   diagnosis: DiagnosisType;
 
-  @Column({ type: 'json' })
-  firstCrisisSymptoms: FirstCrisisSymptom[];
+  @Column({ type: 'text', array: true, default: [] })
+  firstCrisisSymptoms: FirstCrisisSymptom[] = [];
 
-  @Column({ type: 'json' })
-  affectedAreas: AffectedArea[];
+  @Column({ type: 'text', array: true, default: [] })
+  affectedAreas: AffectedArea[] = [];
 
   @Column({ type: 'varchar', length: 128, nullable: true })
   diagnosingDoctorName: string | null;
@@ -244,8 +244,8 @@ export class Survey extends BaseEntity implements SurveySchema {
   @Column({ type: 'varchar', length: 8, nullable: true })
   currentTreatmentHospitalCep: string | null;
 
-  @Column({ type: 'json' })
-  specialistsBeforeDiagnosis: SpecialtyBeforeDiagnosis[];
+  @Column({ type: 'text', array: true, default: [] })
+  specialistsBeforeDiagnosis: SpecialtyBeforeDiagnosis[] = [];
 
   @Column({ type: 'int' })
   timeToDiagnosis: number;
@@ -276,10 +276,10 @@ export class Survey extends BaseEntity implements SurveySchema {
 
   // Follow-up
 
-  @Column({ type: 'json' })
-  followUpSpecialties: FollowUpSpecialty[];
+  @Column({ type: 'text', array: true, default: [] })
+  followUpSpecialties: FollowUpSpecialty[] = [];
 
-  @Column({ type: 'json' })
+  @Column({ type: 'text', array: true, default: [] })
   otherFollowUpProfessionals: string[] = [];
 
   @Column({ type: 'enum', enum: FOLLOW_UP_HOW })
@@ -288,7 +288,7 @@ export class Survey extends BaseEntity implements SurveySchema {
   @Column('boolean')
   hasHealthInsurance: boolean;
 
-  @Column({ type: 'json' })
+  @Column({ type: 'text', array: true, default: [] })
   nmoMedications: string[] = [];
 
   @Column({ type: 'int', nullable: true })
@@ -297,7 +297,7 @@ export class Survey extends BaseEntity implements SurveySchema {
   @Column({ type: 'enum', enum: LEGAL_ACTIONS })
   legalActionForMedication: LegalAction;
 
-  @Column({ type: 'json' })
+  @Column({ type: 'text', array: true, default: [] })
   generalMedications: string[] = [];
 
   @Column('boolean')
@@ -309,7 +309,7 @@ export class Survey extends BaseEntity implements SurveySchema {
   @Column({ type: 'enum', enum: DAILY_ACTIVITY_ASSISTANCES, nullable: true })
   visualImpairmentAssistance: DailyActivityAssistance | null;
 
-  @Column({ type: 'json' })
+  @Column({ type: 'text', array: true, default: [] })
   visualAssistiveTechnologies: VisualAssistiveTechnology[] = [];
 
   @Column('boolean')
@@ -374,8 +374,8 @@ export class Survey extends BaseEntity implements SurveySchema {
   @Column({ type: 'enum', enum: EXERCISES_BEFORE_NMO, nullable: true })
   exercisesBeforeNmo: ExerciseBeforeNmo | null;
 
-  @Column({ type: 'json' })
-  informationSources: InformationSource[];
+  @Column({ type: 'text', array: true, default: [] })
+  informationSources: InformationSource[] = [];
 
   @Column({ type: 'varchar', length: 800 })
   lifePerception: string;
