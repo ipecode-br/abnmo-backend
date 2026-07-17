@@ -5,6 +5,7 @@ import { DATABASE_ENTITIES } from '@/domain/entities/database';
 import { EnvService } from '@/env/env.service';
 
 export function getTypeOrmConfig(env: EnvService): TypeOrmModuleOptions {
+  const isLambda = env.get('APP_ENVIRONMENT') === 'lambda';
   const isTestEnv = env.get('NODE_ENV') === 'test';
 
   const baseConfig: TypeOrmModuleOptions = {
@@ -25,17 +26,26 @@ export function getTypeOrmConfig(env: EnvService): TypeOrmModuleOptions {
     retryAttempts: 1,
     retryDelay: 500,
     extra: {
-      max: 20,
+      max: isLambda ? 1 : 20,
       connectionTimeoutMillis: 2000,
+      idleTimeoutMillis: 1000,
+      keepAlive: true,
+      keepAliveInitialDelayMillis: 0,
     },
   };
 
   if (isTestEnv) {
     return {
       ...baseConfig,
+      schema: 'test',
       cache: false,
       extra: {
-        ...baseConfig.extra,
+        max: 5,
+        connectionTimeoutMillis: 2000,
+        idleTimeoutMillis: 1000,
+        keepAlive: true,
+        keepAliveInitialDelayMillis: 0,
+        options: '-c search_path=test,public',
       },
     };
   }

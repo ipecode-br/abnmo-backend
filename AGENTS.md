@@ -1,6 +1,6 @@
 # ABNMO Backend — Agent Guide
 
-NestJS + TypeORM + MySQL + Zod API.
+NestJS + TypeORM + PostgreSQL + Zod API.
 
 ## Quick commands
 
@@ -158,6 +158,7 @@ Import the inferred schema type from `responses.ts`, use it as the return type, 
 
 - **synchronize: false** — migrations only
 - **Migration file naming**: kebab-case only, e.g. `add-x-column-to-users.ts` — never CamelCase like `AddXColumnToUsers`
+- **Migration schema-agnosticism**: when generating migrations (always against the `public` schema), remove any `"public"."` qualifiers from CREATE/DROP TYPE, DROP INDEX, and enum column references so the same migration runs on both `public` (dev) and `test` (test) schemas via `search_path`
 - Naming: `SnakeNamingStrategy` (columns auto-convert to snake_case)
 - Inject `Repository<T>` directly in use-cases (no repository layer). For multi-table transactions, inject `DataSource`.
 - Always use `.create()` then `.save()` (two steps), never `repository.save()` directly.
@@ -179,15 +180,16 @@ Import the inferred schema type from `responses.ts`, use it as the return type, 
 | Unit  | `tests/config/jest-unit.json` | `tests/**/*.spec.ts`         | ~50   | Yes      |
 | E2E   | `tests/config/jest-e2e.json`  | `tests/e2e/**/*.e2e-spec.ts` | 8     | No       |
 
-Unit tests use mocked repositories, no database. E2E tests run against a real Docker MySQL instance on port 3307 (see `.env.test`).
+Unit tests use mocked repositories, no database. E2E tests run against the same PostgreSQL database as development, but in a separate `test` schema (see `.env.test`). Schema isolation uses PostgreSQL `search_path`; TypeORM migrations are kept schema-agnostic by removing `"public"."` qualifiers.
 
 ### E2E infrastructure
 
-1. `test:prepare` — starts Docker MySQL container (`infra/docker/compose-test.yaml`), waits for it, runs TypeORM migrations
-2. `test:e2e` — `jest --config jest-e2e.json --runInBand` (single worker, `maxWorkers: 1`)
-3. Global `beforeAll` in `tests/config/setup-e2e.ts` creates the NestJS app once, caches it on `global.__E2E_APP__`
-4. Global `beforeEach` deletes all rows from every table via `DELETE FROM` (not `TRUNCATE`, which is slower DDL)
-5. Test files call `getTestApp()` and `createApiClient(app)` to get a supertest wrapper
+1. `test:prepare` — ensures dev DB container is up, then creates `test` schema and runs TypeORM migrations inside it
+2. `test:reset` — drops and recreates the `test` schema (useful after schema drift)
+3. `test:e2e` — `jest --config jest-e2e.json --runInBand` (single worker, `maxWorkers: 1`)
+4. Global `beforeAll` in `tests/config/setup-e2e.ts` creates the NestJS app once, caches it on `global.__E2E_APP__`
+5. Global `beforeEach` deletes all rows from every table via `TRUNCATE TABLE ... CASCADE`
+6. Test files call `getTestApp()` and `createApiClient(app)` to get a supertest wrapper
 
 ### Auth helpers
 

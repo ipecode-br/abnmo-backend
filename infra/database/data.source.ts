@@ -7,6 +7,8 @@ import { DATABASE_ENTITIES } from '@/domain/entities/database';
 const envFile = process.env.NODE_ENV === 'test' ? '.env.test' : '.env';
 config({ path: envFile });
 
+const isTestEnv = process.env.NODE_ENV === 'test';
+
 const dataSource = new DataSource({
   type: 'postgres',
   host: process.env.DB_HOST,
@@ -22,6 +24,11 @@ const dataSource = new DataSource({
   entities: DATABASE_ENTITIES,
   synchronize: false,
   namingStrategy: new SnakeNamingStrategy(),
+  ...(isTestEnv && {
+    extra: {
+      options: '-c search_path=test,public',
+    },
+  }),
 });
 
 export default dataSource;
