@@ -59,6 +59,8 @@ export class GetReferralsUseCase {
     search,
     status,
     user,
+    startDate,
+    endDate,
     ...props
   }: GetReferralsUseCaseInput): Promise<GetReferralsUseCaseOutput> {
     can(user, ['read:referral', 'read:referral:others']);
@@ -71,9 +73,11 @@ export class GetReferralsUseCase {
       condition: 'condition',
       professional: 'professionalName',
     };
-
-    const startDate = props.startDate ? new Date(props.startDate) : null;
-    const endDate = props.endDate ? new Date(props.endDate) : null;
+    const orderBy = ORDER_BY_MAPPING[props.orderBy || 'date'];
+    const order =
+      orderBy === 'patient'
+        ? { patient: { name: props.order } }
+        : { [orderBy]: props.order };
 
     const where: FindOptionsWhere<Referral> = {};
 
@@ -114,12 +118,6 @@ export class GetReferralsUseCase {
     }
 
     const total = await this.referralsRepository.count({ where });
-
-    const orderBy = ORDER_BY_MAPPING[props.orderBy || 'date'];
-    const order =
-      orderBy === 'patient'
-        ? { patient: { name: props.order } }
-        : { [orderBy]: props.order };
 
     const referrals = await this.referralsRepository.find({
       select: {

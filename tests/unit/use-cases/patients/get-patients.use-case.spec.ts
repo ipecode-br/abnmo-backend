@@ -134,8 +134,8 @@ describe('GetPatientsUseCase', () => {
   });
 
   it('applies date range filters when both startDate and endDate are provided', async () => {
-    const startDate = '2024-01-01';
-    const endDate = '2024-12-31';
+    const startDate = new Date('2024-01-01');
+    const endDate = new Date('2024-12-31');
     usersRepo.find.mockResolvedValue([]);
     usersRepo.count.mockResolvedValue(0);
 
@@ -157,7 +157,7 @@ describe('GetPatientsUseCase', () => {
   });
 
   it('applies MoreThanOrEqual when only startDate is provided', async () => {
-    const startDate = '2024-01-01';
+    const startDate = new Date('2024-01-01');
     usersRepo.find.mockResolvedValue([]);
     usersRepo.count.mockResolvedValue(0);
 
@@ -173,7 +173,7 @@ describe('GetPatientsUseCase', () => {
   });
 
   it('applies LessThanOrEqual when only endDate is provided', async () => {
-    const endDate = '2024-12-31';
+    const endDate = new Date('2024-12-31');
     usersRepo.find.mockResolvedValue([]);
     usersRepo.count.mockResolvedValue(0);
 

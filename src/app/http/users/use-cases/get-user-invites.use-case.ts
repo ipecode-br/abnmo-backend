@@ -45,6 +45,8 @@ export class GetUserInvitesUseCase {
     page,
     perPage,
     user,
+    startDate,
+    endDate,
     ...props
   }: GetUserInvitesUseCaseInput): Promise<GetUserInvitesUseCaseOutput> {
     can(user, 'read:user_invite');
@@ -53,9 +55,7 @@ export class GetUserInvitesUseCase {
       email: 'email',
       date: 'createdAt',
     };
-
-    const startDate = props.startDate ? new Date(props.startDate) : null;
-    const endDate = props.endDate ? new Date(props.endDate) : null;
+    const orderBy = ORDER_BY_MAPPING[props.orderBy || 'date'];
 
     const where: FindOptionsWhere<Token> = {
       type: TOKENS.inviteUser,
@@ -78,8 +78,6 @@ export class GetUserInvitesUseCase {
     }
 
     const total = await this.tokensRepository.count({ where });
-
-    const orderBy = ORDER_BY_MAPPING[props.orderBy || 'date'];
 
     const result = await this.tokensRepository.find({
       select: {

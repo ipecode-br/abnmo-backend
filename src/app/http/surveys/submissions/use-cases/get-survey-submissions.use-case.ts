@@ -50,6 +50,8 @@ export class GetSurveySubmissionsUseCase {
     status,
     page,
     perPage,
+    startDate,
+    endDate,
     ...props
   }: GetSurveySubmissionsUseCaseInput): Promise<GetSurveySubmissionsUseCaseOutput> {
     can(user, 'read:survey:others');
@@ -63,9 +65,11 @@ export class GetSurveySubmissionsUseCase {
       status: 'status',
       date: 'createdAt',
     };
-
-    const startDate = props.startDate ? new Date(props.startDate) : null;
-    const endDate = props.endDate ? new Date(props.endDate) : null;
+    const orderBy = ORDER_BY_MAPPING[props.orderBy || 'date'];
+    const shouldOrderByUser = orderBy === 'name' || orderBy === 'email';
+    const order = shouldOrderByUser
+      ? { patient: { [orderBy]: props.order } }
+      : { [orderBy]: props.order };
 
     const where: FindOptionsWhere<SurveySubmission> = {};
 
@@ -94,9 +98,6 @@ export class GetSurveySubmissionsUseCase {
       where,
     });
 
-    const orderBy = ORDER_BY_MAPPING[props.orderBy || 'date'];
-    const shouldOrderByUser = orderBy === 'name' || orderBy === 'email';
-
     const result = await this.surveySubmissionsRepository.find({
       relations: { patient: true, document: true },
       select: {
@@ -107,11 +108,9 @@ export class GetSurveySubmissionsUseCase {
         patient: { id: true, name: true, email: true, phone: true },
         document: { name: true, url: true },
       },
-      order: shouldOrderByUser
-        ? { patient: { [orderBy]: props.order } }
-        : { [orderBy]: props.order },
       skip: (page - 1) * perPage,
       take: perPage,
+      order,
       where,
     });
 

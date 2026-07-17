@@ -102,8 +102,8 @@ describe('GetUserInvitesUseCase', () => {
       user,
       page: 1,
       perPage: 10,
-      startDate: '2024-01-01',
-      endDate: '2024-12-31',
+      startDate: new Date('2024-01-01'),
+      endDate: new Date('2024-12-31'),
     });
 
     expect(tokensRepo.count).toHaveBeenCalled();

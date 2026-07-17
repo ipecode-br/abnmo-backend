@@ -139,8 +139,8 @@ describe('GetSurveysUseCase', () => {
     it('filters by date range', async () => {
       repo.find.mockResolvedValue([]);
       repo.count.mockResolvedValue(0);
-      const startDate = '2024-01-01';
-      const endDate = '2024-12-31';
+      const startDate = new Date('2024-01-01');
+      const endDate = new Date('2024-12-31');
 
       await useCase.execute({
         user: adminUser,
@@ -165,7 +165,7 @@ describe('GetSurveysUseCase', () => {
         user: adminUser,
         page: 1,
         perPage: 10,
-        startDate: '2024-01-01',
+        startDate: new Date('2024-01-01'),
       });
 
       expect(repo.count).toHaveBeenCalledWith(
@@ -183,7 +183,7 @@ describe('GetSurveysUseCase', () => {
         user: adminUser,
         page: 1,
         perPage: 10,
-        endDate: '2024-12-31',
+        endDate: new Date('2024-12-31'),
       });
 
       expect(repo.count).toHaveBeenCalledWith(

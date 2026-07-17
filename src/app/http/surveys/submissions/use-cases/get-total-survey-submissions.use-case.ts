@@ -51,15 +51,15 @@ export class GetTotalSurveySubmissionsUseCase {
     }
 
     if (startDate && !endDate) {
-      where.createdAt = MoreThanOrEqual(new Date(startDate));
+      where.createdAt = MoreThanOrEqual(startDate);
     }
 
     if (endDate && !startDate) {
-      where.createdAt = LessThanOrEqual(new Date(endDate));
+      where.createdAt = LessThanOrEqual(endDate);
     }
 
     if (startDate && endDate) {
-      where.createdAt = Between(new Date(startDate), new Date(endDate));
+      where.createdAt = Between(startDate, endDate);
     }
 
     return await this.surveySubmissionRepository.count({

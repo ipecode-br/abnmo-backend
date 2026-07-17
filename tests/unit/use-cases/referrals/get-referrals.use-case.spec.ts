@@ -86,8 +86,8 @@ describe('GetReferralsUseCase', () => {
   it('filters by date range (startDate and endDate)', async () => {
     referralsRepo.find.mockResolvedValue([]);
     referralsRepo.count.mockResolvedValue(0);
-    const startDate = '2024-01-01';
-    const endDate = '2024-12-31';
+    const startDate = new Date('2024-01-01');
+    const endDate = new Date('2024-12-31');
 
     await useCase.execute({
       user: requestUserFactory({ features: ['read:referral:others'] }),
@@ -109,7 +109,7 @@ describe('GetReferralsUseCase', () => {
   it('filters by startDate only', async () => {
     referralsRepo.find.mockResolvedValue([]);
     referralsRepo.count.mockResolvedValue(0);
-    const startDate = '2024-01-01';
+    const startDate = new Date('2024-01-01');
 
     await useCase.execute({
       user: requestUserFactory({ features: ['read:referral:others'] }),
@@ -130,7 +130,7 @@ describe('GetReferralsUseCase', () => {
   it('filters by endDate only', async () => {
     referralsRepo.find.mockResolvedValue([]);
     referralsRepo.count.mockResolvedValue(0);
-    const endDate = '2024-12-31';
+    const endDate = new Date('2024-12-31');
 
     await useCase.execute({
       user: requestUserFactory({ features: ['read:referral:others'] }),

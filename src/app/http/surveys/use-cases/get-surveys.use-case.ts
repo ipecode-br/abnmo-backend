@@ -49,6 +49,8 @@ export class GetSurveysUseCase {
     period,
     page,
     perPage,
+    startDate,
+    endDate,
     ...props
   }: GetSurveysUseCaseInput): Promise<GetSurveysUseCaseOutput> {
     can(user, 'read:survey:others');
@@ -57,9 +59,6 @@ export class GetSurveysUseCase {
       status: 'status',
       date: 'createdAt',
     };
-
-    const startDate = props.startDate ? new Date(props.startDate) : null;
-    const endDate = props.endDate ? new Date(props.endDate) : null;
     const orderBy = ORDER_BY_MAPPING[props.orderBy || 'date'];
 
     const where: FindOptionsWhere<Survey> = {};

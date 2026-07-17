@@ -106,8 +106,8 @@ describe('GetAppointmentsUseCase', () => {
       status: 'scheduled',
       category: 'nursing',
       condition: 'stable',
-      startDate: '2026-01-01',
-      endDate: '2026-12-31',
+      startDate: new Date('2026-01-01'),
+      endDate: new Date('2026-12-31'),
     });
 
     expect(appointmentsRepo.find).toHaveBeenCalledWith(

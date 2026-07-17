@@ -58,6 +58,8 @@ export class GetAppointmentsUseCase {
     perPage,
     search,
     status,
+    startDate,
+    endDate,
     user,
     ...props
   }: GetAppointmentsUseCaseInput): Promise<GetAppointmentsUseCaseOutput> {
@@ -71,9 +73,11 @@ export class GetAppointmentsUseCase {
       condition: 'condition',
       professional: 'professionalName',
     };
-
-    const startDate = props.startDate ? new Date(props.startDate) : null;
-    const endDate = props.endDate ? new Date(props.endDate) : null;
+    const orderBy = ORDER_BY_MAPPING[props.orderBy || 'date'];
+    const order =
+      orderBy === 'patient'
+        ? { patient: { name: props.order } }
+        : { [orderBy]: props.order };
 
     const where: FindOptionsWhere<Appointment> = {};
 
@@ -114,12 +118,6 @@ export class GetAppointmentsUseCase {
     }
 
     const total = await this.appointmentsRepository.count({ where });
-
-    const orderBy = ORDER_BY_MAPPING[props.orderBy || 'date'];
-    const order =
-      orderBy === 'patient'
-        ? { patient: { name: props.order } }
-        : { [orderBy]: props.order };
 
     const appointments = await this.appointmentsRepository.find({
       select: {

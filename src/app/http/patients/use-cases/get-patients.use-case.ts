@@ -48,6 +48,8 @@ export class GetPatientsUseCase {
     status,
     page,
     perPage,
+    startDate,
+    endDate,
     ...props
   }: GetPatientsUseCaseInput): Promise<GetPatientsUseCaseOutput> {
     can(user, 'read:patient:others');
@@ -58,9 +60,7 @@ export class GetPatientsUseCase {
       status: 'status',
       date: 'createdAt',
     };
-
-    const startDate = props.startDate ? new Date(props.startDate) : null;
-    const endDate = props.endDate ? new Date(props.endDate) : null;
+    const orderBy = ORDER_BY_MAPPING[props.orderBy || 'name'];
 
     const where: FindOptionsWhere<User> = {
       role: 'patient',
@@ -88,8 +88,6 @@ export class GetPatientsUseCase {
     }
 
     const total = await this.usersRepository.count({ where });
-
-    const orderBy = ORDER_BY_MAPPING[props.orderBy || 'name'];
 
     const result = await this.usersRepository.find({
       where,
