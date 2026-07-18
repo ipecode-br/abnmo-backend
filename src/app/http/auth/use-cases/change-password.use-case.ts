@@ -5,6 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import type { Response } from 'express';
 import { Repository } from 'typeorm';
 
 import { CryptographyService } from '@/app/cryptography/cryptography.service';
@@ -13,12 +14,14 @@ import { LogService } from '@/common/log/log.service';
 import type { RequestUser } from '@/common/types';
 import { User } from '@/domain/entities/user';
 
+import { CreateSessionUseCase } from './create-session.use-case';
 import { ExpireSessionUseCase } from './expire-session.use-case';
 
 interface ChangePasswordUseCaseInput {
   user: RequestUser;
   password: string;
   newPassword: string;
+  response: Response;
 }
 
 @Injectable()
@@ -29,6 +32,7 @@ export class ChangePasswordUseCase {
     private readonly usersRepository: Repository<User>,
     private readonly cryptographyService: CryptographyService,
     private readonly expireSessionUseCase: ExpireSessionUseCase,
+    private readonly createSessionUseCase: CreateSessionUseCase,
     private readonly logger: LogService,
   ) {}
 
@@ -36,6 +40,7 @@ export class ChangePasswordUseCase {
     user,
     password,
     newPassword,
+    response,
   }: ChangePasswordUseCaseInput): Promise<void> {
     const { id } = user;
 
@@ -67,6 +72,12 @@ export class ChangePasswordUseCase {
     await this.usersRepository.update({ id }, { password: passwordHash });
 
     await this.expireSessionUseCase.execute({ userId: userToUpdate.id });
+
+    await this.createSessionUseCase.execute({
+      user: { id: user.id, email: userToUpdate.email, role: user.role },
+      keepLoggedIn: false,
+      response,
+    });
 
     this.logger.log('Password changed');
   }

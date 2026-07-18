@@ -117,8 +117,9 @@ export class AuthController {
   async changePassword(
     @User() user: RequestUser,
     @Body() body: ChangePasswordBody,
+    @Res({ passthrough: true }) response: Response,
   ): Promise<BaseResponse> {
-    await this.changePasswordUseCase.execute({ user, ...body });
+    await this.changePasswordUseCase.execute({ user, ...body, response });
 
     return {
       success: true,
