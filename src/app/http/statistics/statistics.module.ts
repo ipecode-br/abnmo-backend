@@ -13,7 +13,7 @@ import { GetTotalPatientsByFieldUseCase } from './use-cases/get-total-patients-b
 import { GetTotalPatientsWithAppointmentsUseCase } from './use-cases/get-total-patients-with-appointments.use-case';
 import { GetTotalPatientsWithAppointmentsByFieldUseCase } from './use-cases/get-total-patients-with-appointments-by-field.use-case';
 import { GetTotalPatientsWithReferralsUseCase } from './use-cases/get-total-patients-with-referrals.use-case';
-import { GetTotalPatientsWithReferralsByStateUseCase } from './use-cases/get-total-patients-with-referrals-by-state.use-case';
+import { GetTotalPatientsWithReferralsByFieldUseCase } from './use-cases/get-total-patients-with-referrals-by-field.use-case';
 import { GetTotalReferralsUseCase } from './use-cases/get-total-referrals.use-case';
 import { GetTotalReferralsByCategoryUseCase } from './use-cases/get-total-referrals-by-category.use-case';
 
@@ -27,7 +27,7 @@ import { GetTotalReferralsByCategoryUseCase } from './use-cases/get-total-referr
     GetTotalPatientsUseCase,
     GetTotalPatientsWithAppointmentsByFieldUseCase,
     GetTotalPatientsWithAppointmentsUseCase,
-    GetTotalPatientsWithReferralsByStateUseCase,
+    GetTotalPatientsWithReferralsByFieldUseCase,
     GetTotalPatientsWithReferralsUseCase,
     GetTotalReferralsByCategoryUseCase,
     GetTotalReferralsUseCase,

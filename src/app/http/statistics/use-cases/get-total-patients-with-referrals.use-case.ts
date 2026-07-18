@@ -24,36 +24,36 @@ export class GetTotalPatientsWithReferralsUseCase {
     startDate,
     endDate,
   }: GetTotalPatientsWithReferralsUseCaseInput = {}): Promise<number> {
-    const query = this.referralsRepository
-      .createQueryBuilder('r')
-      .innerJoin('r.patient', 'patient')
-      .innerJoin('patient.survey', 'survey')
-      .andWhere('patient.status != :status', { status: 'pending' });
+    const dateRange = period
+      ? getDateRangeForPeriod(period)
+      : { startDate, endDate };
 
-    if (period) {
-      const dateRange = getDateRangeForPeriod(period);
-      query.andWhere('r.createdAt BETWEEN :start AND :end', {
+    const query = this.referralsRepository
+      .createQueryBuilder('referral')
+      .innerJoin('referral.patient', 'user')
+      .innerJoin('user.survey', 'survey')
+      .where('user.status != :status', { status: 'pending' });
+
+    if (dateRange.startDate && dateRange.endDate) {
+      query.andWhere('referral.date BETWEEN :start AND :end', {
         start: dateRange.startDate,
         end: dateRange.endDate,
       });
     }
 
-    if (startDate && !endDate) {
-      query.andWhere('r.createdAt >= :startDate', { startDate });
-    }
-
-    if (endDate && !startDate) {
-      query.andWhere('r.createdAt <= :endDate', { endDate });
-    }
-
-    if (startDate && endDate) {
-      query.andWhere('r.createdAt BETWEEN :start AND :end', {
-        start: startDate,
-        end: endDate,
+    if (dateRange.startDate && !dateRange.endDate) {
+      query.andWhere('referral.date >= :startDate', {
+        startDate: dateRange.startDate,
       });
     }
 
-    query.select('COUNT(DISTINCT r.patient_id)', 'count');
+    if (dateRange.endDate && !dateRange.startDate) {
+      query.andWhere('referral.date <= :endDate', {
+        endDate: dateRange.endDate,
+      });
+    }
+
+    query.select('COUNT(DISTINCT referral.patient.id)', 'count');
 
     const result = await query.getRawOne<{ count: string }>();
 
