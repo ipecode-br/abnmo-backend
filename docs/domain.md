@@ -124,16 +124,16 @@ src/domain/schemas/
 
 ### Schema da entidade (`index.ts`)
 
-Define a estrutura completa da entidade. Campos de data usam `z.date()` — o TypeORM retorna objetos `Date` nativos:
+Define a estrutura completa da entidade. Campos de data usam `datetimeSchema` (`z.coerce.date()`):
 
 ```typescript
 import { z } from 'zod';
 import { baseEntitySchema } from '../base';
-import { uuidSchema, nameSchema, specialtySchema, patientConditionSchema } from '../shared';
+import { datetimeSchema, uuidSchema, nameSchema, specialtySchema, patientConditionSchema } from '../shared';
 
 export const appointmentSchema = z.strictObject({
   ...baseEntitySchema.shape,   // id, updatedAt, createdAt
-  date: z.date(),
+  date: datetimeSchema,
   status: z.enum(APPOINTMENT_STATUSES).default('scheduled'),
   category: specialtySchema,
   condition: patientConditionSchema,
@@ -145,19 +145,19 @@ export const appointmentSchema = z.strictObject({
 
 ### Schemas de request (`requests.ts`)
 
-Schemas de body para criação/atualização usam `datetimeSchema` (codec que aceita ISO string, produz `Date`) para campos de data — **não** fazem `.pick({ date: true })` da entidade, pois o schema da entidade usa `z.date()` (aceita apenas objetos `Date` nativos):
+Schemas de body para criação/atualização fazem `.pick()` dos campos da entidade.
 
 ```typescript
 import { z } from 'zod';
-import { datetimeSchema, specialtySchema } from '../shared';
+import { specialtySchema } from '../shared';
 import { appointmentSchema } from '.';
 import { patientSchema } from '../patients';
 
 export const createAppointmentSchema = z.strictObject({
   patientId: patientSchema.shape.id,
   category: specialtySchema.optional(),
-  date: datetimeSchema,       // ISO string → Date
   ...appointmentSchema.pick({
+    date: true,
     condition: true,
     annotation: true,
     professionalName: true,
@@ -165,8 +165,8 @@ export const createAppointmentSchema = z.strictObject({
 });
 
 export const updateAppointmentSchema = z.strictObject({
-  date: datetimeSchema,
   ...appointmentSchema.pick({
+    date: true,
     condition: true,
     annotation: true,
   }).shape,
@@ -226,17 +226,24 @@ export const nameSchema = z.string().min(3).max(64);
 export const emailSchema = z.email().min(1).max(254);
 export const phoneSchema = z.string().min(10).max(11).regex(ONLY_NUMBERS_REGEX);
 export const dateSchema = z.iso.date();           // "YYYY-MM-DD"
-export const datetimeSchema = z.codec(
-  z.iso.datetime(), z.date(),
-  { decode: (iso) => new Date(iso), encode: (date) => date.toISOString() },
-);
+export const datetimeSchema = (() => {
+  const schema = z.coerce.date();               // aceita string ISO e Date nativo
+  schema._zod.processJSONSchema = (             // hook para schema JSON do OpenAPI
+    _ctx: unknown,
+    json: Record<string, string>,
+  ) => {
+    json.type = 'string';
+    json.format = 'date-time';
+  };
+  return schema;
+})();
 ```
 
 ### Regras
 
-- Schemas de entidade usam `z.date()` para campos de data (TypeORM retorna objetos `Date`).
-- Schemas de request body usam `datetimeSchema` (codec) para campos de data — **nunca** fazem `.pick({ date: true })` da entidade.
-- Schemas de query usam `queryDateSchema` (aceita tanto `YYYY-MM-DD` quanto ISO datetime completo).
+- Campos de data (`date`, `createdAt`, `updatedAt`, `expiresAt`, etc.) usam `datetimeSchema` — tanto em schemas de entidade quanto de request. `z.coerce.date()` aceita strings ISO e objetos `Date` nativos.
+- `datetimeSchema` inclui o hook `_zod.processJSONSchema` para gerar `{ type: 'string', format: 'date-time' }` na spec OpenAPI.
+- Schemas de query usam `queryDateSchema` (alias de `datetimeSchema`).
 - Use `z.coerce.number()` e `z.coerce.boolean()` para campos numéricos/booleanos em query strings.
 - Regras de negócio complexas use `.superRefine()`.
 - Exporte o tipo inferido quando necessário via `z.infer<typeof schema>`.

@@ -17,14 +17,14 @@ import {
   querySearchSchema,
   validateEndDate,
 } from '../query';
-import { datetimeSchema, specialtySchema } from '../shared';
+import { specialtySchema } from '../shared';
 import { appointmentSchema } from '.';
 
 export const createAppointmentSchema = z.strictObject({
   patientId: patientSchema.shape.id,
   category: specialtySchema.optional(),
-  date: datetimeSchema,
   ...appointmentSchema.pick({
+    date: true,
     condition: true,
     annotation: true,
     professionalName: true,
@@ -32,8 +32,8 @@ export const createAppointmentSchema = z.strictObject({
 });
 
 export const updateAppointmentSchema = z.strictObject({
-  date: datetimeSchema,
   ...appointmentSchema.pick({
+    date: true,
     condition: true,
     annotation: true,
   }).shape,
