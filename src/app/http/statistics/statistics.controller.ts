@@ -2,6 +2,7 @@ import { Controller, Get, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ZodResponse } from 'nestjs-zod';
 
+import { RequireFeature } from '@/common/decorators/require-feature.decorator';
 import type {
   TotalPatientsByGender,
   TotalPatientsByState,
@@ -58,6 +59,7 @@ export class StatisticsController {
   // Appointments
 
   @Get('appointments/total')
+  @RequireFeature('read:statistic')
   @ApiOperation({ summary: 'Número total de atendimentos' })
   @ZodResponse({ status: 200, type: GetTotalAppointmentsResponse })
   async getTotalAppointments(
@@ -73,6 +75,7 @@ export class StatisticsController {
   }
 
   @Get('appointments/by-category')
+  @RequireFeature('read:statistic')
   @ApiOperation({
     summary: 'Número total de atendimentos por categoria',
   })
@@ -94,6 +97,7 @@ export class StatisticsController {
   // Patients
 
   @Get('patients/total')
+  @RequireFeature('read:statistic')
   @ApiOperation({ summary: 'Número total de pacientes' })
   @ZodResponse({ status: 200, type: GetTotalPatientsResponse })
   async getTotalPatients(): Promise<GetTotalPatientsResponse> {
@@ -107,6 +111,7 @@ export class StatisticsController {
   }
 
   @Get('patients/by-gender')
+  @RequireFeature('read:statistic')
   @ApiOperation({ summary: 'Número total de pacientes por gênero' })
   @ZodResponse({ status: 200, type: GetTotalPatientsByGenderResponse })
   async getTotalPatientsByGender(
@@ -127,6 +132,7 @@ export class StatisticsController {
   }
 
   @Get('patients/by-state')
+  @RequireFeature('read:statistic')
   @ApiOperation({ summary: 'Número total de pacientes por estado' })
   @ZodResponse({ status: 200, type: GetTotalPatientsByStateResponse })
   async getTotalPatientsByState(
@@ -147,6 +153,7 @@ export class StatisticsController {
   }
 
   @Get('patients/with-appointments')
+  @RequireFeature('read:statistic')
   @ApiOperation({ summary: 'Número total de pacientes atendidos' })
   @ZodResponse({ status: 200, type: GetTotalPatientsWithAppointmentsResponse })
   async getTotalPatientsWithAppointments(
@@ -163,6 +170,7 @@ export class StatisticsController {
   }
 
   @Get('patients/with-appointments/by-state')
+  @RequireFeature('read:statistic')
   @ApiOperation({
     summary: 'Número total de pacientes atendidos por estado',
   })
@@ -185,6 +193,7 @@ export class StatisticsController {
   }
 
   @Get('patients/with-referrals')
+  @RequireFeature('read:statistic')
   @ApiOperation({ summary: 'Número total de pacientes encaminhados' })
   @ZodResponse({ status: 200, type: GetTotalPatientsWithReferralsResponse })
   async getTotalPatientsWithReferrals(
@@ -201,6 +210,7 @@ export class StatisticsController {
   }
 
   @Get('patients/with-referrals/by-state')
+  @RequireFeature('read:statistic')
   @ApiOperation({
     summary: 'Número total de pacientes encaminhados por estado',
   })
@@ -225,6 +235,7 @@ export class StatisticsController {
   // Referrals
 
   @Get('referrals/total')
+  @RequireFeature('read:statistic')
   @ApiOperation({ summary: 'Número total de encaminhamentos' })
   @ZodResponse({ status: 200, type: GetTotalReferralsResponse })
   async getTotalReferrals(
@@ -240,6 +251,7 @@ export class StatisticsController {
   }
 
   @Get('referrals/by-category')
+  @RequireFeature('read:statistic')
   @ApiOperation({
     summary: 'Número total de encaminhamentos por categoria',
   })

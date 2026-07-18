@@ -60,6 +60,8 @@ export const USER_FEATURES = [
   'create:user-invite',
   'read:user-invite',
   'delete:user-invite',
+  // Statistics
+  'read:statistic',
 ] as const;
 export type UserFeature = (typeof USER_FEATURES)[number];
 

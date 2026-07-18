@@ -8,6 +8,7 @@ import dataSource from 'infra/database/data.source';
 import { appointmentFactory } from 'tests/config/factories/appointment.factory';
 import { documentFactory } from 'tests/config/factories/document.factory';
 import { referralFactory } from 'tests/config/factories/referral.factory';
+import { datetimeFactory } from 'tests/config/factories/shared.factory';
 import { surveyFactory } from 'tests/config/factories/survey.factory';
 import { surveySubmissionFactory } from 'tests/config/factories/survey-submission.factory';
 import { userFactory } from 'tests/config/factories/user.factory';
@@ -99,6 +100,7 @@ async function main() {
           password,
           role,
           status: 'active',
+          createdAt: datetimeFactory(),
         }),
       );
       await usersRepository.save(user);
@@ -129,6 +131,7 @@ async function main() {
           password,
           role: 'patient',
           status: isCompleted ? 'active' : 'pending',
+          createdAt: datetimeFactory(),
         }),
       );
       await usersRepository.save(patient);
@@ -138,6 +141,7 @@ async function main() {
           patient,
           status: isCompleted ? 'completed' : 'approved',
           updatedBy: ADMIN_USER.id,
+          createdAt: datetimeFactory(),
         }),
       );
       await surveySubmissionRepository.save(submission);
@@ -152,7 +156,10 @@ async function main() {
       await documentRepository.save(document);
 
       const survey = surveyRepository.create(
-        surveyFactory({ patient, status: surveyStatus }, { citiesByState }),
+        surveyFactory(
+          { patient, status: surveyStatus, createdAt: datetimeFactory() },
+          { citiesByState },
+        ),
       );
       await surveyRepository.save(survey);
     }
@@ -171,6 +178,7 @@ async function main() {
           password,
           role: 'patient',
           status: 'pending',
+          createdAt: datetimeFactory(),
         }),
       );
       await usersRepository.save(patient);
@@ -179,6 +187,7 @@ async function main() {
         surveySubmissionFactory({
           patient,
           status: faker.helpers.arrayElement(submissionStatuses),
+          createdAt: datetimeFactory(),
         }),
       );
       await surveySubmissionRepository.save(submission);
@@ -223,6 +232,7 @@ async function main() {
               ADMIN_USER.id,
               ...allSpecialists.map((s) => s.id),
             ]),
+            createdAt: datetimeFactory(),
           }),
         ),
       );
@@ -248,6 +258,7 @@ async function main() {
               ADMIN_USER.id,
               ...allSpecialists.map((s) => s.id),
             ]),
+            createdAt: datetimeFactory(),
           }),
         ),
       );
