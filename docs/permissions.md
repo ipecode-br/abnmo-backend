@@ -36,6 +36,17 @@ action:resource:others        → feature ampla (bypassa verificação de owners
 | `activate:patient`     | Ativar pacientes inativos                           |
 | `deactivate:patient`   | Inativar pacientes                                  |
 
+### Patient requirements
+
+| Feature                        | Descrição                                           |
+| ------------------------------ | --------------------------------------------------- |
+| `create:patient-requirement`   | Criar solicitações                                  |
+| `read:patient-requirement`     | Visualizar as próprias solicitações                 |
+| `read:patient-requirement:others`| Visualizar solicitações de outros pacientes        |
+| `update:patient-requirement`   | Editar as próprias solicitações                     |
+| `update:patient-requirement:others`| Editar solicitações de outros pacientes          |
+| `review:patient-requirement`   | Aprovar/rejeitar solicitações                       |
+
 ### Appointments
 
 | Feature                     | Descrição                                          |

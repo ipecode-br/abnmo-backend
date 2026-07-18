@@ -41,8 +41,8 @@ src/
 ├── common/                        # Utilitários globais
 │   ├── authorization/             # `can()` — verificação de permissões
 │   ├── context/                   # AsyncLocalStorage por request
-│   ├── decorators/                # @Public, @Roles, @RequireFeature, @User, @Cookies
-│   ├── guards/                    # AuthGuard, RolesGuard, FeatureGuard
+│   ├── decorators/                # @Public, @RequireFeature, @User, @Cookies
+│   ├── guards/                    # AuthGuard, FeatureGuard
 │   ├── log/                       # LogService, @Log, LogModule
 │   ├── dtos.ts                    # BaseResponse
 │   ├── http-exception.filter.ts   # Filtro global de exceções
@@ -100,8 +100,7 @@ export class AppModule {}
 Requisição HTTP
   → ContextMiddleware       (inicializa AsyncLocalStorage)
   → AuthGuard               (valida token JWT nos cookies)
-  → RolesGuard              (verifica @Roles no handler — admin bypass)
-  → FeatureGuard            (verifica @RequireFeature no handler)
+  → FeatureGuard            (verifica @RequireFeature no handler — requer feature em todo endpoint não-público)
   → Controller              (extrai parâmetros, chama use-case)
   → UseCase                 (lógica de negócio com can(), banco de dados)
   → ZodSerializerInterceptor(serializa e valida resposta contra schema Zod)

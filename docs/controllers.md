@@ -17,7 +17,6 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ZodResponse } from 'nestjs-zod';
 
 import { RequireFeature } from '@/common/decorators/require-feature.decorator';
-import { Roles } from '@/common/decorators/roles.decorator';
 import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
 import { Log } from '@/common/log/log.decorator';
@@ -36,7 +35,6 @@ import { CancelAppointmentUseCase } from './use-cases/cancel-appointment.use-cas
 
 @ApiTags('Atendimentos')
 @Controller('appointments')
-@Roles(['all'])
 export class AppointmentsController {
   constructor(
     private readonly getAppointmentsUseCase: GetAppointmentsUseCase,
@@ -121,10 +119,6 @@ Métodos HTTP. Aceitam path relativo opcional:
 @Patch(':id/cancel') // PATCH /appointments/:id/cancel
 ```
 
-### `@Roles([...roles])`
-
-Restringe o acesso por perfil. Admin sempre passa. Ver [autenticação](authentication.md).
-
 ### `@RequireFeature(feature)`
 
 Restringe por feature. OR lógico com array. Ver [autenticação](authentication.md).
@@ -194,6 +188,7 @@ async logout(@Cookies('refresh_token') refreshToken: string) { ... }
 
 ## Regras
 
+- Todo endpoint não-`@Public()` deve ter obrigatoriamente um `@RequireFeature()` — endpoints sem feature são bloqueados pelo `FeatureGuard`.
 - Sempre tipar o retorno: `Promise<BaseResponse>`, `Promise<GetAppointmentsResponse>`, etc.
 - Toda rota de mutação deve ter `@Log('event_name')`.
 - Toda rota deve ter `@ZodResponse({ type, status })` — nunca `@ApiResponse`.

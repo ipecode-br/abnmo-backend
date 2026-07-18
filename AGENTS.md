@@ -36,8 +36,8 @@ NestJS + TypeORM + PostgreSQL + Zod API.
 ## Auth & permissions
 
 - **Session-based auth in HTTP-only signed cookies** (no `Authorization` header)
-- Global guards (registered in `AuthModule`, evaluated in order): `AuthGuard` → `RolesGuard` → `FeatureGuard`
-- **Admin** bypasses `RolesGuard` (regardless of `@Roles()`) and `can()` (returns `true` unconditionally)
+- Global guards (registered in `AuthModule`, evaluated in order): `AuthGuard` → `FeatureGuard`
+- **Admin** bypasses `can()` (returns `true` unconditionally)
 - User roles (from `USER_ROLES`): `admin`, `member`, `specialist`, `patient`
 
 ### Decorators
@@ -45,7 +45,6 @@ NestJS + TypeORM + PostgreSQL + Zod API.
 | Decorator            | Purpose                                   |
 | -------------------- | ----------------------------------------- |
 | `@Public()`          | Skip `AuthGuard`                          |
-| `@Roles(['member'])` | Require role — admin always bypasses      |
 | `@RequireFeature(X)` | Require feature(s) — see below            |
 | `@User()`            | Injects `RequestUser` from cookie session |
 | `@Cookies('name')`   | Injects raw cookie value                  |
@@ -53,6 +52,8 @@ NestJS + TypeORM + PostgreSQL + Zod API.
 ### `@RequireFeature` decorator
 
 Accepts `UserFeature` (single) or `UserFeature[]` (OR logic). If the user has **any** of the listed features, the guard passes — it never checks ownership.
+
+**Every endpoint that is not `@Public()` must have a `@RequireFeature()` decorator.** Endpoints without any feature are denied by default.
 
 ```ts
 @RequireFeature('create:appointment')

@@ -4,13 +4,14 @@
 
 Autenticação baseada em **JWT armazenado em cookies HTTP-only assinados**. Não há header `Authorization` — os tokens trafegam via cookies, protegendo contra XSS.
 
-Três guards globais são registrados em `AuthModule` como `APP_GUARD`, avaliados em ordem:
+Dois guards globais são registrados em `AuthModule` como `APP_GUARD`, avaliados em ordem:
 
 1. **`AuthGuard`** — valida o token JWT e popula o contexto da requisição.
-2. **`RolesGuard`** — verifica restrições de perfil (`@Roles`). Admin sempre passa.
-3. **`FeatureGuard`** — verifica features (`@RequireFeature`). Não valida ownership.
+2. **`FeatureGuard`** — verifica features (`@RequireFeature`). Não valida ownership.
 
 A validação de ownership é feita nos use-cases via `can()`.
+
+**Todo endpoint** que não seja `@Public()` deve ter obrigatoriamente um decorator `@RequireFeature()`. Endpoints sem feature são automaticamente bloqueados pelo `FeatureGuard`.
 
 ---
 
@@ -65,17 +66,6 @@ Pula `AuthGuard` — endpoint acessível sem autenticação:
 @Post('/login')
 async login(@Body() body: SignInWithEmailBody): Promise<BaseResponse> { ... }
 ```
-
-### `@Roles([...roles])`
-
-Restringe o acesso por perfil. Admin sempre passa, independentemente do valor declarado:
-
-```typescript
-@Roles(['member', 'specialist'])  // apenas member e specialist (+ admin)
-@Roles(['all'])                    // qualquer usuário autenticado
-```
-
-Pode ser aplicado no controller (afeta todas as rotas) ou no método (sobrepõe o controller).
 
 ### `@RequireFeature(feature)`
 
