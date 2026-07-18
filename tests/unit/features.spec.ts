@@ -8,6 +8,7 @@ const VALID_TARGETS = [
   'referral',
   'user',
   'user-invite',
+  'statistic',
 ];
 const VALID_CONDITIONS = ['others'];
 

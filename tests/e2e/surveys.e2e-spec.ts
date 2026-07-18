@@ -495,6 +495,7 @@ describe('Surveys (e2e)', () => {
       const { patient } = await createPatient();
       const survey = await createSurvey({
         status: 'pending_signature',
+        signatureId: null,
         patient,
       });
 

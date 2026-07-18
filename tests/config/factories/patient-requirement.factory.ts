@@ -1,4 +1,4 @@
-import { faker } from '@faker-js/faker';
+import { fakerPT_BR as faker } from '@faker-js/faker';
 
 import { PatientRequirement } from '@/domain/entities/patient-requirement';
 import { User } from '@/domain/entities/user';

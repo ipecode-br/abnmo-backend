@@ -1,4 +1,4 @@
-import { faker } from '@faker-js/faker';
+import { fakerPT_BR as faker } from '@faker-js/faker';
 
 import { Appointment } from '@/domain/entities/appointment';
 import { APPOINTMENT_STATUSES } from '@/domain/enums/appointments';

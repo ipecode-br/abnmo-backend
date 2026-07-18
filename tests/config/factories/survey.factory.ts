@@ -1,4 +1,4 @@
-import { faker } from '@faker-js/faker';
+import { fakerPT_BR as faker } from '@faker-js/faker';
 
 import { Survey } from '@/domain/entities/survey';
 import { User } from '@/domain/entities/user';
@@ -48,6 +48,7 @@ import {
   baseEntityFactory,
   dateFactory,
   datetimeFactory,
+  idFactory,
   nameFactory,
 } from './shared.factory';
 
@@ -86,7 +87,7 @@ export function surveyFactory(
     ...baseEntityFactory(),
     createdAt: datetimeFactory(),
     status: faker.helpers.arrayElement(SURVEY_STATUSES),
-    signatureId: faker.string.uuid(),
+    signatureId: idFactory(),
     dateOfBirth: faker.date
       .birthdate({ min: 18, max: 80, mode: 'age' })
       .toISOString()

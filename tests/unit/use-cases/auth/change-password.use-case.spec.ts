@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import type { Response } from 'express';
 import { mock, MockProxy } from 'jest-mock-extended';
 import { requestUserFactory } from 'tests/config/factories/shared.factory';
 import { memberUserFactory } from 'tests/config/factories/user.factory';
@@ -12,6 +13,7 @@ import { Repository } from 'typeorm';
 
 import { CryptographyService } from '@/app/cryptography/cryptography.service';
 import { ChangePasswordUseCase } from '@/app/http/auth/use-cases/change-password.use-case';
+import { CreateSessionUseCase } from '@/app/http/auth/use-cases/create-session.use-case';
 import { ExpireSessionUseCase } from '@/app/http/auth/use-cases/expire-session.use-case';
 import { LogService } from '@/common/log/log.service';
 import { User } from '@/domain/entities/user';
@@ -21,6 +23,8 @@ describe('ChangePasswordUseCase', () => {
   let usersRepo: MockProxy<Repository<User>>;
   let cryptographyService: MockProxy<CryptographyService>;
   let expireSessionUseCase: MockProxy<ExpireSessionUseCase>;
+  let createSessionUseCase: MockProxy<CreateSessionUseCase>;
+  let response: MockProxy<Response>;
 
   const existingUser = memberUserFactory();
 
@@ -28,6 +32,8 @@ describe('ChangePasswordUseCase', () => {
     usersRepo = mock<Repository<User>>();
     cryptographyService = mock<CryptographyService>();
     expireSessionUseCase = mock<ExpireSessionUseCase>();
+    createSessionUseCase = mock<CreateSessionUseCase>();
+    response = mock<Response>();
 
     const module = await Test.createTestingModule({
       providers: [
@@ -35,6 +41,7 @@ describe('ChangePasswordUseCase', () => {
         { provide: getRepositoryToken(User), useValue: usersRepo },
         { provide: CryptographyService, useValue: cryptographyService },
         { provide: ExpireSessionUseCase, useValue: expireSessionUseCase },
+        { provide: CreateSessionUseCase, useValue: createSessionUseCase },
         { provide: LogService, useValue: { log: jest.fn() } },
       ],
     }).compile();
@@ -52,6 +59,7 @@ describe('ChangePasswordUseCase', () => {
       user,
       password: 'old-password',
       newPassword: 'new-password',
+      response,
     });
 
     expect(usersRepo.findOne).toHaveBeenCalledWith(
@@ -64,6 +72,11 @@ describe('ChangePasswordUseCase', () => {
     expect(expireSessionUseCase.execute).toHaveBeenCalledWith({
       userId: existingUser.id,
     });
+    expect(createSessionUseCase.execute).toHaveBeenCalledWith({
+      user: { id: user.id, email: existingUser.email, role: user.role },
+      keepLoggedIn: false,
+      response,
+    });
   });
 
   it('throws NotFoundException when user not found', async () => {
@@ -75,6 +88,7 @@ describe('ChangePasswordUseCase', () => {
         user,
         password: 'old-password',
         newPassword: 'new-password',
+        response,
       }),
     ).rejects.toThrow(NotFoundException);
   });
@@ -89,6 +103,7 @@ describe('ChangePasswordUseCase', () => {
         user,
         password: 'wrong-password',
         newPassword: 'new-password',
+        response,
       }),
     ).rejects.toThrow(UnauthorizedException);
   });
@@ -103,6 +118,7 @@ describe('ChangePasswordUseCase', () => {
         user,
         password: 'same-password',
         newPassword: 'same-password',
+        response,
       }),
     ).rejects.toThrow(BadRequestException);
   });
