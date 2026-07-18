@@ -4,13 +4,13 @@ import type { Repository, SelectQueryBuilder } from 'typeorm';
 
 import { User } from '@/domain/entities/user';
 import type { QueryOrder, QueryPeriod } from '@/domain/enums/queries';
-import type { PatientsStatisticField } from '@/domain/enums/statistics';
+import type { PatientField } from '@/domain/enums/statistics';
 import { getDateRangeForPeriod } from '@/utils/get-date-range-for-period';
 
 import { GetTotalPatientsUseCase } from './get-total-patients.use-case';
 
 interface GetTotalPatientsByFieldUseCaseInput {
-  field: PatientsStatisticField;
+  field: PatientField;
   period?: QueryPeriod;
   startDate?: Date;
   endDate?: Date;
@@ -20,14 +20,9 @@ interface GetTotalPatientsByFieldUseCaseInput {
 }
 
 interface GetTotalPatientsByFieldUseCaseOutput<T> {
-  items: T[];
+  list: T[];
   total: number;
 }
-
-const FIELD_COLUMN_MAP: Record<PatientsStatisticField, string> = {
-  gender: 'survey.gender',
-  state: 'survey.addressState',
-};
 
 @Injectable()
 export class GetTotalPatientsByFieldUseCase {
@@ -48,6 +43,13 @@ export class GetTotalPatientsByFieldUseCase {
   }: GetTotalPatientsByFieldUseCaseInput): Promise<
     GetTotalPatientsByFieldUseCaseOutput<T>
   > {
+    const FIELD_MAPPING: Record<PatientField, string> = {
+      gender: 'survey.gender',
+      state: 'survey.addressState',
+    };
+
+    const column = FIELD_MAPPING[field];
+
     const dateRange = period
       ? getDateRangeForPeriod(period)
       : { startDate, endDate };
@@ -56,8 +58,6 @@ export class GetTotalPatientsByFieldUseCase {
       startDate: dateRange.startDate,
       endDate: dateRange.endDate,
     });
-
-    const column = FIELD_COLUMN_MAP[field];
 
     const createBaseQuery = (): SelectQueryBuilder<User> => {
       const baseQuery = this.usersRepository
@@ -81,9 +81,9 @@ export class GetTotalPatientsByFieldUseCase {
     );
 
     const fieldQuery = createBaseQuery()
-      .select(`${column}`, field)
+      .select(column, field)
       .addSelect('COUNT(user.id)', 'total')
-      .groupBy(`${column}`)
+      .groupBy(column)
       .orderBy('total', order);
 
     if (withPercentage) {
@@ -93,23 +93,21 @@ export class GetTotalPatientsByFieldUseCase {
       );
     }
 
-    const [items, totalResult] = await Promise.all([
-      fieldQuery.getRawMany<T>(),
+    const [list, totalResult] = await Promise.all([
+      fieldQuery.getRawMany<Record<string, unknown>>(),
       totalQuery.getRawOne<{ total: string }>(),
     ]);
 
     return {
-      items: (items as Record<string, unknown>[])
-        .slice(0, limit)
-        .map((item) => {
-          const baseData = { ...item, total: Number(item.total) || 0 };
+      list: list.slice(0, limit).map((item) => {
+        const baseData = { ...item, total: Number(item.total) || 0 };
 
-          if (withPercentage) {
-            return { ...baseData, percentage: Number(item.percentage) || 0 };
-          }
+        if (withPercentage) {
+          return { ...baseData, percentage: Number(item.percentage) || 0 };
+        }
 
-          return baseData;
-        }) as T[],
+        return baseData;
+      }) as T[],
       total: Number(totalResult?.total) || 0,
     };
   }

@@ -4,34 +4,44 @@ import type { Repository, SelectQueryBuilder } from 'typeorm';
 
 import { User } from '@/domain/entities/user';
 import type { QueryPeriod } from '@/domain/enums/queries';
-import type { TotalPatientsWithAppointmentsByState } from '@/domain/schemas/statistics/responses';
+import { PatientWithAppointmentsField } from '@/domain/enums/statistics';
 import { getDateRangeForPeriod } from '@/utils/get-date-range-for-period';
 
-interface GetTotalPatientsWithAppointmentsByStateUseCaseInput {
+interface GetTotalPatientsWithAppointmentsByFieldUseCaseInput {
+  field: PatientWithAppointmentsField;
   period?: QueryPeriod;
   startDate?: Date;
   endDate?: Date;
   limit?: number;
 }
 
-interface GetTotalPatientsWithAppointmentsByStateUseCaseOutput {
-  states: TotalPatientsWithAppointmentsByState[];
+interface GetTotalPatientsWithAppointmentsByFieldUseCaseOutput<T> {
+  list: T[];
   total: number;
 }
 
 @Injectable()
-export class GetTotalPatientsWithAppointmentsByStateUseCase {
+export class GetTotalPatientsWithAppointmentsByFieldUseCase {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
   ) {}
 
-  async execute({
+  async execute<T>({
+    field,
     period,
     startDate,
     endDate,
     limit,
-  }: GetTotalPatientsWithAppointmentsByStateUseCaseInput = {}): Promise<GetTotalPatientsWithAppointmentsByStateUseCaseOutput> {
+  }: GetTotalPatientsWithAppointmentsByFieldUseCaseInput): Promise<
+    GetTotalPatientsWithAppointmentsByFieldUseCaseOutput<T>
+  > {
+    const FIELD_MAPPING: Record<PatientWithAppointmentsField, string> = {
+      state: 'survey.addressState',
+    };
+
+    const column = FIELD_MAPPING[field];
+
     const dateRange = period
       ? getDateRangeForPeriod(period)
       : { startDate, endDate };
@@ -42,7 +52,7 @@ export class GetTotalPatientsWithAppointmentsByStateUseCase {
         .innerJoin(
           'appointments',
           'appointment',
-          'appointment.patient_id = user.id',
+          'appointment.patient.id = user.id',
         )
         .innerJoin('user.survey', 'survey')
         .where('user.status != :status', { status: 'pending' });
@@ -57,11 +67,9 @@ export class GetTotalPatientsWithAppointmentsByStateUseCase {
       return baseQuery;
     };
 
-    const listStatesQuery = createBaseQuery()
-      .select('survey.addressState', 'state')
-      .addSelect('COUNT(DISTINCT user.id)', 'total');
-
-    listStatesQuery
+    const listQuery = createBaseQuery()
+      .select(column, field)
+      .addSelect('COUNT(DISTINCT user.id)', 'total')
       .addSelect(
         `ROUND(
           (COUNT(DISTINCT user.id) / SUM(COUNT(DISTINCT user.id)) OVER()) * 100,
@@ -69,29 +77,29 @@ export class GetTotalPatientsWithAppointmentsByStateUseCase {
         )`,
         'percentage',
       )
-      .groupBy('survey.addressState')
+      .groupBy(column)
       .orderBy('COUNT(DISTINCT user.id)', 'DESC')
       .limit(limit);
 
     const totalQuery = createBaseQuery().select(
-      'COUNT(DISTINCT survey.addressState)',
+      `COUNT(DISTINCT ${column})`,
       'total',
     );
 
-    const [states, totalResult] = await Promise.all([
-      listStatesQuery.getRawMany<TotalPatientsWithAppointmentsByState>(),
+    const [list, totalResult] = await Promise.all([
+      listQuery.getRawMany<Record<string, unknown>>(),
       totalQuery.getRawOne<{ total: string }>(),
     ]);
 
-    const totalPatients = Number(totalResult?.total || 0);
+    const totalList = Number(totalResult?.total || 0);
 
     return {
-      states: states.map((state) => ({
-        ...state,
-        total: Number(state.total) || 0,
-        percentage: Number(state.percentage) || 0,
-      })),
-      total: totalPatients,
+      list: list.map((item) => ({
+        ...item,
+        total: Number(item.total) || 0,
+        percentage: Number(item.percentage) || 0,
+      })) as T[],
+      total: totalList,
     };
   }
 }

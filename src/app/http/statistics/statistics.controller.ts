@@ -6,6 +6,7 @@ import { RequireFeature } from '@/common/decorators/require-feature.decorator';
 import type {
   TotalPatientsByGender,
   TotalPatientsByState,
+  TotalPatientsWithAppointmentsByState,
 } from '@/domain/schemas/statistics/responses';
 
 import {
@@ -34,7 +35,7 @@ import { GetTotalAppointmentsByCategoryUseCase } from './use-cases/get-total-app
 import { GetTotalPatientsUseCase } from './use-cases/get-total-patients.use-case';
 import { GetTotalPatientsByFieldUseCase } from './use-cases/get-total-patients-by-field.use-case';
 import { GetTotalPatientsWithAppointmentsUseCase } from './use-cases/get-total-patients-with-appointments.use-case';
-import { GetTotalPatientsWithAppointmentsByStateUseCase } from './use-cases/get-total-patients-with-appointments-by-state.use-case';
+import { GetTotalPatientsWithAppointmentsByFieldUseCase } from './use-cases/get-total-patients-with-appointments-by-field.use-case';
 import { GetTotalPatientsWithReferralsUseCase } from './use-cases/get-total-patients-with-referrals.use-case';
 import { GetTotalPatientsWithReferralsByStateUseCase } from './use-cases/get-total-patients-with-referrals-by-state.use-case';
 import { GetTotalReferralsUseCase } from './use-cases/get-total-referrals.use-case';
@@ -44,16 +45,16 @@ import { GetTotalReferralsByCategoryUseCase } from './use-cases/get-total-referr
 @Controller('statistics')
 export class StatisticsController {
   constructor(
-    private readonly getTotalAppointmentsUseCase: GetTotalAppointmentsUseCase,
     private readonly getTotalAppointmentsByCategoryUseCase: GetTotalAppointmentsByCategoryUseCase,
-    private readonly getTotalPatientsUseCase: GetTotalPatientsUseCase,
+    private readonly getTotalAppointmentsUseCase: GetTotalAppointmentsUseCase,
     private readonly getTotalPatientsByFieldUseCase: GetTotalPatientsByFieldUseCase,
+    private readonly getTotalPatientsUseCase: GetTotalPatientsUseCase,
+    private readonly getTotalPatientsWithAppointmentsByFieldUseCase: GetTotalPatientsWithAppointmentsByFieldUseCase,
     private readonly getTotalPatientsWithAppointmentsUseCase: GetTotalPatientsWithAppointmentsUseCase,
-    private readonly getTotalPatientsWithAppointmentsByStateUseCase: GetTotalPatientsWithAppointmentsByStateUseCase,
     private readonly getTotalPatientsWithReferralsByStateUseCase: GetTotalPatientsWithReferralsByStateUseCase,
     private readonly getTotalPatientsWithReferralsUseCase: GetTotalPatientsWithReferralsUseCase,
-    private readonly getTotalReferralsUseCase: GetTotalReferralsUseCase,
     private readonly getTotalReferralsByCategoryUseCase: GetTotalReferralsByCategoryUseCase,
+    private readonly getTotalReferralsUseCase: GetTotalReferralsUseCase,
   ) {}
 
   // Appointments
@@ -117,7 +118,7 @@ export class StatisticsController {
   async getTotalPatientsByGender(
     @Query() query: GetTotalPatientsByFieldQuery,
   ): Promise<GetTotalPatientsByGenderResponse> {
-    const { items: genders, total } =
+    const { list: genders, total } =
       await this.getTotalPatientsByFieldUseCase.execute<TotalPatientsByGender>({
         field: 'gender',
         ...query,
@@ -138,7 +139,7 @@ export class StatisticsController {
   async getTotalPatientsByState(
     @Query() query: GetTotalPatientsByFieldQuery,
   ): Promise<GetTotalPatientsByStateResponse> {
-    const { items: states, total } =
+    const { list: states, total } =
       await this.getTotalPatientsByFieldUseCase.execute<TotalPatientsByState>({
         field: 'state',
         ...query,
@@ -181,8 +182,10 @@ export class StatisticsController {
   async getTotalPatientsWithAppointmentsByState(
     @Query() query: GetTotalPatientsWithAppointmentsByStateQuery,
   ): Promise<GetTotalPatientsWithAppointmentsByStateResponse> {
-    const { states, total } =
-      await this.getTotalPatientsWithAppointmentsByStateUseCase.execute(query);
+    const { list: states, total } =
+      await this.getTotalPatientsWithAppointmentsByFieldUseCase.execute<TotalPatientsWithAppointmentsByState>(
+        { field: 'state', ...query },
+      );
 
     return {
       success: true,
