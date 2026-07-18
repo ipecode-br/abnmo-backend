@@ -19,7 +19,7 @@ action:resource:others        → feature ampla (bypassa verificação de owners
 | ----------------------- | --------------------------------------------------- |
 | `read:survey`           | Visualizar as próprias catalogações                 |
 | `read:survey:others`    | Visualizar catalogações de outros pacientes         |
-| `approve:survey`        | Aprovar/rejeitar submissões de catalogação          |
+| `review:survey`        | Aprovar/rejeitar submissões de catalogação          |
 | `update:survey`         | Editar a própria catalogação                        |
 | `update:survey:others`  | Editar catalogações de outros pacientes             |
 | `cancel:survey`         | Cancelar a própria catalogação                      |
@@ -75,9 +75,9 @@ action:resource:others        → feature ampla (bypassa verificação de owners
 
 | Feature               | Descrição                                        |
 | --------------------- | ------------------------------------------------ |
-| `create:user_invite`  | Criar convites para novos usuários               |
-| `read:user_invite`    | Visualizar convites enviados                     |
-| `delete:user_invite`  | Cancelar convites pendentes                      |
+| `create:user-invite`  | Criar convites para novos usuários               |
+| `read:user-invite`    | Visualizar convites enviados                     |
+| `delete:user-invite`  | Cancelar convites pendentes                      |
 
 ---
 

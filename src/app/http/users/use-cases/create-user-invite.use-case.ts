@@ -41,7 +41,7 @@ export class CreateUserInviteUseCase {
     role,
     user,
   }: CreateUserInviteUseCaseInput): Promise<void> {
-    can(user, 'create:user_invite');
+    can(user, 'create:user-invite');
 
     const [existingInviteUserToken, existingUser] = await Promise.all([
       this.tokensRepository.findOne({ where: { email } }),

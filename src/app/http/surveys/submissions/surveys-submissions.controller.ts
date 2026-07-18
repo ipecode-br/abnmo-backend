@@ -12,7 +12,6 @@ import { ZodResponse } from 'nestjs-zod';
 
 import { Public } from '@/common/decorators/public.decorator';
 import { RequireFeature } from '@/common/decorators/require-feature.decorator';
-import { Roles } from '@/common/decorators/roles.decorator';
 import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
 import { Log } from '@/common/log/log.decorator';
@@ -38,7 +37,6 @@ import { GetTotalSurveySubmissionsUseCase } from './use-cases/get-total-survey-s
 
 @ApiTags('Catalogação')
 @Controller('survey-submissions')
-@Roles(['member'])
 export class SurveysSubmissionsController {
   constructor(
     private readonly approveSurveySubmissionUseCase: ApproveSurveySubmissionUseCase,
@@ -50,8 +48,8 @@ export class SurveysSubmissionsController {
     private readonly getTotalSurveySubmissionsUseCase: GetTotalSurveySubmissionsUseCase,
   ) {}
 
-  @Post()
   @Public()
+  @Post()
   @Log('init_survey')
   @ApiOperation({ summary: 'Inicia o formulário de catalogação' })
   @ZodResponse({ type: CreateSurveySubmissionResponse, status: 201 })
@@ -67,8 +65,8 @@ export class SurveysSubmissionsController {
     };
   }
 
-  @Post(':id/confirm-upload')
   @Public()
+  @Post(':id/confirm-upload')
   @Log('init_survey')
   @ApiOperation({ summary: 'Confirma o upload do documento' })
   @ZodResponse({ type: BaseResponse, status: 200 })
@@ -141,7 +139,7 @@ export class SurveysSubmissionsController {
 
   @Patch(':id/approve')
   @Log('approve_survey')
-  @RequireFeature('approve:survey')
+  @RequireFeature('review:survey')
   @ApiOperation({ summary: 'Aprova uma submissão de catalogação' })
   @ZodResponse({ type: BaseResponse, status: 200 })
   async approveSurveySubmission(
@@ -158,7 +156,7 @@ export class SurveysSubmissionsController {
 
   @Patch(':id/decline')
   @Log('decline_survey')
-  @RequireFeature('approve:survey')
+  @RequireFeature('review:survey')
   @ApiOperation({ summary: 'Recusa uma submissão de catalogação' })
   @ZodResponse({ type: BaseResponse, status: 200 })
   async declineSurveySubmission(

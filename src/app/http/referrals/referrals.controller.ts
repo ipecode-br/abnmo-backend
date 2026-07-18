@@ -12,7 +12,6 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ZodResponse } from 'nestjs-zod';
 
 import { RequireFeature } from '@/common/decorators/require-feature.decorator';
-import { Roles } from '@/common/decorators/roles.decorator';
 import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
 import { Log } from '@/common/log/log.decorator';
@@ -31,7 +30,6 @@ import { UpdateReferralUseCase } from './use-cases/update-referral.use-case';
 
 @ApiTags('Encaminhamentos')
 @Controller('referrals')
-@Roles(['all'])
 export class ReferralsController {
   constructor(
     private readonly cancelReferralUseCase: CancelReferralUseCase,

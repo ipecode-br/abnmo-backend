@@ -49,7 +49,7 @@ export class GetUserInvitesUseCase {
     endDate,
     ...props
   }: GetUserInvitesUseCaseInput): Promise<GetUserInvitesUseCaseOutput> {
-    can(user, 'read:user_invite');
+    can(user, 'read:user-invite');
 
     const ORDER_BY_MAPPING: Record<UserInvitesOrderBy, keyof Token> = {
       email: 'email',

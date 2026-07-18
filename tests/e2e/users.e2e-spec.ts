@@ -468,7 +468,7 @@ describe('Users (e2e)', () => {
     it('creates an invite', async () => {
       const { cookies } = await createMember({
         login: true,
-        features: ['create:user_invite'],
+        features: ['create:user-invite'],
       });
 
       const res = await api.post<BaseResponseBody, CreateUserInviteBody>(
@@ -487,7 +487,7 @@ describe('Users (e2e)', () => {
       expect(invites[0].email).toBe(inviteBody.email);
     });
 
-    it('blocks user without "create:user_invite" feature', async () => {
+    it('blocks user without "create:user-invite" feature', async () => {
       const { cookies } = await createMember({ login: true });
 
       const res = await api.post<BaseResponseBody, CreateUserInviteBody>(
@@ -506,7 +506,7 @@ describe('Users (e2e)', () => {
     it('cannot create invite for existing user email', async () => {
       const { cookies } = await createMember({
         login: true,
-        features: ['create:user_invite'],
+        features: ['create:user-invite'],
       });
       const existingUser = await createUser({ email: 'existing@example.com' });
 
@@ -528,7 +528,7 @@ describe('Users (e2e)', () => {
     it('paginates invites properly', async () => {
       const { cookies } = await createMember({
         login: true,
-        features: ['read:user_invite'],
+        features: ['read:user-invite'],
       });
 
       const totalInvites = 15;
@@ -557,7 +557,7 @@ describe('Users (e2e)', () => {
       expect(secondPage.body.data.total).toBe(totalInvites);
     });
 
-    it('blocks user without "read:user_invite" feature', async () => {
+    it('blocks user without "read:user-invite" feature', async () => {
       const { cookies } = await createMember({ login: true });
 
       const res = await api.get(
@@ -578,7 +578,7 @@ describe('Users (e2e)', () => {
     it('deletes an invite', async () => {
       const { cookies } = await createMember({
         login: true,
-        features: ['delete:user_invite'],
+        features: ['delete:user-invite'],
       });
       const email = 'test@example.com';
 
@@ -604,7 +604,7 @@ describe('Users (e2e)', () => {
     it('returns 404 for non-existent ID', async () => {
       const { cookies } = await createMember({
         login: true,
-        features: ['delete:user_invite'],
+        features: ['delete:user-invite'],
       });
 
       const res = await api.delete<BaseResponseBody>(
@@ -617,7 +617,7 @@ describe('Users (e2e)', () => {
       expect(res.body.message).toBe('Convite não encontrado.');
     });
 
-    it('blocks user without "delete:user_invite" feature', async () => {
+    it('blocks user without "delete:user-invite" feature', async () => {
       const { cookies } = await createMember({ login: true });
 
       const res = await api.delete<BaseResponseBody>(

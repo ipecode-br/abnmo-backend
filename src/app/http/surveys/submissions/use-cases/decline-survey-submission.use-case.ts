@@ -32,7 +32,7 @@ export class DeclineSurveySubmissionUseCase {
     user,
     reason,
   }: DeclineSurveySubmissionUseCaseInput): Promise<void> {
-    can(user, 'approve:survey');
+    can(user, 'review:survey');
 
     const submission = await this.surveySubmissionsRepository.findOne({
       where: { id },

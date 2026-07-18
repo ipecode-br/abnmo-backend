@@ -3,10 +3,11 @@ import { USER_FEATURES } from '@/domain/enums/users';
 const VALID_TARGETS = [
   'survey',
   'patient',
+  'patient-requirement',
   'appointment',
   'referral',
   'user',
-  'user_invite',
+  'user-invite',
 ];
 const VALID_CONDITIONS = ['others'];
 

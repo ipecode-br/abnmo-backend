@@ -11,7 +11,6 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ZodResponse } from 'nestjs-zod';
 
 import { RequireFeature } from '@/common/decorators/require-feature.decorator';
-import { Roles } from '@/common/decorators/roles.decorator';
 import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
 import { Log } from '@/common/log/log.decorator';
@@ -32,7 +31,6 @@ import { UpdatePatientUseCase } from './use-cases/update-patient.use-case';
 
 @ApiTags('Pacientes')
 @Controller('patients')
-@Roles(['all'])
 export class PatientsController {
   constructor(
     private readonly deactivatePatientUseCase: DeactivatePatientUseCase,

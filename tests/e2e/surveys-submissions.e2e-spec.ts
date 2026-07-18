@@ -381,7 +381,7 @@ describe('Survey Submissions (e2e)', () => {
     it('approves submission and sends email with token', async () => {
       const { cookies } = await createMember({
         login: true,
-        features: ['approve:survey'],
+        features: ['review:survey'],
       });
 
       const { patient } = await createPatient();
@@ -444,7 +444,7 @@ describe('Survey Submissions (e2e)', () => {
       );
     });
 
-    it('blocks user without "approve:survey" feature', async () => {
+    it('blocks user without "review:survey" feature', async () => {
       const { cookies } = await createMember({ login: true, features: [] });
 
       const res = await api.patch(
@@ -479,7 +479,7 @@ describe('Survey Submissions (e2e)', () => {
     it('declines submission with reason', async () => {
       const { cookies } = await createMember({
         login: true,
-        features: ['approve:survey'],
+        features: ['review:survey'],
       });
 
       const { patient } = await createPatient();
@@ -539,7 +539,7 @@ describe('Survey Submissions (e2e)', () => {
       );
     });
 
-    it('blocks user without "approve:survey" feature', async () => {
+    it('blocks user without "review:survey" feature', async () => {
       const { cookies } = await createMember({ login: true, features: [] });
 
       const res = await api.patch(

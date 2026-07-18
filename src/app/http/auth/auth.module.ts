@@ -7,7 +7,6 @@ import { MailModule } from '@/app/mail/mail.module';
 import { StorageModule } from '@/app/storage/storage.module';
 import { AuthGuard } from '@/common/guards/auth.guard';
 import { FeatureGuard } from '@/common/guards/feature.guard';
-import { RolesGuard } from '@/common/guards/roles.guard';
 import { Session } from '@/domain/entities/session';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
@@ -43,7 +42,6 @@ import { SignInWithEmailUseCase } from './use-cases/sign-in-with-email.use-case'
     ResetPasswordUseCase,
     SignInWithEmailUseCase,
     { provide: APP_GUARD, useClass: AuthGuard },
-    { provide: APP_GUARD, useClass: RolesGuard },
     { provide: APP_GUARD, useClass: FeatureGuard },
   ],
   controllers: [AuthController],

@@ -2,7 +2,6 @@ import { Controller, Get, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ZodResponse } from 'nestjs-zod';
 
-import { Roles } from '@/common/decorators/roles.decorator';
 import type {
   TotalPatientsByGender,
   TotalPatientsByState,
@@ -41,7 +40,6 @@ import { GetTotalReferralsUseCase } from './use-cases/get-total-referrals.use-ca
 import { GetTotalReferralsByCategoryUseCase } from './use-cases/get-total-referrals-by-category.use-case';
 
 @ApiTags('Estatísticas')
-@Roles(['member', 'specialist'])
 @Controller('statistics')
 export class StatisticsController {
   constructor(

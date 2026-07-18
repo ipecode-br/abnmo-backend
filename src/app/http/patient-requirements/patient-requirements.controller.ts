@@ -10,7 +10,7 @@ import {
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ZodResponse } from 'nestjs-zod';
 
-import { Roles } from '@/common/decorators/roles.decorator';
+import { RequireFeature } from '@/common/decorators/require-feature.decorator';
 import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
 import { Log } from '@/common/log/log.decorator';
@@ -30,7 +30,6 @@ import { GetPatientRequirementsUseCase } from './use-cases/get-patient-requireme
 import { GetPatientRequirementsByPatientIdUseCase } from './use-cases/get-patient-requirements-by-patient-id.use-case';
 
 @ApiTags('Pendências do paciente')
-@Roles(['member', 'specialist'])
 @Controller('patient-requirements')
 export class PatientRequirementsController {
   constructor(
@@ -42,6 +41,7 @@ export class PatientRequirementsController {
   ) {}
 
   @Get()
+  @RequireFeature('read:patient-requirement:others')
   @ApiOperation({ summary: 'Lista todas as solicitações' })
   @ZodResponse({ type: GetPatientRequirementsResponse, status: 200 })
   async getPatientRequirements(
@@ -57,6 +57,7 @@ export class PatientRequirementsController {
   }
 
   @Get('me')
+  @RequireFeature('read:patient-requirement')
   @ApiOperation({
     summary: 'Lista todas as solicitações do paciente autenticado',
   })
@@ -79,16 +80,14 @@ export class PatientRequirementsController {
 
   @Post()
   @Log('create_patient_requirement')
+  @RequireFeature('create:patient-requirement')
   @ApiOperation({ summary: 'Cadastra uma nova solicitação' })
   @ZodResponse({ type: BaseResponse, status: 201 })
   async create(
     @User() user: RequestUser,
-    @Body() createPatientRequirementDto: CreatePatientRequirementDto,
+    @Body() body: CreatePatientRequirementDto,
   ): Promise<BaseResponse> {
-    await this.createPatientRequirementUseCase.execute({
-      user,
-      ...createPatientRequirementDto,
-    });
+    await this.createPatientRequirementUseCase.execute({ user, ...body });
 
     return {
       success: true,
@@ -98,6 +97,7 @@ export class PatientRequirementsController {
 
   @Patch(':id/approve')
   @Log('approve_patient_requirement')
+  @RequireFeature('review:patient-requirement')
   @ApiOperation({ summary: 'Aprova a solicitação' })
   @ZodResponse({ type: BaseResponse, status: 200 })
   async approve(
@@ -114,6 +114,7 @@ export class PatientRequirementsController {
 
   @Patch(':id/decline')
   @Log('decline_patient_requirement')
+  @RequireFeature('review:patient-requirement')
   @ApiOperation({ summary: 'Recusa a solicitação' })
   @ZodResponse({ type: BaseResponse, status: 200 })
   async decline(

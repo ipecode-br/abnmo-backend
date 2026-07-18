@@ -40,7 +40,7 @@ export class ApproveSurveySubmissionUseCase {
     id,
     user,
   }: ApproveSurveySubmissionUseCaseInput): Promise<void> {
-    can(user, 'approve:survey');
+    can(user, 'review:survey');
 
     const submission = await this.surveySubmissionsRepository.findOne({
       relations: { patient: true },

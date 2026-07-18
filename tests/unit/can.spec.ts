@@ -14,7 +14,7 @@ describe('can()', () => {
 
     it('returns "true" for admin with undefined features', () => {
       const user = requestUserFactory({ role: 'admin' });
-      expect(can(user, 'approve:survey')).toBe(true);
+      expect(can(user, 'review:survey')).toBe(true);
     });
 
     it('returns "true" for admin when feature does not exist', () => {

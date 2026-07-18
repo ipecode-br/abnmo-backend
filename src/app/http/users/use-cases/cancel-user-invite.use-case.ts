@@ -24,7 +24,7 @@ export class CancelUserInviteUseCase {
   ) {}
 
   async execute({ id, user }: CancelUserInviteUseCaseInput): Promise<void> {
-    can(user, 'delete:user_invite');
+    can(user, 'delete:user-invite');
 
     const token = await this.tokensRepository.findOne({
       where: { id, type: TOKENS.inviteUser },

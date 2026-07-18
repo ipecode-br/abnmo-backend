@@ -17,7 +17,6 @@ import { Express } from 'express';
 import { ZodResponse } from 'nestjs-zod';
 
 import { RequireFeature } from '@/common/decorators/require-feature.decorator';
-import { Roles } from '@/common/decorators/roles.decorator';
 import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
 import { FileValidationPipe } from '@/common/file-validation.pipe';
@@ -48,7 +47,6 @@ import {
 
 @ApiTags('Usuários')
 @Controller('users')
-@Roles(['member'])
 export class UsersController {
   constructor(
     private readonly activateUserUseCase: ActivateUserUseCase,
@@ -81,7 +79,7 @@ export class UsersController {
   }
 
   @Get('invites')
-  @RequireFeature('read:user_invite')
+  @RequireFeature('read:user-invite')
   @ApiOperation({ summary: 'Lista todos os convites de usuário' })
   @ZodResponse({ type: GetUserInvitesResponse, status: 200 })
   async getUserInvites(
@@ -98,7 +96,6 @@ export class UsersController {
   }
 
   @Get('me')
-  @Roles(['member', 'specialist'])
   @RequireFeature(['read:user'])
   @ApiOperation({ summary: 'Retorna os dados do usuário autenticado' })
   @ZodResponse({ type: GetUserResponse, status: 200 })
@@ -113,7 +110,6 @@ export class UsersController {
   }
 
   @Get(':id')
-  @Roles(['member'])
   @RequireFeature(['read:user:others'])
   @ApiOperation({ summary: 'Retorna os dados do usuário pelo ID' })
   @ZodResponse({ type: GetUserResponse, status: 200 })
@@ -149,8 +145,8 @@ export class UsersController {
   }
 
   @Patch(':id/features')
-  @Roles(['admin'])
   @Log('update_user')
+  @RequireFeature(['update:user', 'update:user:others'])
   @ApiOperation({ summary: 'Atualiza as permissões do usuário' })
   @ZodResponse({ type: BaseResponse, status: 200 })
   async updateUserFeatures(
@@ -235,7 +231,7 @@ export class UsersController {
 
   @Post('invites')
   @Log('create_user_invite')
-  @RequireFeature('create:user_invite')
+  @RequireFeature('create:user-invite')
   @ApiOperation({ summary: 'Cria convite para registro de usuário' })
   @ZodResponse({ type: BaseResponse, status: 201 })
   async createUserInvite(
@@ -252,7 +248,7 @@ export class UsersController {
 
   @Delete('invites/:id')
   @Log('delete_user_invite')
-  @RequireFeature('delete:user_invite')
+  @RequireFeature('delete:user-invite')
   @ApiOperation({ summary: 'Exclui convite de usuário' })
   @ZodResponse({ type: BaseResponse, status: 200 })
   async cancelUserInvite(

@@ -5,7 +5,7 @@ import { ZodResponse } from 'nestjs-zod';
 
 import { Cookies } from '@/common/decorators/cookies.decorator';
 import { Public } from '@/common/decorators/public.decorator';
-import { Roles } from '@/common/decorators/roles.decorator';
+import { RequireFeature } from '@/common/decorators/require-feature.decorator';
 import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
 import { Log } from '@/common/log/log.decorator';
@@ -38,8 +38,8 @@ export class AuthController {
     private readonly signInUseCase: SignInWithEmailUseCase,
   ) {}
 
-  @Post('login')
   @Public()
+  @Post('login')
   @Log('sign_in')
   @ApiOperation({ summary: 'Inicia a sessão do usuário ou paciente' })
   @ZodResponse({ type: SignInWithEmailResponse, status: 200 })
@@ -56,8 +56,8 @@ export class AuthController {
     };
   }
 
-  @Post('register/user')
   @Public()
+  @Post('register/user')
   @Log('register_user')
   @ApiOperation({ summary: 'Registra um novo usuário via convite' })
   @ZodResponse({ type: BaseResponse, status: 201 })
@@ -73,8 +73,8 @@ export class AuthController {
     };
   }
 
-  @Post('recover-password')
   @Public()
+  @Post('recover-password')
   @Log('recover_password')
   @ApiOperation({ summary: 'Solicita recuperação de senha' })
   @ZodResponse({ type: BaseResponse, status: 200 })
@@ -90,8 +90,8 @@ export class AuthController {
     };
   }
 
-  @Post('reset-password')
   @Public()
+  @Post('reset-password')
   @Log('reset_password')
   @ApiOperation({ summary: 'Solicita redefinição de senha' })
   @ZodResponse({ type: BaseResponse, status: 200 })
@@ -108,8 +108,8 @@ export class AuthController {
   }
 
   @Post('change-password')
-  @Roles(['all'])
   @Log('change_password')
+  @RequireFeature('update:user')
   @ApiOperation({
     summary: 'Altera a senha do usuário ou paciente autenticado',
   })
@@ -126,8 +126,8 @@ export class AuthController {
     };
   }
 
-  @Post('logout')
   @Public()
+  @Post('logout')
   @Log('logout')
   @ApiOperation({ summary: 'Encerra a sessão do usuário ou paciente' })
   @ZodResponse({ type: BaseResponse, status: 200 })
