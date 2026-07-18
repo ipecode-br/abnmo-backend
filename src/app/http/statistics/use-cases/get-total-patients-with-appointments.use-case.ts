@@ -35,20 +35,20 @@ export class GetTotalPatientsWithAppointmentsUseCase {
       .where('user.status != :status', { status: 'pending' });
 
     if (dateRange.startDate && dateRange.endDate) {
-      query.andWhere('appointment.createdAt BETWEEN :start AND :end', {
+      query.andWhere('appointment.date BETWEEN :start AND :end', {
         start: dateRange.startDate,
         end: dateRange.endDate,
       });
     }
 
     if (dateRange.startDate && !dateRange.endDate) {
-      query.andWhere('appointment.createdAt >= :startDate', {
+      query.andWhere('appointment.date >= :startDate', {
         startDate: dateRange.startDate,
       });
     }
 
     if (dateRange.endDate && !dateRange.startDate) {
-      query.andWhere('appointment.createdAt <= :endDate', {
+      query.andWhere('appointment.date <= :endDate', {
         endDate: dateRange.endDate,
       });
     }
