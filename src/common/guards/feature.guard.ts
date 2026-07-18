@@ -21,10 +21,14 @@ export class FeatureGuard implements CanActivate {
     // Skip validation for public or featureless routes
     if (isPublic) return true;
 
+    const request = context.switchToHttp().getRequest<{ user: RequestUser }>();
+    const user = request.user;
+
+    // Bypass validation for admin role
+    if (user.role === 'admin') return true;
+
     // It must have a feature to validate
     if (!feature) return false;
-
-    const request = context.switchToHttp().getRequest<{ user: RequestUser }>();
 
     return can(request.user, feature);
   }
