@@ -6,7 +6,7 @@ import {
 } from '@/domain/enums/patient-requirements';
 
 import { baseEntitySchema } from '../base';
-import { uuidSchema } from '../shared';
+import { datetimeSchema, uuidSchema } from '../shared';
 
 export const patientRequirementSchema = z.strictObject({
   ...baseEntitySchema.shape,
@@ -14,7 +14,7 @@ export const patientRequirementSchema = z.strictObject({
   description: z.string().max(500).nullable(),
   status: z.enum(PATIENT_REQUIREMENT_STATUSES).default('pending'),
   type: z.enum(PATIENT_REQUIREMENT_TYPES),
-  submittedAt: z.date().nullable(),
+  submittedAt: datetimeSchema.nullable(),
   updatedBy: uuidSchema.nullable(),
   createdBy: uuidSchema,
 });

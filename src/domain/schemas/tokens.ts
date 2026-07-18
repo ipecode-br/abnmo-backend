@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { type TOKENS, TOKENS_ENUM } from '../enums/tokens';
 import type { UserRole } from '../enums/users';
 import { baseEntitySchema } from './base';
-import { emailSchema } from './shared';
+import { datetimeSchema, emailSchema } from './shared';
 import { userSchema } from './users';
 
 export const tokenSchema = z.strictObject({
@@ -12,7 +12,7 @@ export const tokenSchema = z.strictObject({
   email: emailSchema.nullable(),
   token: z.string().min(1),
   type: z.enum(TOKENS_ENUM),
-  expiresAt: z.date(),
+  expiresAt: datetimeSchema,
 });
 export type TokenSchema = z.infer<typeof tokenSchema>;
 
