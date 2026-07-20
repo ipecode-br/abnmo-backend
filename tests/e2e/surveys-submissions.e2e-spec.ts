@@ -203,8 +203,8 @@ describe('Survey Submissions (e2e)', () => {
         {
           page: 1,
           perPage: 10,
-          startDate: startDate.toISOString().split('T')[0],
-          endDate: endDate.toISOString().split('T')[0],
+          startDate: startDate,
+          endDate: endDate,
         },
         { cookies },
       );

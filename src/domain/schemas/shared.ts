@@ -23,7 +23,18 @@ export const userRegistrationIdSchema = z.string().max(32);
 export const dateSchema = z.iso.date();
 
 export const datetimeSchema = (() => {
-  const schema = z.coerce.date();
+  const schema = z.codec(
+    // input schema: ISO date string or Date object
+    z.union([z.iso.datetime(), z.date()]),
+    // output schema: Date object
+    z.date(),
+    {
+      // ISO string → Date
+      decode: (isoString) => new Date(isoString),
+      // Date → ISO string
+      encode: (date) => date.toISOString(),
+    },
+  );
   schema._zod.processJSONSchema = (
     _ctx: unknown,
     json: Record<string, string>,
