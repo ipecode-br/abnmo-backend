@@ -62,7 +62,7 @@ export class RecoverPasswordUseCase {
     this.logger.log('Password reset token generated', { id: user.id, email });
 
     const baseAppUrl = this.envService.get('APP_URL');
-    const resetPasswordUrl = `${baseAppUrl}/conta/nova-senha?token=${token}`;
+    const resetPasswordUrl = `${baseAppUrl}/nova-senha?token=${token}`;
 
     const subject = 'Solicitação para redefinição de senha';
     const preheader =

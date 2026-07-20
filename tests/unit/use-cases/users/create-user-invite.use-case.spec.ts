@@ -134,9 +134,7 @@ describe('CreateUserInviteUseCase', () => {
     expect(mailService.send).toHaveBeenCalledWith(
       expect.objectContaining({
         to: 'newuser@test.com',
-        html: expect.stringContaining(
-          '/conta/cadastrar?token=invite-token-abc',
-        ),
+        html: expect.stringContaining('/cadastrar?token=invite-token-abc'),
       }),
     );
   });

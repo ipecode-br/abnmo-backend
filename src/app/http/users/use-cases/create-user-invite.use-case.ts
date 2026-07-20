@@ -92,7 +92,7 @@ export class CreateUserInviteUseCase {
       });
 
       const baseAppUrl = this.envService.get('APP_URL');
-      const registerUserUrl = `${baseAppUrl}/conta/cadastrar?token=${inviteUserToken}`;
+      const registerUserUrl = `${baseAppUrl}/cadastrar?token=${inviteUserToken}`;
 
       const subject = 'Cadastre sua conta no Sistema Viver Melhor da ABNMO';
       const preheader =
