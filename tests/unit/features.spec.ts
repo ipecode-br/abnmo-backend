@@ -10,10 +10,10 @@ const VALID_TARGETS = [
   'user-invite',
   'statistic',
 ];
-const VALID_CONDITIONS = ['others'];
+const VALID_SCOPES = ['others', 'patient', 'appointment', 'referral'];
 
 describe('features', () => {
-  it('must match "action:target" or "action:target:condition"', () => {
+  it('must match "action:target" or "action:target:scope"', () => {
     for (const feature of USER_FEATURES) {
       const parts = feature.split(':');
       expect(parts.length).toBeGreaterThanOrEqual(2);
@@ -28,11 +28,11 @@ describe('features', () => {
     }
   });
 
-  it('third part must be a valid "condition" when present', () => {
+  it('third part must be a valid "scope" when present', () => {
     for (const feature of USER_FEATURES) {
       const parts = feature.split(':');
       if (parts.length === 3) {
-        expect(VALID_CONDITIONS).toContain(parts[2]);
+        expect(VALID_SCOPES).toContain(parts[2]);
       }
     }
   });
