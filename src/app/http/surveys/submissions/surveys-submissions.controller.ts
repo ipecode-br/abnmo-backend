@@ -10,7 +10,7 @@ import {
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ZodResponse } from 'nestjs-zod';
 
-import { Public } from '@/common/decorators/public.decorator';
+import { Dashboard } from '@/common/decorators/dashboard.decorator';
 import { RequireFeature } from '@/common/decorators/require-feature.decorator';
 import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
@@ -48,7 +48,7 @@ export class SurveysSubmissionsController {
     private readonly getTotalSurveySubmissionsUseCase: GetTotalSurveySubmissionsUseCase,
   ) {}
 
-  @Public()
+  @Dashboard()
   @Post()
   @Log('init_survey')
   @ApiOperation({ summary: 'Inicia o formulário de catalogação' })
@@ -65,7 +65,7 @@ export class SurveysSubmissionsController {
     };
   }
 
-  @Public()
+  @Dashboard()
   @Post(':id/confirm-upload')
   @Log('init_survey')
   @ApiOperation({ summary: 'Confirma o upload do documento' })

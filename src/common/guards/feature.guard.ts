@@ -4,6 +4,7 @@ import { Reflector } from '@nestjs/core';
 import type { RequestUser } from '@/common/types';
 
 import { can } from '../authorization/can';
+import { IS_DASHBOARD_KEY } from '../decorators/dashboard.decorator';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { RequireFeature } from '../decorators/require-feature.decorator';
 
@@ -16,10 +17,14 @@ export class FeatureGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
+    const isDashboard = this.reflector.getAllAndOverride<boolean>(
+      IS_DASHBOARD_KEY,
+      [context.getHandler(), context.getClass()],
+    );
+
     const feature = this.reflector.get(RequireFeature, context.getHandler());
 
-    // Skip validation for public or featureless routes
-    if (isPublic) return true;
+    if (isPublic || isDashboard) return true;
 
     const request = context.switchToHttp().getRequest<{ user: RequestUser }>();
     const user = request.user;

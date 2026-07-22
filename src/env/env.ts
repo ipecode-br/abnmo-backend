@@ -16,6 +16,7 @@ export const envSchema = z.object({
   // APPs
   APP_URL: z.url(),
   DASHBOARD_URL: z.url(),
+  DASHBOARD_KEY: z.string().min(1),
 
   // Secrets
   COOKIE_DOMAIN: z.string().min(1),

@@ -6,6 +6,7 @@ import { CryptographyModule } from '@/app/cryptography/cryptography.module';
 import { MailModule } from '@/app/mail/mail.module';
 import { StorageModule } from '@/app/storage/storage.module';
 import { AuthGuard } from '@/common/guards/auth.guard';
+import { DashboardGuard } from '@/common/guards/dashboard.guard';
 import { FeatureGuard } from '@/common/guards/feature.guard';
 import { Session } from '@/domain/entities/session';
 import { Token } from '@/domain/entities/token';
@@ -41,6 +42,7 @@ import { SignInWithEmailUseCase } from './use-cases/sign-in-with-email.use-case'
     RecoverPasswordUseCase,
     ResetPasswordUseCase,
     SignInWithEmailUseCase,
+    { provide: APP_GUARD, useClass: DashboardGuard },
     { provide: APP_GUARD, useClass: AuthGuard },
     { provide: APP_GUARD, useClass: FeatureGuard },
   ],

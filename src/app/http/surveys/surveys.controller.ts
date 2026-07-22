@@ -2,7 +2,7 @@ import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ZodResponse } from 'nestjs-zod';
 
-import { Public } from '@/common/decorators/public.decorator';
+import { Dashboard } from '@/common/decorators/dashboard.decorator';
 import { RequireFeature } from '@/common/decorators/require-feature.decorator';
 import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
@@ -30,7 +30,7 @@ export class SurveysController {
     private readonly sendSurveyReminderUseCase: SendSurveyReminderUseCase,
   ) {}
 
-  @Public()
+  @Dashboard()
   @Post('complete')
   @Log('complete_survey')
   @ApiOperation({ summary: 'Finaliza o formulário de catalogação' })

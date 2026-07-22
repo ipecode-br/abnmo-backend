@@ -19,6 +19,7 @@ import { User } from '@/domain/entities/user';
 import { EnvService } from '@/env/env.service';
 import { deleteCookie } from '@/utils/cookies';
 
+import { IS_DASHBOARD_KEY } from '../decorators/dashboard.decorator';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 
 interface AuthenticatedRequest {
@@ -44,8 +45,12 @@ export class AuthGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
+    const isDashboard = this.reflector.getAllAndOverride<boolean>(
+      IS_DASHBOARD_KEY,
+      [context.getHandler(), context.getClass()],
+    );
 
-    if (isPublic) return true;
+    if (isPublic || isDashboard) return true;
 
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const response = context.switchToHttp().getResponse<Response>();
