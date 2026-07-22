@@ -62,6 +62,9 @@ export const USER_FEATURES = [
   'delete:user-invite',
   // Statistics
   'read:statistic',
+  'read:statistic:patient',
+  'read:statistic:appointment',
+  'read:statistic:referral',
 ] as const;
 export type UserFeature = (typeof USER_FEATURES)[number];
 

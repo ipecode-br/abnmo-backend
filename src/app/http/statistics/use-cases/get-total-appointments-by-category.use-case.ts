@@ -50,7 +50,7 @@ export class GetTotalAppointmentsByCategoryUseCase {
       }
 
       if (patientId) {
-        baseQuery.andWhere('appointment.patient_id = :patientId', {
+        baseQuery.andWhere('appointment.patient.id = :patientId', {
           patientId,
         });
       }

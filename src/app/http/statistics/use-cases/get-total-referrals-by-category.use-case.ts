@@ -49,7 +49,7 @@ export class GetTotalReferralsByCategoryUseCase {
       }
 
       if (patientId) {
-        baseQuery.andWhere('referral.patient_id = :patientId', {
+        baseQuery.andWhere('referral.patient.id = :patientId', {
           patientId,
         });
       }

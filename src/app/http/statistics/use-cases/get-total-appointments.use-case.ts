@@ -41,23 +41,22 @@ export class GetTotalAppointmentsUseCase {
     startDate,
     endDate,
   }: GetTotalAppointmentsUseCaseInput = {}): Promise<number> {
+    const dateRange = period
+      ? getDateRangeForPeriod(period)
+      : { startDate, endDate };
+
     const where: FindOptionsWhere<Appointment> = {};
 
-    if (period) {
-      const dateRange = getDateRangeForPeriod(period);
+    if (dateRange.startDate && dateRange.endDate) {
       where.date = Between(dateRange.startDate, dateRange.endDate);
     }
 
-    if (startDate && !endDate) {
-      where.date = MoreThanOrEqual(startDate);
+    if (dateRange.startDate && !dateRange.endDate) {
+      where.date = MoreThanOrEqual(dateRange.startDate);
     }
 
-    if (endDate && !startDate) {
-      where.date = LessThanOrEqual(endDate);
-    }
-
-    if (startDate && endDate) {
-      where.date = Between(startDate, endDate);
+    if (dateRange.endDate && !dateRange.startDate) {
+      where.date = LessThanOrEqual(dateRange.endDate);
     }
 
     if (patientId) {

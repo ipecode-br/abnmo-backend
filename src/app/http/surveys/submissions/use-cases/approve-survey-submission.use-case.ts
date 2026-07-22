@@ -73,7 +73,7 @@ export class ApproveSurveySubmissionUseCase {
     const completeSurveyUrl = `${this.dashboardUrl}/catalogacao/voce?token=${surveyToken}`;
 
     const subject =
-      'Sua catalogação foi aprovada — preencha o questionário ABNMO';
+      'Sua catalogação foi aprovada — complete o questionário ABNMO';
     const preheader =
       'Sua submissão foi aprovada. Acesse o link para preencher o questionário completo.';
 

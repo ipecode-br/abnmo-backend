@@ -26,37 +26,37 @@ export class GetTotalPatientsUseCase {
     startDate,
     endDate,
   }: GetTotalPatientsUseCaseInput = {}): Promise<number> {
+    const dateRange = period
+      ? getDateRangeForPeriod(period)
+      : { startDate, endDate };
+
     const query: SelectQueryBuilder<User> = this.usersRepository
       .createQueryBuilder('user')
       .innerJoin('user.survey', 'survey')
       .where('user.role = :role', { role: 'patient' })
       .andWhere('user.status != :pending', { pending: 'pending' });
 
-    if (status) {
-      query.andWhere('user.status = :status', { status });
-    }
-
-    if (period) {
-      const dateRange = getDateRangeForPeriod(period);
+    if (dateRange.startDate && dateRange.endDate) {
       query.andWhere('user.created_at BETWEEN :start AND :end', {
         start: dateRange.startDate,
         end: dateRange.endDate,
       });
     }
 
-    if (startDate && !endDate) {
-      query.andWhere('user.created_at >= :startDate', { startDate });
-    }
-
-    if (endDate && !startDate) {
-      query.andWhere('user.created_at <= :endDate', { endDate });
-    }
-
-    if (startDate && endDate) {
-      query.andWhere('user.created_at BETWEEN :start AND :end', {
-        start: startDate,
-        end: endDate,
+    if (dateRange.startDate && !dateRange.endDate) {
+      query.andWhere('user.created_at >= :startDate', {
+        startDate: dateRange.startDate,
       });
+    }
+
+    if (dateRange.endDate && !dateRange.startDate) {
+      query.andWhere('user.created_at <= :endDate', {
+        endDate: dateRange.endDate,
+      });
+    }
+
+    if (status) {
+      query.andWhere('user.status = :status', { status });
     }
 
     query.select('COUNT(DISTINCT user.id)', 'count');
