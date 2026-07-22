@@ -37,7 +37,7 @@ import { GetTotalSurveySubmissionsUseCase } from './use-cases/get-total-survey-s
 
 @ApiTags('Catalogação')
 @Controller('survey-submissions')
-export class SurveysSubmissionsController {
+export class SurveySubmissionsController {
   constructor(
     private readonly approveSurveySubmissionUseCase: ApproveSurveySubmissionUseCase,
     private readonly confirmSurveySubmissionUploadUseCase: ConfirmSurveySubmissionUploadUseCase,

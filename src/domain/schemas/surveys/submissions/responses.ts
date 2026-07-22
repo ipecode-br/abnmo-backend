@@ -5,14 +5,15 @@ import { documentSchema } from '../../documents';
 import { emailSchema, nameSchema, phoneSchema } from '../../shared';
 import { surveySubmissionSchema } from '.';
 
-export const createSurveySubmissionResponseSchema = baseResponseSchema.extend({
-  data: z.object({
-    submissionId: surveySubmissionSchema.shape.id,
-    key: documentSchema.shape.key,
-    url: z.url(),
-    fields: z.record(z.string(), z.string()),
-  }),
-});
+export const createSurveySubmissionResponseSchema = baseResponseSchema
+  .extend({
+    data: z.object({
+      submissionId: surveySubmissionSchema.shape.id,
+      url: z.url(),
+      fields: z.record(z.string(), z.string()),
+    }),
+  })
+  .strict();
 
 export const surveySubmissionResponseSchema = z.strictObject({
   ...surveySubmissionSchema.pick({

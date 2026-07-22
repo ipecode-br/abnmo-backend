@@ -29,7 +29,6 @@ interface CreateSurveySubmissionUseCaseInput {
 
 interface CreateSurveySubmissionUseCaseOutput {
   submissionId: string;
-  key: string;
   url: string;
   fields: Record<string, string>;
 }
@@ -128,7 +127,6 @@ export class CreateSurveySubmissionUseCase {
 
       return {
         submissionId: submission.id,
-        key,
         url: data.url,
         fields: data.fields,
       };
