@@ -7,6 +7,7 @@ import { SnakeNamingStrategy } from './snake-naming.strategy';
 
 export function getTypeOrmConfig(env: EnvService): TypeOrmModuleOptions {
   const isLambda = env.get('APP_ENVIRONMENT') === 'lambda';
+  const isLocal = env.get('APP_ENVIRONMENT') === 'local';
   const isTestEnv = env.get('NODE_ENV') === 'test';
 
   const baseConfig: TypeOrmModuleOptions = {
@@ -23,7 +24,8 @@ export function getTypeOrmConfig(env: EnvService): TypeOrmModuleOptions {
     migrationsRun: false,
     logging: false,
     dropSchema: false,
-    ssl: false,
+    // Use "ssl: { rejectUnauthorized: false }" when connecting to remote database locally
+    ssl: isLocal ? false : { rejectUnauthorized: false },
     retryAttempts: 1,
     retryDelay: 500,
     extra: {

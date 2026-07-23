@@ -16,14 +16,16 @@ const dataSource = new DataSource({
   username: process.env.DB_USERNAME,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
+  entities: DATABASE_ENTITIES,
+  namingStrategy: new SnakeNamingStrategy(),
+  // Use "ssl: { rejectUnauthorized: false }" when running remote migrations locally
+  // ssl: { rejectUnauthorized: false },
+  synchronize: false,
   migrations: [
     process.env.APP_ENVIRONMENT === 'docker'
       ? 'dist/infra/database/migrations/*.js'
       : 'infra/database/migrations/*.ts',
   ],
-  entities: DATABASE_ENTITIES,
-  synchronize: false,
-  namingStrategy: new SnakeNamingStrategy(),
   ...(isTestEnv && {
     extra: {
       options: '-c search_path=test,public',
