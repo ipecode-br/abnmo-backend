@@ -1,9 +1,18 @@
-import type { AuthTokenRole } from '@/domain/enums/tokens';
+import type { UserRole } from '@/domain/enums/users';
 
-export type AuthUser = {
+import { Feature } from './authorization/features';
+
+export type RequestUser = {
   id: string;
   email: string;
-  role: AuthTokenRole;
+  role: UserRole;
+  features: Feature[];
+};
+
+export type ContextUser = {
+  id: string;
+  email: string;
+  role: UserRole;
 };
 
 type AppointmentsEvent =
@@ -15,8 +24,6 @@ type AuthEvent =
   | 'change_password'
   | 'logout'
   | 'recover_password'
-  | 'refresh_token'
-  | 'register_patient'
   | 'register_user'
   | 'reset_password'
   | 'sign_in';
@@ -37,19 +44,27 @@ type ReferralsEvent = 'cancel_referral' | 'create_referral' | 'update_referral';
 
 type UsersEvent =
   | 'activate_user'
-  | 'cancel_user_invite'
+  | 'delete_user_invite'
   | 'create_user_invite'
   | 'deactivate_user'
   | 'update_user';
 
+type SurveyEvent =
+  | 'init_survey'
+  | 'complete_survey'
+  | 'approve_survey'
+  | 'decline_survey'
+  | 'send_survey_reminder';
+
 type StatusEvent = 'get_status';
 
-export type Event =
+export type ContextEvent =
   | AppointmentsEvent
   | AuthEvent
   | PatientRequirementsEvent
   | PatientSupportsEvent
   | PatientsEvent
   | ReferralsEvent
-  | StatusEvent
-  | UsersEvent;
+  | UsersEvent
+  | SurveyEvent
+  | StatusEvent;

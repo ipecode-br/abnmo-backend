@@ -7,6 +7,7 @@ import {
 } from '@/domain/enums/referrals';
 import { SPECIALTY_CATEGORIES } from '@/domain/enums/shared';
 
+import { patientSchema } from '../patients';
 import {
   queryDateSchema,
   queryLimitSchema,
@@ -14,25 +15,28 @@ import {
   queryPageSchema,
   queryPerPageSchema,
   querySearchSchema,
+  validateEndDate,
 } from '../query';
 import { specialtySchema } from '../shared';
 import { referralSchema } from '.';
 
-export const createReferralSchema = referralSchema
-  .pick({
-    patientId: true,
+export const createReferralSchema = z.strictObject({
+  patientId: patientSchema.shape.id,
+  category: specialtySchema.optional(),
+  ...referralSchema.pick({
     date: true,
     condition: true,
     annotation: true,
     professionalName: true,
-  })
-  .extend({ category: specialtySchema.optional() })
-  .strict();
+  }).shape,
+});
 
-export const updateReferralSchema = referralSchema.pick({
-  date: true,
-  condition: true,
-  annotation: true,
+export const updateReferralSchema = z.strictObject({
+  ...referralSchema.pick({
+    date: true,
+    condition: true,
+    annotation: true,
+  }).shape,
 });
 
 export const getReferralsQuerySchema = z
@@ -50,15 +54,4 @@ export const getReferralsQuerySchema = z
     perPage: queryPerPageSchema,
     limit: queryLimitSchema,
   })
-  .refine(
-    (data) => {
-      if (data.startDate && data.endDate) {
-        return data.startDate < data.endDate;
-      }
-      return true;
-    },
-    {
-      message: 'It should be greater than `startDate`',
-      path: ['endDate'],
-    },
-  );
+  .superRefine(validateEndDate);

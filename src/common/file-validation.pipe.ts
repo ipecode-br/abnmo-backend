@@ -26,8 +26,6 @@ export class FileValidationPipe implements PipeTransform {
         })
         .join(', ');
 
-      console.log(formattedAllowedTypes);
-
       throw new BadRequestException(
         `O arquivo enviado é inválido. Por favor, envie em um dos seguintes formatos: ${formattedAllowedTypes}.`,
       );

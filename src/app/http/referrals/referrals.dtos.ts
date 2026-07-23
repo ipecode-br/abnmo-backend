@@ -12,6 +12,6 @@ export class GetReferralsResponse extends createZodDto(
   getReferralsResponseSchema,
 ) {}
 
-export class CreateReferralDto extends createZodDto(createReferralSchema) {}
+export class CreateReferralBody extends createZodDto(createReferralSchema) {}
 
-export class UpdateReferralDto extends createZodDto(updateReferralSchema) {}
+export class UpdateReferralBody extends createZodDto(updateReferralSchema) {}

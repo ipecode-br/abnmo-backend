@@ -1,35 +1,25 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  Index,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, Index } from 'typeorm';
 
-import { AUTH_TOKENS, type AuthTokenType } from '../enums/tokens';
-import type { AuthToken } from '../schemas/tokens';
+import { TOKENS_ENUM, type TokenType } from '../enums/tokens';
+import type { TokenSchema } from '../schemas/tokens';
+import { BaseEntity } from './base';
 
 @Entity('tokens')
-export class Token implements AuthToken {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
+export class Token extends BaseEntity implements TokenSchema {
   @Index()
   @Column({ type: 'uuid', nullable: true })
-  entityId: string | null;
+  userId: string | null;
 
   @Column({ type: 'varchar', length: 64, nullable: true })
   email: string | null;
 
-  @Column({ type: 'varchar' })
+  @Index()
+  @Column({ type: 'varchar', length: 254, unique: true })
   token: string;
 
-  @Column({ type: 'enum', enum: AUTH_TOKENS })
-  type: AuthTokenType;
+  @Column({ type: 'enum', enum: TOKENS_ENUM })
+  type: TokenType;
 
-  @Column({ type: 'datetime', nullable: true })
-  expiresAt: Date | null;
-
-  @CreateDateColumn({ type: 'datetime' })
-  createdAt: Date;
+  @Column({ type: 'timestamp' })
+  expiresAt: Date;
 }

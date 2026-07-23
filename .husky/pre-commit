@@ -3,7 +3,7 @@ check_linting_errors() {
 
   npx lint-staged || exit 1
 
-  echo 'Linting completed successfully.'
+  echo 'Linting completed.'
 }
 
 # Add functions to be called on every pre-commit below

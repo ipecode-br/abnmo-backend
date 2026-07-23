@@ -7,11 +7,10 @@ import { EnvService } from '@/env/env.service';
 import { formatSize } from '@/utils/formatters/format-size';
 
 interface UploadFileUseCaseInput {
-  visibility: 'public' | 'private';
   fileName: string;
   mimeType: string;
   buffer: Buffer;
-  folder?: string;
+  folder: string;
 }
 
 interface UploadFileUseCaseOutput {
@@ -25,24 +24,18 @@ interface UploadFileUseCaseOutput {
 @Log()
 export class UploadFileUseCase {
   private readonly bucketName: string;
-  private readonly s3Client: S3Client;
-  private readonly cdnPublicUrl: string;
-  private readonly cdnPrivateUrl: string;
+  private readonly cdnUrl: string;
 
   constructor(
     private readonly envService: EnvService,
     private readonly logger: LogService,
+    private readonly s3Client: S3Client,
   ) {
     this.bucketName = this.envService.get('STORAGE_BUCKET_NAME');
-    this.cdnPublicUrl = this.envService.get('CDN_PUBLIC_URL');
-    this.cdnPrivateUrl = this.envService.get('CDN_PRIVATE_URL');
-
-    // Initialize S3 client - use default AWS credentials chain
-    this.s3Client = new S3Client({});
+    this.cdnUrl = this.envService.get('CDN_URL');
   }
 
   async execute({
-    visibility,
     fileName,
     mimeType,
     buffer,
@@ -52,8 +45,7 @@ export class UploadFileUseCase {
       this.validateFolder(folder);
     }
 
-    const filePath = folder ? `${folder}/${fileName}` : `/${fileName}`;
-    const s3Key = `${visibility}${filePath}`;
+    const s3Key = `${folder}/${fileName}`;
 
     const uploadCommand = new PutObjectCommand({
       Bucket: this.bucketName,
@@ -64,9 +56,7 @@ export class UploadFileUseCase {
 
     await this.s3Client.send(uploadCommand);
 
-    const cdnBaseUrl =
-      visibility === 'private' ? this.cdnPrivateUrl : this.cdnPublicUrl;
-    const url = `${cdnBaseUrl}${filePath}`;
+    const url = `${this.cdnUrl}/${s3Key}`;
     const size = formatSize(buffer.length);
 
     this.logger.log('File uploaded', { url, s3Key, size });

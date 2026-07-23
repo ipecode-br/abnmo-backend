@@ -49,4 +49,4 @@ jobs:
             --output text \
             --query 'FunctionName'
 
-          echo "Production Lambda deployment completed successfully"
+          echo "Production Lambda deployment completed"

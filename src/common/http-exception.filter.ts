@@ -48,12 +48,25 @@ export class HttpExceptionFilter extends BaseExceptionFilter {
     let message = 'Um erro inesperado ocorreu.';
 
     if (exception instanceof ZodSerializationException) {
+      status = exception.getStatus();
       const zodError = exception.getZodError();
-      if (zodError instanceof ZodError) {
-        this.logger.error('ZodSerializationException', {
-          error: zodError.message,
-        });
+      let fields: ZodFieldError[] | undefined;
+
+      if (zodError instanceof ZodError && zodError.issues.length > 0) {
+        fields = zodError.issues.map((issue) => ({
+          field: issue.path.join('.') || 'root',
+          error: issue.message,
+        }));
       }
+
+      this.logger.error('ZodSerializationException', {
+        status,
+        message,
+        fields,
+        cause: exception.cause,
+        stack: exception.stack,
+      });
+      return response.status(status).json({ success: false, message });
     }
 
     if (exception instanceof ZodValidationException) {
@@ -70,7 +83,12 @@ export class HttpExceptionFilter extends BaseExceptionFilter {
         }));
       }
 
-      this.logger.error('ZodValidationException', { status, message, fields });
+      this.logger.error('ZodValidationException', {
+        status,
+        message,
+        fields,
+        cause: exception.cause,
+      });
       return response.status(status).json({ success: false, message, fields });
     }
 
@@ -83,9 +101,22 @@ export class HttpExceptionFilter extends BaseExceptionFilter {
         message = responseMessage;
       }
 
+      // TODO: make this block more readable
+      if (
+        status === HttpStatus.NOT_FOUND &&
+        responseMessage &&
+        /^Cannot (GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS) \//.test(
+          responseMessage,
+        )
+      ) {
+        status = HttpStatus.FORBIDDEN;
+        message = 'Você não tem permissão para executar esta ação.';
+      }
+
       this.logger.error('HttpException', {
         status,
         message,
+        cause: exception.cause,
         stack: exception.stack,
       });
       return response.status(status).json({ success: false, message });
@@ -125,7 +156,6 @@ export class HttpExceptionFilter extends BaseExceptionFilter {
       stack: errorStack,
       details: errorDetails,
       status,
-      context: 'GlobalExceptionFilter',
     });
 
     return response.status(status).json({ success: false, message });

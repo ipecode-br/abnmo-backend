@@ -7,188 +7,119 @@ import {
 import { Reflector } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Response } from 'express';
-import type { Repository } from 'typeorm';
+import { MoreThan, type Repository } from 'typeorm';
 
 import { CryptographyService } from '@/app/cryptography/cryptography.service';
-import { GenerateAuthTokensUseCase } from '@/app/http/auth/use-cases/generate-auth-tokens-use-case';
 import { ContextService } from '@/common/context/context.service';
-import type { AuthUser } from '@/common/types';
+import type { RequestUser } from '@/common/types';
 import type { Cookie } from '@/domain/cookies';
-import { COOKIES_MAPPING } from '@/domain/cookies';
-import { Patient } from '@/domain/entities/patient';
-import { Token } from '@/domain/entities/token';
+import { COOKIES } from '@/domain/cookies';
+import { Session } from '@/domain/entities/session';
 import { User } from '@/domain/entities/user';
-import { AUTH_TOKENS_MAPPING, type AuthTokenRole } from '@/domain/enums/tokens';
-import type {
-  AccessTokenPayload,
-  RefreshTokenPayload,
-} from '@/domain/schemas/tokens';
 import { EnvService } from '@/env/env.service';
 import { deleteCookie } from '@/utils/cookies';
 
+import { IS_DASHBOARD_KEY } from '../decorators/dashboard.decorator';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 
 interface AuthenticatedRequest {
   signedCookies?: Record<Cookie, string>;
-  user?: AuthUser;
+  user?: RequestUser;
 }
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  private readonly cookieDomain: string;
-
   constructor(
+    @InjectRepository(Session)
+    private readonly sessionsRepository: Repository<Session>,
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
-    @InjectRepository(Patient)
-    private readonly patientsRepository: Repository<Patient>,
-    @InjectRepository(Token)
-    private readonly tokensRepository: Repository<Token>,
     private readonly contextService: ContextService,
     private readonly cryptographyService: CryptographyService,
-    private readonly generateAuthTokensUseCase: GenerateAuthTokensUseCase,
     private readonly envService: EnvService,
     private readonly reflector: Reflector,
-  ) {
-    this.cookieDomain = this.envService.get('COOKIE_DOMAIN');
-  }
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
+    const isDashboard = this.reflector.getAllAndOverride<boolean>(
+      IS_DASHBOARD_KEY,
+      [context.getHandler(), context.getClass()],
+    );
 
-    if (isPublic) {
-      return true;
-    }
+    if (isPublic || isDashboard) return true;
 
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const response = context.switchToHttp().getResponse<Response>();
 
-    const accessToken = request.signedCookies?.access_token;
-    const refreshToken = request.signedCookies?.refresh_token;
+    const rawToken = request.signedCookies?.session;
 
-    const accessTokenMessage = 'Token de acesso inválido ou expirado.';
-    const refreshTokenMessage = 'Token de atualização inválido ou expirado.';
-
-    if (accessToken) {
-      try {
-        const payload =
-          await this.cryptographyService.verifyToken<AccessTokenPayload>(
-            accessToken,
-          );
-        const user = await this.getEntityById(payload.sub, payload.role);
-
-        if (!user) {
-          throw new UnauthorizedException(accessTokenMessage);
-        }
-
-        request.user = user;
-        // ensure request context has the authenticated user too
-        this.contextService.setUser(user);
-        return true;
-      } catch (error) {
-        this.clearCookies(response);
-
-        if (error instanceof UnauthorizedException) {
-          throw error;
-        }
-
-        throw new UnauthorizedException(accessTokenMessage);
-      }
-    }
-
-    if (!refreshToken) {
+    if (!rawToken) {
       throw new UnauthorizedException(
-        'Você não tem permissão para acessar este recurso.',
+        'Você não tem permissão para executar esta ação.',
+        { cause: 'Unauthenticated user' },
       );
     }
 
-    try {
-      const payload =
-        await this.cryptographyService.verifyToken<RefreshTokenPayload>(
-          refreshToken,
-        );
+    const tokenHash = this.cryptographyService.hashToken(rawToken);
 
-      const [user, storedRefreshToken] = await Promise.all([
-        this.getEntityById(payload.sub, payload.role),
-        this.tokensRepository.findOne({
-          where: {
-            type: AUTH_TOKENS_MAPPING.refreshToken,
-            token: refreshToken,
-            entityId: payload.sub,
-          },
-        }),
-      ]);
-
-      if (!user || !storedRefreshToken || !storedRefreshToken.expiresAt) {
-        throw new UnauthorizedException(refreshTokenMessage);
-      }
-
-      if (storedRefreshToken.expiresAt < new Date()) {
-        await this.tokensRepository.delete({ entityId: payload.sub });
-        throw new UnauthorizedException(refreshTokenMessage);
-      }
-
-      await this.generateAuthTokensUseCase.execute({
-        user: { id: user.id, email: user.email, role: user.role },
-        response,
-      });
-
-      request.user = user;
-      // context is already running from middleware; keep it in sync
-      this.contextService.setUser(user);
-      return true;
-    } catch (error) {
-      this.clearCookies(response);
-
-      if (error instanceof UnauthorizedException) {
-        throw error;
-      }
-
-      throw new UnauthorizedException(refreshTokenMessage);
-    }
-  }
-
-  private async getEntityById(
-    id: string,
-    role: AuthTokenRole,
-  ): Promise<AuthUser | null> {
-    if (role === 'patient') {
-      const patient = await this.patientsRepository.findOne({
-        select: { id: true, email: true, status: true },
-        where: { id },
-      });
-
-      if (!patient || patient.status !== 'active') {
-        return null;
-      }
-
-      return { id: patient.id, email: patient.email, role: 'patient' };
-    }
-
-    const user = await this.usersRepository.findOne({
-      select: { id: true, email: true, role: true, status: true },
-      where: { id },
+    const session = await this.sessionsRepository.findOne({
+      where: { tokenHash, expiresAt: MoreThan(new Date()) },
+      relations: { user: true },
     });
 
-    if (!user || user.status !== 'active') {
-      return null;
+    if (!session) {
+      this.clearCookies(response);
+      throw new UnauthorizedException('Sessão inválida ou expirada.', {
+        cause: 'Session not found or expired',
+      });
     }
 
-    return { id: user.id, email: user.email, role: user.role };
+    const user = await this.getUserById(session.user.id);
+
+    if (!user) {
+      this.clearCookies(response);
+      throw new UnauthorizedException('Sessão inválida ou expirada.', {
+        cause: 'User not found or inactive',
+      });
+    }
+
+    this.contextService.setUser({
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
+
+    request.user = user;
+    return true;
+  }
+
+  private async getUserById(id: string): Promise<RequestUser | null> {
+    const user = await this.usersRepository.findOne({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        features: true,
+        status: true,
+      },
+    });
+
+    if (!user || user.status !== 'active') return null;
+
+    return {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      features: user.features,
+    };
   }
 
   private clearCookies(response: Response) {
-    deleteCookie(response, COOKIES_MAPPING.accessToken, {
-      domain: `.${this.cookieDomain}`,
-      sameSite: 'strict',
-    });
-
-    deleteCookie(response, COOKIES_MAPPING.refreshToken, {
-      domain: `.${this.cookieDomain}`,
-      sameSite: 'strict',
-    });
+    deleteCookie(response, this.envService, COOKIES.session);
   }
 }

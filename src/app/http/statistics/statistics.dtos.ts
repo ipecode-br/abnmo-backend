@@ -14,8 +14,8 @@ import {
 import {
   getTotalAppointmentsByCategoryResponseSchema,
   getTotalAppointmentsResponseSchema,
-  getTotalPatientsByCityResponseSchema,
   getTotalPatientsByGenderResponseSchema,
+  getTotalPatientsByStateResponseSchema,
   getTotalPatientsResponseSchema,
   getTotalPatientsWithAppointmentsByStateResponseSchema,
   getTotalPatientsWithAppointmentsResponseSchema,
@@ -51,8 +51,8 @@ export class GetTotalPatientsByFieldQuery extends createZodDto(
   getTotalPatientsByFieldQuerySchema,
 ) {}
 
-export class GetTotalPatientsByCityResponse extends createZodDto(
-  getTotalPatientsByCityResponseSchema,
+export class GetTotalPatientsByStateResponse extends createZodDto(
+  getTotalPatientsByStateResponseSchema,
 ) {}
 
 export class GetTotalPatientsByGenderResponse extends createZodDto(

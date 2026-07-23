@@ -8,12 +8,12 @@ import type { Repository } from 'typeorm';
 
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
-import type { AuthUser } from '@/common/types';
+import type { RequestUser } from '@/common/types';
 import { PatientRequirement } from '@/domain/entities/patient-requirement';
 
 interface DeclinePatientRequirementUseCaseInput {
   id: string;
-  user: AuthUser;
+  user: RequestUser;
 }
 
 @Injectable()
@@ -46,10 +46,9 @@ export class DeclinePatientRequirementUseCase {
 
     await this.patientRequirementsRepository.update(id, {
       status: 'declined',
-      declinedBy: user.id,
-      declinedAt: new Date(),
+      updatedBy: user.id,
     });
 
-    this.logger.log('Patient requirement declined successfully', { id });
+    this.logger.log('Patient requirement declined', { id });
   }
 }

@@ -2,17 +2,16 @@ name: abnmo_dev
 
 services:
   abnmo_db:
-    image: mysql:8.4
-    container_name: 'mysql'
+    image: postgres:17-alpine
+    container_name: database
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${DB_DATABASE}
-      MYSQL_USER: ${DB_USERNAME}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
     ports:
-      - '${DB_PORT}:3306'
+      - '${DB_PORT}:5432'
     volumes:
-      - abnmo_mysql_data:/var/lib/mysql
+      - abnmo_db_data:/var/lib/postgresql/data
 
 volumes:
-  abnmo_mysql_data:
+  abnmo_db_data:

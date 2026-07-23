@@ -12,13 +12,14 @@ import { MailService } from '@/app/mail/mail.service';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import { buildResetPasswordEmail } from '@/domain/email-templates/reset-password-email';
-import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
-import { AUTH_TOKENS_MAPPING, type AuthTokenRole } from '@/domain/enums/tokens';
+import { TOKENS } from '@/domain/enums/tokens';
+import { UserRole } from '@/domain/enums/users';
 import type { ResetPasswordPayload } from '@/domain/schemas/tokens';
 
-import { GenerateAuthTokensUseCase } from './generate-auth-tokens-use-case';
+import { CreateSessionUseCase } from './create-session.use-case';
+import { ExpireSessionUseCase } from './expire-session.use-case';
 
 interface ResetPasswordUseCaseInput {
   password: string;
@@ -32,12 +33,11 @@ export class ResetPasswordUseCase {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
-    @InjectRepository(Patient)
-    private readonly patientsRepository: Repository<Patient>,
     @InjectRepository(Token)
     private readonly tokensRepository: Repository<Token>,
     private readonly cryptographyService: CryptographyService,
-    private readonly generateAuthTokensUseCase: GenerateAuthTokensUseCase,
+    private readonly createSessionUseCase: CreateSessionUseCase,
+    private readonly expireSessionUseCase: ExpireSessionUseCase,
     private readonly mailService: MailService,
     private readonly logger: LogService,
   ) {}
@@ -64,7 +64,7 @@ export class ResetPasswordUseCase {
 
     if (
       !payload ||
-      token.type !== AUTH_TOKENS_MAPPING.passwordReset ||
+      token.type !== TOKENS.passwordReset ||
       (token.expiresAt && token.expiresAt < new Date())
     ) {
       throw new UnauthorizedException(
@@ -74,62 +74,44 @@ export class ResetPasswordUseCase {
 
     const id = payload.sub;
 
-    let entity: User | Patient | null = null;
-    let role: AuthTokenRole = 'patient';
+    const user = await this.usersRepository.findOne({
+      select: { id: true, email: true, name: true },
+      where: { id },
+    });
 
-    const [user, patient] = await Promise.all([
-      this.usersRepository.findOne({
-        select: { id: true, email: true, name: true },
-        where: { id },
-      }),
-      this.patientsRepository.findOne({
-        select: { id: true, email: true, name: true },
-        where: { id },
-      }),
-    ]);
-
-    if (user) {
-      entity = user;
-      role = user.role;
-    }
-
-    if (patient) {
-      entity = patient;
-    }
-
-    if (!entity) {
-      this.logger.warn('Reset password failed: Entity not registered', { id });
+    if (!user) {
+      this.logger.warn('Reset password failed: User not registered', { id });
       throw new NotFoundException('Usuário não encontrado.');
     }
 
+    const role: UserRole = user.role;
+
     const passwordHash = await this.cryptographyService.createHash(password);
 
-    if (role === 'patient') {
-      await this.patientsRepository.update(entity.id, {
-        password: passwordHash,
-      });
-    } else {
-      await this.usersRepository.update(entity.id, { password: passwordHash });
-    }
+    await this.usersRepository.update(user.id, {
+      password: passwordHash,
+    });
 
-    // Delete all tokens for this entity to ensure security after changing the password
-    await this.tokensRepository.delete({ entityId: entity.id });
+    await this.tokensRepository.delete({ userId: user.id });
 
-    await this.generateAuthTokensUseCase.execute({
-      user: { id: entity.id, email: entity.email, role },
+    await this.expireSessionUseCase.execute({ userId: user.id });
+
+    await this.createSessionUseCase.execute({
+      user: { id: user.id, email: user.email, role },
+      keepLoggedIn: false,
       response,
     });
 
     this.logger.log('Password reseted', {
-      id: entity.id,
-      email: entity.email,
+      id: user.id,
+      email: user.email,
       role,
     });
 
     const subject = 'Senha de acesso alterada com sucesso';
     const preheader =
       'Sua senha de acesso ao Sistema Viver Melhor foi alterada com sucesso.';
-    const name = entity.name.split(' ')[0];
+    const name = user.name.split(' ')[0];
 
     const resetPasswordEmail = buildResetPasswordEmail({
       title: subject,
@@ -138,7 +120,7 @@ export class ResetPasswordUseCase {
     });
 
     await this.mailService.send({
-      to: entity.email,
+      to: user.email,
       subject,
       text: preheader,
       html: resetPasswordEmail,

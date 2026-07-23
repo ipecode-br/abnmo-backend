@@ -8,19 +8,20 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ZodResponse } from 'nestjs-zod';
 
-import { Roles } from '@/common/decorators/roles.decorator';
+import { RequireFeature } from '@/common/decorators/require-feature.decorator';
 import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
 import { Log } from '@/common/log/log.decorator';
-import type { AuthUser } from '@/common/types';
+import type { RequestUser } from '@/common/types';
 
 import {
-  CreateAppointmentDto,
+  CreateAppointmentBody,
   GetAppointmentsQuery,
   GetAppointmentsResponse,
-  UpdateAppointmentDto,
+  UpdateAppointmentBody,
 } from './appointments.dtos';
 import { CancelAppointmentUseCase } from './use-cases/cancel-appointment.use-case';
 import { CreateAppointmentUseCase } from './use-cases/create-appointment.use-case';
@@ -31,19 +32,19 @@ import { UpdateAppointmentUseCase } from './use-cases/update-appointment.use-cas
 @Controller('appointments')
 export class AppointmentsController {
   constructor(
-    private readonly getAppointmentsUseCase: GetAppointmentsUseCase,
-    private readonly createAppointmentUseCase: CreateAppointmentUseCase,
-    private readonly updateAppointmentUseCase: UpdateAppointmentUseCase,
     private readonly cancelAppointmentUseCase: CancelAppointmentUseCase,
+    private readonly createAppointmentUseCase: CreateAppointmentUseCase,
+    private readonly getAppointmentsUseCase: GetAppointmentsUseCase,
+    private readonly updateAppointmentUseCase: UpdateAppointmentUseCase,
   ) {}
 
   @Get()
-  @Roles(['all'])
+  @RequireFeature(['read:appointment', 'read:appointment:others'])
   @ApiOperation({ summary: 'Lista todos os atendimentos' })
-  @ApiResponse({ type: GetAppointmentsResponse })
+  @ZodResponse({ type: GetAppointmentsResponse, status: 200 })
   async getAppointments(
     @Query() query: GetAppointmentsQuery,
-    @User() user: AuthUser,
+    @User() user: RequestUser,
   ): Promise<GetAppointmentsResponse> {
     const data = await this.getAppointmentsUseCase.execute({ user, ...query });
 
@@ -56,17 +57,14 @@ export class AppointmentsController {
 
   @Post()
   @Log('create_appointment')
-  @Roles(['manager', 'nurse', 'specialist'])
+  @RequireFeature('create:appointment')
   @ApiOperation({ summary: 'Cadastra um novo atendimento' })
-  @ApiResponse({ type: BaseResponse })
+  @ZodResponse({ type: BaseResponse, status: 201 })
   async create(
-    @User() user: AuthUser,
-    @Body() createAppointmentDto: CreateAppointmentDto,
+    @User() user: RequestUser,
+    @Body() body: CreateAppointmentBody,
   ): Promise<BaseResponse> {
-    await this.createAppointmentUseCase.execute({
-      user,
-      ...createAppointmentDto,
-    });
+    await this.createAppointmentUseCase.execute({ user, ...body });
 
     return {
       success: true,
@@ -76,17 +74,15 @@ export class AppointmentsController {
 
   @Put(':id')
   @Log('update_appointment')
-  @Roles(['manager', 'nurse', 'specialist'])
+  @RequireFeature(['update:appointment', 'update:appointment:others'])
   @ApiOperation({ summary: 'Atualiza os dados do atendimento' })
-  @ApiResponse({ type: BaseResponse })
+  @ZodResponse({ type: BaseResponse, status: 200 })
   public async update(
     @Param('id') id: string,
-    @Body() updateAppointmentDto: UpdateAppointmentDto,
+    @User() user: RequestUser,
+    @Body() body: UpdateAppointmentBody,
   ): Promise<BaseResponse> {
-    await this.updateAppointmentUseCase.execute({
-      id,
-      ...updateAppointmentDto,
-    });
+    await this.updateAppointmentUseCase.execute({ id, user, ...body });
 
     return {
       success: true,
@@ -96,11 +92,14 @@ export class AppointmentsController {
 
   @Patch(':id/cancel')
   @Log('cancel_appointment')
-  @Roles(['manager', 'nurse'])
+  @RequireFeature(['cancel:appointment', 'cancel:appointment:others'])
   @ApiOperation({ summary: 'Cancela o atendimento' })
-  @ApiResponse({ type: BaseResponse })
-  async cancel(@Param('id') id: string): Promise<BaseResponse> {
-    await this.cancelAppointmentUseCase.execute({ id });
+  @ZodResponse({ type: BaseResponse, status: 200 })
+  async cancel(
+    @Param('id') id: string,
+    @User() user: RequestUser,
+  ): Promise<BaseResponse> {
+    await this.cancelAppointmentUseCase.execute({ id, user });
 
     return {
       success: true,

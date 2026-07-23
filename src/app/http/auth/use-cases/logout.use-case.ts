@@ -1,39 +1,32 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import type { Response } from 'express';
-import { Repository } from 'typeorm';
 
+import { CryptographyService } from '@/app/cryptography/cryptography.service';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
-import { COOKIES_MAPPING } from '@/domain/cookies';
-import { Token } from '@/domain/entities/token';
+import { COOKIES } from '@/domain/cookies';
 import { EnvService } from '@/env/env.service';
 import { deleteCookie } from '@/utils/cookies';
 
+import { ExpireSessionUseCase } from './expire-session.use-case';
+
 interface LogoutUseCaseInput {
-  refreshToken?: string;
+  sessionToken?: string;
   response: Response;
 }
 
 @Injectable()
 @Log()
 export class LogoutUseCase {
-  private readonly cookieDomain: string;
-
   constructor(
-    @InjectRepository(Token)
-    private readonly tokensRepository: Repository<Token>,
+    private readonly cryptographyService: CryptographyService,
     private readonly envService: EnvService,
+    private readonly expireSessionUseCase: ExpireSessionUseCase,
     private readonly logger: LogService,
-  ) {
-    this.cookieDomain = this.envService.get('COOKIE_DOMAIN');
-  }
+  ) {}
 
-  async execute({ response, refreshToken }: LogoutUseCaseInput): Promise<void> {
-    deleteCookie(response, COOKIES_MAPPING.accessToken, {
-      domain: `.${this.cookieDomain}`,
-      sameSite: 'strict',
-    });
+  async execute({ response, sessionToken }: LogoutUseCaseInput): Promise<void> {
+    deleteCookie(response, this.envService, COOKIES.session);
 
     const cdnCookies = [
       'CloudFront-Key-Pair-Id',
@@ -42,19 +35,16 @@ export class LogoutUseCase {
     ];
 
     for (const cookie of cdnCookies) {
-      deleteCookie(response, cookie, { domain: `.${this.cookieDomain}` });
+      deleteCookie(response, this.envService, cookie);
     }
 
-    if (!refreshToken) {
+    if (!sessionToken) {
       return;
     }
 
-    await this.tokensRepository.delete({ token: refreshToken });
+    const tokenHash = this.cryptographyService.hashToken(sessionToken);
 
-    deleteCookie(response, COOKIES_MAPPING.refreshToken, {
-      domain: `.${this.cookieDomain}`,
-      sameSite: 'strict',
-    });
+    await this.expireSessionUseCase.execute({ tokenHash });
 
     this.logger.log('User logged out');
   }

@@ -1,29 +1,26 @@
 import { randomUUID } from 'node:crypto';
 
+import { getFileExtension } from './get-file-extension';
 import { normalizeString } from './normalize-string';
 
 interface GenerateFileNameProps {
-  originalName: string;
-  replace?: string;
+  mimeType: string;
   prefix?: string;
+  name?: string;
 }
 
 export function generateFileName({
-  originalName,
-  replace,
+  mimeType,
   prefix,
+  name,
 }: GenerateFileNameProps): string {
-  const parts = originalName.split('.');
-  const extension = parts.pop();
+  const extension = getFileExtension(mimeType);
 
-  let fileName = normalizeString(parts.join());
-
-  if (replace) {
-    fileName = normalizeString(replace);
-  }
+  let fileName = name ? normalizeString(name) : '';
 
   if (prefix) {
-    fileName = `${prefix}_${fileName}`;
+    const separator = fileName ? '_' : '';
+    fileName = `${prefix}${separator}${fileName}`;
   }
 
   const truncatedName = fileName.substring(0, 40);

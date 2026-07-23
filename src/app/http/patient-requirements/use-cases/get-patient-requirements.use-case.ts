@@ -22,8 +22,8 @@ interface GetPatientRequirementsUseCaseInput {
   page: number;
   perPage: number;
   status?: PatientRequirementStatus;
-  startDate?: string;
-  endDate?: string;
+  startDate?: Date;
+  endDate?: Date;
   order?: QueryOrder;
   orderBy?: PatientRequirementsOrderBy;
 }
@@ -57,7 +57,7 @@ export class GetPatientRequirementsUseCase {
       patient: 'patient',
       type: 'type',
       status: 'status',
-      approvedAt: 'approvedAt',
+      approvedAt: 'updatedAt',
       submittedAt: 'submittedAt',
       date: 'createdAt',
     };

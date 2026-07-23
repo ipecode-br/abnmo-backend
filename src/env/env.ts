@@ -10,11 +10,13 @@ export const envSchema = z.object({
   MAINTENANCE: z.enum(['true', 'false']).transform((val) => val === 'true'),
 
   // API
-  API_BASE_URL: z.string().url().optional(),
+  API_BASE_URL: z.url().optional(),
   API_PORT: z.coerce.number().default(3333),
 
-  // APP
-  APP_URL: z.string().url(),
+  // APPs
+  APP_URL: z.url(),
+  DASHBOARD_URL: z.url(),
+  DASHBOARD_KEY: z.string().min(1),
 
   // Secrets
   COOKIE_DOMAIN: z.string().min(1),
@@ -28,9 +30,9 @@ export const envSchema = z.object({
   AWS_SECRET_ACCESS_KEY: z.string().optional().default(''),
 
   // Storage
+  STORAGE_ENABLED: z.enum(['true', 'false']).transform((val) => val === 'true'),
   STORAGE_BUCKET_NAME: z.string().min(1),
-  CDN_PUBLIC_URL: z.string().url(),
-  CDN_PRIVATE_URL: z.string().url(),
+  CDN_URL: z.url(),
   CDN_PUBLIC_KEY_ID: z.string().min(1),
   CDN_PRIVATE_KEY: z.string().min(1),
 
@@ -48,7 +50,15 @@ export const envSchema = z.object({
   AWS_SES_REGION: z.string().min(1),
   AWS_SES_ACCESS_KEY_ID: z.string().min(1),
   AWS_SES_SECRET_ACCESS_KEY: z.string().min(1),
-  AWS_SES_FROM_EMAIL: z.string().email(),
+  AWS_SES_FROM_EMAIL: z.email(),
+
+  // Signature
+  SIGNATURE_ENABLED: z
+    .enum(['true', 'false'])
+    .transform((val) => val === 'true'),
+  SIGNATURE_MODEL_KEY: z.string().min(1),
+  CLICKSIGN_API_URL: z.url(),
+  CLICKSIGN_API_KEY: z.string().min(1),
 });
 
 export type Env = z.infer<typeof envSchema>;

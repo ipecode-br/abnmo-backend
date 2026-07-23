@@ -1,12 +1,4 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 
 import {
   PATIENT_REQUIREMENT_STATUSES,
@@ -15,24 +7,22 @@ import {
   type PatientRequirementType,
 } from '../enums/patient-requirements';
 import type { PatientRequirementSchema } from '../schemas/patient-requirement';
-import { Patient } from './patient';
+import { BaseEntity } from './base';
+import { User } from './user';
 
 @Entity('patient_requirements')
-export class PatientRequirement implements PatientRequirementSchema {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  @Column('uuid')
-  patientId: string;
-
-  @Column({ type: 'enum', enum: PATIENT_REQUIREMENT_TYPES })
-  type: PatientRequirementType;
-
+export class PatientRequirement
+  extends BaseEntity
+  implements PatientRequirementSchema
+{
   @Column({ type: 'varchar', length: 255 })
   title: string;
 
   @Column({ type: 'varchar', length: 500, nullable: true })
   description: string | null;
+
+  @Column({ type: 'enum', enum: PATIENT_REQUIREMENT_TYPES })
+  type: PatientRequirementType;
 
   @Column({
     type: 'enum',
@@ -41,31 +31,17 @@ export class PatientRequirement implements PatientRequirementSchema {
   })
   status: PatientRequirementStatus;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   submittedAt: Date | null;
 
-  @Column({ type: 'uuid', nullable: true })
-  approvedBy: string | null;
+  @Column('uuid', { nullable: true })
+  updatedBy: string | null;
 
-  @Column({ type: 'datetime', nullable: true })
-  approvedAt: Date | null;
-
-  @Column({ type: 'uuid', nullable: true })
-  declinedBy: string | null;
-
-  @Column({ type: 'datetime', nullable: true })
-  declinedAt: Date | null;
-
-  @Column({ type: 'uuid' })
+  @Column('uuid')
   createdBy: string;
 
-  @CreateDateColumn({ type: 'datetime' })
-  createdAt: Date;
-
-  @UpdateDateColumn({ type: 'datetime' })
-  updatedAt: Date;
-
-  @ManyToOne(() => Patient, (patient) => patient.requirements)
-  @JoinColumn()
-  patient: Patient;
+  @Index()
+  @ManyToOne(() => User, { nullable: false })
+  @JoinColumn({ name: 'patientId' })
+  patient: User;
 }

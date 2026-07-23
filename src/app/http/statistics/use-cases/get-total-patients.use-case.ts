@@ -1,21 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  Between,
-  type FindOptionsWhere,
-  LessThanOrEqual,
-  MoreThanOrEqual,
-  Not,
-  type Repository,
-} from 'typeorm';
+import type { Repository, SelectQueryBuilder } from 'typeorm';
 
-import { Patient } from '@/domain/entities/patient';
-import type { PatientStatus } from '@/domain/enums/patients';
+import { User } from '@/domain/entities/user';
 import type { QueryPeriod } from '@/domain/enums/queries';
 import { getDateRangeForPeriod } from '@/utils/get-date-range-for-period';
 
 interface GetTotalPatientsUseCaseInput {
-  status?: PatientStatus;
+  status?: string;
   period?: QueryPeriod;
   startDate?: Date;
   endDate?: Date;
@@ -24,8 +16,8 @@ interface GetTotalPatientsUseCaseInput {
 @Injectable()
 export class GetTotalPatientsUseCase {
   constructor(
-    @InjectRepository(Patient)
-    private readonly patientsRepository: Repository<Patient>,
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
   ) {}
 
   async execute({
@@ -34,26 +26,43 @@ export class GetTotalPatientsUseCase {
     startDate,
     endDate,
   }: GetTotalPatientsUseCaseInput = {}): Promise<number> {
-    const where: FindOptionsWhere<Patient> = {
-      status: status ?? Not('pending'),
-    };
+    const dateRange = period
+      ? getDateRangeForPeriod(period)
+      : { startDate, endDate };
 
-    if (period) {
-      const dateRange = getDateRangeForPeriod(period);
-      where.createdAt = Between(dateRange.startDate, dateRange.endDate);
+    const query: SelectQueryBuilder<User> = this.usersRepository
+      .createQueryBuilder('user')
+      .innerJoin('user.survey', 'survey')
+      .where('user.role = :role', { role: 'patient' })
+      .andWhere('user.status != :pending', { pending: 'pending' });
+
+    if (dateRange.startDate && dateRange.endDate) {
+      query.andWhere('user.created_at BETWEEN :start AND :end', {
+        start: dateRange.startDate,
+        end: dateRange.endDate,
+      });
     }
 
-    if (startDate && !endDate) {
-      where.createdAt = MoreThanOrEqual(startDate);
+    if (dateRange.startDate && !dateRange.endDate) {
+      query.andWhere('user.created_at >= :startDate', {
+        startDate: dateRange.startDate,
+      });
     }
 
-    if (endDate && !startDate) {
-      where.createdAt = LessThanOrEqual(endDate);
+    if (dateRange.endDate && !dateRange.startDate) {
+      query.andWhere('user.created_at <= :endDate', {
+        endDate: dateRange.endDate,
+      });
     }
 
-    if (startDate && endDate) {
-      where.createdAt = Between(startDate, endDate);
+    if (status) {
+      query.andWhere('user.status = :status', { status });
     }
-    return await this.patientsRepository.count({ select: { id: true }, where });
+
+    query.select('COUNT(DISTINCT user.id)', 'count');
+
+    const result = await query.getRawOne<{ count: string }>();
+
+    return Number(result?.count) || 0;
   }
 }

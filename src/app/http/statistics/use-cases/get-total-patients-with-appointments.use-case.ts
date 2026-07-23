@@ -1,16 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  Between,
-  type FindOptionsWhere,
-  IsNull,
-  LessThanOrEqual,
-  MoreThanOrEqual,
-  Not,
-  type Repository,
-} from 'typeorm';
+import { type Repository } from 'typeorm';
 
-import { Patient } from '@/domain/entities/patient';
+import { Appointment } from '@/domain/entities/appointment';
 import type { QueryPeriod } from '@/domain/enums/queries';
 import { getDateRangeForPeriod } from '@/utils/get-date-range-for-period';
 
@@ -23,8 +15,8 @@ interface GetTotalPatientsWithAppointmentsUseCaseInput {
 @Injectable()
 export class GetTotalPatientsWithAppointmentsUseCase {
   constructor(
-    @InjectRepository(Patient)
-    private readonly patientsRepository: Repository<Patient>,
+    @InjectRepository(Appointment)
+    private readonly appointmentsRepository: Repository<Appointment>,
   ) {}
 
   async execute({
@@ -32,26 +24,39 @@ export class GetTotalPatientsWithAppointmentsUseCase {
     startDate,
     endDate,
   }: GetTotalPatientsWithAppointmentsUseCaseInput = {}): Promise<number> {
-    const where: FindOptionsWhere<Patient> = {
-      appointments: { id: Not(IsNull()) },
-    };
+    const dateRange = period
+      ? getDateRangeForPeriod(period)
+      : { startDate, endDate };
 
-    if (period) {
-      const dateRange = getDateRangeForPeriod(period);
-      where.createdAt = Between(dateRange.startDate, dateRange.endDate);
+    const query = this.appointmentsRepository
+      .createQueryBuilder('appointment')
+      .innerJoin('appointment.patient', 'user')
+      .innerJoin('user.survey', 'survey')
+      .where('user.status != :status', { status: 'pending' });
+
+    if (dateRange.startDate && dateRange.endDate) {
+      query.andWhere('appointment.date BETWEEN :start AND :end', {
+        start: dateRange.startDate,
+        end: dateRange.endDate,
+      });
     }
 
-    if (startDate && !endDate) {
-      where.createdAt = MoreThanOrEqual(startDate);
+    if (dateRange.startDate && !dateRange.endDate) {
+      query.andWhere('appointment.date >= :startDate', {
+        startDate: dateRange.startDate,
+      });
     }
 
-    if (endDate && !startDate) {
-      where.createdAt = LessThanOrEqual(endDate);
+    if (dateRange.endDate && !dateRange.startDate) {
+      query.andWhere('appointment.date <= :endDate', {
+        endDate: dateRange.endDate,
+      });
     }
 
-    if (startDate && endDate) {
-      where.createdAt = Between(startDate, endDate);
-    }
-    return await this.patientsRepository.count({ where });
+    query.select('COUNT(DISTINCT appointment.patient.id)', 'count');
+
+    const result = await query.getRawOne<{ count: string }>();
+
+    return Number(result?.count) || 0;
   }
 }

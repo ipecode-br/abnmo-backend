@@ -24,7 +24,7 @@ const command = [
 try {
   console.log(`Generating migration: ${outputPath}`);
   execSync(command, { stdio: 'inherit' });
-  console.log('🟢 Migration generated successfully');
+  console.log('🟢 Migration generated');
 } catch (error) {
   console.error('🔴 Failed to generate migration:', error);
   process.exit(1);

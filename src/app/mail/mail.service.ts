@@ -74,7 +74,7 @@ export class MailService {
           return false;
         }
 
-        this.logger.log('E-mail sent successfully', {
+        this.logger.log('E-mail sent', {
           provider,
           to,
           subject,
@@ -106,7 +106,7 @@ export class MailService {
 
     try {
       const result = await this.sesClient.send(sendCommand);
-      this.logger.log('E-mail sent successfully', {
+      this.logger.log('E-mail sent', {
         provider,
         to,
         subject,

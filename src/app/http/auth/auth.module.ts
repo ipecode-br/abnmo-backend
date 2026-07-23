@@ -6,8 +6,9 @@ import { CryptographyModule } from '@/app/cryptography/cryptography.module';
 import { MailModule } from '@/app/mail/mail.module';
 import { StorageModule } from '@/app/storage/storage.module';
 import { AuthGuard } from '@/common/guards/auth.guard';
-import { RolesGuard } from '@/common/guards/roles.guard';
-import { Patient } from '@/domain/entities/patient';
+import { DashboardGuard } from '@/common/guards/dashboard.guard';
+import { FeatureGuard } from '@/common/guards/feature.guard';
+import { Session } from '@/domain/entities/session';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { EnvModule } from '@/env/env.module';
@@ -15,18 +16,17 @@ import { EnvModule } from '@/env/env.module';
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
 import { ChangePasswordUseCase } from './use-cases/change-password.use-case';
-import { GenerateAuthTokensUseCase } from './use-cases/generate-auth-tokens-use-case';
+import { CreateSessionUseCase } from './use-cases/create-session.use-case';
+import { CreateUserUseCase } from './use-cases/create-user.use-case';
+import { ExpireSessionUseCase } from './use-cases/expire-session.use-case';
 import { LogoutUseCase } from './use-cases/logout.use-case';
 import { RecoverPasswordUseCase } from './use-cases/recover-password.use-case';
-import { RefreshTokenUseCase } from './use-cases/refresh-token.use-case';
-import { RegisterPatientUseCase } from './use-cases/register-patient.use-case';
-import { RegisterUserUseCase } from './use-cases/register-user.use-case';
 import { ResetPasswordUseCase } from './use-cases/reset-password.use-case';
 import { SignInWithEmailUseCase } from './use-cases/sign-in-with-email.use-case';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Patient, Token, User]),
+    TypeOrmModule.forFeature([Session, Token, User]),
     CryptographyModule,
     EnvModule,
     MailModule,
@@ -35,16 +35,16 @@ import { SignInWithEmailUseCase } from './use-cases/sign-in-with-email.use-case'
   ],
   providers: [
     ChangePasswordUseCase,
-    GenerateAuthTokensUseCase,
+    CreateSessionUseCase,
+    CreateUserUseCase,
+    ExpireSessionUseCase,
     LogoutUseCase,
     RecoverPasswordUseCase,
-    RefreshTokenUseCase,
-    RegisterPatientUseCase,
-    RegisterUserUseCase,
     ResetPasswordUseCase,
     SignInWithEmailUseCase,
+    { provide: APP_GUARD, useClass: DashboardGuard },
     { provide: APP_GUARD, useClass: AuthGuard },
-    { provide: APP_GUARD, useClass: RolesGuard },
+    { provide: APP_GUARD, useClass: FeatureGuard },
   ],
   controllers: [AuthController],
 })

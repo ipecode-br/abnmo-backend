@@ -1,5 +1,5 @@
-export function getFileExtension(fileName: string): string {
-  const parts = fileName.split('.');
-  const extension = parts.length > 1 ? parts[parts.length - 1] : '';
+export function getFileExtension(mimeType: string): string {
+  const parts = mimeType.split('/');
+  const extension = parts.pop() || '';
   return extension.toLowerCase();
 }

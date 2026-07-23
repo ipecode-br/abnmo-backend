@@ -1,28 +1,15 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 
 import { PATIENT_CONDITIONS, type PatientCondition } from '../enums/patients';
 import { REFERRAL_STATUSES, type ReferralStatus } from '../enums/referrals';
 import { SPECIALTY_CATEGORIES, type SpecialtyCategory } from '../enums/shared';
-import { ReferralSchema } from '../schemas/referrals';
-import { Patient } from './patient';
+import type { ReferralSchema } from '../schemas/referrals';
+import { BaseEntity } from './base';
+import { User } from './user';
 
 @Entity('referrals')
-export class Referral implements ReferralSchema {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  @Column('uuid')
-  patientId: string;
-
-  @Column({ type: 'datetime' })
+export class Referral extends BaseEntity implements ReferralSchema {
+  @Column({ type: 'timestamp' })
   date: Date;
 
   @Column({ type: 'enum', enum: REFERRAL_STATUSES, default: 'scheduled' })
@@ -34,25 +21,22 @@ export class Referral implements ReferralSchema {
   @Column({ type: 'enum', enum: PATIENT_CONDITIONS })
   condition: PatientCondition;
 
-  @Column({ type: 'varchar', length: 2000, nullable: true })
+  @Column({ type: 'varchar', length: 500, nullable: true })
   annotation: string | null;
 
   @Column({ type: 'varchar', length: 64, nullable: true })
   professionalName: string | null;
 
-  @Column({ type: 'uuid', nullable: true })
-  userId: string | null;
-
   @Column('uuid')
   createdBy: string;
 
-  @CreateDateColumn({ type: 'datetime' })
-  createdAt: Date;
+  @Index()
+  @ManyToOne(() => User, { nullable: false })
+  @JoinColumn({ name: 'patientId' })
+  patient: User;
 
-  @UpdateDateColumn({ type: 'datetime' })
-  updatedAt: Date;
-
-  @ManyToOne(() => Patient, (patient) => patient.appointments)
-  @JoinColumn()
-  patient: Patient;
+  @Index()
+  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'specialistId' })
+  specialist: User | null;
 }

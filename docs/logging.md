@@ -2,13 +2,15 @@
 
 ## Visão geral
 
-O sistema de logging usa `nestjs-pino` como base e expõe um serviço `AppLogger` que enriquece cada log com contexto da requisição atual (evento, usuário autenticado) via `AsyncLocalStorage`.
+O sistema de logging usa `nestjs-pino` como base e expõe o `LogService`, que enriquece cada log com contexto da requisição atual (evento, usuário) via `AsyncLocalStorage`.
+
+`LogModule` é global — `LogService` está disponível em qualquer classe sem importação explícita do módulo.
 
 ---
 
-## `AppLogger`
+## `LogService`
 
-O `AppLogger` é o único serviço de log a ser usado na aplicação. Injetável em qualquer classe que esteja no contexto do `LogModule` (que é global).
+Injetável em qualquer classe que esteja no contexto de injeção do NestJS.
 
 ### Métodos
 
@@ -20,117 +22,127 @@ O `AppLogger` é o único serviço de log a ser usado na aplicação. Injetável
 | `error(message, extras?)` | error | Erros e exceções                       |
 | `debug(message, extras?)` | debug | Informações de diagnóstico             |
 
-Todos os métodos aceitam um segundo argumento de metadados extras que são mesclados ao contexto:
+### Uso
 
 ```typescript
-this.logger.log('Appointment created successfully', {
-  patientId,
+constructor(private readonly logger: LogService) {}
+
+// Em use-cases
+this.logger.log('Appointment created', {
   appointmentId: appointment.id,
-  createdBy: user.id,
+  patientId,
 });
+
+this.logger.error('Create appointment failed: patient not found', {
+  patientId,
+});
+
+this.logger.warn('Cancel appointment failed: already canceled', { id });
 ```
 
-### Payload automático
+---
 
-Cada log é enriquecido automaticamente com:
+## Payload automático
+
+Cada log é enriquecido automaticamente com contexto da requisição:
 
 ```json
 {
   "level": "info",
-  "msg": "Appointment created successfully",
   "event": "create_appointment",
-  "authUser": { "id": "...", "email": "...", "role": "nurse" },
-  "patientId": "...",
-  "appointmentId": "...",
-  "createdBy": "..."
+  "user": { "id": "...", "email": "...", "role": "member" },
+  "...": "..."
 }
 ```
 
-Os campos `event` e `authUser` vêm do `ContextService` — são definidos automaticamente pelo `AuthGuard` e pelo use-case, sem necessidade de passá-los manualmente.
+Os campos `event` e `user` são populados automaticamente pelo `ContextService` a partir dos decorators e guards — não precisam ser passados manualmente.
 
 ---
 
-## Decorator `@Logger()`
+## Decorator `@Log()`
 
-O decorator `@Logger()` é um class decorator aplicado em use-cases. Ele intercepta o método `execute()` e injeta o nome da classe como contexto do logger antes de cada execução:
+O `@Log` é um decorator que funciona em dois níveis:
+
+### Class-level (use-cases)
+
+Aplicado na classe, intercepta todos os métodos e define o contexto do logger como o nome da classe:
 
 ```typescript
-@Logger()
+@Log()
 @Injectable()
 export class CreateAppointmentUseCase {
-  constructor(private readonly logger: AppLogger) {}
+  constructor(private readonly logger: LogService) {}
 
   async execute(input: CreateAppointmentUseCaseInput): Promise<void> {
-    // logger.setContext('CreateAppointmentUseCase') é chamado automaticamente
-    this.logger.setEvent('create_appointment');
-    // ...
+    // logger.setContext('CreateAppointmentUseCase') chamado automaticamente
+    this.logger.log('Appointment created', { appointmentId });
   }
 }
 ```
 
-O decorator deve sempre vir **antes** de `@Injectable()`. Quando o `AppLogger` não está disponível no construtor (ex: use-case sem logging), o decorator não tem efeito.
+### Method-level (controllers)
 
----
-
-## `setEvent()`
-
-Todo use-case deve chamar `this.logger.setEvent()` como **primeira linha** do `execute()`. Isso associa todos os logs daquela execução a um evento tipado, visível nos logs estruturados:
+Aplicado em métodos do controller, registra o evento auditável para toda a requisição:
 
 ```typescript
-async execute(input: CreateAppointmentUseCaseInput): Promise<void> {
-  this.logger.setEvent('create_appointment');
-  // todos os logs abaixo terão "event": "create_appointment"
+@Post()
+@Log('create_appointment')
+@RequireFeature('create:appointment')
+@ZodResponse({ type: BaseResponse, status: 201 })
+async create(@User() user: RequestUser, @Body() body: CreateAppointmentBody) {
+  // Todos os logs desta requisição terão "event": "create_appointment"
 }
 ```
 
 ### Eventos disponíveis (`ContextEvent`)
 
-Os eventos são tipados como uma union em `src/common/types.d.ts`:
-
-| Domínio                | Eventos                                                                                                                            |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Atendimentos           | `create_appointment`, `update_appointment`, `cancel_appointment`                                                                   |
-| Autenticação           | `sign_in`, `logout`, `register_patient`, `register_user`, `recover_password`, `reset_password`, `refresh_token`, `change_password` |
-| Encaminhamentos        | `create_referral`, `update_referral`, `cancel_referral`                                                                            |
-| Pacientes              | `create_patient`, `update_patient`, `deactivate_patient`                                                                           |
-| Requisitos de paciente | `create_patient_requirement`, `approve_patient_requirement`, `decline_patient_requirement`                                         |
-| Contatos de apoio      | `create_patient_support`, `update_patient_support`, `delete_patient_support`                                                       |
-| Usuários               | `create_user_invite`, `cancel_user_invite`, `update_user`, `activate_user`, `deactivate_user`                                      |
+| Domínio         | Eventos                                                                                       |
+| --------------- | --------------------------------------------------------------------------------------------- |
+| Atendimentos    | `create_appointment`, `update_appointment`, `cancel_appointment`                              |
+| Autenticação    | `sign_in`, `logout`, `register_user`, `recover_password`, `reset_password`, `change_password` |
+| Encaminhamentos | `create_referral`, `update_referral`, `cancel_referral`                                       |
+| Pacientes       | `create_patient`, `update_patient`, `deactivate_patient`                                      |
+| Requisitos      | `create_patient_requirement`, `approve_patient_requirement`, `decline_patient_requirement`    |
+| Usuários        | `create_user_invite`, `delete_user_invite`, `update_user`, `activate_user`, `deactivate_user` |
+| Catálogos       | `init_survey`, `complete_survey`, `approve_survey`, `decline_survey`, `send_survey_reminder`  |
 
 ---
 
-## Padrão completo de uso em use-cases
+## Padrão completo
 
 ```typescript
-@Logger()
+// Controller
+@Post()
+@Log('create_appointment')         // registra o evento
+@RequireFeature('create:appointment')
+@ZodResponse({ type: BaseResponse, status: 201 })
+async create(@User() user: RequestUser, @Body() body: CreateAppointmentBody) {
+  await this.createAppointmentUseCase.execute({ user, ...body });
+  return { success: true, message: 'Atendimento cadastrado com sucesso.' };
+}
+
+// Use-case
+@Log()                              // contexto = 'CreateAppointmentUseCase'
 @Injectable()
-export class CreatePatientUseCase {
-  constructor(
-    @InjectRepository(Patient)
-    private readonly patientsRepository: Repository<Patient>,
-    private readonly logger: AppLogger,
-  ) {}
+export class CreateAppointmentUseCase {
+  constructor(private readonly logger: LogService) {}
 
-  async execute(input: CreatePatientUseCaseInput): Promise<void> {
-    this.logger.setEvent('create_patient');
+  async execute(input: CreateAppointmentUseCaseInput): Promise<void> {
+    const patient = await this.patientsRepository.findOne({ where: { id: input.patientId } });
 
-    const existing = await this.patientsRepository.findOne({
-      select: { id: true },
-      where: { email: input.email },
-    });
-
-    if (existing) {
-      this.logger.error('Create patient failed: email already registered', {
-        email: input.email,
+    if (!patient) {
+      this.logger.error('Create appointment failed: patient not found', { patientId: input.patientId });
+      throw new NotFoundException('Paciente não encontrado.', {
+        cause: `Patient with ID <${input.patientId}> not found`,
       });
-      throw new ConflictException('Já existe um paciente com este e-mail.');
     }
 
-    const patient = await this.patientsRepository.save({ ...input });
+    const appointment = this.appointmentsRepository.create({ ... });
+    await this.appointmentsRepository.save(appointment);
 
-    this.logger.log('Patient created successfully', {
-      patientId: patient.id,
-      createdBy: input.user.id,
+    this.logger.log('Appointment created', {
+      appointmentId: appointment.id,
+      patientId: input.patientId,
     });
   }
 }
@@ -140,9 +152,9 @@ export class CreatePatientUseCase {
 
 ## Regras
 
-- Use `@Logger()` em todos os use-cases que possuem `AppLogger` no construtor.
-- Chame `this.logger.setEvent()` **sempre** como primeira linha do `execute()`.
-- Mensagens de log em **inglês** (são para desenvolvedores, não para o usuário).
-- Inclua metadados relevantes no segundo argumento (`patientId`, `userId`, `email`, etc.) para facilitar rastreamento.
-- Use `logger.error()` antes de lançar exceções que representam falhas operacionais (conflitos, entidades não encontradas por dados inválidos).
-- Nunca logar senhas, tokens ou dados sensíveis.
+- Use `@Log()` em todos os use-cases (class-level).
+- Use `@Log('event_name')` em todos os controllers para endpoints de mutação.
+- Mensagens de log em **inglês** — são para desenvolvedores, não para o usuário.
+- Inclua metadados relevantes no segundo argumento para facilitar rastreamento.
+- Use `logger.error()` antes de lançar exceções que representam falhas operacionais.
+- **Nunca** logar senhas, tokens ou dados sensíveis.

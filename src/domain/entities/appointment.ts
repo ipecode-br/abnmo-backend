@@ -1,12 +1,4 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 
 import {
   APPOINTMENT_STATUSES,
@@ -15,17 +7,12 @@ import {
 import { PATIENT_CONDITIONS, type PatientCondition } from '../enums/patients';
 import { SPECIALTY_CATEGORIES, type SpecialtyCategory } from '../enums/shared';
 import type { AppointmentSchema } from '../schemas/appointments';
-import { Patient } from './patient';
+import { BaseEntity } from './base';
+import { User } from './user';
 
 @Entity('appointments')
-export class Appointment implements AppointmentSchema {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  @Column('uuid')
-  patientId: string;
-
-  @Column({ type: 'datetime' })
+export class Appointment extends BaseEntity implements AppointmentSchema {
+  @Column({ type: 'timestamp' })
   date: Date;
 
   @Column({ type: 'enum', enum: APPOINTMENT_STATUSES, default: 'scheduled' })
@@ -43,19 +30,16 @@ export class Appointment implements AppointmentSchema {
   @Column({ type: 'varchar', length: 64, nullable: true })
   professionalName: string | null;
 
-  @Column({ type: 'uuid', nullable: true })
-  userId: string | null;
-
   @Column('uuid')
   createdBy: string;
 
-  @CreateDateColumn({ type: 'datetime' })
-  createdAt: Date;
+  @Index()
+  @ManyToOne(() => User, { nullable: false })
+  @JoinColumn({ name: 'patientId' })
+  patient: User;
 
-  @UpdateDateColumn({ type: 'datetime' })
-  updatedAt: Date;
-
-  @ManyToOne(() => Patient, (patient) => patient.appointments)
-  @JoinColumn()
-  patient: Patient;
+  @Index()
+  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'specialistId' })
+  specialist: User | null;
 }

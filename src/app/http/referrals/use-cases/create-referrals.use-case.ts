@@ -6,31 +6,29 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
+import { can } from '@/common/authorization/can';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
-import type { AuthUser } from '@/common/types';
-import { Patient } from '@/domain/entities/patient';
+import type { RequestUser } from '@/common/types';
 import { Referral } from '@/domain/entities/referral';
 import { User } from '@/domain/entities/user';
 import type { PatientCondition } from '@/domain/enums/patients';
 import type { SpecialtyCategory } from '@/domain/enums/shared';
 
 interface CreateReferralUseCaseInput {
-  user: AuthUser;
-  patientId: string;
-  date: Date;
-  condition: PatientCondition;
   annotation: string | null;
-  professionalName: string | null;
   category?: SpecialtyCategory;
+  condition: PatientCondition;
+  date: Date;
+  patientId: string;
+  professionalName: string | null;
+  user: RequestUser;
 }
 
 @Injectable()
 @Log()
 export class CreateReferralUseCase {
   constructor(
-    @InjectRepository(Patient)
-    private readonly patientsRepository: Repository<Patient>,
     @InjectRepository(Referral)
     private readonly referralsRepository: Repository<Referral>,
     @InjectRepository(User)
@@ -39,33 +37,30 @@ export class CreateReferralUseCase {
   ) {}
 
   async execute({
-    user,
-    patientId,
-    date,
-    condition,
     annotation,
     category,
+    condition,
+    date,
+    patientId,
     professionalName,
+    user,
   }: CreateReferralUseCaseInput): Promise<void> {
-    const patient = await this.patientsRepository.findOne({
-      where: { id: patientId },
+    can(user, 'create:referral');
+
+    const patient = await this.usersRepository.findOne({
+      where: { id: patientId, role: 'patient' },
       select: { id: true },
     });
 
     if (!patient) {
-      throw new NotFoundException('Paciente não encontrado.');
+      throw new NotFoundException('Paciente não encontrado.', {
+        cause: `Patient with ID <${patientId}> not found`,
+      });
     }
 
-    const referralPayload: Partial<Referral> = {
-      patientId: patientId,
-      date,
-      category,
-      condition,
-      professionalName,
-      annotation,
-      status: 'scheduled',
-      createdBy: user.id,
-    };
+    let finalCategory = category;
+    let finalProfessionalName = professionalName;
+    let specialistRef: { id: string } | undefined;
 
     if (user.role === 'specialist') {
       if (category || professionalName) {
@@ -76,30 +71,39 @@ export class CreateReferralUseCase {
 
       const specialist = await this.usersRepository.findOne({
         select: { id: true, name: true, specialty: true },
-        where: { id: user.id },
+        where: { id: user.id, role: 'specialist' },
       });
 
       if (!specialist || !specialist.specialty) {
-        throw new NotFoundException('Especialista não encontrado.');
+        throw new NotFoundException('Especialista não encontrado.', {
+          cause: `Specialist with ID <${user.id}> not found`,
+        });
       }
 
-      referralPayload.userId = specialist.id;
-      referralPayload.professionalName = specialist.name;
-      referralPayload.category = specialist.specialty;
+      finalCategory = specialist.specialty;
+      finalProfessionalName = specialist.name;
+      specialistRef = { id: specialist.id };
     }
 
-    if (!referralPayload.category) {
+    if (!finalCategory) {
       throw new BadRequestException(
-        'A categoria do atendimento é obrigatória.',
+        'A categoria do encaminhamento é obrigatória.',
       );
     }
 
-    const referral = this.referralsRepository.create(referralPayload);
+    const referral = this.referralsRepository.create({
+      annotation,
+      category: finalCategory,
+      condition,
+      createdBy: user.id,
+      date,
+      patient: { id: patientId },
+      professionalName: finalProfessionalName,
+      specialist: specialistRef,
+      status: 'scheduled',
+    });
     await this.referralsRepository.save(referral);
 
-    this.logger.log('Referral created successfully', {
-      id: referral.id,
-      patientId,
-    });
+    this.logger.log('Referral created', { id: referral.id, patientId });
   }
 }

@@ -1,43 +1,36 @@
 import { z } from 'zod';
 
-import { AUTH_ACCOUNT_TYPES } from '../enums/auth';
 import { baseResponseSchema } from './base';
 import {
   emailSchema,
   nameSchema,
   passwordSchema,
   specialtySchema,
-  userRegistrationId,
+  userRegistrationIdSchema,
   userRoleSchema,
 } from './shared';
 
-export const registerPatientSchema = z.object({
-  name: nameSchema,
-  email: emailSchema,
-  password: passwordSchema,
-});
-
-export const registerUserSchema = z
+export const createUserSchema = z
   .object({
     name: nameSchema,
     password: passwordSchema,
     role: userRoleSchema,
     specialty: specialtySchema.optional(),
-    registrationId: userRegistrationId.optional(),
+    registrationId: userRegistrationIdSchema.optional(),
     inviteToken: z.string().min(1),
   })
   .superRefine((data, ctx) => {
     if (data.role === 'specialist') {
       if (!data.specialty) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: 'custom',
           path: ['specialty'],
           message: 'Specialty is required when registering a specialist',
         });
       }
       if (!data.registrationId) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: 'custom',
           path: ['registrationId'],
           message:
             'Professional registration is required when registering a specialist',
@@ -53,14 +46,10 @@ export const signInWithEmailSchema = z.object({
 });
 
 export const signInWithEmailResponseSchema = baseResponseSchema.extend({
-  data: z.object({
-    accountType: z.enum(AUTH_ACCOUNT_TYPES),
-  }),
+  data: z.object({ role: userRoleSchema }),
 });
 
-export const recoverPasswordSchema = z.object({
-  email: emailSchema,
-});
+export const recoverPasswordSchema = z.object({ email: emailSchema });
 
 export const resetPasswordSchema = z.object({
   password: passwordSchema,

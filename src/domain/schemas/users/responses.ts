@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import { baseResponseSchema } from '../base';
-import { authTokenSchema } from '../tokens';
+import { tokenSchema } from '../tokens';
 import { userSchema } from '.';
 
 export const userResponseSchema = userSchema.pick({
@@ -9,18 +9,13 @@ export const userResponseSchema = userSchema.pick({
   name: true,
   email: true,
   avatarUrl: true,
-  status: true,
   role: true,
+  status: true,
   specialty: true,
   registrationId: true,
-  updatedAt: true,
   createdAt: true,
 });
 export type UserResponse = z.infer<typeof userResponseSchema>;
-
-export const getUserResponseSchema = baseResponseSchema.extend({
-  data: userResponseSchema,
-});
 
 export const getUsersResponseSchema = baseResponseSchema.extend({
   data: z.object({
@@ -29,7 +24,26 @@ export const getUsersResponseSchema = baseResponseSchema.extend({
   }),
 });
 
-export const userInviteResponseSchema = authTokenSchema.pick({
+export const userDetailsResponseSchema = userSchema.pick({
+  id: true,
+  name: true,
+  email: true,
+  avatarUrl: true,
+  role: true,
+  features: true,
+  status: true,
+  specialty: true,
+  registrationId: true,
+  updatedAt: true,
+  createdAt: true,
+});
+export type UserDetailsResponse = z.infer<typeof userDetailsResponseSchema>;
+
+export const getUserResponseSchema = baseResponseSchema.extend({
+  data: userDetailsResponseSchema,
+});
+
+export const userInviteResponseSchema = tokenSchema.pick({
   id: true,
   email: true,
   expiresAt: true,

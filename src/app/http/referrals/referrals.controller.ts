@@ -8,19 +8,20 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ZodResponse } from 'nestjs-zod';
 
-import { Roles } from '@/common/decorators/roles.decorator';
+import { RequireFeature } from '@/common/decorators/require-feature.decorator';
 import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
 import { Log } from '@/common/log/log.decorator';
-import type { AuthUser } from '@/common/types';
+import type { RequestUser } from '@/common/types';
 
 import {
-  CreateReferralDto,
+  CreateReferralBody,
   GetReferralsQuery,
   GetReferralsResponse,
-  UpdateReferralDto,
+  UpdateReferralBody,
 } from './referrals.dtos';
 import { CancelReferralUseCase } from './use-cases/cancel-referral.use-case';
 import { CreateReferralUseCase } from './use-cases/create-referrals.use-case';
@@ -31,19 +32,19 @@ import { UpdateReferralUseCase } from './use-cases/update-referral.use-case';
 @Controller('referrals')
 export class ReferralsController {
   constructor(
-    private readonly getReferralsUseCase: GetReferralsUseCase,
-    private readonly createReferralUseCase: CreateReferralUseCase,
-    private readonly updateReferralUseCase: UpdateReferralUseCase,
     private readonly cancelReferralUseCase: CancelReferralUseCase,
+    private readonly createReferralUseCase: CreateReferralUseCase,
+    private readonly getReferralsUseCase: GetReferralsUseCase,
+    private readonly updateReferralUseCase: UpdateReferralUseCase,
   ) {}
 
   @Get()
-  @Roles(['all'])
+  @RequireFeature(['read:referral', 'read:referral:others'])
   @ApiOperation({ summary: 'Lista todos os encaminhamentos' })
-  @ApiResponse({ type: GetReferralsResponse })
+  @ZodResponse({ type: GetReferralsResponse, status: 200 })
   async getReferrals(
     @Query() query: GetReferralsQuery,
-    @User() user: AuthUser,
+    @User() user: RequestUser,
   ): Promise<GetReferralsResponse> {
     const data = await this.getReferralsUseCase.execute({ user, ...query });
 
@@ -56,28 +57,29 @@ export class ReferralsController {
 
   @Post()
   @Log('create_referral')
-  @Roles(['manager', 'nurse'])
+  @RequireFeature('create:referral')
   @ApiOperation({ summary: 'Cadastra um novo encaminhamento' })
-  @ApiResponse({ type: BaseResponse })
+  @ZodResponse({ type: BaseResponse, status: 201 })
   async create(
-    @User() user: AuthUser,
-    @Body() createReferralDto: CreateReferralDto,
+    @User() user: RequestUser,
+    @Body() body: CreateReferralBody,
   ): Promise<BaseResponse> {
-    await this.createReferralUseCase.execute({ user, ...createReferralDto });
+    await this.createReferralUseCase.execute({ user, ...body });
 
     return { success: true, message: 'Encaminhamento cadastrado com sucesso.' };
   }
 
   @Put(':id')
   @Log('update_referral')
-  @Roles(['nurse', 'manager', 'specialist'])
+  @RequireFeature(['update:referral', 'update:referral:others'])
   @ApiOperation({ summary: 'Atualiza os dados do encaminhamento' })
-  @ApiResponse({ type: BaseResponse })
+  @ZodResponse({ type: BaseResponse, status: 200 })
   public async update(
     @Param('id') id: string,
-    @Body() updateReferralDto: UpdateReferralDto,
+    @User() user: RequestUser,
+    @Body() body: UpdateReferralBody,
   ): Promise<BaseResponse> {
-    await this.updateReferralUseCase.execute({ id, ...updateReferralDto });
+    await this.updateReferralUseCase.execute({ id, user, ...body });
 
     return {
       success: true,
@@ -87,11 +89,14 @@ export class ReferralsController {
 
   @Patch(':id/cancel')
   @Log('cancel_referral')
-  @Roles(['manager', 'nurse'])
+  @RequireFeature(['cancel:referral', 'cancel:referral:others'])
   @ApiOperation({ summary: 'Cancela o encaminhamento' })
-  @ApiResponse({ type: BaseResponse })
-  async cancel(@Param('id') id: string): Promise<BaseResponse> {
-    await this.cancelReferralUseCase.execute({ id });
+  @ZodResponse({ type: BaseResponse, status: 200 })
+  async cancel(
+    @Param('id') id: string,
+    @User() user: RequestUser,
+  ): Promise<BaseResponse> {
+    await this.cancelReferralUseCase.execute({ id, user });
 
     return {
       success: true,

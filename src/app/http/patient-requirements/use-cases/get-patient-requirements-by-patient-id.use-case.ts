@@ -17,8 +17,8 @@ interface GetPatientRequirementsByPatientIdUseCaseInput {
   page: number;
   perPage: number;
   status?: PatientRequirementStatus;
-  startDate?: string;
-  endDate?: string;
+  startDate?: Date;
+  endDate?: Date;
 }
 
 interface GetPatientRequirementsByPatientIdUseCaseOutput {
@@ -44,7 +44,7 @@ export class GetPatientRequirementsByPatientIdUseCase {
     const endDate = props.endDate ? new Date(props.endDate) : null;
 
     const where: FindOptionsWhere<PatientRequirement> = {
-      patientId,
+      patient: { id: patientId },
     };
 
     if (status) {
@@ -73,8 +73,8 @@ export class GetPatientRequirementsByPatientIdUseCase {
         title: true,
         status: true,
         submittedAt: true,
-        approvedAt: true,
-        declinedAt: true,
+        updatedBy: true,
+        updatedAt: true,
         createdAt: true,
       },
       skip: (page - 1) * perPage,

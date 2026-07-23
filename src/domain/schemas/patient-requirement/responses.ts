@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import { baseResponseSchema } from '../base';
-import { patientSchema } from '../patients';
+import { userSchema } from '../users';
 import { patientRequirementSchema } from '.';
 
 export const patientRequirementItemSchema = patientRequirementSchema
@@ -12,11 +12,9 @@ export const patientRequirementItemSchema = patientRequirementSchema
     status: true,
     description: true,
     submittedAt: true,
-    approvedAt: true,
-    declinedAt: true,
     createdAt: true,
   })
-  .extend({ patient: patientSchema.pick({ id: true, name: true }) });
+  .extend({ patient: userSchema.pick({ id: true, name: true }) });
 export type PatientRequirementItem = z.infer<
   typeof patientRequirementItemSchema
 >;
@@ -36,8 +34,6 @@ export const patientRequirementByPatientIdSchema =
     status: true,
     description: true,
     submittedAt: true,
-    approvedAt: true,
-    declinedAt: true,
     createdAt: true,
   });
 export type PatientRequirementByPatientId = z.infer<

@@ -9,7 +9,8 @@ import {
   type Repository,
 } from 'typeorm';
 
-import type { AuthUser } from '@/common/types';
+import { can } from '@/common/authorization/can';
+import type { RequestUser } from '@/common/types';
 import { Appointment } from '@/domain/entities/appointment';
 import type {
   AppointmentsOrderBy,
@@ -18,25 +19,26 @@ import type {
 import type { PatientCondition } from '@/domain/enums/patients';
 import type { QueryOrder } from '@/domain/enums/queries';
 import type { SpecialtyCategory } from '@/domain/enums/shared';
+import type { AppointmentResponseSchema } from '@/domain/schemas/appointments/responses';
 
 interface GetAppointmentsUseCaseInput {
-  user: AuthUser;
-  page: number;
-  perPage: number;
-  patientId?: string;
-  status?: AppointmentStatus;
+  user: RequestUser;
   category?: SpecialtyCategory;
   condition?: PatientCondition;
-  search?: string;
-  startDate?: string;
-  endDate?: string;
+  endDate?: Date;
   limit?: number;
-  orderBy?: AppointmentsOrderBy;
   order?: QueryOrder;
+  orderBy?: AppointmentsOrderBy;
+  page: number;
+  patientId?: string;
+  perPage: number;
+  search?: string;
+  startDate?: Date;
+  status?: AppointmentStatus;
 }
 
 interface GetAppointmentsUseCaseOutput {
-  appointments: Appointment[];
+  appointments: AppointmentResponseSchema[];
   total: number;
 }
 
@@ -48,19 +50,20 @@ export class GetAppointmentsUseCase {
   ) {}
 
   async execute({
-    user,
-    patientId,
-    status,
     category,
     condition,
-    search,
-    page,
-    perPage,
     limit,
+    page,
+    patientId,
+    perPage,
+    search,
+    status,
+    startDate,
+    endDate,
+    user,
     ...props
   }: GetAppointmentsUseCaseInput): Promise<GetAppointmentsUseCaseOutput> {
-    const startDate = props.startDate ? new Date(props.startDate) : null;
-    const endDate = props.endDate ? new Date(props.endDate) : null;
+    can(user, ['read:appointment', 'read:appointment:others']);
 
     const ORDER_BY_MAPPING: Record<AppointmentsOrderBy, keyof Appointment> = {
       date: 'date',
@@ -70,15 +73,20 @@ export class GetAppointmentsUseCase {
       condition: 'condition',
       professional: 'professionalName',
     };
+    const orderBy = ORDER_BY_MAPPING[props.orderBy || 'date'];
+    const order =
+      orderBy === 'patient'
+        ? { patient: { name: props.order } }
+        : { [orderBy]: props.order };
 
     const where: FindOptionsWhere<Appointment> = {};
 
     if (user.role === 'patient') {
-      where.patientId = user.id;
+      where.patient = { id: user.id };
     }
 
     if (patientId) {
-      where.patientId = patientId;
+      where.patient = { id: patientId };
     }
 
     if (startDate && !endDate) {
@@ -111,33 +119,54 @@ export class GetAppointmentsUseCase {
 
     const total = await this.appointmentsRepository.count({ where });
 
-    const orderBy = ORDER_BY_MAPPING[props.orderBy || 'date'];
-    const order =
-      orderBy === 'patient'
-        ? { patient: { name: props.order } }
-        : { [orderBy]: props.order };
-
     const appointments = await this.appointmentsRepository.find({
       select: {
         id: true,
-        patientId: true,
         date: true,
         status: true,
         category: true,
         condition: true,
         annotation: true,
         professionalName: true,
-        createdAt: true,
         updatedAt: true,
-        patient: { id: true, name: true, avatarUrl: true },
+        createdAt: true,
+        patient: { id: true, name: true, email: true, avatarUrl: true },
+        specialist: { id: true, name: true, email: true, avatarUrl: true },
       },
-      relations: { patient: true },
+      relations: { patient: true, specialist: true },
       skip: (page - 1) * perPage,
       take: limit ?? perPage,
       order,
       where,
     });
 
-    return { appointments, total };
+    return {
+      appointments: appointments.map((appointment) => ({
+        id: appointment.id,
+        date: appointment.date,
+        status: appointment.status,
+        category: appointment.category,
+        condition: appointment.condition,
+        annotation: appointment.annotation,
+        professionalName: appointment.professionalName,
+        updatedAt: appointment.updatedAt,
+        createdAt: appointment.createdAt,
+        patient: {
+          id: appointment.patient.id,
+          name: appointment.patient.name,
+          email: appointment.patient.email,
+          avatarUrl: appointment.patient.avatarUrl,
+        },
+        specialist: appointment.specialist
+          ? {
+              id: appointment.specialist.id,
+              name: appointment.specialist.name,
+              email: appointment.specialist.email,
+              avatarUrl: appointment.specialist.avatarUrl,
+            }
+          : null,
+      })),
+      total,
+    };
   }
 }

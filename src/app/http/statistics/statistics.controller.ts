@@ -1,19 +1,22 @@
 import { Controller, Get, Query } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ZodResponse } from 'nestjs-zod';
 
-import { Roles } from '@/common/decorators/roles.decorator';
+import { RequireFeature } from '@/common/decorators/require-feature.decorator';
 import type {
-  TotalPatientsByCity,
   TotalPatientsByGender,
+  TotalPatientsByState,
+  TotalPatientsWithAppointmentsByState,
+  TotalPatientsWithReferralsByState,
 } from '@/domain/schemas/statistics/responses';
 
 import {
   GetTotalAppointmentsByCategoryQuery,
   GetTotalAppointmentsByCategoryResponse,
   GetTotalAppointmentsResponse,
-  GetTotalPatientsByCityResponse,
   GetTotalPatientsByFieldQuery,
   GetTotalPatientsByGenderResponse,
+  GetTotalPatientsByStateResponse,
   GetTotalPatientsResponse,
   GetTotalPatientsWithAppointmentsByStateQuery,
   GetTotalPatientsWithAppointmentsByStateResponse,
@@ -33,34 +36,34 @@ import { GetTotalAppointmentsByCategoryUseCase } from './use-cases/get-total-app
 import { GetTotalPatientsUseCase } from './use-cases/get-total-patients.use-case';
 import { GetTotalPatientsByFieldUseCase } from './use-cases/get-total-patients-by-field.use-case';
 import { GetTotalPatientsWithAppointmentsUseCase } from './use-cases/get-total-patients-with-appointments.use-case';
-import { GetTotalPatientsWithAppointmentsByStateUseCase } from './use-cases/get-total-patients-with-appointments-by-state.use-case';
+import { GetTotalPatientsWithAppointmentsByFieldUseCase } from './use-cases/get-total-patients-with-appointments-by-field.use-case';
 import { GetTotalPatientsWithReferralsUseCase } from './use-cases/get-total-patients-with-referrals.use-case';
-import { GetTotalPatientsWithReferralsByStateUseCase } from './use-cases/get-total-patients-with-referrals-by-state.use-case';
+import { GetTotalPatientsWithReferralsByFieldUseCase } from './use-cases/get-total-patients-with-referrals-by-field.use-case';
 import { GetTotalReferralsUseCase } from './use-cases/get-total-referrals.use-case';
 import { GetTotalReferralsByCategoryUseCase } from './use-cases/get-total-referrals-by-category.use-case';
 
 @ApiTags('Estatísticas')
-@Roles(['manager', 'nurse', 'specialist'])
 @Controller('statistics')
 export class StatisticsController {
   constructor(
-    private readonly getTotalAppointmentsUseCase: GetTotalAppointmentsUseCase,
     private readonly getTotalAppointmentsByCategoryUseCase: GetTotalAppointmentsByCategoryUseCase,
-    private readonly getTotalPatientsUseCase: GetTotalPatientsUseCase,
+    private readonly getTotalAppointmentsUseCase: GetTotalAppointmentsUseCase,
     private readonly getTotalPatientsByFieldUseCase: GetTotalPatientsByFieldUseCase,
+    private readonly getTotalPatientsUseCase: GetTotalPatientsUseCase,
+    private readonly getTotalPatientsWithAppointmentsByFieldUseCase: GetTotalPatientsWithAppointmentsByFieldUseCase,
     private readonly getTotalPatientsWithAppointmentsUseCase: GetTotalPatientsWithAppointmentsUseCase,
-    private readonly getTotalPatientsWithAppointmentsByStateUseCase: GetTotalPatientsWithAppointmentsByStateUseCase,
-    private readonly getTotalPatientsWithReferralsByStateUseCase: GetTotalPatientsWithReferralsByStateUseCase,
+    private readonly getTotalPatientsWithReferralsByFieldUseCase: GetTotalPatientsWithReferralsByFieldUseCase,
     private readonly getTotalPatientsWithReferralsUseCase: GetTotalPatientsWithReferralsUseCase,
-    private readonly getTotalReferralsUseCase: GetTotalReferralsUseCase,
     private readonly getTotalReferralsByCategoryUseCase: GetTotalReferralsByCategoryUseCase,
+    private readonly getTotalReferralsUseCase: GetTotalReferralsUseCase,
   ) {}
 
   // Appointments
 
   @Get('appointments/total')
+  @RequireFeature(['read:statistic', 'read:statistic:appointment'])
   @ApiOperation({ summary: 'Número total de atendimentos' })
-  @ApiResponse({ type: GetTotalAppointmentsResponse })
+  @ZodResponse({ status: 200, type: GetTotalAppointmentsResponse })
   async getTotalAppointments(
     @Query() query: GetTotalReferralsQuery,
   ): Promise<GetTotalAppointmentsResponse> {
@@ -74,10 +77,11 @@ export class StatisticsController {
   }
 
   @Get('appointments/by-category')
+  @RequireFeature(['read:statistic', 'read:statistic:appointment'])
   @ApiOperation({
     summary: 'Número total de atendimentos por categoria',
   })
-  @ApiResponse({ type: GetTotalAppointmentsByCategoryResponse })
+  @ZodResponse({ status: 200, type: GetTotalAppointmentsByCategoryResponse })
   async getTotalAppointmentsByCategory(
     @Query() query: GetTotalAppointmentsByCategoryQuery,
   ): Promise<GetTotalAppointmentsByCategoryResponse> {
@@ -95,8 +99,9 @@ export class StatisticsController {
   // Patients
 
   @Get('patients/total')
+  @RequireFeature(['read:statistic', 'read:statistic:patient'])
   @ApiOperation({ summary: 'Número total de pacientes' })
-  @ApiResponse({ type: GetTotalPatientsResponse })
+  @ZodResponse({ status: 200, type: GetTotalPatientsResponse })
   async getTotalPatients(): Promise<GetTotalPatientsResponse> {
     const total = await this.getTotalPatientsUseCase.execute();
 
@@ -108,12 +113,13 @@ export class StatisticsController {
   }
 
   @Get('patients/by-gender')
+  @RequireFeature(['read:statistic', 'read:statistic:patient'])
   @ApiOperation({ summary: 'Número total de pacientes por gênero' })
-  @ApiResponse({ type: GetTotalPatientsByGenderResponse })
+  @ZodResponse({ status: 200, type: GetTotalPatientsByGenderResponse })
   async getTotalPatientsByGender(
     @Query() query: GetTotalPatientsByFieldQuery,
   ): Promise<GetTotalPatientsByGenderResponse> {
-    const { items: genders, total } =
+    const { list: genders, total } =
       await this.getTotalPatientsByFieldUseCase.execute<TotalPatientsByGender>({
         field: 'gender',
         ...query,
@@ -127,29 +133,31 @@ export class StatisticsController {
     };
   }
 
-  @Get('patients/by-city')
-  @ApiOperation({ summary: 'Número total de pacientes por cidade' })
-  @ApiResponse({ type: GetTotalPatientsByCityResponse })
-  async getTotalPatientsByCity(
+  @Get('patients/by-state')
+  @RequireFeature(['read:statistic', 'read:statistic:patient'])
+  @ApiOperation({ summary: 'Número total de pacientes por estado' })
+  @ZodResponse({ status: 200, type: GetTotalPatientsByStateResponse })
+  async getTotalPatientsByState(
     @Query() query: GetTotalPatientsByFieldQuery,
-  ): Promise<GetTotalPatientsByCityResponse> {
-    const { items: cities, total } =
-      await this.getTotalPatientsByFieldUseCase.execute<TotalPatientsByCity>({
-        field: 'city',
+  ): Promise<GetTotalPatientsByStateResponse> {
+    const { list: states, total } =
+      await this.getTotalPatientsByFieldUseCase.execute<TotalPatientsByState>({
+        field: 'state',
         ...query,
       });
 
     return {
       success: true,
       message:
-        'Lista com o total de pacientes por cidade retornado com sucesso.',
-      data: { cities, total },
+        'Lista com o total de pacientes por estado retornado com sucesso.',
+      data: { states, total },
     };
   }
 
   @Get('patients/with-appointments')
+  @RequireFeature(['read:statistic', 'read:statistic:appointment'])
   @ApiOperation({ summary: 'Número total de pacientes atendidos' })
-  @ApiResponse({ type: GetTotalPatientsWithAppointmentsResponse })
+  @ZodResponse({ status: 200, type: GetTotalPatientsWithAppointmentsResponse })
   async getTotalPatientsWithAppointments(
     @Query() query: GetTotalPatientsWithAppointmentsQuery,
   ): Promise<GetTotalPatientsWithAppointmentsResponse> {
@@ -164,15 +172,21 @@ export class StatisticsController {
   }
 
   @Get('patients/with-appointments/by-state')
+  @RequireFeature(['read:statistic', 'read:statistic:appointment'])
   @ApiOperation({
     summary: 'Número total de pacientes atendidos por estado',
   })
-  @ApiResponse({ type: GetTotalPatientsWithAppointmentsByStateResponse })
+  @ZodResponse({
+    status: 200,
+    type: GetTotalPatientsWithAppointmentsByStateResponse,
+  })
   async getTotalPatientsWithAppointmentsByState(
     @Query() query: GetTotalPatientsWithAppointmentsByStateQuery,
   ): Promise<GetTotalPatientsWithAppointmentsByStateResponse> {
-    const { states, total } =
-      await this.getTotalPatientsWithAppointmentsByStateUseCase.execute(query);
+    const { list: states, total } =
+      await this.getTotalPatientsWithAppointmentsByFieldUseCase.execute<TotalPatientsWithAppointmentsByState>(
+        { field: 'state', ...query },
+      );
 
     return {
       success: true,
@@ -183,8 +197,9 @@ export class StatisticsController {
   }
 
   @Get('patients/with-referrals')
+  @RequireFeature(['read:statistic', 'read:statistic:referral'])
   @ApiOperation({ summary: 'Número total de pacientes encaminhados' })
-  @ApiResponse({ type: GetTotalPatientsWithReferralsResponse })
+  @ZodResponse({ status: 200, type: GetTotalPatientsWithReferralsResponse })
   async getTotalPatientsWithReferrals(
     @Query() query: GetTotalPatientsWithReferralsQuery,
   ): Promise<GetTotalPatientsWithReferralsResponse> {
@@ -199,15 +214,21 @@ export class StatisticsController {
   }
 
   @Get('patients/with-referrals/by-state')
+  @RequireFeature(['read:statistic', 'read:statistic:referral'])
   @ApiOperation({
     summary: 'Número total de pacientes encaminhados por estado',
   })
-  @ApiResponse({ type: GetTotalPatientsWithReferralsByStateResponse })
-  async getTotalPatientsWithReferralsByStatel(
+  @ZodResponse({
+    status: 200,
+    type: GetTotalPatientsWithReferralsByStateResponse,
+  })
+  async getTotalPatientsWithReferralsByState(
     @Query() query: GetTotalPatientsWithReferralsByStateQuery,
   ): Promise<GetTotalPatientsWithReferralsByStateResponse> {
-    const { states, total } =
-      await this.getTotalPatientsWithReferralsByStateUseCase.execute(query);
+    const { list: states, total } =
+      await this.getTotalPatientsWithReferralsByFieldUseCase.execute<TotalPatientsWithReferralsByState>(
+        { field: 'state', ...query },
+      );
 
     return {
       success: true,
@@ -220,8 +241,9 @@ export class StatisticsController {
   // Referrals
 
   @Get('referrals/total')
+  @RequireFeature(['read:statistic', 'read:statistic:referral'])
   @ApiOperation({ summary: 'Número total de encaminhamentos' })
-  @ApiResponse({ type: GetTotalReferralsResponse })
+  @ZodResponse({ status: 200, type: GetTotalReferralsResponse })
   async getTotalReferrals(
     @Query() query: GetTotalReferralsQuery,
   ): Promise<GetTotalReferralsResponse> {
@@ -235,10 +257,11 @@ export class StatisticsController {
   }
 
   @Get('referrals/by-category')
+  @RequireFeature(['read:statistic', 'read:statistic:referral'])
   @ApiOperation({
     summary: 'Número total de encaminhamentos por categoria',
   })
-  @ApiResponse({ type: GetTotalReferralsByCategoryResponse })
+  @ZodResponse({ status: 200, type: GetTotalReferralsByCategoryResponse })
   async getTotalReferralsByCategory(
     @Query() query: GetTotalReferralsByCategoryQuery,
   ): Promise<GetTotalReferralsByCategoryResponse> {

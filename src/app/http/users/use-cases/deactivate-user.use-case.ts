@@ -1,21 +1,21 @@
 import {
   ConflictException,
-  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import { can } from '@/common/authorization/can';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
-import type { AuthUser } from '@/common/types';
+import type { RequestUser } from '@/common/types';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 
 interface DeactivateUserUseCaseInput {
   id: string;
-  user: AuthUser;
+  user: RequestUser;
 }
 
 @Injectable()
@@ -30,15 +30,7 @@ export class DeactivateUserUseCase {
   ) {}
 
   async execute({ id, user }: DeactivateUserUseCaseInput): Promise<void> {
-    if (user.role !== 'admin') {
-      this.logger.warn(
-        'Deactivate user failed: User does not have permission',
-        { id },
-      );
-      throw new ForbiddenException(
-        'Você não tem permissão para inativar usuários.',
-      );
-    }
+    can(user, 'deactivate:user');
 
     const userToDeactivate = await this.usersRepository.findOne({
       select: { id: true, status: true },
@@ -55,8 +47,8 @@ export class DeactivateUserUseCase {
 
     await this.usersRepository.update({ id }, { status: 'inactive' });
 
-    await this.tokensRepository.delete({ entityId: id });
+    await this.tokensRepository.delete({ userId: id });
 
-    this.logger.log('User deactivated successfully', { id });
+    this.logger.log('User deactivated', { id });
   }
 }

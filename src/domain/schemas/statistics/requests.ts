@@ -24,8 +24,8 @@ export const getTotalAppointmentsByCategoryQuerySchema = z.object({
 export const getTotalPatientsByFieldQuerySchema = z.object({
   period: queryPeriodSchema.optional(),
   order: queryOrderSchema.optional().default('DESC'),
-  limit: queryLimitSchema,
   withPercentage: queryPercentageSchema,
+  limit: queryLimitSchema,
 });
 
 export const getTotalPatientsWithAppointmentsQuerySchema = z.object({

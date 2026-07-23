@@ -1,24 +1,22 @@
-import {
-  ConflictException,
-  Injectable,
-  ServiceUnavailableException,
-} from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
 import { MailService } from '@/app/mail/mail.service';
+import { can } from '@/common/authorization/can';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
+import type { RequestUser } from '@/common/types';
 import { buildRegisterUserEmail } from '@/domain/email-templates/register-user-email';
-import { Patient } from '@/domain/entities/patient';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
-import { AUTH_TOKENS_MAPPING } from '@/domain/enums/tokens';
+import { TOKENS } from '@/domain/enums/tokens';
 import type { UserRole } from '@/domain/enums/users';
 import { EnvService } from '@/env/env.service';
 
 interface CreateUserInviteUseCaseInput {
+  user: RequestUser;
   email: string;
   role: UserRole;
 }
@@ -29,33 +27,32 @@ export class CreateUserInviteUseCase {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
-    @InjectRepository(Patient)
-    private readonly patientsRepository: Repository<Patient>,
     @InjectRepository(Token)
     private readonly tokensRepository: Repository<Token>,
     private readonly createTokenUseCase: CreateTokenUseCase,
-    private readonly envService: EnvService,
-    private readonly mailService: MailService,
     private readonly dataSource: DataSource,
+    private readonly envService: EnvService,
     private readonly logger: LogService,
+    private readonly mailService: MailService,
   ) {}
 
-  async execute({ email, role }: CreateUserInviteUseCaseInput): Promise<void> {
-    const [existingInviteUserToken, existingUser, existingPatient] =
-      await Promise.all([
-        this.tokensRepository.findOne({ where: { email } }),
-        this.usersRepository.findOne({
-          where: { email },
-          select: { id: true },
-        }),
-        this.patientsRepository.findOne({
-          where: { email },
-          select: { id: true },
-        }),
-      ]);
+  async execute({
+    email,
+    role,
+    user,
+  }: CreateUserInviteUseCaseInput): Promise<void> {
+    can(user, 'create:user-invite');
 
-    if (existingUser || existingPatient) {
-      throw new ConflictException('Este e-mail já está cadastrado no sistema.');
+    const [existingInviteUserToken, existingUser] = await Promise.all([
+      this.tokensRepository.findOne({ where: { email } }),
+      this.usersRepository.findOne({ where: { email }, select: { id: true } }),
+    ]);
+
+    if (existingUser) {
+      throw new ConflictException(
+        'Este e-mail já está cadastrado no sistema.',
+        { cause: `User with email <${email}> already exists` },
+      );
     }
 
     const existingTokenExpiryDate = existingInviteUserToken?.expiresAt;
@@ -63,6 +60,7 @@ export class CreateUserInviteUseCase {
     if (existingTokenExpiryDate && existingTokenExpiryDate > new Date()) {
       throw new ConflictException(
         'Já existe um convite ativo para este e-mail.',
+        { cause: `Invite user token for email <${email}> already exists` },
       );
     }
 
@@ -71,7 +69,7 @@ export class CreateUserInviteUseCase {
 
       const [{ token: inviteUserToken, expiresAt }] = await Promise.all([
         this.createTokenUseCase.execute({
-          type: AUTH_TOKENS_MAPPING.inviteUser,
+          type: TOKENS.inviteUser,
           payload: { role },
         }),
         // Delete all tokens for this email before creating a new one
@@ -79,22 +77,22 @@ export class CreateUserInviteUseCase {
       ]);
 
       const newInviteUserToken = tokensRepository.create({
-        type: AUTH_TOKENS_MAPPING.inviteUser,
+        type: TOKENS.inviteUser,
         token: inviteUserToken,
-        expiresAt: expiresAt,
+        expiresAt,
         email,
       });
 
       await tokensRepository.save(newInviteUserToken);
 
-      this.logger.log('Invite user token created successfully', {
+      this.logger.log('Invite user token created', {
         id: newInviteUserToken.id,
         email,
         role,
       });
 
       const baseAppUrl = this.envService.get('APP_URL');
-      const registerUserUrl = `${baseAppUrl}/conta/cadastrar?token=${inviteUserToken}`;
+      const registerUserUrl = `${baseAppUrl}/cadastrar?token=${inviteUserToken}`;
 
       const subject = 'Cadastre sua conta no Sistema Viver Melhor da ABNMO';
       const preheader =
@@ -106,18 +104,12 @@ export class CreateUserInviteUseCase {
         registerUserUrl,
       });
 
-      const emailSent = await this.mailService.send({
+      await this.mailService.send({
         to: email,
         subject,
         text: preheader,
         html: registerUserEmail,
       });
-
-      if (!emailSent) {
-        throw new ServiceUnavailableException(
-          'O envio do convite falhou. Por favor, tente novamente.',
-        );
-      }
     });
   }
 }

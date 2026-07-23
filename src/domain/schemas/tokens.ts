@@ -1,45 +1,30 @@
 import { z } from 'zod';
 
-import {
-  AUTH_TOKENS,
-  type AUTH_TOKENS_MAPPING,
-  type AuthTokenRole,
-} from '../enums/tokens';
+import { type TOKENS, TOKENS_ENUM } from '../enums/tokens';
 import type { UserRole } from '../enums/users';
+import { baseEntitySchema } from './base';
+import { datetimeSchema, emailSchema } from './shared';
+import { userSchema } from './users';
 
-export const authTokenSchema = z
-  .object({
-    id: z.string().uuid(),
-    entityId: z.string().uuid().nullable(),
-    email: z.string().email().nullable(),
-    token: z.string().min(1),
-    type: z.enum(AUTH_TOKENS),
-    expiresAt: z.coerce.date().nullable(),
-    createdAt: z.coerce.date(),
-  })
-  .strict();
-export type AuthToken = z.infer<typeof authTokenSchema>;
-
-export type RefreshToken = Pick<
-  AuthToken,
-  'entityId' | 'token' | 'expiresAt'
-> & {
-  type: typeof AUTH_TOKENS_MAPPING.refreshToken;
-};
+export const tokenSchema = z.strictObject({
+  ...baseEntitySchema.shape,
+  userId: userSchema.shape.id.nullable(),
+  email: emailSchema.nullable(),
+  token: z.string().min(1),
+  type: z.enum(TOKENS_ENUM),
+  expiresAt: datetimeSchema,
+});
+export type TokenSchema = z.infer<typeof tokenSchema>;
 
 export type PasswordResetToken = Pick<
-  AuthToken,
-  'entityId' | 'token' | 'expiresAt'
-> & { type: typeof AUTH_TOKENS_MAPPING.passwordReset };
+  TokenSchema,
+  'userId' | 'token' | 'expiresAt'
+> & { type: typeof TOKENS.passwordReset };
 
-export type AccessTokenPayload = { sub: string; role: AuthTokenRole };
-export type RefreshTokenPayload = { sub: string; role: AuthTokenRole };
 export type ResetPasswordPayload = { sub: string };
 export type InviteUserPayload = { role: UserRole };
 
 export type AuthTokenPayloads = {
-  [AUTH_TOKENS_MAPPING.accessToken]: AccessTokenPayload;
-  [AUTH_TOKENS_MAPPING.refreshToken]: RefreshTokenPayload;
-  [AUTH_TOKENS_MAPPING.passwordReset]: ResetPasswordPayload;
-  [AUTH_TOKENS_MAPPING.inviteUser]: InviteUserPayload;
+  [TOKENS.passwordReset]: ResetPasswordPayload;
+  [TOKENS.inviteUser]: InviteUserPayload;
 };

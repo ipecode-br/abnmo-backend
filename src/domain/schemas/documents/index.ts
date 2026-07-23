@@ -1,0 +1,22 @@
+import { z } from 'zod';
+
+import {
+  DOCUMENT_CATEGORIES,
+  DOCUMENT_MIME_TYPES,
+  DOCUMENT_STATUSES,
+} from '@/domain/enums/documents';
+
+import { baseEntitySchema } from '../base';
+
+export const documentSchema = z.strictObject({
+  ...baseEntitySchema.shape,
+  name: z.string().min(1).max(128),
+  filename: z.string().min(1).max(256),
+  key: z.string().min(1).max(512),
+  url: z.url(),
+  size: z.number().int().min(0),
+  mimeType: z.enum(DOCUMENT_MIME_TYPES),
+  category: z.enum(DOCUMENT_CATEGORIES),
+  status: z.enum(DOCUMENT_STATUSES).default('pending'),
+});
+export type DocumentSchema = z.infer<typeof documentSchema>;

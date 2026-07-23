@@ -10,20 +10,24 @@ import {
   type Repository,
 } from 'typeorm';
 
-import { Patient } from '@/domain/entities/patient';
-import type { PatientOrderBy, PatientStatus } from '@/domain/enums/patients';
+import { can } from '@/common/authorization/can';
+import type { RequestUser } from '@/common/types';
+import { User } from '@/domain/entities/user';
+import { PatientsOrderBy } from '@/domain/enums/patients';
 import type { QueryOrder } from '@/domain/enums/queries';
+import type { UserStatus } from '@/domain/enums/users';
 import type { PatientResponse } from '@/domain/schemas/patients/responses';
 
 interface GetPatientsUseCaseInput {
+  user: RequestUser;
   page: number;
   perPage: number;
   search?: string;
   order?: QueryOrder;
-  orderBy?: PatientOrderBy;
-  status?: PatientStatus;
-  startDate?: string;
-  endDate?: string;
+  orderBy?: PatientsOrderBy;
+  status?: UserStatus;
+  startDate?: Date;
+  endDate?: Date;
 }
 
 interface GetPatientsUseCaseOutput {
@@ -34,30 +38,38 @@ interface GetPatientsUseCaseOutput {
 @Injectable()
 export class GetPatientsUseCase {
   constructor(
-    @InjectRepository(Patient)
-    private readonly patientsRepository: Repository<Patient>,
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
   ) {}
 
   async execute({
+    user,
     search,
     status,
     page,
     perPage,
+    startDate,
+    endDate,
     ...props
   }: GetPatientsUseCaseInput): Promise<GetPatientsUseCaseOutput> {
-    const startDate = props.startDate ? new Date(props.startDate) : null;
-    const endDate = props.endDate ? new Date(props.endDate) : null;
+    can(user, 'read:patient:others');
 
-    const ORDER_BY_MAPPING: Record<PatientOrderBy, keyof Patient> = {
+    const ORDER_BY_MAPPING: Record<PatientsOrderBy, keyof User> = {
       name: 'name',
       email: 'email',
       status: 'status',
       date: 'createdAt',
     };
+    const orderBy = ORDER_BY_MAPPING[props.orderBy || 'name'];
 
-    const where: FindOptionsWhere<Patient> = {
-      status: status ?? Not('pending'),
+    const where: FindOptionsWhere<User> = {
+      role: 'patient',
+      status: Not('pending'),
     };
+
+    if (status) {
+      where.status = status;
+    }
 
     if (search) {
       where.name = ILike(`%${search}%`);
@@ -75,19 +87,17 @@ export class GetPatientsUseCase {
       where.createdAt = LessThanOrEqual(endDate);
     }
 
-    const total = await this.patientsRepository.count({ where });
+    const total = await this.usersRepository.count({ where });
 
-    const orderBy = ORDER_BY_MAPPING[props.orderBy || 'name'];
-
-    const patients = await this.patientsRepository.find({
+    const result = await this.usersRepository.find({
       where,
       select: {
         id: true,
         name: true,
         email: true,
+        phone: true,
         status: true,
         avatarUrl: true,
-        phone: true,
         createdAt: true,
       },
       order: { [orderBy]: props.order },
@@ -95,6 +105,17 @@ export class GetPatientsUseCase {
       take: perPage,
     });
 
-    return { patients, total };
+    return {
+      patients: result.map((patient) => ({
+        id: patient.id,
+        name: patient.name,
+        email: patient.email,
+        phone: patient.phone || '',
+        status: patient.status,
+        avatarUrl: patient.avatarUrl,
+        createdAt: patient.createdAt,
+      })),
+      total,
+    };
   }
 }

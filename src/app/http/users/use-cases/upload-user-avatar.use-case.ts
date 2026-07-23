@@ -8,15 +8,16 @@ import { Repository } from 'typeorm';
 
 import { DeleteFileUseCase } from '@/app/storage/use-cases/delete-file.use-case';
 import { UploadFileUseCase } from '@/app/storage/use-cases/upload-file.use-case';
+import { can } from '@/common/authorization/can';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
-import type { AuthUser } from '@/common/types';
+import type { RequestUser } from '@/common/types';
 import { STORAGE_FOLDERS } from '@/config/storage';
 import { User } from '@/domain/entities/user';
 import { generateFileName } from '@/utils/generate-file-name';
 
 interface UploadUserAvatarUseCaseInput {
-  user: AuthUser;
+  user: RequestUser;
   buffer: Buffer;
   originalName: string;
   mimeType: string;
@@ -36,11 +37,10 @@ export class UploadUserAvatarUseCase {
   async execute({
     user,
     buffer,
-    originalName,
     mimeType,
   }: UploadUserAvatarUseCaseInput): Promise<void> {
     const userToUpdate = await this.usersRepository.findOne({
-      select: { id: true, avatarUrl: true },
+      select: { id: true, avatarUrl: true, name: true },
       where: { id: user.id },
     });
 
@@ -48,11 +48,16 @@ export class UploadUserAvatarUseCase {
       throw new NotFoundException('Usuário não encontrado.');
     }
 
-    const fileName = generateFileName({ originalName, replace: 'avatar' });
+    can(user, 'update:user', userToUpdate.id);
+
+    const fileName = generateFileName({
+      name: userToUpdate.name,
+      prefix: 'avatar',
+      mimeType,
+    });
 
     const file = await this.uploadFileUseCase.execute({
-      folder: STORAGE_FOLDERS.users.avatars,
-      visibility: 'private',
+      folder: STORAGE_FOLDERS.users.avatars(user.id),
       buffer: buffer,
       fileName,
       mimeType,

@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { Patient } from '@/domain/entities/patient';
 import { PatientRequirement } from '@/domain/entities/patient-requirement';
+import { User } from '@/domain/entities/user';
 
 import { PatientRequirementsController } from './patient-requirements.controller';
 import { ApprovePatientRequirementUseCase } from './use-cases/approve-patient-requirement.use-case';
@@ -12,7 +12,7 @@ import { GetPatientRequirementsUseCase } from './use-cases/get-patient-requireme
 import { GetPatientRequirementsByPatientIdUseCase } from './use-cases/get-patient-requirements-by-patient-id.use-case';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Patient, PatientRequirement])],
+  imports: [TypeOrmModule.forFeature([PatientRequirement, User])],
   controllers: [PatientRequirementsController],
   providers: [
     CreatePatientRequirementUseCase,

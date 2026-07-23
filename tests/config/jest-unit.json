@@ -1,0 +1,47 @@
+{
+  "preset": "ts-jest",
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": "../..",
+  "testEnvironment": "node",
+  "testMatch": ["<rootDir>/tests/**/*.spec.ts"],
+  "moduleNameMapper": {
+    "^@/(.*)$": "<rootDir>/src/$1",
+    "^uuid$": "<rootDir>/src/__mocks__/uuid.ts",
+    "^tests/(.*)$": "<rootDir>/tests/$1"
+  },
+  "transform": {
+    "^.+\\.(t|j)s$": [
+      "ts-jest",
+      {
+        "transpileOnly": true,
+        "tsconfig": {
+          "isolatedModules": true,
+          "allowJs": true,
+          "strictNullChecks": true,
+          "emitDecoratorMetadata": true,
+          "experimentalDecorators": true,
+          "skipLibCheck": true
+        }
+      }
+    ]
+  },
+  "transformIgnorePatterns": ["node_modules/(?!@faker-js).+"],
+  "testTimeout": 5000,
+  "maxWorkers": "50%",
+  "clearMocks": true,
+  "restoreMocks": true,
+  "coverageDirectory": "./coverage",
+  "collectCoverageFrom": [
+    "src/**/*.ts",
+    "!src/**/tests/**",
+    "!src/domain/entities/**",
+    "!src/domain/schemas/**",
+    "!src/domain/enums/**",
+    "!src/constants/**",
+    "!**/*.dto.ts",
+    "!**/*.module.ts",
+    "!src/app/main.ts",
+    "!src/app/lambda.ts",
+    "!src/app/app.ts"
+  ]
+}

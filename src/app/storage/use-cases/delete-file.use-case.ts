@@ -9,24 +9,23 @@ import { EnvService } from '@/env/env.service';
 @Log()
 export class DeleteFileUseCase {
   private readonly bucketName: string;
-  private readonly s3Client: S3Client;
 
   constructor(
-    private readonly logger: LogService,
     private readonly envService: EnvService,
+    private readonly logger: LogService,
+    private readonly s3Client: S3Client,
   ) {
     this.bucketName = this.envService.get('STORAGE_BUCKET_NAME');
-    this.s3Client = new S3Client({});
   }
 
-  async execute(s3Key: string): Promise<void> {
+  async execute(key: string): Promise<void> {
     const deleteCommand = new DeleteObjectCommand({
       Bucket: this.bucketName,
-      Key: s3Key,
+      Key: key,
     });
 
     await this.s3Client.send(deleteCommand);
 
-    this.logger.log('File deleted', { s3Key });
+    this.logger.log('File deleted', { key });
   }
 }

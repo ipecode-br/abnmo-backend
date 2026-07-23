@@ -49,7 +49,7 @@ export class GetTotalReferralsByCategoryUseCase {
       }
 
       if (patientId) {
-        baseQuery.andWhere('referral.patient_id = :patientId', {
+        baseQuery.andWhere('referral.patient.id = :patientId', {
           patientId,
         });
       }
@@ -74,6 +74,12 @@ export class GetTotalReferralsByCategoryUseCase {
       totalQuery.getRawOne<{ total: string }>(),
     ]);
 
-    return { categories, total: Number(totalResult?.total || 0) };
+    return {
+      categories: categories.map((category) => ({
+        ...category,
+        total: Number(category.total) || 0,
+      })),
+      total: Number(totalResult?.total) || 0,
+    };
   }
 }

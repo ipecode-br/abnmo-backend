@@ -1,7 +1,8 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_FILTER, APP_GUARD, APP_PIPE } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { LoggerModule } from 'nestjs-pino';
+import { ZodSerializerInterceptor } from 'nestjs-zod';
 
 import { ContextMiddleware } from '@/common/context/context.middleware';
 import { HttpExceptionFilter } from '@/common/http-exception.filter';
@@ -17,11 +18,11 @@ import { DatabaseModule } from './database/database.module';
 import { AppointmentsModule } from './http/appointments/appointments.module';
 import { AuthModule } from './http/auth/auth.module';
 import { PatientRequirementsModule } from './http/patient-requirements/patient-requirements.module';
-import { PatientSupportsModule } from './http/patient-supports/patient-supports.module';
 import { PatientsModule } from './http/patients/patients.module';
 import { ReferralsModule } from './http/referrals/referrals.module';
 import { StatisticsModule } from './http/statistics/statistics.module';
 import { StatusModule } from './http/status/status.module';
+import { SurveysModule } from './http/surveys/surveys.module';
 import { UsersModule } from './http/users/users.module';
 import { StorageModule } from './storage/storage.module';
 
@@ -42,27 +43,31 @@ import { StorageModule } from './storage/storage.module';
       imports: [EnvModule],
       inject: [EnvService],
       useFactory: (envService: EnvService) => {
+        const isTest = envService.get('NODE_ENV') === 'test';
         const usePinoPretty = envService.get('APP_ENVIRONMENT') !== 'lambda';
         return {
           pinoHttp: {
             autoLogging: false,
+            level: isTest ? 'silent' : 'info',
             formatters: { level: (label) => ({ level: label }) },
-            transport: usePinoPretty
-              ? {
-                  target: 'pino-pretty',
-                  options: {
-                    colorize: true,
-                    translateTime: 'UTC:yyyy-mm-dd HH:MM:ss.l',
-                    ignore: 'req,res',
-                  },
-                }
-              : undefined,
+            transport:
+              usePinoPretty && !isTest
+                ? {
+                    target: 'pino-pretty',
+                    options: {
+                      colorize: true,
+                      translateTime: 'UTC:yyyy-mm-dd HH:MM:ss.l',
+                      ignore: 'req,res',
+                    },
+                  }
+                : undefined,
           },
         };
       },
     }),
     LogModule,
     DatabaseModule,
+    SurveysModule,
     AuthModule,
     UsersModule,
     PatientsModule,
@@ -70,7 +75,6 @@ import { StorageModule } from './storage/storage.module';
     AppointmentsModule,
     StatisticsModule,
     PatientRequirementsModule,
-    PatientSupportsModule,
     StorageModule,
     StatusModule,
   ],
@@ -78,6 +82,7 @@ import { StorageModule } from './storage/storage.module';
     { provide: APP_GUARD, useClass: LogGuard },
     { provide: APP_PIPE, useClass: ZodValidationPipe },
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
+    { provide: APP_INTERCEPTOR, useClass: ZodSerializerInterceptor },
   ],
 })
 export class AppModule implements NestModule {
