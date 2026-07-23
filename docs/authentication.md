@@ -17,10 +17,10 @@ A validação de ownership é feita nos use-cases via `can()`.
 
 ## Cookies e tokens
 
-| Cookie          | Duração | Finalidade                                  |
-| --------------- | ------- | ------------------------------------------- |
-| `access_token`  | 8 horas | Autenticação principal em cada requisição   |
-| `refresh_token` | 30 dias | Renovação silenciosa do `access_token`      |
+| Cookie          | Duração | Finalidade                                |
+| --------------- | ------- | ----------------------------------------- |
+| `access_token`  | 8 horas | Autenticação principal em cada requisição |
+| `refresh_token` | 30 dias | Renovação silenciosa do `access_token`    |
 
 Tokens armazenados na tabela `tokens`:
 
@@ -39,18 +39,18 @@ O usuário autenticado é injetado via `@User()` com o tipo:
 type RequestUser = {
   id: string;
   email: string;
-  role: UserRole;         // 'admin' | 'member' | 'specialist' | 'patient'
+  role: UserRole; // 'admin' | 'member' | 'specialist' | 'patient'
   features: UserFeature[]; // lista de features atribuídas
 };
 ```
 
 Perfis disponíveis (`USER_ROLES`):
 
-| Perfil       | Valor          | Descrição                          |
-| ------------ | -------------- | ---------------------------------- |
-| `admin`      | `'admin'`      | Acesso total, bypass de guards     |
-| `member`     | `'member'`     | Gestão operacional do sistema      |
-| `specialist` | `'specialist'` | Especialistas (médicos, psicólogos, etc.) |
+| Perfil       | Valor          | Descrição                                      |
+| ------------ | -------------- | ---------------------------------------------- |
+| `admin`      | `'admin'`      | Acesso total, bypass de guards                 |
+| `member`     | `'member'`     | Gestão operacional do sistema                  |
+| `specialist` | `'specialist'` | Especialistas (médicos, psicólogos, etc.)      |
 | `patient`    | `'patient'`    | Pacientes — acesso restrito aos próprios dados |
 
 ---
@@ -105,7 +105,11 @@ import { can } from '@/common/authorization/can';
 can(user, 'update:user', targetId);
 
 // Múltiplas features (OR): basta ter UMA feature e passar ownership
-can(user, ['update:appointment', 'update:appointment:others'], appointment.specialist?.id);
+can(
+  user,
+  ['update:appointment', 'update:appointment:others'],
+  appointment.specialist?.id,
+);
 
 // Múltiplos owners: deve ter feature E bater com PELO MENOS UM owner
 can(
@@ -123,11 +127,11 @@ can(
 
 Cada perfil recebe um conjunto base de features ao ser criado:
 
-| Perfil       | Features                                                                 |
-| ------------ | ------------------------------------------------------------------------ |
-| Todos        | `read:user`, `update:user`                                               |
-| `member`     | + `read:patient`, `read:patient:others`                                   |
-| `specialist` | + `create:appointment`, `read/update/cancel:appointment`, `read/update/cancel:referral` |
+| Perfil       | Features                                                                                                |
+| ------------ | ------------------------------------------------------------------------------------------------------- |
+| Todos        | `read:user`, `update:user`                                                                              |
+| `member`     | + `read:patient`, `read:patient:others`                                                                 |
+| `specialist` | + `create:appointment`, `read/update/cancel:appointment`, `read/update/cancel:referral`                 |
 | `patient`    | + `read/update:patient`, `read:survey`, `read/update/cancel:appointment`, `read/update/cancel:referral` |
 
 Para a lista completa de features disponíveis, veja [permissoes](permissions.md).
@@ -145,5 +149,9 @@ if (user.role === 'patient') {
 }
 
 // Especialista só edita os próprios atendimentos (exceto se tiver :others)
-can(user, ['update:appointment', 'update:appointment:others'], appointment.specialist?.id);
+can(
+  user,
+  ['update:appointment', 'update:appointment:others'],
+  appointment.specialist?.id,
+);
 ```

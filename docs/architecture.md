@@ -110,12 +110,12 @@ Em caso de exceção, o `HttpExceptionFilter` captura e retorna resposta padroni
 
 ## Módulos compartilhados
 
-| Módulo               | Propósito                                        | Como importar                  |
-| -------------------- | ------------------------------------------------ | ------------------------------ |
-| `CryptographyModule` | Hash (bcrypt), JWT e cookies                     | Importar no módulo que precisar |
-| `MailModule`         | Envio de e-mails (SES/Resend)                    | Importar no módulo que precisar |
-| `EnvModule`          | Acesso tipado a variáveis de ambiente            | Importar quando necessário      |
-| `StorageModule`      | Upload de arquivos (S3/CDN com signed URLs)      | Importar quando necessário      |
-| `LogModule`          | `LogService` e decorator `@Log()`                | Global — não precisa importar   |
+| Módulo               | Propósito                                   | Como importar                   |
+| -------------------- | ------------------------------------------- | ------------------------------- |
+| `CryptographyModule` | Hash (bcrypt), JWT e cookies                | Importar no módulo que precisar |
+| `MailModule`         | Envio de e-mails (SES/Resend)               | Importar no módulo que precisar |
+| `EnvModule`          | Acesso tipado a variáveis de ambiente       | Importar quando necessário      |
+| `StorageModule`      | Upload de arquivos (S3/CDN com signed URLs) | Importar quando necessário      |
+| `LogModule`          | `LogService` e decorator `@Log()`           | Global — não precisa importar   |
 
 > `LogModule` é declarado com `@Global()`, portanto `LogService` está disponível em toda a aplicação.

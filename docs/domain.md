@@ -129,10 +129,16 @@ Define a estrutura completa da entidade. Campos de data usam `datetimeSchema` (`
 ```typescript
 import { z } from 'zod';
 import { baseEntitySchema } from '../base';
-import { datetimeSchema, uuidSchema, nameSchema, specialtySchema, patientConditionSchema } from '../shared';
+import {
+  datetimeSchema,
+  uuidSchema,
+  nameSchema,
+  specialtySchema,
+  patientConditionSchema,
+} from '../shared';
 
 export const appointmentSchema = z.strictObject({
-  ...baseEntitySchema.shape,   // id, updatedAt, createdAt
+  ...baseEntitySchema.shape, // id, updatedAt, createdAt
   date: datetimeSchema,
   status: z.enum(APPOINTMENT_STATUSES).default('scheduled'),
   category: specialtySchema,
@@ -199,13 +205,26 @@ Definem o formato exato da resposta. `.pick()` da entidade e estendem `baseRespo
 ```typescript
 export const appointmentResponseSchema = appointmentSchema
   .pick({
-    id: true, date: true, status: true, category: true,
-    condition: true, annotation: true, professionalName: true,
-    updatedAt: true, createdAt: true,
+    id: true,
+    date: true,
+    status: true,
+    category: true,
+    condition: true,
+    annotation: true,
+    professionalName: true,
+    updatedAt: true,
+    createdAt: true,
   })
   .extend({
-    patient: patientSchema.pick({ id: true, name: true, email: true, avatarUrl: true }),
-    specialist: userSchema.pick({ id: true, name: true, email: true, avatarUrl: true }).nullable(),
+    patient: patientSchema.pick({
+      id: true,
+      name: true,
+      email: true,
+      avatarUrl: true,
+    }),
+    specialist: userSchema
+      .pick({ id: true, name: true, email: true, avatarUrl: true })
+      .nullable(),
   });
 
 export const getAppointmentsResponseSchema = baseResponseSchema.extend({
@@ -225,10 +244,11 @@ export const uuidSchema = z.uuid({ version: 'v7' });
 export const nameSchema = z.string().min(3).max(64);
 export const emailSchema = z.email().min(1).max(254);
 export const phoneSchema = z.string().min(10).max(11).regex(ONLY_NUMBERS_REGEX);
-export const dateSchema = z.iso.date();           // "YYYY-MM-DD"
+export const dateSchema = z.iso.date(); // "YYYY-MM-DD"
 export const datetimeSchema = (() => {
-  const schema = z.coerce.date();               // aceita string ISO e Date nativo
-  schema._zod.processJSONSchema = (             // hook para schema JSON do OpenAPI
+  const schema = z.coerce.date(); // aceita string ISO e Date nativo
+  schema._zod.processJSONSchema = (
+    // hook para schema JSON do OpenAPI
     _ctx: unknown,
     json: Record<string, string>,
   ) => {

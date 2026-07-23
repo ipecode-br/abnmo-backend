@@ -74,10 +74,10 @@ async getAppointments(@Query() query: GetAppointmentsQuery, @User() user: Reques
 
 Todo endpoint deve usar `@ZodResponse({ type, status })` — **nunca** `@ApiResponse` para validação de resposta.
 
-| HTTP  | Quando                                                       |
-| :---: | ------------------------------------------------------------ |
-| `200` | GET que retorna dados, PUT/PATCH que retornam confirmação     |
-| `201` | POST que cria um recurso                                      |
+| HTTP  | Quando                                                    |
+| :---: | --------------------------------------------------------- |
+| `200` | GET que retorna dados, PUT/PATCH que retornam confirmação |
+| `201` | POST que cria um recurso                                  |
 
 O `ZodSerializerInterceptor` global valida a resposta contra o schema em runtime. Campos extras ou tipos incorretos causam erro 500 (`ZodSerializationException`).
 

@@ -101,12 +101,12 @@ import { MailModule } from '@/app/mail/mail.module';
 export class UsersModule {}
 ```
 
-| Módulo compartilhado | Quando importar                                              |
-| -------------------- | ------------------------------------------------------------ |
-| `CryptographyModule` | Hash de senhas, criação/verificação de JWT, cookies          |
-| `MailModule`         | Envio de e-mails                                             |
-| `EnvModule`          | Acesso a variáveis de ambiente                               |
-| `StorageModule`      | Upload de arquivos (S3/CDN com signed URLs)                  |
+| Módulo compartilhado | Quando importar                                     |
+| -------------------- | --------------------------------------------------- |
+| `CryptographyModule` | Hash de senhas, criação/verificação de JWT, cookies |
+| `MailModule`         | Envio de e-mails                                    |
+| `EnvModule`          | Acesso a variáveis de ambiente                      |
+| `StorageModule`      | Upload de arquivos (S3/CDN com signed URLs)         |
 
 > `LogModule` é global e não precisa ser importado.
 
@@ -114,11 +114,11 @@ export class UsersModule {}
 
 ## Convenções
 
-| Arquivo              | Padrão                      | Exemplo                          |
-| -------------------- | --------------------------- | -------------------------------- |
-| Módulo               | `{feature}.module.ts`       | `appointments.module.ts`         |
-| Controller           | `{feature}.controller.ts`   | `appointments.controller.ts`     |
-| DTOs                 | `{feature}.dtos.ts`         | `appointments.dtos.ts`           |
-| Use-case             | `{action}-{feature}.use-case.ts` | `create-appointment.use-case.ts` |
+| Arquivo    | Padrão                           | Exemplo                          |
+| ---------- | -------------------------------- | -------------------------------- |
+| Módulo     | `{feature}.module.ts`            | `appointments.module.ts`         |
+| Controller | `{feature}.controller.ts`        | `appointments.controller.ts`     |
+| DTOs       | `{feature}.dtos.ts`              | `appointments.dtos.ts`           |
+| Use-case   | `{action}-{feature}.use-case.ts` | `create-appointment.use-case.ts` |
 
 Todos os arquivos seguem `kebab-case`.

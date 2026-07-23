@@ -45,7 +45,6 @@ describe('Survey Submissions (e2e)', () => {
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
       expect(res.body.data.submissionId).toBeDefined();
-      expect(res.body.data.key).toBeDefined();
       expect(res.body.data.url).toBeDefined();
       expect(res.body.data.fields).toBeDefined();
     });

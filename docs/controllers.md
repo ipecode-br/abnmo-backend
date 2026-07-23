@@ -12,7 +12,16 @@ O controller recebe requisições HTTP, extrai parâmetros (body, query, params,
 
 ```typescript
 // src/app/http/appointments/appointments.controller.ts
-import { Body, Controller, Get, Param, Patch, Post, Put, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ZodResponse } from 'nestjs-zod';
 
@@ -52,7 +61,11 @@ export class AppointmentsController {
     @User() user: RequestUser,
   ): Promise<GetAppointmentsResponse> {
     const data = await this.getAppointmentsUseCase.execute({ user, ...query });
-    return { success: true, message: 'Lista de atendimentos retornada com sucesso.', data };
+    return {
+      success: true,
+      message: 'Lista de atendimentos retornada com sucesso.',
+      data,
+    };
   }
 
   @Post()
@@ -135,10 +148,10 @@ Registra um evento auditável na requisição. Aplicado nos métodos dos control
 
 **Obrigatório** em todos os endpoints. Valida e serializa a resposta contra o schema Zod em runtime. **Nunca** use `@ApiResponse` para validação de resposta.
 
-| HTTP  | Quando                                                      |
-| ----- | ----------------------------------------------------------- |
-| `200` | GET que retorna dados, ações que retornam confirmação        |
-| `201` | POST que cria um recurso                                     |
+| HTTP  | Quando                                                |
+| ----- | ----------------------------------------------------- |
+| `200` | GET que retorna dados, ações que retornam confirmação |
+| `201` | POST que cria um recurso                              |
 
 ---
 

@@ -35,7 +35,10 @@ Erro de validação Zod:
   "success": false,
   "message": "Os dados enviados são inválidos.",
   "fields": [
-    { "field": "date", "error": "Invalid input: expected string, received Date" },
+    {
+      "field": "date",
+      "error": "Invalid input: expected string, received Date"
+    },
     { "field": "patientId", "error": "Invalid UUID" }
   ]
 }
@@ -56,14 +59,14 @@ Erro interno inesperado:
 
 Use as classes nativas do NestJS, importadas de `@nestjs/common`:
 
-| Exceção                       | HTTP | Quando usar                                              |
-| ----------------------------- | :--: | -------------------------------------------------------- |
-| `NotFoundException`           | 404  | Entidade não encontrada pelo ID                          |
-| `UnauthorizedException`       | 401  | Credenciais inválidas, token expirado ou ausente         |
-| `ForbiddenException`          | 403  | Permissão insuficiente ou violação de ownership          |
-| `BadRequestException`         | 400  | Violação de regra de negócio                             |
-| `ConflictException`           | 409  | Conflito de dados únicos (e-mail, CPF já cadastrado)     |
-| `ServiceUnavailableException` | 503  | Falha em serviço externo (e-mail, S3, assinatura)        |
+| Exceção                       | HTTP | Quando usar                                          |
+| ----------------------------- | :--: | ---------------------------------------------------- |
+| `NotFoundException`           | 404  | Entidade não encontrada pelo ID                      |
+| `UnauthorizedException`       | 401  | Credenciais inválidas, token expirado ou ausente     |
+| `ForbiddenException`          | 403  | Permissão insuficiente ou violação de ownership      |
+| `BadRequestException`         | 400  | Violação de regra de negócio                         |
+| `ConflictException`           | 409  | Conflito de dados únicos (e-mail, CPF já cadastrado) |
+| `ServiceUnavailableException` | 503  | Falha em serviço externo (e-mail, S3, assinatura)    |
 
 ---
 
@@ -89,7 +92,9 @@ O `HttpExceptionFilter` extrai o `cause` e o loga automaticamente.
 
 ```typescript
 // Entidade não encontrada
-const appointment = await this.appointmentsRepository.findOne({ where: { id } });
+const appointment = await this.appointmentsRepository.findOne({
+  where: { id },
+});
 if (!appointment) {
   throw new NotFoundException('Atendimento não encontrado.', {
     cause: `Appointment with ID <${id}> not found`,
@@ -99,20 +104,30 @@ if (!appointment) {
 // Conflito de dados únicos
 const existing = await this.usersRepository.findOne({ where: { email } });
 if (existing) {
-  throw new ConflictException('Já existe uma conta cadastrada com este e-mail.', {
-    cause: `User with <${email}> already exists`,
-  });
+  throw new ConflictException(
+    'Já existe uma conta cadastrada com este e-mail.',
+    {
+      cause: `User with <${email}> already exists`,
+    },
+  );
 }
 
 // Regra de negócio violada
 if (appointment.status !== 'scheduled') {
-  throw new BadRequestException('Apenas atendimentos agendados podem ser cancelados.', {
-    cause: `Appointment <${id}> status is <${appointment.status}>`,
-  });
+  throw new BadRequestException(
+    'Apenas atendimentos agendados podem ser cancelados.',
+    {
+      cause: `Appointment <${id}> status is <${appointment.status}>`,
+    },
+  );
 }
 
 // Violação de ownership tratada pelo can()
-can(user, ['update:appointment', 'update:appointment:others'], appointment.specialist?.id);
+can(
+  user,
+  ['update:appointment', 'update:appointment:others'],
+  appointment.specialist?.id,
+);
 // → ForbiddenException implícito se falhar
 
 // Falha em serviço externo

@@ -51,7 +51,7 @@ Cada log é enriquecido automaticamente com contexto da requisição:
   "level": "info",
   "event": "create_appointment",
   "user": { "id": "...", "email": "...", "role": "member" },
-  "...": "...",
+  "...": "..."
 }
 ```
 
@@ -96,15 +96,15 @@ async create(@User() user: RequestUser, @Body() body: CreateAppointmentBody) {
 
 ### Eventos disponíveis (`ContextEvent`)
 
-| Domínio                | Eventos                                                                                             |
-| ---------------------- | --------------------------------------------------------------------------------------------------- |
-| Atendimentos           | `create_appointment`, `update_appointment`, `cancel_appointment`                                    |
-| Autenticação           | `sign_in`, `logout`, `register_user`, `recover_password`, `reset_password`, `change_password`       |
-| Encaminhamentos        | `create_referral`, `update_referral`, `cancel_referral`                                             |
-| Pacientes              | `create_patient`, `update_patient`, `deactivate_patient`                                            |
-| Requisitos             | `create_patient_requirement`, `approve_patient_requirement`, `decline_patient_requirement`           |
-| Usuários               | `create_user_invite`, `delete_user_invite`, `update_user`, `activate_user`, `deactivate_user`       |
-| Catálogos              | `init_survey`, `complete_survey`, `approve_survey`, `decline_survey`, `send_survey_reminder`        |
+| Domínio         | Eventos                                                                                       |
+| --------------- | --------------------------------------------------------------------------------------------- |
+| Atendimentos    | `create_appointment`, `update_appointment`, `cancel_appointment`                              |
+| Autenticação    | `sign_in`, `logout`, `register_user`, `recover_password`, `reset_password`, `change_password` |
+| Encaminhamentos | `create_referral`, `update_referral`, `cancel_referral`                                       |
+| Pacientes       | `create_patient`, `update_patient`, `deactivate_patient`                                      |
+| Requisitos      | `create_patient_requirement`, `approve_patient_requirement`, `decline_patient_requirement`    |
+| Usuários        | `create_user_invite`, `delete_user_invite`, `update_user`, `activate_user`, `deactivate_user` |
+| Catálogos       | `init_survey`, `complete_survey`, `approve_survey`, `decline_survey`, `send_survey_reminder`  |
 
 ---
 

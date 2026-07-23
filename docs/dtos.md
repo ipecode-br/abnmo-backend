@@ -10,13 +10,13 @@ A validação é automática: o `nestjs-zod` intercepta todo `@Body()` e `@Query
 
 ## Convenção de nomenclatura
 
-| Tipo                 | Padrão                  | Exemplo                       |
-| -------------------- | ----------------------- | ----------------------------- |
-| Body de criação      | `Create{Entity}Body`     | `CreateAppointmentBody`       |
-| Body de atualização  | `Update{Entity}Body`     | `UpdateAppointmentBody`       |
-| Query de listagem    | `Get{Entities}Query`    | `GetAppointmentsQuery`        |
-| Response de listagem | `Get{Entities}Response` | `GetAppointmentsResponse`     |
-| Response de detalhe  | `Get{Entity}Response`   | `GetPatientResponse`          |
+| Tipo                 | Padrão                  | Exemplo                   |
+| -------------------- | ----------------------- | ------------------------- |
+| Body de criação      | `Create{Entity}Body`    | `CreateAppointmentBody`   |
+| Body de atualização  | `Update{Entity}Body`    | `UpdateAppointmentBody`   |
+| Query de listagem    | `Get{Entities}Query`    | `GetAppointmentsQuery`    |
+| Response de listagem | `Get{Entities}Response` | `GetAppointmentsResponse` |
+| Response de detalhe  | `Get{Entity}Response`   | `GetPatientResponse`      |
 
 > Nunca use o sufixo `Dto` — a convenção é `Body`, `Query` ou `Response`.
 
@@ -84,7 +84,10 @@ async create(
   "success": false,
   "message": "Os dados enviados são inválidos.",
   "fields": [
-    { "field": "date", "error": "Invalid input: expected string, received Date" },
+    {
+      "field": "date",
+      "error": "Invalid input: expected string, received Date"
+    },
     { "field": "patientId", "error": "Invalid UUID" }
   ]
 }

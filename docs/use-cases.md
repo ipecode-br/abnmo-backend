@@ -14,7 +14,14 @@ Um use-case encapsula uma única operação de negócio. É onde vive toda a ló
 // src/app/http/appointments/use-cases/get-appointments.use-case.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsWhere, ILike, MoreThanOrEqual, LessThanOrEqual, Between, Repository } from 'typeorm';
+import {
+  FindOptionsWhere,
+  ILike,
+  MoreThanOrEqual,
+  LessThanOrEqual,
+  Between,
+  Repository,
+} from 'typeorm';
 
 import { can } from '@/common/authorization/can';
 import { Log } from '@/common/log/log.decorator';
@@ -81,7 +88,7 @@ export class GetAppointmentsUseCase {
     const total = await this.appointmentsRepository.count({ where });
 
     const appointments = await this.appointmentsRepository.find({
-      select: { id: true, date: true, status: true, /* ... */ },
+      select: { id: true, date: true, status: true /* ... */ },
       relations: { patient: true, specialist: true },
       skip: (page - 1) * perPage,
       take: perPage,
@@ -94,8 +101,8 @@ export class GetAppointmentsUseCase {
         id: a.id,
         date: a.date,
         status: a.status,
-        patient: { id: a.patient.id, name: a.patient.name, /* ... */ },
-        specialist: a.specialist ? { id: a.specialist.id, /* ... */ } : null,
+        patient: { id: a.patient.id, name: a.patient.name /* ... */ },
+        specialist: a.specialist ? { id: a.specialist.id /* ... */ } : null,
       })),
       total,
     };
@@ -227,7 +234,11 @@ return {
     status: a.status,
     patient: { id: a.patient.id, name: a.patient.name, email: a.patient.email },
     specialist: a.specialist
-      ? { id: a.specialist.id, name: a.specialist.name, email: a.specialist.email }
+      ? {
+          id: a.specialist.id,
+          name: a.specialist.name,
+          email: a.specialist.email,
+        }
       : null,
   })),
   total,
@@ -243,7 +254,11 @@ Use `can()` para verificar features e ownership. Deve ser chamado no início do 
 ```typescript
 can(user, ['read:appointment', 'read:appointment:others']);
 can(user, 'update:user', targetUserId);
-can(user, ['update:appointment', 'update:appointment:others'], appointment.specialist?.id);
+can(
+  user,
+  ['update:appointment', 'update:appointment:others'],
+  appointment.specialist?.id,
+);
 ```
 
 Ver [autenticação](authentication.md) para documentação completa do `can()`.
@@ -256,7 +271,9 @@ Use-cases possuem o decorator `@Log()` (class-level). O `LogService` é injetado
 
 ```typescript
 this.logger.log('Appointment created', { appointmentId: appointment.id });
-this.logger.error('Create appointment failed: patient not found', { patientId });
+this.logger.error('Create appointment failed: patient not found', {
+  patientId,
+});
 ```
 
 Ver [logging](logging.md) para documentação completa.
@@ -265,12 +282,12 @@ Ver [logging](logging.md) para documentação completa.
 
 ## Convenções
 
-| Item                | Padrão                           | Exemplo                          |
-| ------------------- | -------------------------------- | -------------------------------- |
-| Arquivo             | `{action}-{feature}.use-case.ts` | `create-appointment.use-case.ts` |
-| Classe              | `{Action}{Feature}UseCase`       | `CreateAppointmentUseCase`       |
-| Input               | `{Action}{Feature}UseCaseInput`  | `CreateAppointmentUseCaseInput`  |
-| Output              | `{Action}{Feature}UseCaseOutput` | `GetAppointmentsUseCaseOutput`   |
+| Item    | Padrão                           | Exemplo                          |
+| ------- | -------------------------------- | -------------------------------- |
+| Arquivo | `{action}-{feature}.use-case.ts` | `create-appointment.use-case.ts` |
+| Classe  | `{Action}{Feature}UseCase`       | `CreateAppointmentUseCase`       |
+| Input   | `{Action}{Feature}UseCaseInput`  | `CreateAppointmentUseCaseInput`  |
+| Output  | `{Action}{Feature}UseCaseOutput` | `GetAppointmentsUseCaseOutput`   |
 
 ---
 
