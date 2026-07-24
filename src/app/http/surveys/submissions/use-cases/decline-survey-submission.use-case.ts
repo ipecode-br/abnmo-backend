@@ -38,6 +38,8 @@ export class DeclineSurveySubmissionUseCase {
     can(user, 'review:survey');
 
     const submission = await this.surveySubmissionsRepository.findOne({
+      select: { patient: { name: true, email: true } },
+      relations: { patient: true },
       where: { id },
     });
 

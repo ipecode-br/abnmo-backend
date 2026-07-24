@@ -496,6 +496,9 @@ describe('Survey Submissions (e2e)', () => {
         patient,
       });
 
+      const mailService = app.get(MailService);
+      const mailSpy = jest.spyOn(mailService, 'send');
+
       const res = await api.patch(
         `/survey-submissions/${submission.id}/decline`,
         { reason: 'Documento inválido' },
@@ -509,6 +512,15 @@ describe('Survey Submissions (e2e)', () => {
 
       expect(updated?.status).toBe('declined');
       expect(updated?.reason).toBe('Documento inválido');
+      expect(mailSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: patient.email,
+          subject: expect.any(String),
+          html: expect.stringContaining('Documento inválido'),
+        }),
+      );
+
+      mailSpy.mockRestore();
     });
 
     it('must provide a reason', async () => {
