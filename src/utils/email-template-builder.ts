@@ -154,7 +154,10 @@ export function heading(text: string, style = ''): string {
 export function p(text: string, style = ''): string {
   const defaultStyle =
     'margin: 16px 0; font-family: Arial, sans-serif; font-size: 16px; line-height: 1.6; color: #333333;';
-  return `<p style="${defaultStyle}${style}">${text}</p>`;
+  const formattedText = text
+    .replace(/\n\n/g, '<br><br>')
+    .replace(/\n/g, '<br>');
+  return `<p style="${defaultStyle}${style}">${formattedText}</p>`;
 }
 
 /**

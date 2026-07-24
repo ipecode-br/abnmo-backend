@@ -32,7 +32,7 @@ export function buildDeclineSurveyEmail({
       ),
       p(
         reason,
-        'background-color: #f8f8f8; border-radius: 12px; padding: 12px 18px;',
+        'background-color: #f8f8f8; border-radius: 12px; padding: 20px 24px;',
       ),
       p(
         'Para esclarecer dúvidas ou solicitar orientações sobre como prosseguir, entre em contato conosco através do WhatsApp ou e-mail abaixo:',
