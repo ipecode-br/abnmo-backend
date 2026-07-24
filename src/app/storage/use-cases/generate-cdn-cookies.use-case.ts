@@ -46,7 +46,7 @@ export class GenerateCdnCookiesUseCase {
     const { role } = user;
 
     if (role === 'admin') {
-      allowedPaths.push('/*');
+      allowedPaths.push('*');
     }
 
     const sharedPaths = [
