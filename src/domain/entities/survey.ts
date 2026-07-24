@@ -78,7 +78,7 @@ import { User } from './user';
 
 @Entity('surveys')
 export class Survey extends BaseEntity implements SurveySchema {
-  @Column({ type: 'varchar', length: 64, nullable: true })
+  @Column({ type: 'varchar', length: 64, unique: true, nullable: true })
   signatureId: string | null;
 
   @Column({ type: 'enum', enum: SURVEY_STATUSES, default: 'pending_signature' })

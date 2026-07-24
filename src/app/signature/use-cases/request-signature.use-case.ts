@@ -51,20 +51,22 @@ export class RequestSignatureUseCase {
     this.isEnabled = this.envService.get('SIGNATURE_ENABLED');
   }
 
-  async execute(
-    input: RequestSignatureUseCaseInput,
-  ): Promise<RequestSignatureUseCaseOutput> {
+  async execute({
+    config,
+    signer,
+    template,
+  }: RequestSignatureUseCaseInput): Promise<RequestSignatureUseCaseOutput> {
     if (!this.isEnabled) {
       this.logger.log('Signature disabled — signature request bypassed', {
-        name: input.config.name,
-        email: input.signer.email,
-        cpf: input.signer.cpf,
+        name: config.name,
+        email: signer.email,
+        cpf: signer.cpf,
       });
       return { signatureId: null };
     }
 
-    const deadline = input.config.deadline ?? this.daysFromNow(2);
-    const channel = input.config.notificationChannel ?? 'email';
+    const deadline = config.deadline ?? this.daysFromNow(2);
+    const channel = config.notificationChannel ?? 'email';
 
     const envelope = await this.signatureService.api<{ id: string }>(
       '/envelopes',
@@ -75,10 +77,10 @@ export class RequestSignatureUseCase {
           attributes: {
             auto_close: true,
             deadline_at: deadline,
-            default_message: input.config.message,
-            default_subject: input.config.subject,
+            default_message: config.message,
+            default_subject: config.subject,
             locale: 'pt-BR',
-            name: input.config.name,
+            name: config.name,
           },
         },
       },
@@ -92,10 +94,10 @@ export class RequestSignatureUseCase {
         data: {
           type: 'signers',
           attributes: {
-            documentation: input.signer.cpf,
-            email: input.signer.email,
-            name: input.signer.fullName,
-            phone_number: input.signer.phone,
+            documentation: signer.cpf,
+            email: signer.email,
+            name: signer.fullName,
+            phone_number: signer.phone,
             communicate_events: {
               signature_request: channel,
               signature_reminder: channel === 'whatsapp' ? 'none' : 'email',
@@ -114,9 +116,9 @@ export class RequestSignatureUseCase {
         data: {
           type: 'documents',
           attributes: {
-            template: input.template,
-            metadata: { key: input.config.key },
-            filename: `${input.config.filename}.docx`,
+            template: template,
+            metadata: { key: config.key },
+            filename: `${config.filename}.docx`,
           },
         },
       },
@@ -167,9 +169,9 @@ export class RequestSignatureUseCase {
     this.logger.log('Signature requested', {
       envelopeId,
       channel,
-      name: input.config.name,
-      email: input.signer.email,
-      cpf: input.signer.cpf,
+      name: config.name,
+      email: signer.email,
+      cpf: signer.cpf,
     });
 
     return { signatureId: envelopeId };

@@ -24,6 +24,7 @@ import { StatisticsModule } from './http/statistics/statistics.module';
 import { StatusModule } from './http/status/status.module';
 import { SurveysModule } from './http/surveys/surveys.module';
 import { UsersModule } from './http/users/users.module';
+import { WebhooksModule } from './http/webhooks/webhooks.module';
 import { StorageModule } from './storage/storage.module';
 
 /**
@@ -77,6 +78,7 @@ import { StorageModule } from './storage/storage.module';
     PatientRequirementsModule,
     StorageModule,
     StatusModule,
+    WebhooksModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: LogGuard },
