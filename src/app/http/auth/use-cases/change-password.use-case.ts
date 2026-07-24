@@ -74,7 +74,12 @@ export class ChangePasswordUseCase {
     await this.expireSessionUseCase.execute({ userId: userToUpdate.id });
 
     await this.createSessionUseCase.execute({
-      user: { id: user.id, email: userToUpdate.email, role: user.role },
+      user: {
+        id: user.id,
+        email: userToUpdate.email,
+        role: user.role,
+        features: user.features,
+      },
       keepLoggedIn: false,
       response,
     });

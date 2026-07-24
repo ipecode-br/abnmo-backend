@@ -2,8 +2,6 @@ import { Injectable } from '@nestjs/common';
 import type { Response } from 'express';
 
 import { CryptographyService } from '@/app/cryptography/cryptography.service';
-import { Log } from '@/common/log/log.decorator';
-import { LogService } from '@/common/log/log.service';
 import { COOKIES } from '@/domain/cookies';
 import { EnvService } from '@/env/env.service';
 import { deleteCookie } from '@/utils/cookies';
@@ -16,13 +14,11 @@ interface LogoutUseCaseInput {
 }
 
 @Injectable()
-@Log()
 export class LogoutUseCase {
   constructor(
     private readonly cryptographyService: CryptographyService,
     private readonly envService: EnvService,
     private readonly expireSessionUseCase: ExpireSessionUseCase,
-    private readonly logger: LogService,
   ) {}
 
   async execute({ response, sessionToken }: LogoutUseCaseInput): Promise<void> {
@@ -44,8 +40,6 @@ export class LogoutUseCase {
 
     const tokenHash = this.cryptographyService.hashToken(sessionToken);
 
-    await this.expireSessionUseCase.execute({ tokenHash });
-
-    this.logger.log('User logged out');
+    await this.expireSessionUseCase.execute({ tokenHash, logout: true });
   }
 }

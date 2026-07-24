@@ -9,6 +9,7 @@ import { Session } from '@/domain/entities/session';
 interface ExpireSessionUseCaseInput {
   tokenHash?: string;
   userId?: string;
+  logout?: boolean;
 }
 
 @Injectable()
@@ -23,6 +24,7 @@ export class ExpireSessionUseCase {
   async execute({
     tokenHash,
     userId,
+    logout,
   }: ExpireSessionUseCaseInput): Promise<void> {
     if (!tokenHash && !userId) {
       this.logger.log(
@@ -33,7 +35,7 @@ export class ExpireSessionUseCase {
 
     const WHERE_MAPPING = {
       tokenHash: { tokenHash },
-      userId: { user: { id: userId! } },
+      userId: { user: { id: userId } },
     };
 
     const where = WHERE_MAPPING[tokenHash ? 'tokenHash' : 'userId'];
@@ -44,6 +46,7 @@ export class ExpireSessionUseCase {
 
     this.logger.log(
       `Session expired by <${tokenHash ? 'tokenHash' : 'userId'}>`,
+      { logout },
     );
   }
 }

@@ -15,6 +15,13 @@ import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import type { SpecialtyCategory } from '@/domain/enums/shared';
 import { TOKENS } from '@/domain/enums/tokens';
+import {
+  DEFAULT_MEMBER_FEATURES,
+  DEFAULT_PATIENT_FEATURES,
+  DEFAULT_SPECIALIST_FEATURES,
+  UserFeature,
+  UserRole,
+} from '@/domain/enums/users';
 import type { InviteUserPayload } from '@/domain/schemas/tokens';
 
 import { CreateSessionUseCase } from './create-session.use-case';
@@ -92,11 +99,19 @@ export class CreateUserUseCase {
 
     const passwordHash = await this.cryptographyService.createHash(password);
 
+    const FEATURES_MAPPING: Record<UserRole, UserFeature[]> = {
+      admin: [],
+      member: DEFAULT_MEMBER_FEATURES,
+      specialist: DEFAULT_SPECIALIST_FEATURES,
+      patient: DEFAULT_PATIENT_FEATURES,
+    };
+
     const user = this.usersRepository.create({
       name,
       email,
       password: passwordHash,
       role,
+      features: FEATURES_MAPPING[role],
       specialty,
       registrationId,
     });
@@ -105,7 +120,7 @@ export class CreateUserUseCase {
     await this.tokensRepository.delete({ token: inviteToken });
 
     await this.createSessionUseCase.execute({
-      user: { id: user.id, email, role },
+      user: { id: user.id, email, role, features: user.features },
       keepLoggedIn: false,
       response,
     });

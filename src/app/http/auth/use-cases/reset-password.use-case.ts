@@ -15,7 +15,6 @@ import { buildResetPasswordEmail } from '@/domain/email-templates/reset-password
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { TOKENS } from '@/domain/enums/tokens';
-import { UserRole } from '@/domain/enums/users';
 import type { ResetPasswordPayload } from '@/domain/schemas/tokens';
 
 import { CreateSessionUseCase } from './create-session.use-case';
@@ -75,7 +74,7 @@ export class ResetPasswordUseCase {
     const id = payload.sub;
 
     const user = await this.usersRepository.findOne({
-      select: { id: true, email: true, name: true },
+      select: { id: true, name: true, email: true, role: true, features: true },
       where: { id },
     });
 
@@ -83,8 +82,6 @@ export class ResetPasswordUseCase {
       this.logger.warn('Reset password failed: User not registered', { id });
       throw new NotFoundException('Usuário não encontrado.');
     }
-
-    const role: UserRole = user.role;
 
     const passwordHash = await this.cryptographyService.createHash(password);
 
@@ -97,7 +94,12 @@ export class ResetPasswordUseCase {
     await this.expireSessionUseCase.execute({ userId: user.id });
 
     await this.createSessionUseCase.execute({
-      user: { id: user.id, email: user.email, role },
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        features: user.features,
+      },
       keepLoggedIn: false,
       response,
     });
@@ -105,7 +107,7 @@ export class ResetPasswordUseCase {
     this.logger.log('Password reseted', {
       id: user.id,
       email: user.email,
-      role,
+      role: user.role,
     });
 
     const subject = 'Senha de acesso alterada com sucesso';

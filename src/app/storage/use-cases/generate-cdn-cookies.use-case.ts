@@ -4,14 +4,14 @@ import { Response } from 'express';
 
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
-import { ContextUser } from '@/common/types';
+import { RequestUser } from '@/common/types';
 import { STORAGE_FOLDERS } from '@/config/storage';
 import { EnvService } from '@/env/env.service';
 import { setCookie } from '@/utils/cookies';
 
 interface GenerateCdnCookiesUseCaseInput {
   expiresAt: Date;
-  user: ContextUser;
+  user: RequestUser;
   response: Response;
 }
 
@@ -63,6 +63,10 @@ export class GenerateCdnCookiesUseCase {
     if (role === 'patient') {
       allowedPaths.push(`${STORAGE_FOLDERS.patients.avatars(user.id)}/*`);
       allowedPaths.push(`${STORAGE_FOLDERS.patients.documents(user.id)}/*`);
+    }
+
+    if (user.features.includes('review:survey')) {
+      allowedPaths.push(`${STORAGE_FOLDERS.patients.documentsRoot}/*`);
     }
 
     const policy = JSON.stringify({

@@ -56,6 +56,7 @@ export class SignInWithEmailUseCase {
         email: true,
         password: true,
         role: true,
+        features: true,
         status: true,
       },
     });
@@ -87,12 +88,12 @@ export class SignInWithEmailUseCase {
 
     if (role === 'patient' && !this.isTestMode) {
       throw new UnauthorizedException(
-        'O sistema ainda não está pronto para pacientes.',
+        'O sistema ainda não está disponível para pacientes.',
       );
     }
 
     await this.createSessionUseCase.execute({
-      user: { id: user.id, email, role },
+      user: { id: user.id, email, role, features: user.features },
       keepLoggedIn,
       response,
     });

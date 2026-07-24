@@ -58,7 +58,12 @@ describe('CreateSessionUseCase', () => {
     const response = mockResponse();
 
     await useCase.execute({
-      user: { id: user.id, email: user.email, role: user.role },
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        features: user.features,
+      },
       keepLoggedIn: false,
       response,
     });
@@ -73,7 +78,12 @@ describe('CreateSessionUseCase', () => {
     expect(sessionsRepo.save).toHaveBeenCalled();
     expect(generateCdnCookiesUseCase.execute).toHaveBeenCalledWith(
       expect.objectContaining({
-        user: { id: user.id, email: user.email, role: user.role },
+        user: {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+          features: user.features,
+        },
         expiresAt: expect.any(Date),
         response,
       }),

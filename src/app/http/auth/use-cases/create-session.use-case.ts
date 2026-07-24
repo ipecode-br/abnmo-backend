@@ -8,7 +8,7 @@ import { Repository } from 'typeorm';
 import { CryptographyService } from '@/app/cryptography/cryptography.service';
 import { GenerateCdnCookiesUseCase } from '@/app/storage/use-cases/generate-cdn-cookies.use-case';
 import { Log } from '@/common/log/log.decorator';
-import { ContextUser } from '@/common/types';
+import { RequestUser } from '@/common/types';
 import { SESSION_LONG_MAX_AGE, SESSION_SHORT_MAX_AGE } from '@/config';
 import { COOKIES } from '@/domain/cookies';
 import { Session } from '@/domain/entities/session';
@@ -16,7 +16,7 @@ import { EnvService } from '@/env/env.service';
 import { setCookie } from '@/utils/cookies';
 
 interface CreateSessionUseCaseInput {
-  user: ContextUser;
+  user: RequestUser;
   keepLoggedIn: boolean;
   response: Response;
 }
