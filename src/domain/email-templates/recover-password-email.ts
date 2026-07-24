@@ -27,7 +27,7 @@ export function buildRecoverPasswordEmail({
         'Você solicitou a redefinição da sua senha de acesso ao <strong>Sistema Viver Melhor</strong> da <strong>ABNMO</strong>.',
       ),
       p(
-        'Clique no botão para cadastrar sua nova senha.',
+        'Clique no botão abaixo para cadastrar sua nova senha:',
         'margin-bottom: 24px',
       ),
       button('Redefinir sua senha', resetPasswordUrl),

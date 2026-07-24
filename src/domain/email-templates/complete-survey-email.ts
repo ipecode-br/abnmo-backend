@@ -8,23 +8,26 @@ import {
 interface BuildCompleteSurveyEmailProps {
   title: string;
   preheader: string;
+  name: string;
   completeSurveyUrl: string;
 }
 
 export function buildCompleteSurveyEmail({
-  completeSurveyUrl,
-  preheader,
   title,
+  preheader,
+  name,
+  completeSurveyUrl,
 }: BuildCompleteSurveyEmailProps) {
   return createEmailTemplate({
     config: { title, preheader },
     content: [
-      heading('Catalogação ABNMO'),
+      heading('Pesquisa Nacional da Neuromielite Óptica'),
+      p(`Olá, ${name}!`),
       p(
-        'Sua submissão de catalogação foi <strong>aprovada</strong> pela equipe da <strong>ABNMO</strong>.',
+        'Sua submissão para a catalogação foi <strong>aprovada</strong> pela nossa equipe.',
       ),
       p(
-        'Agora você pode preencher o questionário completo da catalogação para nos ajudar a entender melhor o seu perfil e necessidades.',
+        'Agora você pode preencher o questionário completo da pesquisa para nos ajudar a entender melhor o seu perfil e necessidades.',
         'margin-bottom: 24px',
       ),
       button('Preencher catalogação', completeSurveyUrl),

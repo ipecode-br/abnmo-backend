@@ -22,9 +22,15 @@ export function buildRegisterUserEmail({
       heading('Cadastre sua conta'),
       p(`Olá!`),
       p(
-        'Você foi convidado a participar do <strong>Sistema Viver Melhor</strong> da <strong>ABNMO</strong>. Para ter acesso, realize a criação da sua conta.',
+        'Você foi convidado a participar do <strong>Sistema Viver Melhor</strong> da <strong>ABNMO</strong>.',
       ),
-      p('Clique no botão para realizar o cadastro.', 'margin-bottom: 24px'),
+      p(
+        'Para acessar o sistema, você precisa concluir a criação da sua conta.',
+      ),
+      p(
+        'Clique no botão abaixo para concluir o cadastro:',
+        'margin-bottom: 24px',
+      ),
       button('Cadastrar conta', registerUserUrl),
     ],
   });

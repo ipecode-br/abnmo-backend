@@ -73,13 +73,14 @@ export class ApproveSurveySubmissionUseCase {
     const completeSurveyUrl = `${this.dashboardUrl}/catalogacao/voce?token=${surveyToken}`;
 
     const subject =
-      'Sua catalogação foi aprovada — complete o questionário ABNMO';
+      'Sua submissão foi aprovada — complete o questionário da pesquisa';
     const preheader =
       'Sua submissão foi aprovada. Acesse o link para preencher o questionário completo.';
 
     const emailHtml = buildCompleteSurveyEmail({
       title: subject,
       preheader,
+      name: submission.patient.name,
       completeSurveyUrl,
     });
 
