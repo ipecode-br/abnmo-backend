@@ -19,7 +19,7 @@ export function createEmailTemplate({
   data?: { headerImageUrl?: string; headerImageAlt?: string };
 }): string {
   const {
-    headerImageUrl = `${process.env.CDN_PUBLIC_URL}/brand/email-header-default.png`,
+    headerImageUrl = 'https://cdn.abnmo.org/public/brand/email-header-default.png',
     headerImageAlt = 'SVM | ABNMO',
   } = data;
 
@@ -191,7 +191,6 @@ export function button(
 						font-weight: bold;
 						padding: ${padding};
 						text-decoration: none;
-						width: 100%;
 					">
 						${text}
 					</a>
