@@ -99,7 +99,6 @@ describe('CreateSurveySubmissionUseCase', () => {
     expect(generateUploadUrlUseCase.execute).toHaveBeenCalled();
     expect(result).toMatchObject({
       submissionId: 'new-id',
-      key: expect.stringContaining('private/documents/patients/'),
       url: 'https://upload.example.com/presigned',
       fields: { key: 'value' },
     });

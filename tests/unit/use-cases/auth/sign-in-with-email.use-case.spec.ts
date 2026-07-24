@@ -71,6 +71,12 @@ describe('SignInWithEmailUseCase', () => {
           id: activeMember.id,
           email: activeMember.email,
           role: activeMember.role,
+          features: [
+            'read:user',
+            'update:user',
+            'read:patient',
+            'read:patient:others',
+          ],
         },
         keepLoggedIn: false,
       }),

@@ -91,7 +91,17 @@ describe('CreateUserUseCase', () => {
     });
     expect(createSessionUseCase.execute).toHaveBeenCalledWith(
       expect.objectContaining({
-        user: { id: 'new-user-id', email: 'newuser@test.com', role: 'member' },
+        user: {
+          id: 'new-user-id',
+          email: 'newuser@test.com',
+          role: 'member',
+          features: [
+            'read:user',
+            'update:user',
+            'read:patient',
+            'read:patient:others',
+          ],
+        },
         keepLoggedIn: false,
       }),
     );

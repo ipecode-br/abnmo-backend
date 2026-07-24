@@ -93,6 +93,12 @@ describe('ResetPasswordUseCase', () => {
           id: existingUser.id,
           email: existingUser.email,
           role: existingUser.role,
+          features: [
+            'read:user',
+            'update:user',
+            'read:patient',
+            'read:patient:others',
+          ],
         },
         keepLoggedIn: false,
       }),

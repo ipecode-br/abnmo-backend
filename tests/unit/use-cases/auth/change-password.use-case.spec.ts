@@ -73,7 +73,12 @@ describe('ChangePasswordUseCase', () => {
       userId: existingUser.id,
     });
     expect(createSessionUseCase.execute).toHaveBeenCalledWith({
-      user: { id: user.id, email: existingUser.email, role: user.role },
+      user: {
+        id: user.id,
+        email: existingUser.email,
+        role: user.role,
+        features: [],
+      },
       keepLoggedIn: false,
       response,
     });

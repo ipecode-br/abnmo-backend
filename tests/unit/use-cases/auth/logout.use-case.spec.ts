@@ -52,6 +52,7 @@ describe('LogoutUseCase', () => {
 
     expect(expireSessionUseCase.execute).toHaveBeenCalledWith({
       tokenHash: 'hashed-token',
+      logout: true,
     });
   });
 
