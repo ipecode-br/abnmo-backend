@@ -8,6 +8,7 @@ import type {
   GetTotalSurveySubmissionsResponse,
 } from '@/app/http/surveys/submissions/surveys.dtos';
 import { MailService } from '@/app/mail/mail.service';
+import { EnvService } from '@/env/env.service';
 
 import { ApiClient, createApiClient } from '../config/api-client';
 import { createAdmin, createMember, createPatient } from '../config/helpers';
@@ -21,10 +22,12 @@ import {
 describe('Survey Submissions (e2e)', () => {
   let app: INestApplication;
   let api: ApiClient;
+  let headers: Record<string, string>;
 
   beforeAll(() => {
     app = getTestApp();
     api = createApiClient(app);
+    headers = { 'x-dashboard-key': app.get(EnvService).get('DASHBOARD_KEY') };
   });
 
   describe('POST /survey-submissions', () => {
@@ -40,7 +43,7 @@ describe('Survey Submissions (e2e)', () => {
       const res = await api.post<
         CreateSurveySubmissionResponse,
         CreateSurveySubmissionBody
-      >('/survey-submissions', createBody);
+      >('/survey-submissions', createBody, { headers });
 
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
@@ -52,10 +55,11 @@ describe('Survey Submissions (e2e)', () => {
     it('cannot create survey submission with email already registered', async () => {
       const { member } = await createMember();
 
-      const res = await api.post('/survey-submissions', {
-        ...createBody,
-        email: member.email,
-      });
+      const res = await api.post(
+        '/survey-submissions',
+        { ...createBody, email: member.email },
+        { headers },
+      );
 
       expect(res.status).toBe(409);
       expect(res.body.success).toBe(false);
@@ -65,10 +69,11 @@ describe('Survey Submissions (e2e)', () => {
     });
 
     it('cannot create survey submission when "fileSize" exceeds limit', async () => {
-      const res = await api.post('/survey-submissions', {
-        ...createBody,
-        fileSize: 7000000,
-      });
+      const res = await api.post(
+        '/survey-submissions',
+        { ...createBody, fileSize: 7000000 },
+        { headers },
+      );
 
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
@@ -76,10 +81,11 @@ describe('Survey Submissions (e2e)', () => {
     });
 
     it('cannot create survey submission when "mimeType" is invalid', async () => {
-      const res = await api.post('/survey-submissions', {
-        ...createBody,
-        mimeType: 'application/zip',
-      });
+      const res = await api.post(
+        '/survey-submissions',
+        { ...createBody, mimeType: 'application/zip' },
+        { headers },
+      );
 
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
@@ -87,7 +93,11 @@ describe('Survey Submissions (e2e)', () => {
     });
 
     it('cannot create survey submission when missing required fields', async () => {
-      const res = await api.post('/survey-submissions', { name: 'Test User' });
+      const res = await api.post(
+        '/survey-submissions',
+        { name: 'Test User' },
+        { headers },
+      );
 
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
@@ -107,6 +117,8 @@ describe('Survey Submissions (e2e)', () => {
 
       const res = await api.post(
         `/survey-submissions/${submission.id}/confirm-upload`,
+        undefined,
+        { headers },
       );
 
       expect(res.status).toBe(200);
@@ -120,6 +132,8 @@ describe('Survey Submissions (e2e)', () => {
     it('returns 404 for non-existent ID', async () => {
       const res = await api.post(
         '/survey-submissions/00000000-0000-0000-0000-000000000000/confirm-upload',
+        undefined,
+        { headers },
       );
 
       expect(res.status).toBe(404);
@@ -199,12 +213,7 @@ describe('Survey Submissions (e2e)', () => {
 
       const res = await api.get<GetSurveySubmissionsResponse>(
         '/survey-submissions',
-        {
-          page: 1,
-          perPage: 10,
-          startDate: startDate,
-          endDate: endDate,
-        },
+        { page: 1, perPage: 10, startDate: startDate, endDate: endDate },
         { cookies },
       );
 

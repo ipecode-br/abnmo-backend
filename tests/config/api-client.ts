@@ -11,8 +11,9 @@ export interface ResponseBody<T> extends Omit<Response, 'body'> {
   body: T;
 }
 
-export interface RequestOptions {
+interface RequestOptions {
   cookies?: string[];
+  headers?: Record<string, string>;
 }
 
 export type ApiClient = ReturnType<typeof createApiClient>;
@@ -30,6 +31,12 @@ export function createApiClient(app: INestApplication) {
 
     if (options?.cookies) {
       req.set('Cookie', options.cookies);
+    }
+
+    if (options?.headers) {
+      Object.entries(options.headers).forEach(([key, value]) => {
+        req.set(key, value);
+      });
     }
 
     if (body !== undefined) {
@@ -50,6 +57,12 @@ export function createApiClient(app: INestApplication) {
 
     if (options?.cookies) {
       req.set('Cookie', options.cookies);
+    }
+
+    if (options?.headers) {
+      Object.entries(options.headers).forEach(([key, value]) => {
+        req.set(key, value);
+      });
     }
 
     return req;

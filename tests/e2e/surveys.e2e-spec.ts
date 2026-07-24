@@ -7,6 +7,7 @@ import type {
 } from '@/app/http/surveys/surveys.dtos';
 import { RequestSignatureUseCase } from '@/app/signature/use-cases/request-signature.use-case';
 import { SendReminderSignatureUseCase } from '@/app/signature/use-cases/send-reminder-signature.use-case';
+import { EnvService } from '@/env/env.service';
 
 import {
   ApiClient,
@@ -24,10 +25,12 @@ import {
 describe('Surveys (e2e)', () => {
   let app: INestApplication;
   let api: ApiClient;
+  let headers: Record<string, string>;
 
   beforeAll(() => {
     app = getTestApp();
     api = createApiClient(app);
+    headers = { 'x-dashboard-key': app.get(EnvService).get('DASHBOARD_KEY') };
   });
 
   function buildCompleteSurveyBody(token: string): CreateSurveyBody {
@@ -166,6 +169,7 @@ describe('Surveys (e2e)', () => {
       const res = await api.post<BaseResponseBody, CreateSurveyBody>(
         '/surveys/complete',
         buildCompleteSurveyBody(submission.surveyToken!),
+        { headers },
       );
 
       expect(res.status).toBe(201);
@@ -198,6 +202,7 @@ describe('Surveys (e2e)', () => {
       const res = await api.post<BaseResponseBody, CreateSurveyBody>(
         '/surveys/complete',
         buildCompleteSurveyBody('01900000-0000-7000-8000-000000000000'),
+        { headers },
       );
 
       expect(res.status).toBe(404);
@@ -216,6 +221,7 @@ describe('Surveys (e2e)', () => {
       const res = await api.post<BaseResponseBody, CreateSurveyBody>(
         '/surveys/complete',
         buildCompleteSurveyBody(submission.surveyToken!),
+        { headers },
       );
 
       expect(res.status).toBe(400);
@@ -236,6 +242,7 @@ describe('Surveys (e2e)', () => {
       const res = await api.post<BaseResponseBody, CreateSurveyBody>(
         '/surveys/complete',
         buildCompleteSurveyBody(submission.surveyToken!),
+        { headers },
       );
 
       expect(res.status).toBe(400);
@@ -258,6 +265,7 @@ describe('Surveys (e2e)', () => {
       const res = await api.post<BaseResponseBody, CreateSurveyBody>(
         '/surveys/complete',
         buildCompleteSurveyBody(submission.surveyToken!),
+        { headers },
       );
 
       expect(res.status).toBe(409);
