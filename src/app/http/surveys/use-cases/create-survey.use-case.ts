@@ -43,6 +43,11 @@ export class CreateSurveyUseCase {
     const submission = await this.surveySubmissionsRepository.findOne({
       where: { surveyToken: input.token },
       relations: { patient: true },
+      select: {
+        id: true,
+        status: true,
+        patient: { id: true, name: true, email: true, phone: true },
+      },
     });
 
     if (!submission) {
@@ -116,36 +121,39 @@ export class CreateSurveyUseCase {
         email: submission.patient.email,
         cpf,
       });
-    });
 
-    const { signatureId } = await this.requestSignatureUseCase.execute({
-      config: {
-        name: `Catalogação ABNMO - ${submission.patient.name}`,
-        filename: 'termo-de-aceite-catalogacao-abnmo',
-        subject: 'Termo de aceite para tratamento de dados - ABNMO',
-        message:
-          'Aceite os termos e assine o documento autorizando o tratamento dos seus dados de forma anônima.',
-        notificationChannel: 'whatsapp',
-        key: 'catalogacao-abnmo',
-      },
-      signer: {
-        fullName: submission.patient.name,
-        email: submission.patient.email,
-        phone: submission.patient.phone!,
-        cpf: formatCpfNumber(cpf),
-      },
-      template: {
-        key: this.signatureModelKey,
-        data: { FULL_NAME: submission.patient.name, CPF: cpf },
-      },
-    });
-
-    if (signatureId) {
-      await this.surveysRepository.update(surveyId, { signatureId });
-      this.logger.log('Signature ID stored for survey', {
-        id: surveyId,
-        signatureId,
+      const { signatureId } = await this.requestSignatureUseCase.execute({
+        config: {
+          name: `Catalogação ABNMO - ${submission.patient.name}`,
+          filename: 'termo-de-aceite-catalogacao-abnmo',
+          subject: 'Termo de aceite para tratamento de dados - ABNMO',
+          message:
+            'Aceite os termos e assine o documento autorizando o tratamento dos seus dados de forma anônima.',
+          notificationChannel: 'whatsapp',
+          key: 'catalogacao-abnmo',
+        },
+        signer: {
+          fullName: submission.patient.name,
+          email: submission.patient.email,
+          phone: submission.patient.phone!,
+          cpf: formatCpfNumber(cpf),
+        },
+        template: {
+          key: this.signatureModelKey,
+          data: {
+            FULL_NAME: submission.patient.name,
+            CPF: formatCpfNumber(cpf),
+          },
+        },
       });
-    }
+
+      if (signatureId) {
+        await this.surveysRepository.update(surveyId, { signatureId });
+        this.logger.log('Signature ID stored for survey', {
+          id: surveyId,
+          signatureId,
+        });
+      }
+    });
   }
 }
