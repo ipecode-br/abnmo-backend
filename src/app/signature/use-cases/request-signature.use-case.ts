@@ -171,6 +171,7 @@ export class RequestSignatureUseCase {
       channel,
       name: config.name,
       email: signer.email,
+      phone: signer.phone,
       cpf: signer.cpf,
     });
 

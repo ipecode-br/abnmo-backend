@@ -10,6 +10,7 @@ import { DataSource, Repository } from 'typeorm';
 import { RequestSignatureUseCase } from '@/app/signature/use-cases/request-signature.use-case';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
+import { SURVEY_SIGNATURE_METADATA_KEY } from '@/config';
 import { Survey } from '@/domain/entities/survey';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
 import { User } from '@/domain/entities/user';
@@ -117,7 +118,7 @@ export class CreateSurveyUseCase {
 
       this.logger.log('Survey submitted', {
         id: submission.id,
-        userId: submission.patient.id,
+        patientId: submission.patient.id,
         email: submission.patient.email,
         cpf,
       });
@@ -128,9 +129,9 @@ export class CreateSurveyUseCase {
           filename: 'termo-de-aceite-catalogacao-abnmo',
           subject: 'Termo de aceite para tratamento de dados - ABNMO',
           message:
-            'Aceite os termos e assine o documento autorizando o tratamento dos seus dados de forma anônima.',
+            'Para concluir a catalogação, aceite os termos e assine o documento autorizando o tratamento dos seus dados de forma anônima.',
           notificationChannel: 'whatsapp',
-          key: 'catalogacao-abnmo',
+          key: SURVEY_SIGNATURE_METADATA_KEY,
         },
         signer: {
           fullName: submission.patient.name,

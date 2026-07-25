@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { CompleteSurveyUseCase } from '@/app/http/surveys/use-cases/complete-survey.use-case';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
+import { SURVEY_SIGNATURE_METADATA_KEY } from '@/config';
 import type { SurveySignatureWebhook } from '@/domain/schemas/webhooks/signature';
 
 interface SurveySignatureWebhookOutput {
@@ -22,11 +23,26 @@ export class SurveySignatureWebhookUseCase {
     document,
     event,
   }: SurveySignatureWebhook): Promise<SurveySignatureWebhookOutput> {
-    this.logger.log('ClickSign webhook received', {
+    const logData = {
       eventName: event.name,
       documentKey: document.key,
       documentStatus: document.status,
-    });
+    };
+
+    this.logger.log('ClickSign webhook received', logData);
+
+    const metadataKey = document.metadata?.key;
+
+    if (metadataKey !== SURVEY_SIGNATURE_METADATA_KEY) {
+      this.logger.log('ClickSign webhook bypassed – metadata key mismatch', {
+        ...logData,
+        metadataKey,
+      });
+      return {
+        success: true,
+        message: 'Evento de webhook recebido com sucesso.',
+      };
+    }
 
     const CLICKSIGN_COMPLETION_EVENTS = [
       'auto_close',
@@ -35,6 +51,7 @@ export class SurveySignatureWebhookUseCase {
     ];
 
     if (!CLICKSIGN_COMPLETION_EVENTS.includes(event.name)) {
+      this.logger.log('ClickSign webhook bypassed – event mismatch', logData);
       return {
         success: true,
         message: 'Evento de webhook recebido com sucesso.',

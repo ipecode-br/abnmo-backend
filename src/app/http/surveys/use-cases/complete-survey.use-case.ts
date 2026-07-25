@@ -29,9 +29,7 @@ export class CompleteSurveyUseCase {
     if (!survey) {
       throw new NotFoundException(
         'Nenhuma catalogação encontrada para esta assinatura.',
-        {
-          cause: `Survey with signatureId <${signatureId}> not found`,
-        },
+        { cause: `Survey with signatureId <${signatureId}> not found` },
       );
     }
 
