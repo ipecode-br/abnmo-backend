@@ -26,7 +26,7 @@ export function formatCpfNumber(input: string) {
   const sanitizedInput = input.replace(NON_NUMBER_REGEX, '').slice(0, 11);
 
   return sanitizedInput.replace(
-    /^(\d{3})\.(\d{3})\.(\d{3})(\d)/,
+    /^(\d{3})(\d{3})(\d{3})(\d{2})$/,
     '$1.$2.$3-$4',
   );
 }
