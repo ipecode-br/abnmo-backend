@@ -3,6 +3,7 @@ import {
   Catch,
   HttpException,
   HttpStatus,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
 import { Response } from 'express';
@@ -46,6 +47,20 @@ export class HttpExceptionFilter extends BaseExceptionFilter {
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = 'Um erro inesperado ocorreu.';
+
+    if (exception instanceof InternalServerErrorException) {
+      const exceptionData = exception.getResponse() as HttpExceptionResponse;
+      const logMessage = exceptionData.message || exceptionData.error;
+
+      this.logger.error('InternalServerErrorException', {
+        status: exception.getStatus(),
+        message: logMessage,
+        cause: exception.cause,
+        stack: exception.stack,
+      });
+
+      return response.status(status).json({ success: false, message });
+    }
 
     if (exception instanceof ZodSerializationException) {
       status = exception.getStatus();
