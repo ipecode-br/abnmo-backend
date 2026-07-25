@@ -68,7 +68,7 @@ export class RequestSignatureUseCase {
     const deadline = config.deadline ?? this.daysFromNow(2);
     const channel = config.notificationChannel ?? 'email';
 
-    const envelope = await this.signatureService.api<{ id: string }>(
+    const envelopeRes = await this.signatureService.api<{ id: string }>(
       '/envelopes',
       {
         method: 'POST',
@@ -85,7 +85,7 @@ export class RequestSignatureUseCase {
         },
       },
     );
-    const envelopeId = envelope.data.id;
+    const envelopeId = envelopeRes.data?.id || '';
 
     const signerRes = await this.signatureService.api<{ id: string }>(
       `/envelopes/${envelopeId}/signers`,
@@ -107,9 +107,9 @@ export class RequestSignatureUseCase {
         },
       },
     );
-    const signerId = signerRes.data.id;
+    const signerId = signerRes.data?.id;
 
-    const document = await this.signatureService.api<{ id: string }>(
+    const documentRes = await this.signatureService.api<{ id: string }>(
       `/envelopes/${envelopeId}/documents`,
       {
         method: 'POST',
@@ -123,7 +123,7 @@ export class RequestSignatureUseCase {
         },
       },
     );
-    const documentId = document.data.id;
+    const documentId = documentRes.data?.id;
 
     await this.signatureService.api(`/envelopes/${envelopeId}/requirements`, {
       method: 'POST',
