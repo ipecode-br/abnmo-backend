@@ -9,6 +9,7 @@ const VALID_TARGETS = [
   'user',
   'user-invite',
   'statistic',
+  'webhook',
 ];
 const VALID_SCOPES = ['others', 'patient', 'appointment', 'referral'];
 

@@ -6,6 +6,9 @@ import { LogService } from '@/common/log/log.service';
 import { SURVEY_SIGNATURE_METADATA_KEY } from '@/config';
 import type { SurveySignatureWebhook } from '@/domain/schemas/webhooks/signature';
 
+import { CreateWebhookEventUseCase } from './create-webhook-event.use-case';
+import { UpdateWebhookEventStatusUseCase } from './update-webhook-event-status.use-case';
+
 interface SurveySignatureWebhookOutput {
   success: boolean;
   message: string;
@@ -16,6 +19,8 @@ interface SurveySignatureWebhookOutput {
 export class SurveySignatureWebhookUseCase {
   constructor(
     private readonly updateSurveyStatusUseCase: CompleteSurveyUseCase,
+    private readonly createWebhookEventUseCase: CreateWebhookEventUseCase,
+    private readonly updateWebhookEventStatusUseCase: UpdateWebhookEventStatusUseCase,
     private readonly logger: LogService,
   ) {}
 
@@ -31,6 +36,11 @@ export class SurveySignatureWebhookUseCase {
 
     this.logger.log('ClickSign webhook received', logData);
 
+    const webhookEvent = await this.createWebhookEventUseCase.execute({
+      payload: { event, document },
+      event: 'sign_survey',
+    });
+
     const metadataKey = document.metadata?.key;
 
     if (metadataKey !== SURVEY_SIGNATURE_METADATA_KEY) {
@@ -38,6 +48,7 @@ export class SurveySignatureWebhookUseCase {
         ...logData,
         metadataKey,
       });
+
       return {
         success: true,
         message: 'Evento de webhook recebido com sucesso.',
@@ -52,13 +63,32 @@ export class SurveySignatureWebhookUseCase {
 
     if (!CLICKSIGN_COMPLETION_EVENTS.includes(event.name)) {
       this.logger.log('ClickSign webhook bypassed – event mismatch', logData);
+
       return {
         success: true,
         message: 'Evento de webhook recebido com sucesso.',
       };
     }
 
-    await this.updateSurveyStatusUseCase.execute({ signatureId: document.key });
+    try {
+      await this.updateSurveyStatusUseCase.execute({
+        signatureId: document.key,
+      });
+    } catch {
+      await this.updateWebhookEventStatusUseCase.execute({
+        id: webhookEvent.id,
+        status: 'failed',
+      });
+      return {
+        success: true,
+        message: 'Status da catalogação atualizado com sucesso.',
+      };
+    }
+
+    await this.updateWebhookEventStatusUseCase.execute({
+      id: webhookEvent.id,
+      status: 'success',
+    });
 
     return {
       success: true,
