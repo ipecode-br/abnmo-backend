@@ -17,7 +17,7 @@ export class WebhooksController {
   ) {}
 
   @Public()
-  @Post('signature/survey')
+  @Post('signatures/survey')
   @Log('signature_survey_webhook')
   @ApiOperation({ summary: 'Recebe webhooks de assinatura do ClickSign' })
   @ZodResponse({ type: BaseResponse, status: 200 })

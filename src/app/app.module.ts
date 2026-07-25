@@ -98,6 +98,6 @@ export class AppModule implements NestModule {
     consumer.apply(ContextMiddleware, MaintenanceMiddleware).forRoutes('*');
     consumer
       .apply(SignatureMiddleware)
-      .forRoutes({ path: 'webhooks/signature/*', method: RequestMethod.POST });
+      .forRoutes({ path: 'webhooks/signatures/*', method: RequestMethod.POST });
   }
 }

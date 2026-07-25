@@ -2,6 +2,7 @@ import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import cookieParser from 'cookie-parser';
 import { config } from 'dotenv';
+import express, { Request } from 'express';
 import { DataSource } from 'typeorm';
 
 config({ path: '.env.test' });
@@ -24,6 +25,13 @@ beforeAll(async () => {
 
   const app = moduleRef.createNestApplication({ logger: false });
   const envService = moduleRef.get(EnvService);
+  app.use(
+    express.json({
+      verify: (req: Request & { rawBody?: Buffer }, _res, buf: Buffer) => {
+        req.rawBody = buf;
+      },
+    }),
+  );
   app.use(cookieParser(envService.get('COOKIE_SECRET')));
   await app.init();
 
