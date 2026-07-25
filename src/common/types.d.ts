@@ -58,7 +58,7 @@ type SurveyEvent =
 
 type StatusEvent = 'get_status';
 
-type WebhooksEvent = 'survey_signature_webhook';
+type WebhooksEvent = 'signature_survey_webhook';
 
 export type ContextEvent =
   | AppointmentsEvent

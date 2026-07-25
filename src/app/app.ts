@@ -2,6 +2,8 @@ import { NestFactory } from '@nestjs/core';
 import type { ExpressAdapter } from '@nestjs/platform-express';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import cookieParser from 'cookie-parser';
+import { Request } from 'express';
+import express from 'express';
 import { Logger } from 'nestjs-pino';
 
 import { EnvService } from '@/env/env.service';
@@ -18,6 +20,14 @@ export async function createNestApp(adapter?: ExpressAdapter) {
       });
 
   const envService = app.get(EnvService);
+
+  app.use(
+    express.json({
+      verify: (req: Request & { rawBody?: Buffer }, _res, buf: Buffer) => {
+        req.rawBody = buf;
+      },
+    }),
+  );
 
   app.enableCors({
     origin: [envService.get('APP_URL'), envService.get('DASHBOARD_URL')],
