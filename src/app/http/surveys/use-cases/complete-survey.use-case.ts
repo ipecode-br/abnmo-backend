@@ -7,7 +7,7 @@ import { LogService } from '@/common/log/log.service';
 import { Survey } from '@/domain/entities/survey';
 
 interface CompleteSurveyUseCaseInput {
-  signatureId: string;
+  signatureDocumentId: string;
 }
 
 @Injectable()
@@ -19,24 +19,32 @@ export class CompleteSurveyUseCase {
     private readonly logger: LogService,
   ) {}
 
-  async execute({ signatureId }: CompleteSurveyUseCaseInput): Promise<void> {
+  async execute({
+    signatureDocumentId,
+  }: CompleteSurveyUseCaseInput): Promise<void> {
     const survey = await this.surveysRepository.findOne({
-      select: { id: true, status: true, patient: { id: true, email: true } },
+      where: { signatureDocumentId },
       relations: { patient: true },
-      where: { signatureId },
+      select: {
+        id: true,
+        status: true,
+        patient: { id: true, name: true, email: true },
+      },
     });
 
     if (!survey) {
       throw new NotFoundException(
         'Nenhuma catalogação encontrada para esta assinatura.',
-        { cause: `Survey with signatureId <${signatureId}> not found` },
+        {
+          cause: `Survey with signatureDocumentId <${signatureDocumentId}> not found`,
+        },
       );
     }
 
     if (survey.status === 'completed') {
       this.logger.log('Survey already completed – skipping update', {
         surveyId: survey.id,
-        signatureId,
+        signatureDocumentId,
       });
       return;
     }
@@ -44,9 +52,13 @@ export class CompleteSurveyUseCase {
     await this.surveysRepository.update(survey.id, { status: 'completed' });
 
     this.logger.log('Survey completed', {
-      patient: { id: survey.patient.id, email: survey.patient.email },
       surveyId: survey.id,
-      signatureId,
+      signatureDocumentId,
+      patient: {
+        id: survey.patient.id,
+        name: survey.patient.name,
+        email: survey.patient.email,
+      },
     });
   }
 }

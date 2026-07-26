@@ -31,8 +31,6 @@ export class CreateSurveyUseCase {
     private readonly usersRepository: Repository<User>,
     @InjectRepository(SurveySubmission)
     private readonly surveySubmissionsRepository: Repository<SurveySubmission>,
-    @InjectRepository(Survey)
-    private readonly surveysRepository: Repository<Survey>,
     private readonly requestSignatureUseCase: RequestSignatureUseCase,
     private readonly envService: EnvService,
     private readonly logger: LogService,
@@ -61,7 +59,7 @@ export class CreateSurveyUseCase {
       throw new BadRequestException(
         'Esta catalogação não está aprovada para preenchimento.',
         {
-          cause: `Survey submission <${input.token}> status is <${submission.status}>`,
+          cause: `Survey submission with token <${input.token}> status is <${submission.status}>`,
         },
       );
     }
@@ -89,8 +87,6 @@ export class CreateSurveyUseCase {
       ...input.dailyLife,
     };
 
-    let surveyId = '';
-
     await this.dataSource.transaction(async (manager) => {
       const usersRepository = manager.getRepository(User);
       const surveysRepository = manager.getRepository(Survey);
@@ -110,49 +106,57 @@ export class CreateSurveyUseCase {
       });
       await surveysRepository.save(survey);
 
-      surveyId = survey.id;
-
       await submissionsRepository.update(submission.id, {
         status: 'completed',
       });
 
       this.logger.log('Survey submitted', {
-        id: submission.id,
-        patientId: submission.patient.id,
-        email: submission.patient.email,
-        cpf,
-      });
-
-      const { signatureId } = await this.requestSignatureUseCase.execute({
-        config: {
-          name: `Catalogação ABNMO - ${submission.patient.name}`,
-          filename: 'termo-de-aceite-catalogacao-abnmo',
-          subject: 'Termo de aceite para tratamento de dados - ABNMO',
-          message:
-            'Para concluir a catalogação, aceite os termos e assine o documento autorizando o tratamento dos seus dados de forma anônima.',
-          notificationChannel: 'whatsapp',
-          key: SURVEY_SIGNATURE_METADATA_KEY,
-        },
-        signer: {
-          fullName: submission.patient.name,
+        submissionId: submission.id,
+        surveyId: survey.id,
+        patient: {
+          id: submission.patient.id,
+          name: submission.patient.name,
           email: submission.patient.email,
-          phone: submission.patient.phone!,
-          cpf: formatCpfNumber(cpf),
-        },
-        template: {
-          key: this.signatureModelKey,
-          data: {
-            FULL_NAME: submission.patient.name,
-            CPF: formatCpfNumber(cpf),
-          },
+          cpf,
         },
       });
 
-      if (signatureId) {
-        await this.surveysRepository.update(surveyId, { signatureId });
-        this.logger.log('Signature ID stored for survey', {
-          id: surveyId,
+      const { signatureId, signatureDocumentId } =
+        await this.requestSignatureUseCase.execute({
+          config: {
+            name: `Catalogação ABNMO - ${submission.patient.name}`,
+            filename: 'termo-de-aceite-catalogacao-abnmo',
+            subject: 'Termo de aceite para tratamento de dados - ABNMO',
+            message:
+              'Para concluir a catalogação, aceite os termos e assine o documento autorizando o tratamento dos seus dados de forma anônima.',
+            notificationChannel: 'whatsapp',
+            key: SURVEY_SIGNATURE_METADATA_KEY,
+          },
+          signer: {
+            fullName: submission.patient.name,
+            email: submission.patient.email,
+            phone: submission.patient.phone!,
+            cpf: formatCpfNumber(cpf),
+          },
+          template: {
+            key: this.signatureModelKey,
+            data: {
+              FULL_NAME: submission.patient.name,
+              CPF: formatCpfNumber(cpf),
+            },
+          },
+        });
+
+      if (signatureId && signatureDocumentId) {
+        await surveysRepository.update(survey.id, {
           signatureId,
+          signatureDocumentId,
+        });
+
+        this.logger.log('Append signature data to survey', {
+          id: survey.id,
+          signatureId,
+          signatureDocumentId,
         });
       }
     });
