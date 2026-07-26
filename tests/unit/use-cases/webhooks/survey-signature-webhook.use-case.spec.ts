@@ -19,13 +19,16 @@ describe('SurveySignatureWebhookUseCase', () => {
   const makePayload = (overrides?: Record<string, unknown>) => ({
     webhookEventId: WEBHOOK_EVENT_ID,
     payload: {
-      event: { name: 'auto_close' },
+      event: {
+        name: 'auto_close',
+        ...(overrides?.event as Record<string, unknown> | undefined),
+      },
       document: {
         key: DOCUMENT_KEY,
         status: 'closed',
         metadata: { key: 'catalogacao-abnmo' },
+        ...(overrides?.document as Record<string, unknown> | undefined),
       },
-      ...overrides,
     },
   });
 
@@ -50,17 +53,7 @@ describe('SurveySignatureWebhookUseCase', () => {
   });
 
   it('bypasses when metadata key does not match', async () => {
-    const input = makePayload({
-      payload: {
-        event: { name: 'auto_close' },
-        document: {
-          key: DOCUMENT_KEY,
-          status: 'closed',
-          metadata: { key: 'wrong-key' },
-        },
-      },
-    });
-
+    const input = makePayload({ document: { metadata: { key: 'wrong-key' } } });
     await useCase.execute(input);
 
     expect(completeSurveyUseCase.execute).not.toHaveBeenCalled();
@@ -68,13 +61,7 @@ describe('SurveySignatureWebhookUseCase', () => {
   });
 
   it('bypasses when metadata is missing', async () => {
-    const input = makePayload({
-      payload: {
-        event: { name: 'auto_close' },
-        document: { key: DOCUMENT_KEY, status: 'closed' },
-      },
-    });
-
+    const input = makePayload({ document: { metadata: undefined } });
     await useCase.execute(input);
 
     expect(completeSurveyUseCase.execute).not.toHaveBeenCalled();
@@ -82,28 +69,18 @@ describe('SurveySignatureWebhookUseCase', () => {
   });
 
   it('bypasses when event is not a completion event', async () => {
-    const input = makePayload({
-      payload: {
-        event: { name: 'sign' },
-        document: {
-          key: DOCUMENT_KEY,
-          status: 'closed',
-          metadata: { key: 'catalogacao-abnmo' },
-        },
-      },
-    });
-
+    const input = makePayload({ event: { name: 'sign' } });
     await useCase.execute(input);
 
     expect(completeSurveyUseCase.execute).not.toHaveBeenCalled();
     expect(updateWebhookEventStatusUseCase.execute).not.toHaveBeenCalled();
   });
 
-  it('calls CompleteSurveyUseCase when metadata matches and event is completion', async () => {
+  it('calls "CompleteSurveyUseCase" when metadata matches and event is completion', async () => {
     await useCase.execute(makePayload());
 
     expect(completeSurveyUseCase.execute).toHaveBeenCalledWith({
-      documentId: DOCUMENT_KEY,
+      signatureDocumentId: DOCUMENT_KEY,
     });
     expect(updateWebhookEventStatusUseCase.execute).toHaveBeenCalledWith({
       id: WEBHOOK_EVENT_ID,
@@ -111,22 +88,12 @@ describe('SurveySignatureWebhookUseCase', () => {
     });
   });
 
-  it('calls CompleteSurveyUseCase for close event', async () => {
-    const input = makePayload({
-      payload: {
-        event: { name: 'close' },
-        document: {
-          key: DOCUMENT_KEY,
-          status: 'closed',
-          metadata: { key: 'catalogacao-abnmo' },
-        },
-      },
-    });
-
+  it('calls "CompleteSurveyUseCase" for close event', async () => {
+    const input = makePayload({ event: { name: 'close' } });
     await useCase.execute(input);
 
     expect(completeSurveyUseCase.execute).toHaveBeenCalledWith({
-      documentId: DOCUMENT_KEY,
+      signatureDocumentId: DOCUMENT_KEY,
     });
     expect(updateWebhookEventStatusUseCase.execute).toHaveBeenCalledWith({
       id: WEBHOOK_EVENT_ID,
@@ -134,22 +101,12 @@ describe('SurveySignatureWebhookUseCase', () => {
     });
   });
 
-  it('calls CompleteSurveyUseCase for document_closed event', async () => {
-    const input = makePayload({
-      payload: {
-        event: { name: 'document_closed' },
-        document: {
-          key: DOCUMENT_KEY,
-          status: 'closed',
-          metadata: { key: 'catalogacao-abnmo' },
-        },
-      },
-    });
-
+  it('calls "CompleteSurveyUseCase" for "document_closed" event', async () => {
+    const input = makePayload({ event: { name: 'document_closed' } });
     await useCase.execute(input);
 
     expect(completeSurveyUseCase.execute).toHaveBeenCalledWith({
-      documentId: DOCUMENT_KEY,
+      signatureDocumentId: DOCUMENT_KEY,
     });
     expect(updateWebhookEventStatusUseCase.execute).toHaveBeenCalledWith({
       id: WEBHOOK_EVENT_ID,
@@ -157,16 +114,14 @@ describe('SurveySignatureWebhookUseCase', () => {
     });
   });
 
-  it('rethrows NotFoundException and updates status to failed', async () => {
+  it('catches "NotFoundException" and marks webhook event as failed', async () => {
     completeSurveyUseCase.execute.mockRejectedValue(
       new NotFoundException(
         'Nenhuma catalogação encontrada para esta assinatura.',
       ),
     );
 
-    await expect(useCase.execute(makePayload())).rejects.toThrow(
-      NotFoundException,
-    );
+    await expect(useCase.execute(makePayload())).resolves.toBeUndefined();
 
     expect(updateWebhookEventStatusUseCase.execute).toHaveBeenCalledWith({
       id: WEBHOOK_EVENT_ID,

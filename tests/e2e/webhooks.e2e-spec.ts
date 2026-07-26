@@ -113,7 +113,7 @@ describe('Webhooks – Signature (e2e)', () => {
       expect(updated?.status).toBe('completed');
     });
 
-    it('returns 404 when survey is not found', async () => {
+    it('returns 200 when survey is not found', async () => {
       const payload = makePayload({
         document: {
           key: 'nonexistent-key',
@@ -126,7 +126,8 @@ describe('Webhooks – Signature (e2e)', () => {
         headers: { 'content-hmac': makeHmacHeader(secret, payload) },
       });
 
-      expect(res.status).toBe(404);
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
     });
   });
 });
