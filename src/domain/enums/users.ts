@@ -65,6 +65,8 @@ export const USER_FEATURES = [
   'read:statistic:patient',
   'read:statistic:appointment',
   'read:statistic:referral',
+  // Webhooks
+  'read:webhook',
 ] as const;
 export type UserFeature = (typeof USER_FEATURES)[number];
 

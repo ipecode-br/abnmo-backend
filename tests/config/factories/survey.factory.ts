@@ -88,6 +88,7 @@ export function surveyFactory(
     createdAt: datetimeFactory(),
     status: faker.helpers.arrayElement(SURVEY_STATUSES),
     signatureId: idFactory(),
+    signatureDocumentId: idFactory(),
     dateOfBirth: faker.date
       .birthdate({ min: 18, max: 80, mode: 'age' })
       .toISOString()

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 
 import { EnvService } from '@/env/env.service';
 
@@ -7,7 +7,8 @@ interface ApiOptions extends Omit<RequestInit, 'body'> {
 }
 
 interface ApiResponse<T = unknown> {
-  data: T;
+  data?: T;
+  errors?: T;
 }
 
 @Injectable()
@@ -41,6 +42,14 @@ export class SignatureService {
       ...rest,
     });
 
-    return response.json() as Promise<ApiResponse<T>>;
+    const responseData = (await response.json()) as ApiResponse<T>;
+
+    if (!responseData.data) {
+      throw new InternalServerErrorException('Signature API failed', {
+        cause: { url: url.toString(), errors: responseData.errors },
+      });
+    }
+
+    return responseData;
   }
 }

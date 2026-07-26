@@ -1,4 +1,9 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { LoggerModule } from 'nestjs-pino';
@@ -8,7 +13,8 @@ import { ContextMiddleware } from '@/common/context/context.middleware';
 import { HttpExceptionFilter } from '@/common/http-exception.filter';
 import { LogGuard } from '@/common/log/log.guard';
 import { LogModule } from '@/common/log/log.module';
-import { MaintenanceMiddleware } from '@/common/maintenance.middleware';
+import { MaintenanceMiddleware } from '@/common/middlewares/maintenance.middleware';
+import { SignatureMiddleware } from '@/common/middlewares/signature.middleware';
 import { ZodValidationPipe } from '@/common/zod-validation.pipe';
 import { envSchema } from '@/env/env';
 import { EnvModule } from '@/env/env.module';
@@ -24,6 +30,7 @@ import { StatisticsModule } from './http/statistics/statistics.module';
 import { StatusModule } from './http/status/status.module';
 import { SurveysModule } from './http/surveys/surveys.module';
 import { UsersModule } from './http/users/users.module';
+import { WebhooksModule } from './http/webhooks/webhooks.module';
 import { StorageModule } from './storage/storage.module';
 
 /**
@@ -77,6 +84,7 @@ import { StorageModule } from './storage/storage.module';
     PatientRequirementsModule,
     StorageModule,
     StatusModule,
+    WebhooksModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: LogGuard },
@@ -88,5 +96,8 @@ import { StorageModule } from './storage/storage.module';
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(ContextMiddleware, MaintenanceMiddleware).forRoutes('*');
+    consumer
+      .apply(SignatureMiddleware)
+      .forRoutes({ path: 'webhooks/signatures/*', method: RequestMethod.POST });
   }
 }

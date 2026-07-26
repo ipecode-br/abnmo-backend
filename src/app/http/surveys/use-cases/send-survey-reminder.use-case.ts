@@ -8,8 +8,6 @@ import { Repository } from 'typeorm';
 
 import { SendReminderSignatureUseCase } from '@/app/signature/use-cases/send-reminder-signature.use-case';
 import { can } from '@/common/authorization/can';
-import { Log } from '@/common/log/log.decorator';
-import { LogService } from '@/common/log/log.service';
 import type { RequestUser } from '@/common/types';
 import { Survey } from '@/domain/entities/survey';
 
@@ -19,13 +17,11 @@ interface SendSurveyReminderUseCaseInput {
 }
 
 @Injectable()
-@Log()
 export class SendSurveyReminderUseCase {
   constructor(
     @InjectRepository(Survey)
     private readonly surveysRepository: Repository<Survey>,
     private readonly sendReminderSignatureUseCase: SendReminderSignatureUseCase,
-    private readonly logger: LogService,
   ) {}
 
   async execute({ user, id }: SendSurveyReminderUseCaseInput): Promise<void> {
@@ -64,17 +60,6 @@ export class SendSurveyReminderUseCase {
 
     await this.sendReminderSignatureUseCase.execute({
       signatureId: survey.signatureId,
-    });
-
-    this.logger.log('Survey signature reminder sent', {
-      id: survey.id,
-      signatureId: survey.signatureId,
-      patient: {
-        name: survey.patient.name,
-        email: survey.patient.email,
-        phone: survey.patient.phone,
-        cpf: survey.patient.cpf,
-      },
     });
   }
 }

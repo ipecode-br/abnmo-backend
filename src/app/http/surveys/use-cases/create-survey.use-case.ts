@@ -10,6 +10,7 @@ import { DataSource, Repository } from 'typeorm';
 import { RequestSignatureUseCase } from '@/app/signature/use-cases/request-signature.use-case';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
+import { SURVEY_SIGNATURE_METADATA_KEY } from '@/config';
 import { Survey } from '@/domain/entities/survey';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
 import { User } from '@/domain/entities/user';
@@ -30,8 +31,6 @@ export class CreateSurveyUseCase {
     private readonly usersRepository: Repository<User>,
     @InjectRepository(SurveySubmission)
     private readonly surveySubmissionsRepository: Repository<SurveySubmission>,
-    @InjectRepository(Survey)
-    private readonly surveysRepository: Repository<Survey>,
     private readonly requestSignatureUseCase: RequestSignatureUseCase,
     private readonly envService: EnvService,
     private readonly logger: LogService,
@@ -43,6 +42,11 @@ export class CreateSurveyUseCase {
     const submission = await this.surveySubmissionsRepository.findOne({
       where: { surveyToken: input.token },
       relations: { patient: true },
+      select: {
+        id: true,
+        status: true,
+        patient: { id: true, name: true, email: true, phone: true },
+      },
     });
 
     if (!submission) {
@@ -55,7 +59,7 @@ export class CreateSurveyUseCase {
       throw new BadRequestException(
         'Esta catalogação não está aprovada para preenchimento.',
         {
-          cause: `Survey submission <${input.token}> status is <${submission.status}>`,
+          cause: `Survey submission with token <${input.token}> status is <${submission.status}>`,
         },
       );
     }
@@ -83,8 +87,6 @@ export class CreateSurveyUseCase {
       ...input.dailyLife,
     };
 
-    let surveyId = '';
-
     await this.dataSource.transaction(async (manager) => {
       const usersRepository = manager.getRepository(User);
       const surveysRepository = manager.getRepository(Survey);
@@ -104,48 +106,59 @@ export class CreateSurveyUseCase {
       });
       await surveysRepository.save(survey);
 
-      surveyId = survey.id;
-
       await submissionsRepository.update(submission.id, {
         status: 'completed',
       });
 
       this.logger.log('Survey submitted', {
-        id: submission.id,
-        userId: submission.patient.id,
-        email: submission.patient.email,
-        cpf,
+        submissionId: submission.id,
+        surveyId: survey.id,
+        patient: {
+          id: submission.patient.id,
+          name: submission.patient.name,
+          email: submission.patient.email,
+          cpf,
+        },
       });
-    });
 
-    const { signatureId } = await this.requestSignatureUseCase.execute({
-      config: {
-        name: `Catalogação ABNMO - ${submission.patient.name}`,
-        filename: 'termo-de-aceite-catalogacao-abnmo',
-        subject: 'Termo de aceite para tratamento de dados - ABNMO',
-        message:
-          'Aceite os termos e assine o documento autorizando o tratamento dos seus dados de forma anônima.',
-        notificationChannel: 'whatsapp',
-        key: 'catalogacao-abnmo',
-      },
-      signer: {
-        fullName: submission.patient.name,
-        email: submission.patient.email,
-        phone: submission.patient.phone!,
-        cpf: formatCpfNumber(cpf),
-      },
-      template: {
-        key: this.signatureModelKey,
-        data: { FULL_NAME: submission.patient.name, CPF: cpf },
-      },
-    });
+      const { signatureId, signatureDocumentId } =
+        await this.requestSignatureUseCase.execute({
+          config: {
+            name: `Catalogação ABNMO - ${submission.patient.name}`,
+            filename: 'termo-de-aceite-catalogacao-abnmo',
+            subject: 'Termo de aceite para tratamento de dados - ABNMO',
+            message:
+              'Para concluir a catalogação, aceite os termos e assine o documento autorizando o tratamento dos seus dados de forma anônima.',
+            notificationChannel: 'whatsapp',
+            key: SURVEY_SIGNATURE_METADATA_KEY,
+          },
+          signer: {
+            fullName: submission.patient.name,
+            email: submission.patient.email,
+            phone: submission.patient.phone!,
+            cpf: formatCpfNumber(cpf),
+          },
+          template: {
+            key: this.signatureModelKey,
+            data: {
+              FULL_NAME: submission.patient.name,
+              CPF: formatCpfNumber(cpf),
+            },
+          },
+        });
 
-    if (signatureId) {
-      await this.surveysRepository.update(surveyId, { signatureId });
-      this.logger.log('Signature ID stored for survey', {
-        id: surveyId,
-        signatureId,
-      });
-    }
+      if (signatureId && signatureDocumentId) {
+        await surveysRepository.update(survey.id, {
+          signatureId,
+          signatureDocumentId,
+        });
+
+        this.logger.log('Append signature data to survey', {
+          id: survey.id,
+          signatureId,
+          signatureDocumentId,
+        });
+      }
+    });
   }
 }

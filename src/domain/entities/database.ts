@@ -7,6 +7,7 @@ import { Survey } from './survey';
 import { SurveySubmission } from './survey-submission';
 import { Token } from './token';
 import { User } from './user';
+import { WebhookEvent } from './webhook-event';
 
 export const DATABASE_ENTITIES = [
   Appointment,
@@ -18,4 +19,5 @@ export const DATABASE_ENTITIES = [
   SurveySubmission,
   Token,
   User,
+  WebhookEvent,
 ];

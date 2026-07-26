@@ -8,3 +8,5 @@ export const DATE_OF_BIRTH_START_YEAR = CURRENT_YEAR - MAX_PATIENT_AGE;
 
 export const SUPPORT_WHATSAPP = '(75) 99980-1515';
 export const SUPPORT_EMAIL = 'contato@abnmo.org';
+
+export const SURVEY_SIGNATURE_METADATA_KEY = 'catalogacao-abnmo';

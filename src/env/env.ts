@@ -59,6 +59,7 @@ export const envSchema = z.object({
   SIGNATURE_MODEL_KEY: z.string().min(1),
   CLICKSIGN_API_URL: z.url(),
   CLICKSIGN_API_KEY: z.string().min(1),
+  CLICKSIGN_WEBHOOK_SECRET: z.string().min(1),
 });
 
 export type Env = z.infer<typeof envSchema>;

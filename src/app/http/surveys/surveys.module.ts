@@ -20,6 +20,7 @@ import { GetSurveySubmissionUseCase } from './submissions/use-cases/get-survey-s
 import { GetSurveySubmissionsUseCase } from './submissions/use-cases/get-survey-submissions.use-case';
 import { GetTotalSurveySubmissionsUseCase } from './submissions/use-cases/get-total-survey-submissions.use-case';
 import { SurveysController } from './surveys.controller';
+import { CompleteSurveyUseCase } from './use-cases/complete-survey.use-case';
 import { CreateSurveyUseCase } from './use-cases/create-survey.use-case';
 import { GetSurveyUseCase } from './use-cases/get-survey.use-case';
 import { GetSurveysUseCase } from './use-cases/get-surveys.use-case';
@@ -28,8 +29,8 @@ import { SendSurveyReminderUseCase } from './use-cases/send-survey-reminder.use-
 @Module({
   imports: [
     TypeOrmModule.forFeature([SurveySubmission, Survey, User, Document]),
-    EnvModule,
     CryptographyModule,
+    EnvModule,
     MailModule,
     SignatureModule,
     StorageModule,
@@ -37,6 +38,7 @@ import { SendSurveyReminderUseCase } from './use-cases/send-survey-reminder.use-
   controllers: [SurveysController, SurveySubmissionsController],
   providers: [
     ApproveSurveySubmissionUseCase,
+    CompleteSurveyUseCase,
     ConfirmSurveySubmissionUploadUseCase,
     CreateSurveySubmissionUseCase,
     CreateSurveyUseCase,
@@ -48,5 +50,6 @@ import { SendSurveyReminderUseCase } from './use-cases/send-survey-reminder.use-
     GetTotalSurveySubmissionsUseCase,
     SendSurveyReminderUseCase,
   ],
+  exports: [CompleteSurveyUseCase],
 })
 export class SurveysModule {}

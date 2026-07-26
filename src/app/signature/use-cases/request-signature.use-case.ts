@@ -36,6 +36,7 @@ interface RequestSignatureUseCaseInput {
 
 interface RequestSignatureUseCaseOutput {
   signatureId: string | null;
+  signatureDocumentId: string | null;
 }
 
 @Injectable()
@@ -51,22 +52,24 @@ export class RequestSignatureUseCase {
     this.isEnabled = this.envService.get('SIGNATURE_ENABLED');
   }
 
-  async execute(
-    input: RequestSignatureUseCaseInput,
-  ): Promise<RequestSignatureUseCaseOutput> {
+  async execute({
+    config,
+    signer,
+    template,
+  }: RequestSignatureUseCaseInput): Promise<RequestSignatureUseCaseOutput> {
     if (!this.isEnabled) {
       this.logger.log('Signature disabled — signature request bypassed', {
-        name: input.config.name,
-        email: input.signer.email,
-        cpf: input.signer.cpf,
+        name: config.name,
+        email: signer.email,
+        cpf: signer.cpf,
       });
-      return { signatureId: null };
+      return { signatureId: null, signatureDocumentId: null };
     }
 
-    const deadline = input.config.deadline ?? this.daysFromNow(2);
-    const channel = input.config.notificationChannel ?? 'email';
+    const deadline = config.deadline ?? this.daysFromNow(2);
+    const channel = config.notificationChannel ?? 'email';
 
-    const envelope = await this.signatureService.api<{ id: string }>(
+    const envelopeRes = await this.signatureService.api<{ id: string }>(
       '/envelopes',
       {
         method: 'POST',
@@ -75,15 +78,15 @@ export class RequestSignatureUseCase {
           attributes: {
             auto_close: true,
             deadline_at: deadline,
-            default_message: input.config.message,
-            default_subject: input.config.subject,
+            default_message: config.message,
+            default_subject: config.subject,
             locale: 'pt-BR',
-            name: input.config.name,
+            name: config.name,
           },
         },
       },
     );
-    const envelopeId = envelope.data.id;
+    const envelopeId = envelopeRes.data?.id || '';
 
     const signerRes = await this.signatureService.api<{ id: string }>(
       `/envelopes/${envelopeId}/signers`,
@@ -92,10 +95,10 @@ export class RequestSignatureUseCase {
         data: {
           type: 'signers',
           attributes: {
-            documentation: input.signer.cpf,
-            email: input.signer.email,
-            name: input.signer.fullName,
-            phone_number: input.signer.phone,
+            documentation: signer.cpf,
+            email: signer.email,
+            name: signer.fullName,
+            phone_number: signer.phone,
             communicate_events: {
               signature_request: channel,
               signature_reminder: channel === 'whatsapp' ? 'none' : 'email',
@@ -105,23 +108,23 @@ export class RequestSignatureUseCase {
         },
       },
     );
-    const signerId = signerRes.data.id;
+    const signerId = signerRes.data?.id;
 
-    const document = await this.signatureService.api<{ id: string }>(
+    const documentRes = await this.signatureService.api<{ id: string }>(
       `/envelopes/${envelopeId}/documents`,
       {
         method: 'POST',
         data: {
           type: 'documents',
           attributes: {
-            template: input.template,
-            metadata: { key: input.config.key },
-            filename: `${input.config.filename}.docx`,
+            template: template,
+            metadata: { key: config.key },
+            filename: `${config.filename}.docx`,
           },
         },
       },
     );
-    const documentId = document.data.id;
+    const documentId = documentRes.data?.id || '';
 
     await this.signatureService.api(`/envelopes/${envelopeId}/requirements`, {
       method: 'POST',
@@ -166,13 +169,17 @@ export class RequestSignatureUseCase {
 
     this.logger.log('Signature requested', {
       envelopeId,
+      documentId,
       channel,
-      name: input.config.name,
-      email: input.signer.email,
-      cpf: input.signer.cpf,
+      name: config.name,
+      signer: {
+        email: signer.email,
+        phone: signer.phone,
+        cpf: signer.cpf,
+      },
     });
 
-    return { signatureId: envelopeId };
+    return { signatureId: envelopeId, signatureDocumentId: documentId };
   }
 
   private daysFromNow(days: number): string {
