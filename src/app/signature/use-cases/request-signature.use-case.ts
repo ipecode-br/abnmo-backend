@@ -36,6 +36,7 @@ interface RequestSignatureUseCaseInput {
 
 interface RequestSignatureUseCaseOutput {
   signatureId: string | null;
+  signatureDocumentId: string | null;
 }
 
 @Injectable()
@@ -62,7 +63,7 @@ export class RequestSignatureUseCase {
         email: signer.email,
         cpf: signer.cpf,
       });
-      return { signatureId: null };
+      return { signatureId: null, signatureDocumentId: null };
     }
 
     const deadline = config.deadline ?? this.daysFromNow(2);
@@ -123,7 +124,7 @@ export class RequestSignatureUseCase {
         },
       },
     );
-    const documentId = documentRes.data?.id;
+    const documentId = documentRes.data?.id || '';
 
     await this.signatureService.api(`/envelopes/${envelopeId}/requirements`, {
       method: 'POST',
@@ -168,14 +169,17 @@ export class RequestSignatureUseCase {
 
     this.logger.log('Signature requested', {
       envelopeId,
+      documentId,
       channel,
       name: config.name,
-      email: signer.email,
-      phone: signer.phone,
-      cpf: signer.cpf,
+      signer: {
+        email: signer.email,
+        phone: signer.phone,
+        cpf: signer.cpf,
+      },
     });
 
-    return { signatureId: envelopeId };
+    return { signatureId: envelopeId, signatureDocumentId: documentId };
   }
 
   private daysFromNow(days: number): string {
