@@ -184,7 +184,10 @@ describe('CreateSurveyUseCase', () => {
       return cb(manager);
     });
 
-    requestSignatureUseCase.execute.mockResolvedValue({ signatureId: 'sig-1' });
+    requestSignatureUseCase.execute.mockResolvedValue({
+      signatureId: 'sig-1',
+      signatureDocumentId: 'doc-1',
+    });
     surveysRepo.update.mockResolvedValue(undefined as any);
 
     const module = await Test.createTestingModule({

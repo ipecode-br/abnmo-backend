@@ -91,7 +91,7 @@ describe('Webhooks – Signature (e2e)', () => {
       const { patient } = await createPatient();
       const survey = await createSurvey({
         status: 'pending_signature',
-        signatureId: DOCUMENT_KEY,
+        signatureDocumentId: DOCUMENT_KEY,
         patient,
       });
 
