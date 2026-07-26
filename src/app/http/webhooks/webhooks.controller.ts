@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, Req } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ZodResponse } from 'nestjs-zod';
 
@@ -9,6 +9,7 @@ import { BaseResponse } from '@/common/dtos';
 import { Log } from '@/common/log/log.decorator';
 import type { RequestUser } from '@/common/types';
 
+import { CreateWebhookEventUseCase } from './use-cases/create-webhook-event.use-case';
 import { GetWebhookEventsUseCase } from './use-cases/get-webhook-events.use-case';
 import { SurveySignatureWebhookUseCase } from './use-cases/survey-signature-webhook.use-case';
 import {
@@ -23,6 +24,7 @@ export class WebhooksController {
   constructor(
     private readonly surveySignatureWebhookUseCase: SurveySignatureWebhookUseCase,
     private readonly getWebhookEventsUseCase: GetWebhookEventsUseCase,
+    private readonly createWebhookEventUseCase: CreateWebhookEventUseCase,
   ) {}
 
   @Get('/events')
@@ -48,8 +50,24 @@ export class WebhooksController {
   @ApiOperation({ summary: 'Recebe webhooks de assinatura do ClickSign' })
   @ZodResponse({ type: BaseResponse, status: 200 })
   async surveySignature(
+    @Req() req: Request,
     @Body() body: SurveySignatureWebhookBody,
   ): Promise<BaseResponse> {
-    return this.surveySignatureWebhookUseCase.execute(body);
+    const fullBody = req.body as unknown as Record<string, unknown>;
+
+    const webhookEvent = await this.createWebhookEventUseCase.execute({
+      event: 'sign_survey',
+      payload: fullBody,
+    });
+
+    await this.surveySignatureWebhookUseCase.execute({
+      webhookEventId: webhookEvent.id,
+      payload: body,
+    });
+
+    return {
+      success: true,
+      message: 'Webhook de assinatura recebido com sucesso.',
+    };
   }
 }
