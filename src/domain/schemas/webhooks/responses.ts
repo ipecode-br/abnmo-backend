@@ -17,3 +17,19 @@ export const getWebhookEventsResponseSchema = baseResponseSchema.extend({
     total: z.number(),
   }),
 });
+
+export const webhookEventDetailsResponseSchema = webhookEventSchema.pick({
+  id: true,
+  event: true,
+  status: true,
+  payload: true,
+  updatedAt: true,
+  createdAt: true,
+});
+export type WebhookEventDetailsResponse = z.infer<
+  typeof webhookEventDetailsResponseSchema
+>;
+
+export const getWebhookEventResponseSchema = baseResponseSchema.extend({
+  data: webhookEventDetailsResponseSchema,
+});

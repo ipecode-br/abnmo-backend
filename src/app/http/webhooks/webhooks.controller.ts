@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query, Req } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, Req } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ZodResponse } from 'nestjs-zod';
 
@@ -10,9 +10,11 @@ import { Log } from '@/common/log/log.decorator';
 import type { RequestUser } from '@/common/types';
 
 import { CreateWebhookEventUseCase } from './use-cases/create-webhook-event.use-case';
+import { GetWebhookEventUseCase } from './use-cases/get-webhook-event.use-case';
 import { GetWebhookEventsUseCase } from './use-cases/get-webhook-events.use-case';
 import { SurveySignatureWebhookUseCase } from './use-cases/survey-signature-webhook.use-case';
 import {
+  GetWebhookEventResponse,
   GetWebhookEventsQuery,
   GetWebhookEventsResponse,
   SurveySignatureWebhookBody,
@@ -24,6 +26,7 @@ export class WebhooksController {
   constructor(
     private readonly surveySignatureWebhookUseCase: SurveySignatureWebhookUseCase,
     private readonly getWebhookEventsUseCase: GetWebhookEventsUseCase,
+    private readonly getWebhookEventUseCase: GetWebhookEventUseCase,
     private readonly createWebhookEventUseCase: CreateWebhookEventUseCase,
   ) {}
 
@@ -40,6 +43,23 @@ export class WebhooksController {
     return {
       success: true,
       message: 'Lista de eventos de webhook retornada com sucesso.',
+      data,
+    };
+  }
+
+  @Get('/events/:id')
+  @RequireFeature('read:webhook')
+  @ApiOperation({ summary: 'Detalhes de um evento de webhook' })
+  @ZodResponse({ type: GetWebhookEventResponse, status: 200 })
+  async getWebhookEvent(
+    @Param('id') id: string,
+    @User() user: RequestUser,
+  ): Promise<GetWebhookEventResponse> {
+    const data = await this.getWebhookEventUseCase.execute({ id, user });
+
+    return {
+      success: true,
+      message: 'Detalhes do evento de webhook retornados com sucesso.',
       data,
     };
   }
