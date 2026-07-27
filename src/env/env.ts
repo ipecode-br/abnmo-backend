@@ -43,11 +43,7 @@ export const envSchema = z.object({
 
   // Observability
   SENTRY_DSN: z.string().optional().default(''),
-  SENTRY_ENABLE_LOGS: z
-    .enum(['true', 'false'])
-    .transform((val) => val === 'true')
-    .optional()
-    .default(false),
+  SENTRY_LOGS: z.enum(['all', 'error', 'none']),
 
   // Database
   DB_HOST: z.string().min(1),
