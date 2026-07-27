@@ -1,3 +1,4 @@
+import '../instrument.js';
 import 'reflect-metadata';
 
 import type { RequestListener } from 'node:http';
