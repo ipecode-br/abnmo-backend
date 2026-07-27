@@ -1,10 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
-import {
-  Injectable,
-  NestMiddleware,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, NestMiddleware } from '@nestjs/common';
 import { NextFunction, Request, Response } from 'express';
 
 import { EnvService } from '@/env/env.service';
@@ -17,19 +13,21 @@ export class SignatureMiddleware implements NestMiddleware {
     this.secret = this.envService.get('CLICKSIGN_WEBHOOK_SECRET');
   }
 
-  use(req: Request & { rawBody?: Buffer }, _res: Response, next: NextFunction) {
+  use(
+    req: Request & { rawBody?: Buffer; webhookValid?: boolean },
+    _res: Response,
+    next: NextFunction,
+  ) {
     const hmacHeader = req.headers['content-hmac'] as string | undefined;
 
     if (!hmacHeader) {
-      throw new UnauthorizedException(
-        'Assinatura HMAC não encontrada no cabeçalho.',
-      );
+      req.webhookValid = false;
+      return next();
     }
 
     if (!req.rawBody) {
-      throw new UnauthorizedException(
-        'Corpo da requisição não disponível para validação.',
-      );
+      req.webhookValid = false;
+      return next();
     }
 
     const received = hmacHeader.replace(/^sha256=/, '');
@@ -45,9 +43,11 @@ export class SignatureMiddleware implements NestMiddleware {
         Buffer.from(computed, 'hex'),
       )
     ) {
-      throw new UnauthorizedException('Assinatura HMAC inválida.');
+      req.webhookValid = false;
+      return next();
     }
 
+    req.webhookValid = true;
     next();
   }
 }

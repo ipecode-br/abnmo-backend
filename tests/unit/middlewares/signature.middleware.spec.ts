@@ -1,6 +1,5 @@
 import { createHmac } from 'node:crypto';
 
-import { UnauthorizedException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { mock, MockProxy } from 'jest-mock-extended';
 
@@ -33,30 +32,30 @@ describe('SignatureMiddleware', () => {
     return `sha256=${createHmac('sha256', SECRET).update(payload).digest('hex')}`;
   };
 
-  it('throws if content-hmac header is missing', () => {
+  it('sets "webhookValid=false" and calls next when content-hmac header is missing', () => {
     const req = { headers: {}, rawBody } as any;
     const next = jest.fn();
 
-    expect(() => middleware.use(req, {} as any, next)).toThrow(
-      UnauthorizedException,
-    );
-    expect(next).not.toHaveBeenCalled();
+    middleware.use(req, {} as any, next);
+
+    expect(req.webhookValid).toBe(false);
+    expect(next).toHaveBeenCalled();
   });
 
-  it('throws if rawBody is missing', () => {
+  it('sets "webhookValid=false" and calls next when rawBody is missing', () => {
     const req = {
       headers: { 'content-hmac': makeValidHmac(body) },
       rawBody: undefined,
     } as any;
     const next = jest.fn();
 
-    expect(() => middleware.use(req, {} as any, next)).toThrow(
-      UnauthorizedException,
-    );
-    expect(next).not.toHaveBeenCalled();
+    middleware.use(req, {} as any, next);
+
+    expect(req.webhookValid).toBe(false);
+    expect(next).toHaveBeenCalled();
   });
 
-  it('throws if HMAC does not match', () => {
+  it('sets "webhookValid=false" and calls next when HMAC does not match', () => {
     const req = {
       headers: {
         'content-hmac':
@@ -66,13 +65,13 @@ describe('SignatureMiddleware', () => {
     } as any;
     const next = jest.fn();
 
-    expect(() => middleware.use(req, {} as any, next)).toThrow(
-      UnauthorizedException,
-    );
-    expect(next).not.toHaveBeenCalled();
+    middleware.use(req, {} as any, next);
+
+    expect(req.webhookValid).toBe(false);
+    expect(next).toHaveBeenCalled();
   });
 
-  it('calls next when HMAC is valid', () => {
+  it('sets "webhookValid=true" and calls next when HMAC is valid', () => {
     const req = {
       headers: { 'content-hmac': makeValidHmac(body) },
       rawBody,
@@ -81,6 +80,7 @@ describe('SignatureMiddleware', () => {
 
     middleware.use(req, {} as any, next);
 
+    expect(req.webhookValid).toBe(true);
     expect(next).toHaveBeenCalled();
   });
 });
