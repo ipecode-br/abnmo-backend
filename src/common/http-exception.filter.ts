@@ -116,16 +116,18 @@ export class HttpExceptionFilter extends BaseExceptionFilter {
         message = responseMessage;
       }
 
-      // TODO: make this block more readable
-      if (
+      const isNotFoundRoute =
+        exception instanceof HttpException &&
         status === HttpStatus.NOT_FOUND &&
-        responseMessage &&
+        typeof responseMessage === 'string' &&
         /^Cannot (GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS) \//.test(
           responseMessage,
-        )
-      ) {
+        );
+
+      if (isNotFoundRoute) {
         status = HttpStatus.FORBIDDEN;
         message = 'Você não tem permissão para executar esta ação.';
+        return response.status(status).json({ success: false, message });
       }
 
       this.logger.error('HttpException', {

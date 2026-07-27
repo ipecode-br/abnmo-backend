@@ -21,6 +21,23 @@ export class SignatureService {
     this.apiKey = this.envService.get('CLICKSIGN_API_KEY');
   }
 
+  async check(): Promise<boolean> {
+    try {
+      const url = new URL('envelopes?per_page=1', this.apiUrl);
+
+      const response = await fetch(url.toString(), {
+        headers: {
+          Authorization: this.apiKey,
+          Accept: 'application/vnd.api+json',
+        },
+      });
+
+      return response.ok;
+    } catch {
+      return false;
+    }
+  }
+
   async api<T = unknown>(
     path: string,
     options: ApiOptions,
