@@ -13,6 +13,10 @@ import { SendReminderSignatureUseCase } from './use-cases/send-reminder-signatur
     RequestSignatureUseCase,
     SendReminderSignatureUseCase,
   ],
-  exports: [RequestSignatureUseCase, SendReminderSignatureUseCase],
+  exports: [
+    RequestSignatureUseCase,
+    SendReminderSignatureUseCase,
+    SignatureService,
+  ],
 })
 export class SignatureModule {}

@@ -22,5 +22,6 @@ describe('Status (e2e)', () => {
     expect(res.body.message).toBe('Sistema está operacional.');
     expect(res.body.data.api.status).toBe('ok');
     expect(res.body.data.database.status).toBe('ok');
+    expect(res.body.data.signature.status).toBe('ok');
   });
 });

@@ -8,5 +8,6 @@ export const getStatusResponseSchema = baseResponseSchema.extend({
   data: z.object({
     api: z.object({ status: statusSchema }),
     database: z.object({ status: statusSchema }),
+    signature: z.object({ status: statusSchema }),
   }),
 });
