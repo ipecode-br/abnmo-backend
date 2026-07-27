@@ -41,10 +41,14 @@ export class GetStatusUseCase {
       const signatureOk = await this.signatureService.check();
 
       if (!signatureOk) {
+        success = false;
+        message = 'O serviço de assinatura está indisponível.';
         data.signature.status = 'error';
         this.logger.error('Signature health check failed');
       }
     } catch {
+      success = false;
+      message = 'O serviço de assinatura está indisponível.';
       data.signature.status = 'error';
       this.logger.error('Signature health check failed');
     }

@@ -75,8 +75,8 @@ describe('GetStatusUseCase', () => {
       const result = await useCase.execute();
 
       expect(result).toEqual({
-        success: true,
-        message: 'Sistema está operacional.',
+        success: false,
+        message: 'O serviço de assinatura está indisponível.',
         data: {
           api: { status: 'ok' },
           database: { status: 'ok' },
@@ -92,8 +92,8 @@ describe('GetStatusUseCase', () => {
       const result = await useCase.execute();
 
       expect(result).toEqual({
-        success: true,
-        message: 'Sistema está operacional.',
+        success: false,
+        message: 'O serviço de assinatura está indisponível.',
         data: {
           api: { status: 'ok' },
           database: { status: 'ok' },
@@ -110,7 +110,7 @@ describe('GetStatusUseCase', () => {
 
       expect(result).toEqual({
         success: false,
-        message: 'O banco de dados está indisponível.',
+        message: 'O serviço de assinatura está indisponível.',
         data: {
           api: { status: 'ok' },
           database: { status: 'error' },
