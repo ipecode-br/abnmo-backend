@@ -7,6 +7,7 @@ import { RequireFeature } from '@/common/decorators/require-feature.decorator';
 import { User } from '@/common/decorators/user.decorator';
 import { BaseResponse } from '@/common/dtos';
 import { Log } from '@/common/log/log.decorator';
+import { LogService } from '@/common/log/log.service';
 import type { RequestUser } from '@/common/types';
 
 import { CreateWebhookEventUseCase } from './use-cases/create-webhook-event.use-case';
@@ -28,6 +29,7 @@ export class WebhooksController {
     private readonly getWebhookEventsUseCase: GetWebhookEventsUseCase,
     private readonly getWebhookEventUseCase: GetWebhookEventUseCase,
     private readonly createWebhookEventUseCase: CreateWebhookEventUseCase,
+    private readonly logger: LogService,
   ) {}
 
   @Get('/events')
@@ -70,9 +72,18 @@ export class WebhooksController {
   @ApiOperation({ summary: 'Recebe webhooks de assinatura do ClickSign' })
   @ZodResponse({ type: BaseResponse, status: 200 })
   async surveySignature(
-    @Req() req: Request,
+    @Req() req: Request & { webhookValid?: boolean },
     @Body() body: SurveySignatureWebhookBody,
   ): Promise<BaseResponse> {
+    if (!req.webhookValid) {
+      this.logger.warn('Invalid signature webhook received');
+
+      return {
+        success: true,
+        message: 'Webhook de assinatura recebido com sucesso.',
+      };
+    }
+
     const fullBody = req.body as unknown as Record<string, unknown>;
 
     const webhookEvent = await this.createWebhookEventUseCase.execute({

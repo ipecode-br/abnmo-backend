@@ -44,17 +44,17 @@ describe('Webhooks – Signature (e2e)', () => {
   });
 
   describe('POST /webhooks/signatures/survey', () => {
-    it('returns 401 when content-hmac header is missing', async () => {
+    it('returns 200 when content-hmac header is missing', async () => {
       const res = await api.post('/webhooks/signatures/survey', makePayload());
 
-      expect(res.status).toBe(401);
-      expect(res.body.success).toBe(false);
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
       expect(res.body.message).toBe(
-        'Assinatura HMAC não encontrada no cabeçalho.',
+        'Webhook de assinatura recebido com sucesso.',
       );
     });
 
-    it('returns 401 when HMAC is invalid', async () => {
+    it('returns 200 when HMAC is invalid', async () => {
       const res = await api.post('/webhooks/signatures/survey', makePayload(), {
         headers: {
           'content-hmac':
@@ -62,9 +62,11 @@ describe('Webhooks – Signature (e2e)', () => {
         },
       });
 
-      expect(res.status).toBe(401);
-      expect(res.body.success).toBe(false);
-      expect(res.body.message).toBe('Assinatura HMAC inválida.');
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.message).toBe(
+        'Webhook de assinatura recebido com sucesso.',
+      );
     });
 
     it('bypasses when metadata key does not match', async () => {
