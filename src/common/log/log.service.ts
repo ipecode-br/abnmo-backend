@@ -37,48 +37,50 @@ export class LogService {
   }
 
   info(message: string, extras?: Record<string, any>) {
-    this.pino.info(this.buildPayload(extras), message);
+    const payload = this.buildPayload(extras);
+    this.pino.info(payload, message);
     if (this.sentryLogs === 'all') {
-      Sentry.logger.info(message, extras);
+      Sentry.logger.info(message, payload);
     }
   }
 
   debug(message: string, extras?: Record<string, any>) {
-    this.pino.debug(this.buildPayload(extras), message);
+    const payload = this.buildPayload(extras);
+    this.pino.debug(payload, message);
     if (this.sentryLogs === 'all') {
-      Sentry.logger.debug(message, extras);
+      Sentry.logger.debug(message, payload);
     }
   }
 
   warn(message: string, extras?: Record<string, any>) {
-    this.pino.warn(this.buildPayload(extras), message);
+    const payload = this.buildPayload(extras);
+    this.pino.warn(payload, message);
     if (this.sentryLogs === 'all') {
-      Sentry.logger.warn(message, extras);
+      Sentry.logger.warn(message, payload);
     }
   }
 
   error(message: string | object, extras?: Record<string, any>) {
     if (typeof message === 'string') {
-      this.pino.error(this.buildPayload(extras), message);
+      const payload = this.buildPayload(extras);
+      this.pino.error(payload, message);
       if (this.sentryLogs === 'all' || this.sentryLogs === 'error') {
-        Sentry.logger.error(message, extras);
+        Sentry.logger.error(message, payload);
       }
     } else {
-      this.pino.error(this.buildPayload({ ...(extras ?? {}), ...{ message } }));
+      const payload = this.buildPayload({
+        ...(extras ?? {}),
+        ...(message as Record<string, any>),
+      });
+      this.pino.error(payload);
       if (this.sentryLogs === 'all' || this.sentryLogs === 'error') {
-        Sentry.logger.error('Error', {
-          ...(extras ?? {}),
-          ...(message as Record<string, any>),
-        });
+        Sentry.logger.error('Error', payload);
       }
     }
   }
 
   log(message: string, extras?: Record<string, any>) {
     this.info(message, extras);
-    if (this.sentryLogs === 'all') {
-      Sentry.logger.info(message, extras);
-    }
   }
 
   private buildPayload(extras: Record<string, any> = {}) {
