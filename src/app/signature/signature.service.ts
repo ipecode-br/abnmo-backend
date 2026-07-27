@@ -15,13 +15,19 @@ interface ApiResponse<T = unknown> {
 export class SignatureService {
   private readonly apiUrl: string;
   private readonly apiKey: string;
+  private readonly enabled: boolean;
 
   constructor(private readonly envService: EnvService) {
     this.apiUrl = this.envService.get('CLICKSIGN_API_URL');
     this.apiKey = this.envService.get('CLICKSIGN_API_KEY');
+    this.enabled = this.envService.get('SIGNATURE_ENABLED');
   }
 
   async check(): Promise<boolean> {
+    if (!this.enabled) {
+      return true;
+    }
+
     try {
       const url = new URL('envelopes?per_page=1', this.apiUrl);
 
