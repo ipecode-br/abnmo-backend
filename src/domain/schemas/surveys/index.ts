@@ -58,7 +58,7 @@ export const surveySchema = baseEntitySchema.extend({
   addressState: z.enum(BRAZIL_STATES),
   addressCity: z.string().min(1),
   addressStreet: z.string().min(1),
-  addressNumber: z.string().nullable(),
+  addressNumber: z.string().min(1).nullable(),
   addressNeighborhood: z.string().min(1).nullable(),
   hasLivedElsewhere: z.boolean(),
   livedElsewhereDescription: z.string().max(500).nullable(),
