@@ -103,8 +103,27 @@ async create(@User() user: RequestUser, @Body() body: CreateAppointmentBody) {
 | Encaminhamentos | `create_referral`, `update_referral`, `cancel_referral`                                       |
 | Pacientes       | `create_patient`, `update_patient`, `deactivate_patient`                                      |
 | Requisitos      | `create_patient_requirement`, `approve_patient_requirement`, `decline_patient_requirement`    |
+| Suporte         | `create_patient_support`, `update_patient_support`, `delete_patient_support`                  |
 | Usuários        | `create_user_invite`, `delete_user_invite`, `update_user`, `activate_user`, `deactivate_user` |
 | Catálogos       | `init_survey`, `complete_survey`, `approve_survey`, `decline_survey`, `send_survey_reminder`  |
+| Status          | `get_status`                                                                                  |
+| Webhooks        | `signature_survey_webhook`                                                                    |
+
+---
+
+## Integração com Sentry
+
+Quando configurado (`SENTRY_DSN` preenchido), o `LogService` encaminha logs para o Sentry paralelamente ao pino. O nível de envio é controlado pela variável `SENTRY_LOGS`:
+
+| `SENTRY_LOGS` | Comportamento                                                   |
+| ------------- | --------------------------------------------------------------- |
+| `"none"`      | Nenhum log enviado ao Sentry                                    |
+| `"error"`     | Apenas chamadas de `logger.error()` são encaminhadas            |
+| `"all"`       | Todos os níveis (`info`, `warn`, `error`, `debug`) são enviados |
+
+Os logs enviados ao Sentry incluem o mesmo payload enriquecido do pino (`event`, `user`, `context`), tornando-os pesquisáveis no dashboard do Sentry.
+
+Para filtrar logs 4xx no Sentry (evitar poluição), o `instrument.ts` inclui um `beforeSendLog` que descarta logs com `status < 500`. Apenas erros 5xx e logs sem status HTTP chegam ao Sentry.
 
 ---
 

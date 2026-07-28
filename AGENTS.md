@@ -17,7 +17,7 @@ NestJS + TypeORM + PostgreSQL + Zod API.
 
 ## Architecture
 
-- **Entrypoint**: `src/app/main.ts` (HTTP), `src/app/lambda.ts` (Lambda via `@vendia/serverless-express`)
+- **Entrypoint**: `src/app/main.ts` (HTTP — local dev only), `src/app/lambda.ts` (AWS Lambda via `@vendia/serverless-express`), `src/instrument.ts` (Sentry init)
 - **Feature modules**: `src/app/http/{feature}/` — `{feature}.module.ts`, `.controller.ts`, `.dtos.ts`, `use-cases/{action}-{feature}.use-case.ts`
 - **Entities**: `src/domain/entities/`, registered centrally in `DATABASE_ENTITIES` in `src/domain/entities/database.ts`
 - **Zod schemas** (source of truth for validation): `src/domain/schemas/{entity}/` — `index.ts`, `requests.ts`, `responses.ts`
@@ -171,6 +171,7 @@ Import the inferred schema type from `responses.ts`, use it as the return type, 
 - `@Log()` (class decorator) + `constructor(private readonly logger: LogService)` on use-cases
 - All database write operations (create, update, delete) **must** log after successful execution
 - On error, throw the correct HTTP exception with a `cause` property set to the original error; the exception's message goes to the response, and the cause is logged automatically by the exception filter
+- When `SENTRY_DSN` is configured, `LogService` forwards logs to Sentry based on `SENTRY_LOGS` env var (`"none"` = nothing, `"error"` = only errors, `"all"` = all levels). Logs with HTTP `status < 500` are filtered out by `beforeSendLog` — only 5xx errors reach Sentry.
 
 ## Testing
 
@@ -179,7 +180,7 @@ Import the inferred schema type from `responses.ts`, use it as the return type, 
 | Layer | Config                        | Pattern                      | Count | Parallel |
 | ----- | ----------------------------- | ---------------------------- | ----- | -------- |
 | Unit  | `tests/config/jest-unit.json` | `tests/**/*.spec.ts`         | ~50   | Yes      |
-| E2E   | `tests/config/jest-e2e.json`  | `tests/e2e/**/*.e2e-spec.ts` | 8     | No       |
+| E2E   | `tests/config/jest-e2e.json`  | `tests/e2e/**/*.e2e-spec.ts` | 9     | No       |
 
 Unit tests use mocked repositories, no database. E2E tests run against the same PostgreSQL database as development, but in a separate `test` schema (see `.env.test`). Schema isolation uses PostgreSQL `search_path`; TypeORM migrations are kept schema-agnostic by removing `"public"."` qualifiers.
 
@@ -248,6 +249,7 @@ When composing a list response, extract a standalone list-item schema (e.g. `lis
 | `MailModule`         | Sending emails        |
 | `EnvModule`          | Accessing env vars    |
 | `StorageModule`      | File uploads          |
+| `SignatureModule`    | Digital signatures    |
 
 `LogModule` is global — never import it.
 

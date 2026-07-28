@@ -8,12 +8,13 @@ Todos os erros são tratados de forma centralizada pelo `HttpExceptionFilter`, r
 
 ## `HttpExceptionFilter`
 
-O filtro `@Catch()` intercepta exceções e aplica o tratamento adequado conforme o tipo:
+O filtro `@Catch()` intercepta exceções e aplica o tratamento adequado conforme o tipo. Ele também reporta exceções ao **Sentry** via `@SentryExceptionCaptured()` (quando configurado), filtrando automaticamente erros 4xx — apenas 5xx são enviados ao Sentry.
 
-1. **`ZodSerializationException`** — erro de validação do schema de resposta (500). A mensagem genérica `"Um erro inesperado ocorreu."` é retornada.
-2. **`ZodValidationException`** — erro de validação do schema de request (400). Retorna `"Os dados enviados são inválidos."` com a lista de `fields`.
-3. **`HttpException`** — exceção HTTP padrão. O status e mensagem da exceção são repassados.
-4. **Erro desconhecido** — qualquer outra exceção retorna 500 com `"Um erro inesperado ocorreu."`. O erro completo é logado pelo `LogService`.
+1. **`InternalServerErrorException`** — erro 500 genérico. O `cause` e `stack` são logados.
+2. **`ZodSerializationException`** — erro de validação do schema de resposta (500). A mensagem genérica `"Um erro inesperado ocorreu."` é retornada.
+3. **`ZodValidationException`** — erro de validação do schema de request (400). Retorna `"Os dados enviados são inválidos."` com a lista de `fields`.
+4. **`HttpException`** — exceção HTTP padrão. O status e mensagem da exceção são repassados. Rotas desconhecidas (404 do Express) são convertidas para 403.
+5. **Erro desconhecido** — qualquer outra exceção retorna 500 com `"Um erro inesperado ocorreu."`. O erro completo é logado pelo `LogService` e enviado ao Sentry.
 
 ---
 
