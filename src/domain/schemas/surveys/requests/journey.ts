@@ -1,3 +1,5 @@
+import z from 'zod';
+
 import { EMPLOYMENT_STATUSES_WITH_DETAILS_REQUIRED } from '@/domain/enums/surveys';
 
 import { surveySchema } from '..';
@@ -23,16 +25,16 @@ export const journeySurveySchema = surveySchema
       data.employmentStatus,
     );
 
-    if (isStudent) {
-      if (!data.studyInterruption) {
-        ctx.addIssue({
-          code: 'custom',
-          message:
-            '"studyInterruption" is required when "employmentStatus" is student',
-          path: ['studyInterruption'],
-        });
-      }
-    } else if (data.studyInterruption !== null) {
+    if (isStudent && !data.studyInterruption) {
+      ctx.addIssue({
+        code: 'custom',
+        message:
+          '"studyInterruption" is required when "employmentStatus" is student',
+        path: ['studyInterruption'],
+      });
+    }
+
+    if (!isStudent && data.studyInterruption !== null) {
       ctx.addIssue({
         code: 'custom',
         message:
@@ -50,6 +52,7 @@ export const journeySurveySchema = surveySchema
           path: ['profession'],
         });
       }
+
       if (!data.jobTitle) {
         ctx.addIssue({
           code: 'custom',
@@ -57,7 +60,9 @@ export const journeySurveySchema = surveySchema
           path: ['jobTitle'],
         });
       }
-    } else {
+    }
+
+    if (!requiresDetails) {
       if (data.profession !== null) {
         ctx.addIssue({
           code: 'custom',
@@ -75,16 +80,16 @@ export const journeySurveySchema = surveySchema
       }
     }
 
-    if (data.changedProfession) {
-      if (!data.changedProfessionTo) {
-        ctx.addIssue({
-          code: 'custom',
-          message:
-            '"changedProfessionTo" is required when "changedProfession" is true',
-          path: ['changedProfessionTo'],
-        });
-      }
-    } else if (data.changedProfessionTo !== null) {
+    if (data.changedProfession && !data.changedProfessionTo) {
+      ctx.addIssue({
+        code: 'custom',
+        message:
+          '"changedProfessionTo" is required when "changedProfession" is true',
+        path: ['changedProfessionTo'],
+      });
+    }
+
+    if (!data.changedProfession && data.changedProfessionTo !== null) {
       ctx.addIssue({
         code: 'custom',
         message:
@@ -93,3 +98,4 @@ export const journeySurveySchema = surveySchema
       });
     }
   });
+export type JourneySurveySchema = z.infer<typeof journeySurveySchema>;

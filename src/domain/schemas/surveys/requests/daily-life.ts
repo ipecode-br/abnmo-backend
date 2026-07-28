@@ -1,3 +1,5 @@
+import z from 'zod';
+
 import { surveySchema } from '..';
 
 export const dailyLifeSurveySchema = surveySchema
@@ -14,16 +16,16 @@ export const dailyLifeSurveySchema = surveySchema
     additionalInfo: true,
   })
   .superRefine((data, ctx) => {
-    if (data.physicalActivity !== 'no') {
-      if (!data.physicalActivityType) {
-        ctx.addIssue({
-          code: 'custom',
-          message:
-            '"physicalActivityType" is required when "physicalActivity" is not "no"',
-          path: ['physicalActivityType'],
-        });
-      }
-    } else if (data.physicalActivityType !== null) {
+    if (data.physicalActivity !== 'no' && !data.physicalActivityType) {
+      ctx.addIssue({
+        code: 'custom',
+        message:
+          '"physicalActivityType" is required when "physicalActivity" is not "no"',
+        path: ['physicalActivityType'],
+      });
+    }
+
+    if (data.physicalActivity === 'no' && data.physicalActivityType !== null) {
       ctx.addIssue({
         code: 'custom',
         message:
@@ -32,16 +34,16 @@ export const dailyLifeSurveySchema = surveySchema
       });
     }
 
-    if (data.exercisedBeforeNmo) {
-      if (!data.exercisesBeforeNmo) {
-        ctx.addIssue({
-          code: 'custom',
-          message:
-            '"exercisesBeforeNmo" is required when "exercisedBeforeNmo" is true',
-          path: ['exercisesBeforeNmo'],
-        });
-      }
-    } else if (data.exercisesBeforeNmo !== null) {
+    if (data.exercisedBeforeNmo && !data.exercisesBeforeNmo) {
+      ctx.addIssue({
+        code: 'custom',
+        message:
+          '"exercisesBeforeNmo" is required when "exercisedBeforeNmo" is true',
+        path: ['exercisesBeforeNmo'],
+      });
+    }
+
+    if (!data.exercisedBeforeNmo && data.exercisesBeforeNmo !== null) {
       ctx.addIssue({
         code: 'custom',
         message:
@@ -50,3 +52,4 @@ export const dailyLifeSurveySchema = surveySchema
       });
     }
   });
+export type DailyLifeSurveySchema = z.infer<typeof dailyLifeSurveySchema>;

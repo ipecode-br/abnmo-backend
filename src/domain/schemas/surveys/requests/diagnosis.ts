@@ -1,3 +1,5 @@
+import z from 'zod';
+
 import { surveySchema } from '..';
 
 export const diagnosisSurveySchema = surveySchema
@@ -45,7 +47,9 @@ export const diagnosisSurveySchema = surveySchema
           path: ['diagnosisHospitalCity'],
         });
       }
-    } else {
+    }
+
+    if (!data.diagnosisHospitalName) {
       if (data.diagnosisHospitalState !== null) {
         ctx.addIssue({
           code: 'custom',
@@ -80,3 +84,4 @@ export const diagnosisSurveySchema = surveySchema
       }
     }
   });
+export type DiagnosisSurveySchema = z.infer<typeof diagnosisSurveySchema>;

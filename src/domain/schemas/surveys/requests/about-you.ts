@@ -1,3 +1,5 @@
+import z from 'zod';
+
 import { DATE_OF_BIRTH_START_YEAR } from '@/config';
 import { validateDate } from '@/utils/validators/validate-date';
 
@@ -31,19 +33,7 @@ export const aboutYouSurveySchema = surveySchema
       });
     }
 
-    if (data.hasLivedElsewhere) {
-      if (
-        !data.livedElsewhereDescription ||
-        data.livedElsewhereDescription.length <= 3
-      ) {
-        ctx.addIssue({
-          code: 'custom',
-          message:
-            'When "hasLivedElsewhere" is true, "livedElsewhereDescription" must have more than 3 characters',
-          path: ['livedElsewhereDescription'],
-        });
-      }
-    } else if (data.livedElsewhereDescription !== null) {
+    if (!data.hasLivedElsewhere && data.livedElsewhereDescription !== null) {
       ctx.addIssue({
         code: 'custom',
         message:
@@ -51,4 +41,16 @@ export const aboutYouSurveySchema = surveySchema
         path: ['livedElsewhereDescription'],
       });
     }
+
+    const livedElsewhereDescription = data.livedElsewhereDescription || '';
+
+    if (data.hasLivedElsewhere && livedElsewhereDescription.length <= 3) {
+      ctx.addIssue({
+        code: 'custom',
+        message:
+          'When "hasLivedElsewhere" is true, "livedElsewhereDescription" must have more than 3 characters',
+        path: ['livedElsewhereDescription'],
+      });
+    }
   });
+export type AboutYouSurveySchema = z.infer<typeof aboutYouSurveySchema>;
