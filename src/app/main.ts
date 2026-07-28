@@ -1,3 +1,6 @@
+import 'dotenv/config';
+import '../instrument.js';
+
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 

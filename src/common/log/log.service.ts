@@ -1,15 +1,24 @@
 import { Injectable } from '@nestjs/common';
+import * as Sentry from '@sentry/nestjs';
 import { PinoLogger } from 'nestjs-pino';
+
+import { Env } from '@/env/env';
+import { EnvService } from '@/env/env.service';
 
 import { ContextService } from '../context/context.service';
 import type { ContextEvent, ContextUser } from '../types';
 
 @Injectable()
 export class LogService {
+  private readonly sentryLogs: Env['SENTRY_LOGS'];
+
   constructor(
+    private readonly env: EnvService,
     private readonly pino: PinoLogger,
     private readonly ctx: ContextService,
-  ) {}
+  ) {
+    this.sentryLogs = this.env.get('SENTRY_LOGS');
+  }
 
   setContext(name: string) {
     this.ctx.addContext({ context: name });
@@ -28,27 +37,48 @@ export class LogService {
   }
 
   info(message: string, extras?: Record<string, any>) {
-    this.pino.info(this.buildPayload(extras), message);
-  }
-
-  debug(message: string, extras?: Record<string, any>) {
-    this.pino.debug(this.buildPayload(extras), message);
-  }
-
-  warn(message: string, extras?: Record<string, any>) {
-    this.pino.warn(this.buildPayload(extras), message);
-  }
-
-  error(message: string | object, extras?: Record<string, any>) {
-    // allow passing an object directly (exception payloads)
-    if (typeof message === 'string') {
-      this.pino.error(this.buildPayload(extras), message);
-    } else {
-      this.pino.error(this.buildPayload({ ...(extras ?? {}), ...{ message } }));
+    const payload = this.buildPayload(extras);
+    this.pino.info(payload, message);
+    if (this.sentryLogs === 'all') {
+      Sentry.logger.info(message, payload);
     }
   }
 
-  // Generic alias matching Nest's `logger.log` signature.
+  debug(message: string, extras?: Record<string, any>) {
+    const payload = this.buildPayload(extras);
+    this.pino.debug(payload, message);
+    if (this.sentryLogs === 'all') {
+      Sentry.logger.debug(message, payload);
+    }
+  }
+
+  warn(message: string, extras?: Record<string, any>) {
+    const payload = this.buildPayload(extras);
+    this.pino.warn(payload, message);
+    if (this.sentryLogs === 'all') {
+      Sentry.logger.warn(message, payload);
+    }
+  }
+
+  error(message: string | object, extras?: Record<string, any>) {
+    if (typeof message === 'string') {
+      const payload = this.buildPayload(extras);
+      this.pino.error(payload, message);
+      if (this.sentryLogs === 'all' || this.sentryLogs === 'error') {
+        Sentry.logger.error(message, payload);
+      }
+    } else {
+      const payload = this.buildPayload({
+        ...(extras ?? {}),
+        ...(message as Record<string, any>),
+      });
+      this.pino.error(payload);
+      if (this.sentryLogs === 'all' || this.sentryLogs === 'error') {
+        Sentry.logger.error('Error', payload);
+      }
+    }
+  }
+
   log(message: string, extras?: Record<string, any>) {
     this.info(message, extras);
   }

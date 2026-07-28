@@ -6,6 +6,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
+import { SentryExceptionCaptured } from '@sentry/nestjs';
 import { Response } from 'express';
 import { ZodSerializationException, ZodValidationException } from 'nestjs-zod';
 import { ZodError } from 'zod';
@@ -42,6 +43,7 @@ export class HttpExceptionFilter extends BaseExceptionFilter {
     super();
   }
 
+  @SentryExceptionCaptured()
   catch(exception: unknown, host: ArgumentsHost) {
     const response = host.switchToHttp().getResponse<Response>();
 

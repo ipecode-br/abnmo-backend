@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
+import { SentryModule } from '@sentry/nestjs/setup';
 import { LoggerModule } from 'nestjs-pino';
 import { ZodSerializerInterceptor } from 'nestjs-zod';
 
@@ -45,6 +46,7 @@ import { StorageModule } from './storage/storage.module';
       envFilePath: process.env.NODE_ENV === 'test' ? '.env.test' : '.env',
       validate: (env) => envSchema.parse(env),
     }),
+    SentryModule.forRoot(),
     EnvModule,
     LoggerModule.forRootAsync({
       imports: [EnvModule],
