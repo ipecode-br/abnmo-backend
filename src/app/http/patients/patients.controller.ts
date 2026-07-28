@@ -12,7 +12,7 @@ import { ZodResponse } from 'nestjs-zod';
 
 import { RequireFeature } from '@/common/decorators/require-feature.decorator';
 import { User } from '@/common/decorators/user.decorator';
-import { BaseResponse } from '@/common/dtos';
+import { BaseResponse, UUIDParam } from '@/common/dtos';
 import { Log } from '@/common/log/log.decorator';
 import type { RequestUser } from '@/common/types';
 
@@ -80,7 +80,7 @@ export class PatientsController {
   @ApiOperation({ summary: 'Retorna os dados do paciente' })
   @ZodResponse({ type: GetPatientResponse, status: 200 })
   async getPatientById(
-    @Param('id') id: string,
+    @Param() { id }: UUIDParam,
     @User() user: RequestUser,
   ): Promise<GetPatientResponse> {
     const data = await this.getPatientUseCase.execute({ user, id });
@@ -98,7 +98,7 @@ export class PatientsController {
   @ApiOperation({ summary: 'Atualiza os dados do paciente' })
   @ZodResponse({ type: BaseResponse, status: 200 })
   async update(
-    @Param('id') id: string,
+    @Param() { id }: UUIDParam,
     @User() user: RequestUser,
     @Body() body: UpdatePatientBody,
   ): Promise<BaseResponse> {
@@ -116,7 +116,7 @@ export class PatientsController {
   @ApiOperation({ summary: 'Inativa o paciente' })
   @ZodResponse({ type: BaseResponse, status: 200 })
   async deactivatePatient(
-    @Param('id') id: string,
+    @Param() { id }: UUIDParam,
     @User() user: RequestUser,
   ): Promise<BaseResponse> {
     await this.deactivatePatientUseCase.execute({ id, user });

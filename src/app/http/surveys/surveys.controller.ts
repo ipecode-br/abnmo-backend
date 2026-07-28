@@ -5,7 +5,7 @@ import { ZodResponse } from 'nestjs-zod';
 import { Dashboard } from '@/common/decorators/dashboard.decorator';
 import { RequireFeature } from '@/common/decorators/require-feature.decorator';
 import { User } from '@/common/decorators/user.decorator';
-import { BaseResponse } from '@/common/dtos';
+import { BaseResponse, UUIDParam } from '@/common/dtos';
 import { Log } from '@/common/log/log.decorator';
 import type { RequestUser } from '@/common/types';
 
@@ -66,7 +66,7 @@ export class SurveysController {
   @ApiOperation({ summary: 'Detalhes de uma catalogação' })
   @ZodResponse({ type: GetSurveyResponse, status: 200 })
   async getSurvey(
-    @Param('id') id: string,
+    @Param() { id }: UUIDParam,
     @User() user: RequestUser,
   ): Promise<GetSurveyResponse> {
     const data = await this.getSurveyUseCase.execute({ id, user });
@@ -84,7 +84,7 @@ export class SurveysController {
   @ApiOperation({ summary: 'Envia lembrete de assinatura ao paciente' })
   @ZodResponse({ type: BaseResponse, status: 200 })
   async sendSignRemind(
-    @Param('id') id: string,
+    @Param() { id }: UUIDParam,
     @User() user: RequestUser,
   ): Promise<BaseResponse> {
     await this.sendSurveyReminderUseCase.execute({ id, user });

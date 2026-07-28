@@ -13,7 +13,7 @@ import { ZodResponse } from 'nestjs-zod';
 
 import { RequireFeature } from '@/common/decorators/require-feature.decorator';
 import { User } from '@/common/decorators/user.decorator';
-import { BaseResponse } from '@/common/dtos';
+import { BaseResponse, UUIDParam } from '@/common/dtos';
 import { Log } from '@/common/log/log.decorator';
 import type { RequestUser } from '@/common/types';
 
@@ -78,7 +78,7 @@ export class AppointmentsController {
   @ApiOperation({ summary: 'Atualiza os dados do atendimento' })
   @ZodResponse({ type: BaseResponse, status: 200 })
   public async update(
-    @Param('id') id: string,
+    @Param() { id }: UUIDParam,
     @User() user: RequestUser,
     @Body() body: UpdateAppointmentBody,
   ): Promise<BaseResponse> {
@@ -96,7 +96,7 @@ export class AppointmentsController {
   @ApiOperation({ summary: 'Cancela o atendimento' })
   @ZodResponse({ type: BaseResponse, status: 200 })
   async cancel(
-    @Param('id') id: string,
+    @Param() { id }: UUIDParam,
     @User() user: RequestUser,
   ): Promise<BaseResponse> {
     await this.cancelAppointmentUseCase.execute({ id, user });
