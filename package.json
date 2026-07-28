@@ -1,9 +1,9 @@
 {
   "name": "abnmo-svm-backend",
   "version": "0.1.0",
-  "description": "",
-  "author": "",
-  "private": true,
+  "description": "API do Sistema Viver Melhor (SVM) — plataforma de acompanhamento de pacientes com Neuromielite Óptica, gerenciamento de encaminhamentos e consolidação de dados clínicos por equipes multidisciplinares de saúde.",
+  "author": "IpêCode",
+  "private": false,
   "license": "UNLICENSED",
   "engines": {
     "node": ">=22"
