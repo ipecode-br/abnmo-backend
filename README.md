@@ -4,7 +4,7 @@ API do Sistema Viver Melhor (SVM) para a ABNMO. Plataforma centralizada para aco
 
 ## Stack
 
-Node.js · NestJS · TypeORM · PostgreSQL · Zod · Docker
+Node.js · NestJS · TypeORM · PostgreSQL · Zod · Sentry · Docker
 
 ## Instalação
 
@@ -50,6 +50,21 @@ npm run test:prepare && npx jest --config tests/config/jest-e2e.json tests/e2e/a
 ```
 
 Testes unitários usam repositórios mockados. Testes e2e executam contra o mesmo banco de desenvolvimento, em um schema `test` isolado via `search_path` do PostgreSQL.
+
+## Monitoramento
+
+O Sentry captura erros 5xx e encaminha logs de erro quando configurado via variáveis de ambiente:
+
+```bash
+SENTRY_DSN="https://<key>@o<orgId>.ingest.sentry.io/<projectId>"
+SENTRY_LOGS="error"  # "none" | "error" | "all"
+```
+
+Sem `SENTRY_DSN`, o Sentry permanece inativo — seguro para desenvolvimento local e repositório público.
+
+## Contribuindo
+
+Veja [`CONTRIBUTING.md`](CONTRIBUTING.md) para diretrizes de contribuição, fluxo de branches e criação de PRs.
 
 ## Documentação
 
