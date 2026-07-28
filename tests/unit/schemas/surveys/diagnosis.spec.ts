@@ -3,6 +3,7 @@ import {
   diagnosisSurveySchema,
 } from '@/domain/schemas/surveys/requests/diagnosis';
 
+// Valid base payload
 const makePayload = (overrides?: Partial<DiagnosisSurveySchema>) => ({
   diagnosis: 'anti_aqp4_positive',
   firstCrisisSymptoms: ['vomiting'],

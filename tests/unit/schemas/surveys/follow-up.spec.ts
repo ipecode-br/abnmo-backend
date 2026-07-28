@@ -3,6 +3,7 @@ import {
   followUpSurveySchema,
 } from '@/domain/schemas/surveys/requests/follow-up';
 
+// Valid base payload
 const makePayload = (overrides?: Partial<FollowUpSurveySchema>) => ({
   followUpSpecialties: ['neurologist'],
   otherFollowUpProfessionals: [],
