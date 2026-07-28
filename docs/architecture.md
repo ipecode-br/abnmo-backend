@@ -6,15 +6,16 @@ API SaaS construída com **NestJS** para gerenciamento de pacientes, usuários, 
 
 ## Stack
 
-| Tecnologia              | Finalidade                  |
-| ----------------------- | --------------------------- |
-| NestJS + TypeScript     | Framework principal         |
-| TypeORM + PostgreSQL    | Persistência de dados       |
-| Zod v4                  | Validação de schemas e DTOs |
-| JWT (cookies HTTP-only) | Autenticação                |
-| nestjs-pino             | Base do sistema de logging  |
-| AWS SES / Resend        | Envio de e-mails            |
-| Docker                  | Banco de dados local        |
+| Tecnologia              | Finalidade                        |
+| ----------------------- | --------------------------------- |
+| NestJS + TypeScript     | Framework principal               |
+| TypeORM + PostgreSQL    | Persistência de dados             |
+| Zod v4                  | Validação de schemas e DTOs       |
+| JWT (cookies HTTP-only) | Autenticação                      |
+| nestjs-pino             | Base do sistema de logging        |
+| @sentry/nestjs          | Monitoramento de erros 5xx e logs |
+| AWS SES / Resend        | Envio de e-mails                  |
+| Docker                  | Banco de dados local              |
 
 ## Estrutura de pastas
 
@@ -22,9 +23,11 @@ API SaaS construída com **NestJS** para gerenciamento de pacientes, usuários, 
 src/
 ├── app/
 │   ├── app.module.ts              # Módulo raiz
-│   ├── main.ts                    # Bootstrap (HTTP)
+│   ├── app.ts                     # Factory createNestApp()
+│   ├── main.ts                    # Bootstrap (HTTP — dev local)
 │   ├── lambda.ts                  # Bootstrap (AWS Lambda)
 │   ├── cryptography/              # Módulo compartilhado: hash, JWT e cookies
+│   ├── database/                  # Configuração do TypeORM
 │   ├── http/                      # Módulos de funcionalidade
 │   │   ├── appointments/
 │   │   ├── auth/
@@ -32,11 +35,13 @@ src/
 │   │   ├── patients/
 │   │   ├── referrals/
 │   │   ├── statistics/
-│   │   ├── storage/
+│   │   ├── status/
 │   │   ├── surveys/
 │   │   │   └── submissions/
-│   │   └── users/
+│   │   ├── users/
+│   │   └── webhooks/
 │   ├── mail/                      # Módulo de envio de e-mail
+│   ├── signature/                 # Módulo de assinatura digital
 │   └── storage/                   # Módulo de upload de arquivos (S3/CDN)
 ├── common/                        # Utilitários globais
 │   ├── authorization/             # `can()` — verificação de permissões
@@ -44,8 +49,9 @@ src/
 │   ├── decorators/                # @Public, @RequireFeature, @User, @Cookies
 │   ├── guards/                    # AuthGuard, FeatureGuard
 │   ├── log/                       # LogService, @Log, LogModule
+│   ├── middlewares/               # Maintenance, Signature, Context
 │   ├── dtos.ts                    # BaseResponse
-│   ├── http-exception.filter.ts   # Filtro global de exceções
+│   ├── http-exception.filter.ts   # Filtro global de exceções (+ Sentry)
 │   └── types.d.ts                 # RequestUser, ContextUser, ContextEvent
 ├── config/                        # Configuração da aplicação
 ├── constants/                     # Estados brasileiros, regex
@@ -54,6 +60,7 @@ src/
 │   ├── enums/                     # Constantes `as const` + tipos derivados
 │   └── schemas/                   # Schemas Zod (entidade, request, response)
 ├── env/                           # Validação e acesso a variáveis de ambiente
+├── instrument.ts                  # Inicialização do Sentry
 └── utils/                         # Utilitários funcionais (sem DI)
 ```
 
@@ -77,6 +84,7 @@ Controllers não contêm lógica de negócio — apenas chamam `useCase.execute(
 ```typescript
 @Module({
   imports: [
+    SentryModule.forRoot(),
     EnvModule,
     AuthModule,
     AppointmentsModule,
@@ -84,12 +92,18 @@ Controllers não contêm lógica de negócio — apenas chamam `useCase.execute(
     PatientRequirementsModule,
     ReferralsModule,
     StatisticsModule,
+    StatusModule,
     StorageModule,
     SurveysModule,
-    SurveySubmissionsModule,
     UsersModule,
+    WebhooksModule,
   ],
-  providers: [HttpExceptionFilter],
+  providers: [
+    { provide: APP_GUARD, useClass: LogGuard },
+    { provide: APP_PIPE, useClass: ZodValidationPipe },
+    { provide: APP_FILTER, useClass: HttpExceptionFilter },
+    { provide: APP_INTERCEPTOR, useClass: ZodSerializerInterceptor },
+  ],
 })
 export class AppModule {}
 ```
@@ -98,15 +112,16 @@ export class AppModule {}
 
 ```
 Requisição HTTP
-  → ContextMiddleware       (inicializa AsyncLocalStorage)
-  → AuthGuard               (valida token JWT nos cookies)
-  → FeatureGuard            (verifica @RequireFeature no handler — requer feature em todo endpoint não-público)
-  → Controller              (extrai parâmetros, chama use-case)
-  → UseCase                 (lógica de negócio com can(), banco de dados)
-  → ZodSerializerInterceptor(serializa e valida resposta contra schema Zod)
+  → ContextMiddleware        (inicializa AsyncLocalStorage)
+  → MaintenanceMiddleware    (bloqueia requisições em modo manutenção)
+  → AuthGuard                (valida token JWT nos cookies — exceto @Public())
+  → FeatureGuard             (verifica @RequireFeature no handler)
+  → Controller               (extrai parâmetros, chama use-case)
+  → UseCase                  (lógica de negócio com can(), banco de dados)
+  → ZodSerializerInterceptor (serializa e valida resposta contra schema Zod)
 ```
 
-Em caso de exceção, o `HttpExceptionFilter` captura e retorna resposta padronizada.
+Em caso de exceção, o `HttpExceptionFilter` captura, reporta ao Sentry (5xx) e retorna resposta padronizada.
 
 ## Módulos compartilhados
 
@@ -116,6 +131,8 @@ Em caso de exceção, o `HttpExceptionFilter` captura e retorna resposta padroni
 | `MailModule`         | Envio de e-mails (SES/Resend)               | Importar no módulo que precisar |
 | `EnvModule`          | Acesso tipado a variáveis de ambiente       | Importar quando necessário      |
 | `StorageModule`      | Upload de arquivos (S3/CDN com signed URLs) | Importar quando necessário      |
+| `SignatureModule`    | Assinatura digital (ClickSign)              | Importar no módulo que precisar |
 | `LogModule`          | `LogService` e decorator `@Log()`           | Global — não precisa importar   |
+| `SentryModule`       | Monitoramento de erros e logs               | Registrado no `AppModule`       |
 
 > `LogModule` é declarado com `@Global()`, portanto `LogService` está disponível em toda a aplicação.

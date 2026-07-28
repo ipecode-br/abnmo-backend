@@ -90,6 +90,21 @@ action:resource:others        → feature ampla (bypassa verificação de owners
 | `read:user-invite`   | Visualizar convites enviados       |
 | `delete:user-invite` | Cancelar convites pendentes        |
 
+### Statistics
+
+| Feature                      | Descrição                                  |
+| ---------------------------- | ------------------------------------------ |
+| `read:statistic`             | Visualizar estatísticas gerais do sistema  |
+| `read:statistic:patient`     | Visualizar estatísticas de pacientes       |
+| `read:statistic:appointment` | Visualizar estatísticas de atendimentos    |
+| `read:statistic:referral`    | Visualizar estatísticas de encaminhamentos |
+
+### Webhooks
+
+| Feature        | Descrição                     |
+| -------------- | ----------------------------- |
+| `read:webhook` | Visualizar eventos de webhook |
+
 ---
 
 ## Features padrão por perfil
@@ -101,7 +116,7 @@ action:resource:others        → feature ampla (bypassa verificação de owners
 | **specialist** | + `create:appointment`, `read:appointment`, `update:appointment`, `cancel:appointment`, `read:referral`, `update:referral`, `cancel:referral`                            |
 | **patient**    | + `read:patient`, `update:patient`, `read:survey`, `read:appointment`, `update:appointment`, `cancel:appointment`, `read:referral`, `update:referral`, `cancel:referral` |
 
-**Admin** não requer features — `can()` retorna `true` incondicionalmente para admins.
+**Admin** não requer features — `can()` retorna `true` incondicionalmente para admins. Features adicionais podem ser atribuídas manualmente via `PATCH /users/:id/features` por um admin.
 
 ---
 
@@ -161,7 +176,9 @@ if (!user.features.includes('read:appointment:others')) {
 
 ---
 
-## Matriz de acesso padrão por perfil
+## Matriz de acesso por perfil
+
+A tabela abaixo reflete o acesso **potencial** de cada perfil (features que podem ser atribuídas). Nem todas as colunas com "Sim" são atribuídas por padrão — features como `read:statistic`, `read:webhook` e permissões de convite exigem configuração manual por um admin.
 
 | Ação                    | Admin | Member | Specialist | Patient |
 | ----------------------- | :---: | :----: | :--------: | :-----: |
@@ -179,3 +196,4 @@ if (!user.features.includes('read:appointment:others')) {
 | Gerenciar convites      |  Sim  |  Sim   |    Não     |   Não   |
 | Visualizar estatísticas |  Sim  |  Sim   |    Sim     |   Não   |
 | Gerenciar catalogações  |  Sim  |  Sim   |    Não     | Próprio |
+| Visualizar webhooks     |  Sim  |  Sim   |    Não     |   Não   |
