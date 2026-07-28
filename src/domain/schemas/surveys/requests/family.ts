@@ -1,3 +1,5 @@
+import z from 'zod';
+
 import { surveySchema } from '..';
 
 export const familySurveySchema = surveySchema
@@ -52,3 +54,4 @@ export const familySurveySchema = surveySchema
       });
     }
   });
+export type FamilySurveySchema = z.infer<typeof familySurveySchema>;
