@@ -237,7 +237,7 @@ describe('Patients (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const res = await api.get(
-        '/patients/00000000-0000-0000-0000-000000000000',
+        '/patients/01900000-0000-7000-8000-000000000000',
         undefined,
         {
           cookies,
@@ -328,7 +328,7 @@ describe('Patients (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const res = await api.put<BaseResponseBody, UpdatePatientBody>(
-        '/patients/00000000-0000-0000-0000-000000000000',
+        '/patients/01900000-0000-7000-8000-000000000000',
         updateBody,
         { cookies },
       );
@@ -398,7 +398,7 @@ describe('Patients (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const res = await api.patch(
-        '/patients/00000000-0000-0000-0000-000000000000/deactivate',
+        '/patients/01900000-0000-7000-8000-000000000000/deactivate',
         undefined,
         { cookies },
       );

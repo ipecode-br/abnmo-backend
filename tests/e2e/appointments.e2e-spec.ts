@@ -212,7 +212,7 @@ describe('Appointments (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const res = await api.put<BaseResponseBody, UpdateAppointmentBody>(
-        '/appointments/00000000-0000-0000-0000-000000000000',
+        '/appointments/01900000-0000-7000-8000-000000000000',
         updateBody,
         { cookies },
       );
@@ -245,7 +245,7 @@ describe('Appointments (e2e)', () => {
       const { cookies } = await createMember({ login: true });
 
       const res = await api.put<BaseResponseBody, UpdateAppointmentBody>(
-        `/appointments/sample-id`,
+        `/appointments/01900000-0000-7000-8000-000000000000`,
         updateBody,
         { cookies },
       );
@@ -369,7 +369,7 @@ describe('Appointments (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const res = await api.patch(
-        '/appointments/00000000-0000-0000-0000-000000000000/cancel',
+        '/appointments/01900000-0000-7000-8000-000000000000/cancel',
         undefined,
         { cookies },
       );

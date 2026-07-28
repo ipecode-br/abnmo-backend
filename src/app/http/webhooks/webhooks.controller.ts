@@ -5,7 +5,7 @@ import { ZodResponse } from 'nestjs-zod';
 import { Public } from '@/common/decorators/public.decorator';
 import { RequireFeature } from '@/common/decorators/require-feature.decorator';
 import { User } from '@/common/decorators/user.decorator';
-import { BaseResponse } from '@/common/dtos';
+import { BaseResponse, UUIDParam } from '@/common/dtos';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import type { RequestUser } from '@/common/types';
@@ -54,7 +54,7 @@ export class WebhooksController {
   @ApiOperation({ summary: 'Detalhes de um evento de webhook' })
   @ZodResponse({ type: GetWebhookEventResponse, status: 200 })
   async getWebhookEvent(
-    @Param('id') id: string,
+    @Param() { id }: UUIDParam,
     @User() user: RequestUser,
   ): Promise<GetWebhookEventResponse> {
     const data = await this.getWebhookEventUseCase.execute({ id, user });

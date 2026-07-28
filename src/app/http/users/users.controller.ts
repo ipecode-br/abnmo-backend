@@ -18,7 +18,7 @@ import { ZodResponse } from 'nestjs-zod';
 
 import { RequireFeature } from '@/common/decorators/require-feature.decorator';
 import { User } from '@/common/decorators/user.decorator';
-import { BaseResponse } from '@/common/dtos';
+import { BaseResponse, UUIDParam } from '@/common/dtos';
 import { FileValidationPipe } from '@/common/file-validation.pipe';
 import { Log } from '@/common/log/log.decorator';
 import type { RequestUser } from '@/common/types';
@@ -114,7 +114,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Retorna os dados do usuário pelo ID' })
   @ZodResponse({ type: GetUserResponse, status: 200 })
   async getUserById(
-    @Param('id') id: string,
+    @Param() { id }: UUIDParam,
     @User() user: RequestUser,
   ): Promise<GetUserResponse> {
     const data = await this.getUserUseCase.execute({ id, user });
@@ -132,7 +132,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Atualiza os dados do usuário' })
   @ZodResponse({ type: BaseResponse, status: 200 })
   async updateUser(
-    @Param('id') id: string,
+    @Param() { id }: UUIDParam,
     @User() user: RequestUser,
     @Body() body: UpdateUserBody,
   ): Promise<BaseResponse> {
@@ -150,7 +150,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Atualiza as permissões do usuário' })
   @ZodResponse({ type: BaseResponse, status: 200 })
   async updateUserFeatures(
-    @Param('id') id: string,
+    @Param() { id }: UUIDParam,
     @User() user: RequestUser,
     @Body() body: UpdateUserFeaturesBody,
   ): Promise<BaseResponse> {
@@ -166,6 +166,7 @@ export class UsersController {
     };
   }
 
+  // TODO: update this endpoint with new upload file pattern
   @Post('upload-avatar')
   @Log('update_user')
   @RequireFeature('update:user')
@@ -201,7 +202,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Inativa o usuário' })
   @ZodResponse({ type: BaseResponse, status: 200 })
   async deactivateUser(
-    @Param('id') id: string,
+    @Param() { id }: UUIDParam,
     @User() user: RequestUser,
   ): Promise<BaseResponse> {
     await this.deactivateUserUseCase.execute({ id, user });
@@ -218,7 +219,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Ativa o usuário' })
   @ZodResponse({ type: BaseResponse, status: 200 })
   async activateUser(
-    @Param('id') id: string,
+    @Param() { id }: UUIDParam,
     @User() user: RequestUser,
   ): Promise<BaseResponse> {
     await this.activateUserUseCase.execute({ id, user });
@@ -252,7 +253,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Exclui convite de usuário' })
   @ZodResponse({ type: BaseResponse, status: 200 })
   async cancelUserInvite(
-    @Param('id') id: string,
+    @Param() { id }: UUIDParam,
     @User() user: RequestUser,
   ): Promise<BaseResponse> {
     await this.cancelUserInviteUseCase.execute({ id, user });

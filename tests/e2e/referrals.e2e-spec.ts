@@ -212,7 +212,7 @@ describe('Referrals (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const res = await api.put<BaseResponseBody, UpdateReferralBody>(
-        '/referrals/00000000-0000-0000-0000-000000000000',
+        '/referrals/01900000-0000-7000-8000-000000000000',
         updateBody,
         { cookies },
       );
@@ -247,7 +247,7 @@ describe('Referrals (e2e)', () => {
       const { cookies } = await createMember({ login: true });
 
       const res = await api.put<BaseResponseBody, UpdateReferralBody>(
-        `/referrals/sample-id`,
+        `/referrals/01900000-0000-7000-8000-000000000000`,
         updateBody,
         { cookies },
       );
@@ -371,7 +371,7 @@ describe('Referrals (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const res = await api.patch(
-        '/referrals/00000000-0000-0000-0000-000000000000/cancel',
+        '/referrals/01900000-0000-7000-8000-000000000000/cancel',
         undefined,
         { cookies },
       );

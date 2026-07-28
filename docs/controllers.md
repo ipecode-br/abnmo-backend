@@ -27,7 +27,7 @@ import { ZodResponse } from 'nestjs-zod';
 
 import { RequireFeature } from '@/common/decorators/require-feature.decorator';
 import { User } from '@/common/decorators/user.decorator';
-import { BaseResponse } from '@/common/dtos';
+import { BaseResponse, UUIDParams } from '@/common/dtos';
 import { Log } from '@/common/log/log.decorator';
 import type { RequestUser } from '@/common/types';
 
@@ -87,7 +87,7 @@ export class AppointmentsController {
   @ApiOperation({ summary: 'Atualiza os dados do atendimento' })
   @ZodResponse({ type: BaseResponse, status: 200 })
   async update(
-    @Param('id') id: string,
+    @Param() { id }: UUIDParams,
     @User() user: RequestUser,
     @Body() body: UpdateAppointmentBody,
   ): Promise<BaseResponse> {
@@ -101,7 +101,7 @@ export class AppointmentsController {
   @ApiOperation({ summary: 'Cancela o atendimento' })
   @ZodResponse({ type: BaseResponse, status: 200 })
   async cancel(
-    @Param('id') id: string,
+    @Param() { id }: UUIDParams,
     @User() user: RequestUser,
   ): Promise<BaseResponse> {
     await this.cancelAppointmentUseCase.execute({ id, user });
@@ -183,11 +183,19 @@ async create(@Body() body: CreateAppointmentBody) { ... }
 
 ### `@Param('name')`
 
-Injeta um parâmetro de rota:
+Injeta um parâmetro de rota. Para parâmetros `:id` que representam UUIDs, use o DTO compartilhado `UUIDParams` com destructuring — o `ZodValidationPipe` global valida automaticamente o formato UUID v7:
 
 ```typescript
-async cancel(@Param('id') id: string) { ... }
+async cancel(@Param() { id }: UUIDParams) { ... }
 ```
+
+Para parâmetros que não são UUIDs, use a extração direta com `string`:
+
+```typescript
+async findByToken(@Param('token') token: string) { ... }
+```
+
+Nunca use `@Param('id') id: string` para UUIDs — isso contorna a validação e permite que strings inválidas cheguem ao banco de dados.
 
 ### `@Cookies('cookie_name')`
 

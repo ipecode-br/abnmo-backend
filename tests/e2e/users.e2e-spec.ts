@@ -135,7 +135,7 @@ describe('Users (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const res = await api.get<GetUserResponse>(
-        '/users/00000000-0000-0000-0000-000000000000',
+        '/users/01900000-0000-7000-8000-000000000000',
         undefined,
         { cookies },
       );
@@ -220,7 +220,7 @@ describe('Users (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const res = await api.put<BaseResponseBody, UpdateUserBody>(
-        '/users/00000000-0000-0000-0000-000000000000',
+        '/users/01900000-0000-7000-8000-000000000000',
         updateBody,
         { cookies },
       );
@@ -234,7 +234,7 @@ describe('Users (e2e)', () => {
       const { cookies } = await createMember({ login: true });
 
       const res = await api.put<BaseResponseBody, UpdateUserBody>(
-        '/users/sample-id',
+        '/users/01900000-0000-7000-8000-000000000000',
         updateBody,
         { cookies },
       );
@@ -292,7 +292,7 @@ describe('Users (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const res = await api.patch<BaseResponseBody, UpdateUserFeaturesBody>(
-        '/users/00000000-0000-0000-0000-000000000000/features',
+        '/users/01900000-0000-7000-8000-000000000000/features',
         { features: [] },
         { cookies },
       );
@@ -306,7 +306,7 @@ describe('Users (e2e)', () => {
       const { cookies } = await createMember({ login: true });
 
       const res = await api.patch<BaseResponseBody, UpdateUserFeaturesBody>(
-        `/users/sample-id/features`,
+        `/users/01900000-0000-7000-8000-000000000000/features`,
         { features: [] },
         { cookies },
       );
@@ -346,7 +346,7 @@ describe('Users (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const res = await api.patch<BaseResponseBody>(
-        '/users/00000000-0000-0000-0000-000000000000/deactivate',
+        '/users/01900000-0000-7000-8000-000000000000/deactivate',
         undefined,
         { cookies },
       );
@@ -416,7 +416,7 @@ describe('Users (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const res = await api.patch<BaseResponseBody>(
-        '/users/00000000-0000-0000-0000-000000000000/activate',
+        '/users/01900000-0000-7000-8000-000000000000/activate',
         undefined,
         { cookies },
       );
@@ -608,7 +608,7 @@ describe('Users (e2e)', () => {
       });
 
       const res = await api.delete<BaseResponseBody>(
-        '/users/invites/00000000-0000-0000-0000-000000000000',
+        '/users/invites/01900000-0000-7000-8000-000000000000',
         { cookies },
       );
 
@@ -621,7 +621,7 @@ describe('Users (e2e)', () => {
       const { cookies } = await createMember({ login: true });
 
       const res = await api.delete<BaseResponseBody>(
-        '/users/invites/sample-id',
+        '/users/invites/01900000-0000-7000-8000-000000000000',
         { cookies },
       );
 

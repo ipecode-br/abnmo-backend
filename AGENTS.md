@@ -233,6 +233,21 @@ export class CreateAppointmentBody extends createZodDto(
 ) {}
 ```
 
+### Path params
+
+For route params representing UUIDs (`:id`), use the shared `UUIDParams` DTO with `@Param()` destructuring:
+
+```ts
+import { UUIDParams } from '@/common/dtos';
+
+@Get(':id')
+async getById(@Param() { id }: UUIDParams, @User() user: RequestUser) {
+  // id is a validated UUID v7 string
+}
+```
+
+**Never** use `@Param('id') id: string` for UUIDs — it bypasses validation and allows invalid strings to reach the database.
+
 ### Schema reuse
 
 Prefer `.pick()`, `.extend()`, or `.merge()` from existing schemas before defining raw fields. Only create a new schema from scratch if no existing one covers the domain (e.g., a brand-new entity). This keeps schemas like `userSchema` as a single source of truth.

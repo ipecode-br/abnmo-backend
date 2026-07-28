@@ -9,6 +9,8 @@ import { USER_ROLES } from '../enums/users';
 
 export const uuidSchema = z.uuid({ version: 'v7' });
 
+export const uuidParamSchema = z.object({ id: uuidSchema });
+
 export const nameSchema = z.string().min(3).max(64);
 
 // Maximum email length is 254 characters.

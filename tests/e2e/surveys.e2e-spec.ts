@@ -449,7 +449,7 @@ describe('Surveys (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const res = await api.get(
-        '/surveys/00000000-0000-0000-0000-000000000000',
+        '/surveys/01900000-0000-7000-8000-000000000000',
         undefined,
         {
           cookies,
@@ -547,7 +547,7 @@ describe('Surveys (e2e)', () => {
       const { cookies } = await createMember({ login: true, features: [] });
 
       const res = await api.post(
-        '/surveys/sample-id/send-reminder',
+        '/surveys/01900000-0000-7000-8000-000000000000/send-reminder',
         undefined,
         { cookies },
       );
@@ -563,7 +563,7 @@ describe('Surveys (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const res = await api.post(
-        '/surveys/00000000-0000-0000-0000-000000000000/send-reminder',
+        '/surveys/01900000-0000-7000-8000-000000000000/send-reminder',
         undefined,
         { cookies },
       );

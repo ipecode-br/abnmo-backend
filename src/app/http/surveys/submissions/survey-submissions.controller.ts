@@ -13,7 +13,7 @@ import { ZodResponse } from 'nestjs-zod';
 import { Dashboard } from '@/common/decorators/dashboard.decorator';
 import { RequireFeature } from '@/common/decorators/require-feature.decorator';
 import { User } from '@/common/decorators/user.decorator';
-import { BaseResponse } from '@/common/dtos';
+import { BaseResponse, UUIDParam } from '@/common/dtos';
 import { Log } from '@/common/log/log.decorator';
 import type { RequestUser } from '@/common/types';
 
@@ -70,7 +70,9 @@ export class SurveySubmissionsController {
   @Log('init_survey')
   @ApiOperation({ summary: 'Confirma o upload do documento' })
   @ZodResponse({ type: BaseResponse, status: 200 })
-  async confirmDocumentUpload(@Param('id') id: string): Promise<BaseResponse> {
+  async confirmDocumentUpload(
+    @Param() { id }: UUIDParam,
+  ): Promise<BaseResponse> {
     await this.confirmSurveySubmissionUploadUseCase.execute({ id });
 
     return {
@@ -125,7 +127,7 @@ export class SurveySubmissionsController {
   @ApiOperation({ summary: 'Detalhes de uma submissão de catalogação' })
   @ZodResponse({ type: GetSurveySubmissionResponse, status: 200 })
   async getSurveySubmissionDetails(
-    @Param('id') id: string,
+    @Param() { id }: UUIDParam,
     @User() user: RequestUser,
   ): Promise<GetSurveySubmissionResponse> {
     const data = await this.getSurveySubmissionUseCase.execute({ id, user });
@@ -143,7 +145,7 @@ export class SurveySubmissionsController {
   @ApiOperation({ summary: 'Aprova uma submissão de catalogação' })
   @ZodResponse({ type: BaseResponse, status: 200 })
   async approveSurveySubmission(
-    @Param('id') id: string,
+    @Param() { id }: UUIDParam,
     @User() user: RequestUser,
   ): Promise<BaseResponse> {
     await this.approveSurveySubmissionUseCase.execute({ id, user });
@@ -160,7 +162,7 @@ export class SurveySubmissionsController {
   @ApiOperation({ summary: 'Recusa uma submissão de catalogação' })
   @ZodResponse({ type: BaseResponse, status: 200 })
   async declineSurveySubmission(
-    @Param('id') id: string,
+    @Param() { id }: UUIDParam,
     @User() user: RequestUser,
     @Body() body: DeclineSurveySubmissionBody,
   ): Promise<BaseResponse> {

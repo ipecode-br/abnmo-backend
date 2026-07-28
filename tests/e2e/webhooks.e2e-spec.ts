@@ -310,7 +310,7 @@ describe('Webhooks – Signature (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const res = await api.get(
-        '/webhooks/events/00000000-0000-0000-0000-000000000000',
+        '/webhooks/events/01900000-0000-7000-8000-000000000000',
         undefined,
         { cookies },
       );

@@ -131,7 +131,7 @@ describe('Survey Submissions (e2e)', () => {
 
     it('returns 404 for non-existent ID', async () => {
       const res = await api.post(
-        '/survey-submissions/00000000-0000-0000-0000-000000000000/confirm-upload',
+        '/survey-submissions/01900000-0000-7000-8000-000000000000/confirm-upload',
         undefined,
         { headers },
       );
@@ -374,7 +374,7 @@ describe('Survey Submissions (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const res = await api.get(
-        '/survey-submissions/00000000-0000-0000-0000-000000000000',
+        '/survey-submissions/01900000-0000-7000-8000-000000000000',
         undefined,
         { cookies },
       );
@@ -456,7 +456,7 @@ describe('Survey Submissions (e2e)', () => {
       const { cookies } = await createMember({ login: true, features: [] });
 
       const res = await api.patch(
-        '/survey-submissions/00000000-0000-0000-0000-000000000000/approve',
+        '/survey-submissions/01900000-0000-7000-8000-000000000000/approve',
         undefined,
         { cookies },
       );
@@ -472,7 +472,7 @@ describe('Survey Submissions (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const res = await api.patch(
-        '/survey-submissions/00000000-0000-0000-0000-000000000000/approve',
+        '/survey-submissions/01900000-0000-7000-8000-000000000000/approve',
         undefined,
         { cookies },
       );
@@ -527,7 +527,7 @@ describe('Survey Submissions (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const res = await api.patch(
-        '/survey-submissions/00000000-0000-0000-0000-000000000000/decline',
+        '/survey-submissions/01900000-0000-7000-8000-000000000000/decline',
         {},
         { cookies },
       );
@@ -563,7 +563,7 @@ describe('Survey Submissions (e2e)', () => {
       const { cookies } = await createMember({ login: true, features: [] });
 
       const res = await api.patch(
-        '/survey-submissions/00000000-0000-0000-0000-000000000000/decline',
+        '/survey-submissions/01900000-0000-7000-8000-000000000000/decline',
         { reason: 'Documento invalido' },
         { cookies },
       );
@@ -579,7 +579,7 @@ describe('Survey Submissions (e2e)', () => {
       const { cookies } = await createAdmin({ login: true });
 
       const res = await api.patch(
-        '/survey-submissions/00000000-0000-0000-0000-000000000000/decline',
+        '/survey-submissions/01900000-0000-7000-8000-000000000000/decline',
         { reason: 'Documento inválido' },
         { cookies },
       );

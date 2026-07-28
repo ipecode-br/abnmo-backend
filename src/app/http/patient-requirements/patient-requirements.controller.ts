@@ -12,7 +12,7 @@ import { ZodResponse } from 'nestjs-zod';
 
 import { RequireFeature } from '@/common/decorators/require-feature.decorator';
 import { User } from '@/common/decorators/user.decorator';
-import { BaseResponse } from '@/common/dtos';
+import { BaseResponse, UUIDParam } from '@/common/dtos';
 import { Log } from '@/common/log/log.decorator';
 import type { RequestUser } from '@/common/types';
 
@@ -101,7 +101,7 @@ export class PatientRequirementsController {
   @ApiOperation({ summary: 'Aprova a solicitação' })
   @ZodResponse({ type: BaseResponse, status: 200 })
   async approve(
-    @Param('id') id: string,
+    @Param() { id }: UUIDParam,
     @User() user: RequestUser,
   ): Promise<BaseResponse> {
     await this.approvePatientRequirementUseCase.execute({ id, user });
@@ -118,7 +118,7 @@ export class PatientRequirementsController {
   @ApiOperation({ summary: 'Recusa a solicitação' })
   @ZodResponse({ type: BaseResponse, status: 200 })
   async decline(
-    @Param('id') id: string,
+    @Param() { id }: UUIDParam,
     @User() user: RequestUser,
   ): Promise<BaseResponse> {
     await this.declinePatientRequirementUseCase.execute({ id, user });
