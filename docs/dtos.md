@@ -105,12 +105,31 @@ Resposta padrão para rotas que não retornam dados (criação, atualização, c
 // src/common/dtos.ts
 import { createZodDto } from 'nestjs-zod';
 import { baseResponseSchema } from '@/domain/schemas/base';
+import { uuidParamsSchema } from '@/domain/schemas/shared';
 
 export class BaseResponse extends createZodDto(baseResponseSchema) {}
 // → { success: boolean; message: string }
+
+export class UUIDParams extends createZodDto(uuidParamsSchema) {}
+// → { id: string }  (UUID v7)
 ```
 
-Uso:
+## `UUIDParams`
+
+DTO compartilhado para validar parâmetros de rota `:id`. Usado com `@Param()` destructuring em controllers:
+
+```typescript
+@Get(':id')
+async getById(@Param() { id }: UUIDParams) {
+  // id é uma string UUID v7 validada pelo ZodValidationPipe global
+}
+```
+
+O schema `uuidParamsSchema` usa `uuidSchema` (`z.uuid({ version: 'v7' })`) definido em `src/domain/schemas/shared.ts`. O `ZodValidationPipe` global valida automaticamente qualquer `@Param()` tipado como `UUIDParams`.
+
+Strings inválidas retornam **400** com `"Os dados enviados são inválidos."` antes mesmo de chegar ao controller — sem round-trip ao banco.
+
+### Uso
 
 ```typescript
 @Post()
@@ -120,8 +139,6 @@ async create(@Body() body: CreateAppointmentBody): Promise<BaseResponse> {
 }
 ```
 
----
-
 ## Regras
 
 - Um único arquivo `{feature}.dtos.ts` por feature — nunca criar arquivos separados por DTO.
@@ -129,3 +146,4 @@ async create(@Body() body: CreateAppointmentBody): Promise<BaseResponse> {
 - Nunca importar schemas de outros domínios para criar DTOs — cada feature usa apenas seus schemas.
 - Para respostas tipadas com `data`, crie um schema de response em `responses.ts` e derive o DTO.
 - Nomes seguem `PascalCase` com sufixo funcional: `Body`, `Query` ou `Response`.
+- Para parâmetros de rota `:id`, use `@Param() { id }: UUIDParams` — **nunca** `@Param('id') id: string` para UUIDs.
