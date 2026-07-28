@@ -19,12 +19,12 @@
 
 3. **Implemente e teste localmente**
 
-  O docker deve estar rodando localmente para executar os testes e2e.
+O docker deve estar rodando localmente para executar os testes e2e.
 
-   ```bash
-   npm run dev  # sobe o servidor com hot-reload
-   npm test     # suíte completa (unit + e2e)
-   ```
+```bash
+npm run dev  # sobe o servidor com hot-reload
+npm test     # suíte completa (unit + e2e)
+```
 
 4. **Crie ou atualize testes automatizados**
 

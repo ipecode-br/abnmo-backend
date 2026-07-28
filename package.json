@@ -5,6 +5,9 @@
   "author": "",
   "private": true,
   "license": "UNLICENSED",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "npm run services:up && npm run services:wait:database && npm run db:migrate && nest start --watch",
     "lint:eslint:check": "eslint .",

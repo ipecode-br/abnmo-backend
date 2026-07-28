@@ -6,6 +6,12 @@ API do Sistema Viver Melhor (SVM) para a ABNMO. Plataforma centralizada para aco
 
 Node.js · NestJS · TypeORM · PostgreSQL · Zod · Sentry · Docker
 
+## Pré-requisitos
+
+- **Node.js** ≥ 22
+- **npm** ≥ 9
+- **Docker** (para o banco de dados PostgreSQL local)
+
 ## Instalação
 
 ```bash
