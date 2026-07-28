@@ -1,3 +1,5 @@
+import z from 'zod';
+
 import { surveySchema } from '..';
 
 export const followUpSurveySchema = surveySchema
@@ -47,7 +49,9 @@ export const followUpSurveySchema = surveySchema
           path: ['visualImpairmentAssistance'],
         });
       }
-    } else {
+    }
+
+    if (!data.hasVisualAlteration) {
       if (data.usesVisualCane !== null) {
         ctx.addIssue({
           code: 'custom',
@@ -83,7 +87,9 @@ export const followUpSurveySchema = surveySchema
           path: ['walkingDistance'],
         });
       }
-    } else {
+    }
+
+    if (!data.hasMotorSequelae) {
       if (data.motorImpairmentAssistance !== null) {
         ctx.addIssue({
           code: 'custom',
@@ -102,16 +108,16 @@ export const followUpSurveySchema = surveySchema
       }
     }
 
-    if (data.hasOtherDisease) {
-      if (!data.otherDiseaseDescription) {
-        ctx.addIssue({
-          code: 'custom',
-          message:
-            '"otherDiseaseDescription" is required when "hasOtherDisease" is true',
-          path: ['otherDiseaseDescription'],
-        });
-      }
-    } else if (data.otherDiseaseDescription !== null) {
+    if (data.hasOtherDisease && !data.otherDiseaseDescription) {
+      ctx.addIssue({
+        code: 'custom',
+        message:
+          '"otherDiseaseDescription" is required when "hasOtherDisease" is true',
+        path: ['otherDiseaseDescription'],
+      });
+    }
+
+    if (!data.hasOtherDisease && data.otherDiseaseDescription !== null) {
       ctx.addIssue({
         code: 'custom',
         message:
@@ -120,3 +126,4 @@ export const followUpSurveySchema = surveySchema
       });
     }
   });
+export type FollowUpSurveySchema = z.infer<typeof followUpSurveySchema>;
