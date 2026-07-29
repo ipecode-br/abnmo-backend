@@ -9,7 +9,7 @@ import {
 import type { WebhookEventSchema } from '../schemas/webhooks';
 import { BaseEntity } from './base';
 
-@Entity('webhooks_events')
+@Entity('webhook_events')
 export class WebhookEvent extends BaseEntity implements WebhookEventSchema {
   @Column({ type: 'enum', enum: WEBHOOK_EVENT_TYPES })
   event: WebhookEventType;

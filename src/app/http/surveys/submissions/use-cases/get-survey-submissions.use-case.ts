@@ -104,6 +104,7 @@ export class GetSurveySubmissionsUseCase {
         id: true,
         status: true,
         reason: true,
+        fillingMethod: true,
         createdAt: true,
         patient: { id: true, name: true, email: true, phone: true },
         document: { name: true, url: true },
@@ -122,6 +123,7 @@ export class GetSurveySubmissionsUseCase {
         phone: submission.patient.phone || '',
         status: submission.status,
         reason: submission.reason,
+        fillingMethod: submission.fillingMethod,
         createdAt: submission.createdAt,
         document: submission.document
           ? { name: submission.document.name, url: submission.document.url }

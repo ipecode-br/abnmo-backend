@@ -37,6 +37,7 @@ describe('Survey Submissions (e2e)', () => {
       phone: '11999999999',
       mimeType: 'application/pdf',
       fileSize: 1024,
+      fillingMethod: 'self',
     };
 
     it('creates survey submission', async () => {

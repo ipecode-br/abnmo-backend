@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { MAX_SURVEY_DOCUMENT_FILE_SIZE } from '@/config/storage';
 import {
+  SURVEY_FILLING_METHODS,
   SURVEY_SUBMISSION_ORDER_BY,
   SURVEY_SUBMISSION_STATUSES,
 } from '@/domain/enums/survey-submissions';
@@ -24,6 +25,7 @@ export const createSurveySubmissionSchema = z.object({
   phone: phoneSchema,
   mimeType: z.enum(SURVEY_DOCUMENT_TYPES),
   fileSize: z.number().min(1).max(MAX_SURVEY_DOCUMENT_FILE_SIZE),
+  fillingMethod: z.enum(SURVEY_FILLING_METHODS),
 });
 
 export const declineSurveySubmissionSchema = z.object({

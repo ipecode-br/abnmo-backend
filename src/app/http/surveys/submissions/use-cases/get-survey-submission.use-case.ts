@@ -30,6 +30,7 @@ export class GetSurveySubmissionUseCase {
         id: true,
         status: true,
         reason: true,
+        fillingMethod: true,
         patient: { id: true, name: true, email: true, phone: true },
         document: {
           key: true,
@@ -59,6 +60,7 @@ export class GetSurveySubmissionUseCase {
       phone: submission.patient.phone || '',
       status: submission.status,
       reason: submission.reason,
+      fillingMethod: submission.fillingMethod,
       document: submission.document
         ? {
             key: submission.document.key,
