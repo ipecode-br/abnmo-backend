@@ -5,6 +5,7 @@ import { mock, MockProxy } from 'jest-mock-extended';
 import { DataSource, Repository } from 'typeorm';
 
 import { CryptographyService } from '@/app/cryptography/cryptography.service';
+import { CreateSurveySubmissionBody } from '@/app/http/surveys/submissions/surveys.dtos';
 import { CreateSurveySubmissionUseCase } from '@/app/http/surveys/submissions/use-cases/create-survey-submission.use-case';
 import { GenerateUploadUrlUseCase } from '@/app/storage/use-cases/generate-upload-url.use-case';
 import { LogService } from '@/common/log/log.service';
@@ -27,12 +28,13 @@ describe('CreateSurveySubmissionUseCase', () => {
   let cryptographyService: MockProxy<CryptographyService>;
   let generateUploadUrlUseCase: MockProxy<GenerateUploadUrlUseCase>;
 
-  const input = {
+  const createBody: CreateSurveySubmissionBody = {
     name: 'Alice',
     email: 'alice@example.com',
     phone: '11999999999',
-    mimeType: 'application/pdf' as const,
+    mimeType: 'application/pdf',
     fileSize: 1024,
+    fillingMethod: 'self',
   };
 
   beforeEach(async () => {
@@ -90,7 +92,7 @@ describe('CreateSurveySubmissionUseCase', () => {
   it('creates submission successfully', async () => {
     usersRepo.findOne.mockResolvedValue(null);
 
-    const result = await useCase.execute(input);
+    const result = await useCase.execute(createBody);
 
     expect(usersRepo.findOne).toHaveBeenCalledWith(
       expect.objectContaining({ where: { email: 'alice@example.com' } }),
@@ -107,6 +109,8 @@ describe('CreateSurveySubmissionUseCase', () => {
   it('throws ConflictException for existing user email', async () => {
     usersRepo.findOne.mockResolvedValue({ id: 'existing-user' } as User);
 
-    await expect(useCase.execute(input)).rejects.toThrow(ConflictException);
+    await expect(useCase.execute(createBody)).rejects.toThrow(
+      ConflictException,
+    );
   });
 });

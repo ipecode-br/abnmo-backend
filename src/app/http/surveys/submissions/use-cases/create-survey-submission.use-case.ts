@@ -12,6 +12,7 @@ import { STORAGE_FOLDERS } from '@/config/storage';
 import { Document } from '@/domain/entities/document';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
 import { User } from '@/domain/entities/user';
+import type { SurveyFillingMethod } from '@/domain/enums/survey-submissions';
 import {
   SURVEY_DOCUMENT_TYPES,
   type SurveyDocumentType,
@@ -25,6 +26,7 @@ interface CreateSurveySubmissionUseCaseInput {
   phone: string;
   fileSize: number;
   mimeType: SurveyDocumentType;
+  fillingMethod: SurveyFillingMethod;
 }
 
 interface CreateSurveySubmissionUseCaseOutput {
@@ -57,6 +59,7 @@ export class CreateSurveySubmissionUseCase {
     phone,
     mimeType,
     fileSize,
+    fillingMethod,
   }: CreateSurveySubmissionUseCaseInput): Promise<CreateSurveySubmissionUseCaseOutput> {
     const existingUser = await this.usersRepository.findOne({
       select: { id: true },
@@ -93,6 +96,7 @@ export class CreateSurveySubmissionUseCase {
 
       const submission = submissionsRepository.create({
         patient: { id: user.id },
+        fillingMethod,
       });
       await submissionsRepository.save(submission);
 

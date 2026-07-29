@@ -1,7 +1,9 @@
 import { Column, Entity, Index, JoinColumn, OneToOne } from 'typeorm';
 
 import {
+  SURVEY_FILLING_METHODS,
   SURVEY_SUBMISSION_STATUSES,
+  type SurveyFillingMethod,
   type SurveySubmissionStatus,
 } from '../enums/survey-submissions';
 import type { SurveySubmissionSchema } from '../schemas/surveys/submissions';
@@ -23,6 +25,9 @@ export class SurveySubmission
 
   @Column({ type: 'varchar', length: 500, nullable: true })
   reason: string | null;
+
+  @Column({ type: 'enum', enum: SURVEY_FILLING_METHODS })
+  fillingMethod: SurveyFillingMethod;
 
   @Index()
   @Column({ type: 'varchar', length: 36, nullable: true })

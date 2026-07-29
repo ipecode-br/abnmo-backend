@@ -60,6 +60,7 @@ describe('GetSurveySubmissionsUseCase', () => {
         phone: '11999999999',
         status: 'pending_document',
         reason: null,
+        fillingMethod: submission.fillingMethod,
         createdAt: submission.createdAt,
         document: null,
       },
