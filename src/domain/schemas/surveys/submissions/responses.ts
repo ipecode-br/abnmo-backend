@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { baseResponseSchema } from '../../base';
 import { documentSchema } from '../../documents';
+import { patientSchema } from '../../patients';
 import { emailSchema, nameSchema, phoneSchema } from '../../shared';
 import { surveySubmissionSchema } from '.';
 
@@ -23,9 +24,12 @@ export const surveySubmissionResponseSchema = z.strictObject({
     fillingMethod: true,
     createdAt: true,
   }).shape,
-  name: nameSchema,
-  email: emailSchema,
-  phone: phoneSchema,
+  patient: patientSchema.pick({
+    id: true,
+    name: true,
+    email: true,
+    phone: true,
+  }),
   document: documentSchema.pick({ name: true, url: true }).nullable(),
 });
 export type SurveySubmissionResponse = z.infer<

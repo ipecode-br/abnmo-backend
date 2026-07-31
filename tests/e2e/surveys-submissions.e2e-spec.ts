@@ -245,7 +245,7 @@ describe('Survey Submissions (e2e)', () => {
 
       expect(res.status).toBe(200);
       expect(res.body.data.submissions).toHaveLength(1);
-      expect(res.body.data.submissions[0].name).toBe('Searchable Name');
+      expect(res.body.data.submissions[0].patient.name).toBe('Searchable Name');
       expect(res.body.data.total).toBe(1);
     });
 

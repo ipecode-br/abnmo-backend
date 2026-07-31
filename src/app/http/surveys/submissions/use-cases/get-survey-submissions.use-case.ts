@@ -118,13 +118,16 @@ export class GetSurveySubmissionsUseCase {
     return {
       submissions: result.map((submission) => ({
         id: submission.id,
-        name: submission.patient.name,
-        email: submission.patient.email,
-        phone: submission.patient.phone || '',
         status: submission.status,
         reason: submission.reason,
         fillingMethod: submission.fillingMethod,
         createdAt: submission.createdAt,
+        patient: {
+          id: submission.patient.id,
+          name: submission.patient.name,
+          email: submission.patient.email,
+          phone: submission.patient.phone || '',
+        },
         document: submission.document
           ? { name: submission.document.name, url: submission.document.url }
           : null,
