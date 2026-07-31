@@ -24,6 +24,7 @@ import {
   GetSurveySubmissionResponse,
   GetSurveySubmissionsQuery,
   GetSurveySubmissionsResponse,
+  GetSurveyUrlResponse,
   GetTotalSurveySubmissionsQuery,
   GetTotalSurveySubmissionsResponse,
 } from './surveys.dtos';
@@ -33,6 +34,7 @@ import { CreateSurveySubmissionUseCase } from './use-cases/create-survey-submiss
 import { DeclineSurveySubmissionUseCase } from './use-cases/decline-survey-submission.use-case';
 import { GetSurveySubmissionUseCase } from './use-cases/get-survey-submission.use-case';
 import { GetSurveySubmissionsUseCase } from './use-cases/get-survey-submissions.use-case';
+import { GetSurveyUrlUseCase } from './use-cases/get-survey-url.use-case';
 import { GetTotalSurveySubmissionsUseCase } from './use-cases/get-total-survey-submissions.use-case';
 
 @ApiTags('Catalogação')
@@ -45,6 +47,7 @@ export class SurveySubmissionsController {
     private readonly declineSurveySubmissionUseCase: DeclineSurveySubmissionUseCase,
     private readonly getSurveySubmissionUseCase: GetSurveySubmissionUseCase,
     private readonly getSurveySubmissionsUseCase: GetSurveySubmissionsUseCase,
+    private readonly getSurveyUrlUseCase: GetSurveyUrlUseCase,
     private readonly getTotalSurveySubmissionsUseCase: GetTotalSurveySubmissionsUseCase,
   ) {}
 
@@ -119,6 +122,23 @@ export class SurveySubmissionsController {
       success: true,
       message: 'Total de submissões retornado com sucesso.',
       data: { total },
+    };
+  }
+
+  @Get(':id/survey-url')
+  @RequireFeature('review:survey')
+  @ApiOperation({ summary: 'Retorna a URL de preenchimento da catalogação' })
+  @ZodResponse({ type: GetSurveyUrlResponse, status: 200 })
+  async getSurveyUrl(
+    @Param() { id }: UUIDParam,
+    @User() user: RequestUser,
+  ): Promise<GetSurveyUrlResponse> {
+    const data = await this.getSurveyUrlUseCase.execute({ id, user });
+
+    return {
+      success: true,
+      message: 'URL retornada com sucesso.',
+      data,
     };
   }
 

@@ -18,6 +18,7 @@ import { CreateSurveySubmissionUseCase } from './submissions/use-cases/create-su
 import { DeclineSurveySubmissionUseCase } from './submissions/use-cases/decline-survey-submission.use-case';
 import { GetSurveySubmissionUseCase } from './submissions/use-cases/get-survey-submission.use-case';
 import { GetSurveySubmissionsUseCase } from './submissions/use-cases/get-survey-submissions.use-case';
+import { GetSurveyUrlUseCase } from './submissions/use-cases/get-survey-url.use-case';
 import { GetTotalSurveySubmissionsUseCase } from './submissions/use-cases/get-total-survey-submissions.use-case';
 import { SurveysController } from './surveys.controller';
 import { CompleteSurveyUseCase } from './use-cases/complete-survey.use-case';
@@ -45,6 +46,7 @@ import { SendSurveyReminderUseCase } from './use-cases/send-survey-reminder.use-
     DeclineSurveySubmissionUseCase,
     GetSurveySubmissionUseCase,
     GetSurveySubmissionsUseCase,
+    GetSurveyUrlUseCase,
     GetSurveyUseCase,
     GetSurveysUseCase,
     GetTotalSurveySubmissionsUseCase,

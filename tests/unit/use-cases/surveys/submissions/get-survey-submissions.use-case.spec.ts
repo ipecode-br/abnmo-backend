@@ -55,13 +55,16 @@ describe('GetSurveySubmissionsUseCase', () => {
     expect(result.submissions).toEqual([
       {
         id: 'sub-1',
-        name: 'Alice',
-        email: 'alice@example.com',
-        phone: '11999999999',
         status: 'pending_document',
         reason: null,
         fillingMethod: submission.fillingMethod,
         createdAt: submission.createdAt,
+        patient: {
+          id: 'pat-1',
+          name: 'Alice',
+          email: 'alice@example.com',
+          phone: '11999999999',
+        },
         document: null,
       },
     ]);

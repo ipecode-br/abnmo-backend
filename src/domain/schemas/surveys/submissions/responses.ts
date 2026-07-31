@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import { baseResponseSchema } from '../../base';
 import { documentSchema } from '../../documents';
-import { emailSchema, nameSchema, phoneSchema } from '../../shared';
+import { patientSchema } from '../../patients';
 import { surveySubmissionSchema } from '.';
 
 export const createSurveySubmissionResponseSchema = baseResponseSchema
@@ -23,9 +23,12 @@ export const surveySubmissionResponseSchema = z.strictObject({
     fillingMethod: true,
     createdAt: true,
   }).shape,
-  name: nameSchema,
-  email: emailSchema,
-  phone: phoneSchema,
+  patient: patientSchema.pick({
+    id: true,
+    name: true,
+    email: true,
+    phone: true,
+  }),
   document: documentSchema.pick({ name: true, url: true }).nullable(),
 });
 export type SurveySubmissionResponse = z.infer<
@@ -48,15 +51,17 @@ export const surveySubmissionDetailsResponseSchema = z.strictObject({
     updatedAt: true,
     createdAt: true,
   }).shape,
-  name: nameSchema,
-  email: emailSchema,
-  phone: phoneSchema,
+  patient: patientSchema.pick({
+    id: true,
+    name: true,
+    email: true,
+    phone: true,
+  }),
   document: documentSchema
     .pick({
       key: true,
-      url: true,
       name: true,
-      filename: true,
+      url: true,
       size: true,
       mimeType: true,
     })
@@ -68,6 +73,10 @@ export type SurveySubmissionDetailsResponse = z.infer<
 
 export const getSurveySubmissionResponseSchema = baseResponseSchema.extend({
   data: surveySubmissionDetailsResponseSchema,
+});
+
+export const getSurveyUrlResponseSchema = baseResponseSchema.extend({
+  data: z.strictObject({ url: z.string() }),
 });
 
 export const getTotalSurveySubmissionsResponseSchema = z.strictObject({

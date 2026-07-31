@@ -5,6 +5,7 @@ import type {
   CreateSurveySubmissionResponse,
   GetSurveySubmissionResponse,
   GetSurveySubmissionsResponse,
+  GetSurveyUrlResponse,
   GetTotalSurveySubmissionsResponse,
 } from '@/app/http/surveys/submissions/surveys.dtos';
 import { MailService } from '@/app/mail/mail.service';
@@ -245,7 +246,7 @@ describe('Survey Submissions (e2e)', () => {
 
       expect(res.status).toBe(200);
       expect(res.body.data.submissions).toHaveLength(1);
-      expect(res.body.data.submissions[0].name).toBe('Searchable Name');
+      expect(res.body.data.submissions[0].patient.name).toBe('Searchable Name');
       expect(res.body.data.total).toBe(1);
     });
 
@@ -347,8 +348,8 @@ describe('Survey Submissions (e2e)', () => {
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(res.body.data.id).toBe(submission.id);
-      expect(res.body.data.name).toBe(patient.name);
-      expect(res.body.data.email).toBe(patient.email);
+      expect(res.body.data.patient.name).toBe(patient.name);
+      expect(res.body.data.patient.email).toBe(patient.email);
       expect(res.body.data.status).toBe(submission.status);
     });
 
@@ -376,6 +377,84 @@ describe('Survey Submissions (e2e)', () => {
 
       const res = await api.get(
         '/survey-submissions/01900000-0000-7000-8000-000000000000',
+        undefined,
+        { cookies },
+      );
+
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Submissão de catalogação não encontrada.');
+    });
+  });
+
+  describe('GET /survey-submissions/:id/survey-url', () => {
+    it('returns survey URL for approved submission', async () => {
+      const { cookies } = await createMember({
+        login: true,
+        features: ['review:survey'],
+      });
+
+      const { patient } = await createPatient();
+      const submission = await createSurveySubmission({
+        status: 'approved',
+        surveyToken: '01900000-0000-7000-8000-000000000001',
+        patient,
+      });
+
+      const res = await api.get<GetSurveyUrlResponse>(
+        `/survey-submissions/${submission.id}/survey-url`,
+        undefined,
+        { cookies },
+      );
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.url).toContain(
+        '/catalogacao/voce?token=01900000-0000-7000-8000-000000000001',
+      );
+    });
+
+    it('returns 400 for non-approved submission', async () => {
+      const { cookies } = await createAdmin({ login: true });
+
+      const { patient } = await createPatient();
+      const submission = await createSurveySubmission({
+        status: 'pending_review',
+        patient,
+      });
+
+      const res = await api.get(
+        `/survey-submissions/${submission.id}/survey-url`,
+        undefined,
+        { cookies },
+      );
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('A submissão ainda não foi aprovada.');
+    });
+
+    it('blocks user without "review:survey" feature', async () => {
+      const { cookies } = await createMember({ login: true, features: [] });
+
+      const res = await api.get(
+        '/survey-submissions/01900000-0000-7000-8000-000000000000/survey-url',
+        undefined,
+        { cookies },
+      );
+
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe(
+        'Você não tem permissão para executar esta ação.',
+      );
+    });
+
+    it('returns 404 for non-existent ID', async () => {
+      const { cookies } = await createAdmin({ login: true });
+
+      const res = await api.get(
+        '/survey-submissions/01900000-0000-7000-8000-000000000000/survey-url',
         undefined,
         { cookies },
       );
