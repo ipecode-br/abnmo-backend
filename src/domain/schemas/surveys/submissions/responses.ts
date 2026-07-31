@@ -3,7 +3,6 @@ import { z } from 'zod';
 import { baseResponseSchema } from '../../base';
 import { documentSchema } from '../../documents';
 import { patientSchema } from '../../patients';
-import { emailSchema, nameSchema, phoneSchema } from '../../shared';
 import { surveySubmissionSchema } from '.';
 
 export const createSurveySubmissionResponseSchema = baseResponseSchema
@@ -52,15 +51,17 @@ export const surveySubmissionDetailsResponseSchema = z.strictObject({
     updatedAt: true,
     createdAt: true,
   }).shape,
-  name: nameSchema,
-  email: emailSchema,
-  phone: phoneSchema,
+  patient: patientSchema.pick({
+    id: true,
+    name: true,
+    email: true,
+    phone: true,
+  }),
   document: documentSchema
     .pick({
       key: true,
-      url: true,
       name: true,
-      filename: true,
+      url: true,
       size: true,
       mimeType: true,
     })

@@ -66,15 +66,17 @@ describe('GetSurveySubmissionUseCase', () => {
     );
     expect(result).toMatchObject({
       id: 'sub-1',
-      name: 'Alice',
-      email: 'alice@example.com',
-      phone: '11999999999',
       status: 'pending_review',
+      patient: {
+        id: 'pat-1',
+        name: 'Alice',
+        email: 'alice@example.com',
+        phone: '11999999999',
+      },
       document: {
         key: 'path/file.pdf',
         url: 'https://cdn.example.com/file.pdf',
         name: 'Laudo',
-        filename: 'file.pdf',
         size: 1024,
         mimeType: 'application/pdf',
       },

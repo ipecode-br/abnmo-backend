@@ -36,7 +36,6 @@ export class GetSurveySubmissionUseCase {
           key: true,
           url: true,
           name: true,
-          filename: true,
           size: true,
           mimeType: true,
         },
@@ -55,18 +54,20 @@ export class GetSurveySubmissionUseCase {
 
     return {
       id: submission.id,
-      name: submission.patient.name,
-      email: submission.patient.email,
-      phone: submission.patient.phone || '',
       status: submission.status,
       reason: submission.reason,
       fillingMethod: submission.fillingMethod,
+      patient: {
+        id: submission.patient.id,
+        name: submission.patient.name,
+        email: submission.patient.email,
+        phone: submission.patient.phone || '',
+      },
       document: submission.document
         ? {
             key: submission.document.key,
             url: submission.document.url,
             name: submission.document.name,
-            filename: submission.document.filename,
             size: submission.document.size,
             mimeType: submission.document.mimeType,
           }

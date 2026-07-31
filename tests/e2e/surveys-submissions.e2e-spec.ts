@@ -347,8 +347,8 @@ describe('Survey Submissions (e2e)', () => {
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(res.body.data.id).toBe(submission.id);
-      expect(res.body.data.name).toBe(patient.name);
-      expect(res.body.data.email).toBe(patient.email);
+      expect(res.body.data.patient.name).toBe(patient.name);
+      expect(res.body.data.patient.email).toBe(patient.email);
       expect(res.body.data.status).toBe(submission.status);
     });
 
