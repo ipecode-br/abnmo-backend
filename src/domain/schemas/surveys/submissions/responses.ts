@@ -75,6 +75,10 @@ export const getSurveySubmissionResponseSchema = baseResponseSchema.extend({
   data: surveySubmissionDetailsResponseSchema,
 });
 
+export const getSurveyUrlResponseSchema = baseResponseSchema.extend({
+  data: z.strictObject({ url: z.string() }),
+});
+
 export const getTotalSurveySubmissionsResponseSchema = z.strictObject({
   ...baseResponseSchema.shape,
   data: z.strictObject({ total: z.number() }),

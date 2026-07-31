@@ -10,6 +10,7 @@ import {
   createSurveySubmissionResponseSchema,
   getSurveySubmissionResponseSchema,
   getSurveySubmissionsResponseSchema,
+  getSurveyUrlResponseSchema,
   getTotalSurveySubmissionsResponseSchema,
 } from '@/domain/schemas/surveys/submissions/responses';
 
@@ -36,6 +37,10 @@ export class GetTotalSurveySubmissionsQuery extends createZodDto(
 ) {}
 export class GetTotalSurveySubmissionsResponse extends createZodDto(
   getTotalSurveySubmissionsResponseSchema,
+) {}
+
+export class GetSurveyUrlResponse extends createZodDto(
+  getSurveyUrlResponseSchema,
 ) {}
 
 export class DeclineSurveySubmissionBody extends createZodDto(
