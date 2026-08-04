@@ -64,14 +64,14 @@ export const surveySchema = baseEntitySchema.extend({
   livedElsewhereDescription: z.string().min(3).max(500).nullable(),
   // Family
   numberOfChildren: z.number().min(0),
-  childrenAges: z.array(z.number().min(0)).nullable(),
+  childrenAges: z.array(z.number().min(0)).min(1).nullable(),
   childrenSchoolSupportSituation: z
     .enum(CHILDREN_SCHOOL_SUPPORT_SITUATIONS)
     .nullable(),
   familyIncome: z.enum(FAMILY_INCOMES),
   housingSituation: z.enum(HOUSING_SITUATIONS),
   householdSize: z.number().min(1),
-  houseRooms: z.number().min(0),
+  houseRooms: z.number().min(1),
   houseBathrooms: z.number().min(0),
   homeAccessLevel: z.enum(HOME_ACCESS_LEVELS),
   transportModes: z.array(z.enum(TRANSPORT_MODES)).min(1),

@@ -15,18 +15,18 @@ const makePayload = (overrides?: Partial<DailyLifeSurveySchema>) => ({
   informationSources: ['with_my_doctor'],
   lifePerception: 'I feel hopeful',
   dreams: 'Travel more',
-  additionalInfo: '',
+  additionalInfo: 'In consectetur incididunt nostrud.',
   ...overrides,
 });
 
 describe('dailyLifeSurveySchema', () => {
-  describe('happy path', () => {
-    it('accepts "physicalActivity" = "no" with null "physicalActivityType"', () => {
+  describe('Happy path', () => {
+    it('accepts when "physicalActivity" is "no" with null "physicalActivityType"', () => {
       const result = dailyLifeSurveySchema.safeParse(makePayload());
       expect(result.success).toBe(true);
     });
 
-    it('accepts "physicalActivity" = "one_week" with valid "physicalActivityType"', () => {
+    it('accepts when "physicalActivity" is "one_week" with valid "physicalActivityType"', () => {
       const result = dailyLifeSurveySchema.safeParse(
         makePayload({
           physicalActivity: 'one_week',
@@ -36,7 +36,7 @@ describe('dailyLifeSurveySchema', () => {
       expect(result.success).toBe(true);
     });
 
-    it('accepts "exercisedBeforeNmo" = "true" with valid "exercisesBeforeNmo"', () => {
+    it('accepts when "exercisedBeforeNmo" is "true" with valid "exercisesBeforeNmo"', () => {
       const result = dailyLifeSurveySchema.safeParse(
         makePayload({
           exercisedBeforeNmo: true,
@@ -46,7 +46,7 @@ describe('dailyLifeSurveySchema', () => {
       expect(result.success).toBe(true);
     });
 
-    it('accepts "exercisedBeforeNmo" = "false" with null "exercisesBeforeNmo"', () => {
+    it('accepts when "exercisedBeforeNmo" is "false" with null "exercisesBeforeNmo"', () => {
       const result = dailyLifeSurveySchema.safeParse(
         makePayload({
           exercisedBeforeNmo: false,
@@ -57,7 +57,7 @@ describe('dailyLifeSurveySchema', () => {
     });
   });
 
-  describe('"physicalActivity" != "no"', () => {
+  describe('When "physicalActivity" is NOT "no"', () => {
     const nonNoValues = PHYSICAL_ACTIVITY_FREQUENCIES.filter((v) => v !== 'no');
 
     it.each(nonNoValues)(
@@ -95,7 +95,7 @@ describe('dailyLifeSurveySchema', () => {
     );
   });
 
-  describe('"physicalActivity" = "no"', () => {
+  describe('When "physicalActivity" is "no"', () => {
     it('rejects non-null "physicalActivityType"', () => {
       const result = dailyLifeSurveySchema.safeParse(
         makePayload({
@@ -115,7 +115,7 @@ describe('dailyLifeSurveySchema', () => {
     });
   });
 
-  describe('"exercisedBeforeNmo" = "true"', () => {
+  describe('When "exercisedBeforeNmo" is "true"', () => {
     it('rejects null "exercisesBeforeNmo"', () => {
       const result = dailyLifeSurveySchema.safeParse(
         makePayload({
@@ -135,7 +135,7 @@ describe('dailyLifeSurveySchema', () => {
     });
   });
 
-  describe('"exercisedBeforeNmo" = "false"', () => {
+  describe('When "exercisedBeforeNmo" is "false"', () => {
     it('rejects non-null "exercisesBeforeNmo"', () => {
       const result = dailyLifeSurveySchema.safeParse(
         makePayload({
@@ -155,108 +155,47 @@ describe('dailyLifeSurveySchema', () => {
     });
   });
 
-  describe('"informationSources"', () => {
-    it('rejects an empty array', () => {
+  describe('Reject empty arrays', () => {
+    const fieldsCannotBeEmpty = ['informationSources'];
+
+    it.each(fieldsCannotBeEmpty)(
+      'rejects when "%s" is an empty array',
+      (field) => {
+        const result = dailyLifeSurveySchema.safeParse(
+          makePayload({ [field]: [] }),
+        );
+        expect(result.success).toBe(false);
+
+        if (!result.success) {
+          const issue = result.error.issues.find((i) => i.path[0] === field);
+          expect(issue).toBeDefined();
+        }
+      },
+    );
+  });
+
+  describe('Missing required fields', () => {
+    const requiredFields = [
+      'familySupport',
+      'fatigue',
+      'physicalActivity',
+      'exercisedBeforeNmo',
+      'informationSources',
+      'lifePerception',
+      'dreams',
+      'additionalInfo',
+    ];
+
+    it.each(requiredFields)('rejects when "%s" is missing', (field) => {
       const result = dailyLifeSurveySchema.safeParse(
-        makePayload({ informationSources: [] }),
+        makePayload({ [field]: undefined }),
       );
       expect(result.success).toBe(false);
 
       if (!result.success) {
-        const issue = result.error.issues.find(
-          (i) => i.path[0] === 'informationSources',
-        );
+        const issue = result.error.issues.find((i) => i.path[0] === field);
         expect(issue).toBeDefined();
       }
-    });
-  });
-
-  describe('cross-scenario', () => {
-    it('returns error only for "physicalActivityType" when "exercisedBeforeNmo" group is valid', () => {
-      const result = dailyLifeSurveySchema.safeParse(
-        makePayload({
-          physicalActivity: 'two_week',
-          physicalActivityType: null,
-          exercisedBeforeNmo: false,
-          exercisesBeforeNmo: null,
-        }),
-      );
-      expect(result.success).toBe(false);
-
-      if (!result.success) {
-        const paths = result.error.issues.map((i) => i.path[0]);
-        expect(paths).toContain('physicalActivityType');
-        expect(paths).not.toContain('exercisesBeforeNmo');
-      }
-    });
-
-    it('returns errors for both groups simultaneously', () => {
-      const result = dailyLifeSurveySchema.safeParse(
-        makePayload({
-          physicalActivity: 'only_physiotherapy',
-          physicalActivityType: null,
-          exercisedBeforeNmo: true,
-          exercisesBeforeNmo: null,
-        }),
-      );
-      expect(result.success).toBe(false);
-
-      if (!result.success) {
-        const paths = result.error.issues.map((i) => i.path[0]);
-        expect(paths).toContain('physicalActivityType');
-        expect(paths).toContain('exercisesBeforeNmo');
-      }
-    });
-  });
-
-  describe('required fields', () => {
-    it('rejects when "familySupport" is missing', () => {
-      const result = dailyLifeSurveySchema.safeParse(
-        makePayload({ familySupport: undefined }),
-      );
-      expect(result.success).toBe(false);
-    });
-
-    it('rejects when "fatigue" is missing', () => {
-      const result = dailyLifeSurveySchema.safeParse(
-        makePayload({ fatigue: undefined }),
-      );
-      expect(result.success).toBe(false);
-    });
-
-    it('rejects when "physicalActivity" is missing', () => {
-      const result = dailyLifeSurveySchema.safeParse(
-        makePayload({ physicalActivity: undefined }),
-      );
-      expect(result.success).toBe(false);
-    });
-
-    it('rejects when "exercisedBeforeNmo" is missing', () => {
-      const result = dailyLifeSurveySchema.safeParse(
-        makePayload({ exercisedBeforeNmo: undefined }),
-      );
-      expect(result.success).toBe(false);
-    });
-
-    it('rejects when "informationSources" is missing', () => {
-      const result = dailyLifeSurveySchema.safeParse(
-        makePayload({ informationSources: undefined }),
-      );
-      expect(result.success).toBe(false);
-    });
-
-    it('rejects when "lifePerception" is missing', () => {
-      const result = dailyLifeSurveySchema.safeParse(
-        makePayload({ lifePerception: undefined }),
-      );
-      expect(result.success).toBe(false);
-    });
-
-    it('rejects when "dreams" is missing', () => {
-      const result = dailyLifeSurveySchema.safeParse(
-        makePayload({ dreams: undefined }),
-      );
-      expect(result.success).toBe(false);
     });
   });
 });

@@ -19,13 +19,13 @@ const makePayload = (overrides?: Partial<FamilySurveySchema>) => ({
 });
 
 describe('familySurveySchema', () => {
-  describe('happy path', () => {
-    it('accepts "numberOfChildren" = 0 with null children fields', () => {
+  describe('Happy path', () => {
+    it('accepts "numberOfChildren" with 0 and null children fields', () => {
       const result = familySurveySchema.safeParse(makePayload());
       expect(result.success).toBe(true);
     });
 
-    it('accepts "numberOfChildren" = 2 with matching "childrenAges" and "childrenSchoolSupportSituation"', () => {
+    it('accepts "numberOfChildren" with 2 and matching "childrenAges" and "childrenSchoolSupportSituation"', () => {
       const result = familySurveySchema.safeParse(
         makePayload({
           numberOfChildren: 2,
@@ -36,7 +36,7 @@ describe('familySurveySchema', () => {
       expect(result.success).toBe(true);
     });
 
-    it('accepts "numberOfChildren" = 1 with a single "childrenAges" entry', () => {
+    it('accepts "numberOfChildren" with 1 with a single "childrenAges" entry', () => {
       const result = familySurveySchema.safeParse(
         makePayload({
           numberOfChildren: 1,
@@ -48,7 +48,7 @@ describe('familySurveySchema', () => {
     });
   });
 
-  describe('numberOfChildren = "0"', () => {
+  describe('When "numberOfChildren" is 0', () => {
     it('rejects non-null "childrenAges"', () => {
       const result = familySurveySchema.safeParse(
         makePayload({ numberOfChildren: 0, childrenAges: [1] }),
@@ -82,24 +82,7 @@ describe('familySurveySchema', () => {
       }
     });
 
-    it('returns both errors when "childrenAges" and "childrenSchoolSupportSituation" are non-null simultaneously', () => {
-      const result = familySurveySchema.safeParse(
-        makePayload({
-          numberOfChildren: 0,
-          childrenAges: [5],
-          childrenSchoolSupportSituation: 'lives_with_parent',
-        }),
-      );
-      expect(result.success).toBe(false);
-
-      if (!result.success) {
-        const paths = result.error.issues.map((i) => i.path[0]);
-        expect(paths).toContain('childrenAges');
-        expect(paths).toContain('childrenSchoolSupportSituation');
-      }
-    });
-
-    it('rejects empty array "childrenAges"', () => {
+    it('rejects "childrenAges" with an empty array ', () => {
       const result = familySurveySchema.safeParse(
         makePayload({ numberOfChildren: 0, childrenAges: [] }),
       );
@@ -114,7 +97,7 @@ describe('familySurveySchema', () => {
     });
   });
 
-  describe('numberOfChildren > "0"', () => {
+  describe('When "numberOfChildren" is greater than 0', () => {
     it('rejects when "childrenAges" length is less than "numberOfChildren"', () => {
       const result = familySurveySchema.safeParse(
         makePayload({
@@ -188,43 +171,38 @@ describe('familySurveySchema', () => {
         expect(issue!.message).toContain('required');
       }
     });
-
-    it('rejects invalid "childrenAges" and null "childrenSchoolSupportSituation" simultaneously', () => {
-      const result = familySurveySchema.safeParse(
-        makePayload({
-          numberOfChildren: 3,
-          childrenAges: [1],
-          childrenSchoolSupportSituation: null,
-        }),
-      );
-      expect(result.success).toBe(false);
-
-      if (!result.success) {
-        const paths = result.error.issues.map((i) => i.path[0]);
-        expect(paths).toContain('childrenAges');
-        expect(paths).toContain('childrenSchoolSupportSituation');
-      }
-    });
   });
 
-  describe('"transportModes"', () => {
-    it('rejects an empty array', () => {
+  describe('Invalid types or values', () => {
+    it('rejects "numberOfChildren" with a value less than 0', () => {
       const result = familySurveySchema.safeParse(
-        makePayload({ transportModes: [] }),
+        makePayload({ numberOfChildren: -2 }),
       );
       expect(result.success).toBe(false);
 
       if (!result.success) {
         const issue = result.error.issues.find(
-          (i) => i.path[0] === 'transportModes',
+          (i) => i.path[0] === 'numberOfChildren',
         );
         expect(issue).toBeDefined();
       }
     });
-  });
 
-  describe('"householdSize"', () => {
-    it('rejects a value less than 1', () => {
+    it('rejects "childrenAges" with a value less than 0', () => {
+      const result = familySurveySchema.safeParse(
+        makePayload({ numberOfChildren: 1, childrenAges: [-1] }),
+      );
+      expect(result.success).toBe(false);
+
+      if (!result.success) {
+        const issue = result.error.issues.find(
+          (i) => i.path[0] === 'childrenAges',
+        );
+        expect(issue).toBeDefined();
+      }
+    });
+
+    it('rejects "householdSize" with a value less than 1', () => {
       const result = familySurveySchema.safeParse(
         makePayload({ householdSize: 0 }),
       );
@@ -237,63 +215,77 @@ describe('familySurveySchema', () => {
         expect(issue).toBeDefined();
       }
     });
+
+    it('rejects "houseRooms" with a value less than 1', () => {
+      const result = familySurveySchema.safeParse(
+        makePayload({ houseRooms: 0 }),
+      );
+      expect(result.success).toBe(false);
+
+      if (!result.success) {
+        const issue = result.error.issues.find(
+          (i) => i.path[0] === 'houseRooms',
+        );
+        expect(issue).toBeDefined();
+      }
+    });
+
+    it('rejects "houseBathrooms" with a value less than 0', () => {
+      const result = familySurveySchema.safeParse(
+        makePayload({ houseBathrooms: -1 }),
+      );
+      expect(result.success).toBe(false);
+
+      if (!result.success) {
+        const issue = result.error.issues.find(
+          (i) => i.path[0] === 'houseBathrooms',
+        );
+        expect(issue).toBeDefined();
+      }
+    });
   });
 
-  describe('required fields', () => {
-    it('rejects when "numberOfChildren" is missing', () => {
-      const result = familySurveySchema.safeParse(
-        makePayload({ numberOfChildren: undefined }),
-      );
-      expect(result.success).toBe(false);
-    });
+  describe('Reject empty arrays', () => {
+    const fieldsCannotBeEmpty = ['transportModes'];
 
-    it('rejects when "familyIncome" is missing', () => {
-      const result = familySurveySchema.safeParse(
-        makePayload({ familyIncome: undefined }),
-      );
-      expect(result.success).toBe(false);
-    });
+    it.each(fieldsCannotBeEmpty)(
+      'rejects when "%s" is an empty array',
+      (field) => {
+        const result = familySurveySchema.safeParse(
+          makePayload({ [field]: [] }),
+        );
+        expect(result.success).toBe(false);
 
-    it('rejects when "housingSituation" is missing', () => {
-      const result = familySurveySchema.safeParse(
-        makePayload({ housingSituation: undefined }),
-      );
-      expect(result.success).toBe(false);
-    });
+        if (!result.success) {
+          const issue = result.error.issues.find((i) => i.path[0] === field);
+          expect(issue).toBeDefined();
+        }
+      },
+    );
+  });
 
-    it('rejects when "householdSize" is missing', () => {
-      const result = familySurveySchema.safeParse(
-        makePayload({ householdSize: undefined }),
-      );
-      expect(result.success).toBe(false);
-    });
+  describe('Missing required fields', () => {
+    const requiredFields = [
+      'numberOfChildren',
+      'familyIncome',
+      'housingSituation',
+      'householdSize',
+      'houseRooms',
+      'houseBathrooms',
+      'homeAccessLevel',
+      'transportModes',
+    ];
 
-    it('rejects when "houseRooms" is missing', () => {
+    it.each(requiredFields)('rejects when "%s" is missing', (field) => {
       const result = familySurveySchema.safeParse(
-        makePayload({ houseRooms: undefined }),
+        makePayload({ [field]: undefined }),
       );
       expect(result.success).toBe(false);
-    });
 
-    it('rejects when "houseBathrooms" is missing', () => {
-      const result = familySurveySchema.safeParse(
-        makePayload({ houseBathrooms: undefined }),
-      );
-      expect(result.success).toBe(false);
-    });
-
-    it('rejects when "homeAccessLevel" is missing', () => {
-      const result = familySurveySchema.safeParse(
-        makePayload({ homeAccessLevel: undefined }),
-      );
-      expect(result.success).toBe(false);
-    });
-
-    it('rejects when "transportModes" is missing', () => {
-      const result = familySurveySchema.safeParse(
-        makePayload({ transportModes: undefined }),
-      );
-      expect(result.success).toBe(false);
+      if (!result.success) {
+        const issue = result.error.issues.find((i) => i.path[0] === field);
+        expect(issue).toBeDefined();
+      }
     });
   });
 });

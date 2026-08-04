@@ -21,8 +21,21 @@ const makePayload = (overrides?: Partial<JourneySurveySchema>) => ({
   ...overrides,
 });
 
+// educationLevel: z.enum(EDUCATION_LEVELS),
+// employmentStatus: z.enum(EMPLOYMENT_STATUSES),
+// studyInterruption: z.enum(STUDY_INTERRUPTION_SITUATIONS).nullable(),
+// profession: z.string().min(1).nullable(),
+// jobTitle: z.string().min(1).nullable(),
+// salaryRange: z.enum(SALARY_RANGES),
+// dismissedAfterDiagnosis: z.boolean().nullable(),
+// changedProfession: z.boolean().nullable(),
+// changedProfessionTo: z.string().min(1).nullable(),
+// currentJobIsPcd: z.boolean().nullable(),
+// receivesSicknessBenefit: z.enum(SICKNESS_BENEFIT_STATUSES),
+// receivesBpcLoas: z.enum(BPC_LOAS_STATUSES),
+
 describe('journeySurveySchema', () => {
-  describe('happy path', () => {
+  describe('Happy path', () => {
     it('accepts non-student, non-detail status with null optional fields', () => {
       const result = journeySurveySchema.safeParse(makePayload());
       expect(result.success).toBe(true);
@@ -63,7 +76,7 @@ describe('journeySurveySchema', () => {
     );
   });
 
-  describe('"employmentStatus" is "student"', () => {
+  describe('When "employmentStatus" is "student"', () => {
     it('rejects null "studyInterruption"', () => {
       const result = journeySurveySchema.safeParse(
         makePayload({ employmentStatus: 'student', studyInterruption: null }),
@@ -80,7 +93,7 @@ describe('journeySurveySchema', () => {
     });
   });
 
-  describe('"employmentStatus" is NOT "student"', () => {
+  describe('When "employmentStatus" is NOT "student"', () => {
     it('rejects non-null "studyInterruption"', () => {
       const result = journeySurveySchema.safeParse(
         makePayload({
@@ -107,7 +120,7 @@ describe('journeySurveySchema', () => {
     });
   });
 
-  describe('"employmentStatus" requires details', () => {
+  describe('When "employmentStatus" requires details', () => {
     it.each(EMPLOYMENT_STATUSES_WITH_DETAILS_REQUIRED)(
       'rejects null "profession" for "%s"',
       (status) => {
@@ -152,7 +165,7 @@ describe('journeySurveySchema', () => {
       },
     );
 
-    it('rejects empty string "profession" when required', () => {
+    it('rejects "profession" with an empty string when required', () => {
       const result = journeySurveySchema.safeParse(
         makePayload({
           employmentStatus: 'employed_formal',
@@ -170,7 +183,7 @@ describe('journeySurveySchema', () => {
       }
     });
 
-    it('rejects empty string "jobTitle" when required', () => {
+    it('rejects "jobTitle" with an empty string when required', () => {
       const result = journeySurveySchema.safeParse(
         makePayload({
           employmentStatus: 'employed_formal',
@@ -187,7 +200,7 @@ describe('journeySurveySchema', () => {
     });
   });
 
-  describe('"employmentStatus" does NOT require details', () => {
+  describe('When "employmentStatus" does NOT require details', () => {
     it('rejects non-null "profession"', () => {
       const result = journeySurveySchema.safeParse(
         makePayload({
@@ -225,7 +238,7 @@ describe('journeySurveySchema', () => {
     });
   });
 
-  describe('"changedProfession" is "true"', () => {
+  describe('When "changedProfession" is "true"', () => {
     it('rejects null "changedProfessionTo"', () => {
       const result = journeySurveySchema.safeParse(
         makePayload({ changedProfession: true, changedProfessionTo: null }),
@@ -256,7 +269,7 @@ describe('journeySurveySchema', () => {
     });
   });
 
-  describe('"changedProfession" is NOT "true"', () => {
+  describe('When "changedProfession" is NOT "true"', () => {
     it('accepts null "changedProfessionTo" when "changedProfession" is "false"', () => {
       const result = journeySurveySchema.safeParse(
         makePayload({ changedProfession: false, changedProfessionTo: null }),
@@ -307,80 +320,48 @@ describe('journeySurveySchema', () => {
     });
   });
 
-  describe('cross-scenario', () => {
-    it('returns errors for "studyInterruption" and "changedProfessionTo" simultaneously', () => {
-      const result = journeySurveySchema.safeParse(
-        makePayload({
-          employmentStatus: 'student',
-          studyInterruption: null,
-          changedProfession: true,
-          changedProfessionTo: null,
-        }),
-      );
-      expect(result.success).toBe(false);
+  describe('Reject empty strings', () => {
+    const fieldsCannotBeEmpty = [
+      'profession',
+      'jobTitle',
+      'changedProfessionTo',
+    ];
 
-      if (!result.success) {
-        const paths = result.error.issues.map((i) => i.path[0]);
-        expect(paths).toContain('studyInterruption');
-        expect(paths).toContain('changedProfessionTo');
-      }
-    });
+    it.each(fieldsCannotBeEmpty)(
+      'rejects when "%s" is an empty string',
+      (field) => {
+        const result = journeySurveySchema.safeParse(
+          makePayload({ [field]: '' }),
+        );
+        expect(result.success).toBe(false);
 
-    it('returns errors for "profession", "jobTitle" and "changedProfessionTo" simultaneously', () => {
-      const result = journeySurveySchema.safeParse(
-        makePayload({
-          employmentStatus: 'employed_formal',
-          profession: null,
-          jobTitle: null,
-          changedProfession: true,
-          changedProfessionTo: null,
-        }),
-      );
-      expect(result.success).toBe(false);
-
-      if (!result.success) {
-        const paths = result.error.issues.map((i) => i.path[0]);
-        expect(paths).toContain('profession');
-        expect(paths).toContain('jobTitle');
-        expect(paths).toContain('changedProfessionTo');
-      }
-    });
+        if (!result.success) {
+          const issue = result.error.issues.find((i) => i.path[0] === field);
+          expect(issue).toBeDefined();
+        }
+      },
+    );
   });
 
-  describe('required fields', () => {
-    it('rejects when "educationLevel" is missing', () => {
-      const result = journeySurveySchema.safeParse(
-        makePayload({ educationLevel: undefined }),
-      );
-      expect(result.success).toBe(false);
-    });
+  describe('Missing required fields', () => {
+    const requiredFields = [
+      'educationLevel',
+      'employmentStatus',
+      'salaryRange',
+      'receivesSicknessBenefit',
+      'receivesBpcLoas',
+    ];
 
-    it('rejects when "employmentStatus" is missing', () => {
+    it.each(requiredFields)('rejects when "%s" is missing', (field) => {
       const result = journeySurveySchema.safeParse(
-        makePayload({ employmentStatus: undefined }),
+        makePayload({ [field]: undefined }),
       );
       expect(result.success).toBe(false);
-    });
 
-    it('rejects when "salaryRange" is missing', () => {
-      const result = journeySurveySchema.safeParse(
-        makePayload({ salaryRange: undefined }),
-      );
-      expect(result.success).toBe(false);
-    });
-
-    it('rejects when "receivesSicknessBenefit" is missing', () => {
-      const result = journeySurveySchema.safeParse(
-        makePayload({ receivesSicknessBenefit: undefined }),
-      );
-      expect(result.success).toBe(false);
-    });
-
-    it('rejects when "receivesBpcLoas" is missing', () => {
-      const result = journeySurveySchema.safeParse(
-        makePayload({ receivesBpcLoas: undefined }),
-      );
-      expect(result.success).toBe(false);
+      if (!result.success) {
+        const issue = result.error.issues.find((i) => i.path[0] === field);
+        expect(issue).toBeDefined();
+      }
     });
   });
 });

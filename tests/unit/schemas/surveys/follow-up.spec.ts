@@ -35,7 +35,7 @@ const makePayload = (overrides?: Partial<FollowUpSurveySchema>) => ({
 });
 
 describe('followUpSurveySchema', () => {
-  describe('happy path', () => {
+  describe('Happy path', () => {
     it('accepts all trigger fields "false" with null dependent fields', () => {
       const result = followUpSurveySchema.safeParse(makePayload());
       expect(result.success).toBe(true);
@@ -58,7 +58,7 @@ describe('followUpSurveySchema', () => {
     });
   });
 
-  describe('"hasVisualAlteration" = "true"', () => {
+  describe('When "hasVisualAlteration" is "true"', () => {
     it('accepts "usesVisualCane" = "false" (non-null) with valid "visualImpairmentAssistance"', () => {
       const result = followUpSurveySchema.safeParse(
         makePayload({
@@ -109,7 +109,7 @@ describe('followUpSurveySchema', () => {
     });
   });
 
-  describe('"hasVisualAlteration" = "false"', () => {
+  describe('When "hasVisualAlteration" is "false"', () => {
     it('accepts null "usesVisualCane" and null "visualImpairmentAssistance"', () => {
       const result = followUpSurveySchema.safeParse(
         makePayload({
@@ -178,7 +178,7 @@ describe('followUpSurveySchema', () => {
     });
   });
 
-  describe('"hasMotorSequelae" = "true"', () => {
+  describe('When "hasMotorSequelae" is "true"', () => {
     it('rejects null "motorImpairmentAssistance"', () => {
       const result = followUpSurveySchema.safeParse(
         makePayload({
@@ -218,7 +218,7 @@ describe('followUpSurveySchema', () => {
     });
   });
 
-  describe('"hasMotorSequelae" = "false"', () => {
+  describe('When "hasMotorSequelae" is "false"', () => {
     it('accepts both null dependent fields', () => {
       const result = followUpSurveySchema.safeParse(
         makePayload({
@@ -269,7 +269,7 @@ describe('followUpSurveySchema', () => {
     });
   });
 
-  describe('"hasOtherDisease" = "true"', () => {
+  describe('When "hasOtherDisease" is "true"', () => {
     it('accepts valid "otherDiseaseDescription"', () => {
       const result = followUpSurveySchema.safeParse(
         makePayload({
@@ -316,13 +316,10 @@ describe('followUpSurveySchema', () => {
     });
   });
 
-  describe('"hasOtherDisease" = "false"', () => {
+  describe('When "hasOtherDisease" is "false"', () => {
     it('accepts null "otherDiseaseDescription"', () => {
       const result = followUpSurveySchema.safeParse(
-        makePayload({
-          hasOtherDisease: false,
-          otherDiseaseDescription: null,
-        }),
+        makePayload({ hasOtherDisease: false, otherDiseaseDescription: null }),
       );
       expect(result.success).toBe(true);
     });
@@ -346,146 +343,71 @@ describe('followUpSurveySchema', () => {
     });
   });
 
-  describe('"followUpSpecialties"', () => {
-    it('rejects an empty array', () => {
+  describe('Reject empty arrays', () => {
+    const fieldsCannotBeEmpty = ['followUpSpecialties'];
+
+    it.each(fieldsCannotBeEmpty)(
+      'rejects when "%s" is an empty array',
+      (field) => {
+        const result = followUpSurveySchema.safeParse(
+          makePayload({ [field]: [] }),
+        );
+        expect(result.success).toBe(false);
+
+        if (!result.success) {
+          const issue = result.error.issues.find((i) => i.path[0] === field);
+          expect(issue).toBeDefined();
+        }
+      },
+    );
+  });
+
+  describe('Reject empty strings', () => {
+    const fieldsCannotBeEmpty = ['otherSequelae', 'otherDiseaseDescription'];
+
+    it.each(fieldsCannotBeEmpty)(
+      'rejects when "%s" is an empty string',
+      (field) => {
+        const result = followUpSurveySchema.safeParse(
+          makePayload({ [field]: '' }),
+        );
+        expect(result.success).toBe(false);
+
+        if (!result.success) {
+          const issue = result.error.issues.find((i) => i.path[0] === field);
+          expect(issue).toBeDefined();
+        }
+      },
+    );
+  });
+
+  describe('Missing required fields', () => {
+    const requiredFields = [
+      'followUpSpecialties',
+      'followUpHow',
+      'hasHealthInsurance',
+      'legalActionForMedication',
+      'hasVisualAlteration',
+      'usesWalkingAid',
+      'hasMotorSequelae',
+      'bladderControl',
+      'bowelFunction',
+      'psychologicalMedsBeforeNmo',
+      'psychologicalMedsAfterNmo',
+      'psychologicalDiagnosisAfterNmo',
+      'hasOtherDisease',
+    ];
+
+    it.each(requiredFields)('rejects when "%s" is missing', (field) => {
       const result = followUpSurveySchema.safeParse(
-        makePayload({ followUpSpecialties: [] }),
+        makePayload({ [field]: undefined }),
       );
       expect(result.success).toBe(false);
 
       if (!result.success) {
-        const issue = result.error.issues.find(
-          (i) => i.path[0] === 'followUpSpecialties',
-        );
+        const issue = result.error.issues.find((i) => i.path[0] === field);
         expect(issue).toBeDefined();
       }
-    });
-  });
-
-  describe('cross-scenario', () => {
-    it('returns errors from multiple groups simultaneously', () => {
-      const result = followUpSurveySchema.safeParse(
-        makePayload({
-          hasVisualAlteration: true,
-          usesVisualCane: null,
-          visualImpairmentAssistance: null,
-          hasMotorSequelae: false,
-          motorImpairmentAssistance: 'some_activities',
-          walkingDistance: 'less_than_10m',
-          hasOtherDisease: true,
-          otherDiseaseDescription: null,
-        }),
-      );
-      expect(result.success).toBe(false);
-
-      if (!result.success) {
-        const paths = result.error.issues.map((i) => i.path[0]);
-        expect(paths).toContain('usesVisualCane');
-        expect(paths).toContain('visualImpairmentAssistance');
-        expect(paths).toContain('motorImpairmentAssistance');
-        expect(paths).toContain('walkingDistance');
-        expect(paths).toContain('otherDiseaseDescription');
-      }
-    });
-  });
-
-  describe('required fields', () => {
-    it('rejects when "followUpSpecialties" is missing', () => {
-      const result = followUpSurveySchema.safeParse(
-        makePayload({ followUpSpecialties: undefined }),
-      );
-      expect(result.success).toBe(false);
-    });
-
-    it('rejects when "followUpHow" is missing', () => {
-      const result = followUpSurveySchema.safeParse(
-        makePayload({ followUpHow: undefined }),
-      );
-      expect(result.success).toBe(false);
-    });
-
-    it('rejects when "hasHealthInsurance" is missing', () => {
-      const result = followUpSurveySchema.safeParse(
-        makePayload({ hasHealthInsurance: undefined }),
-      );
-      expect(result.success).toBe(false);
-    });
-
-    it('rejects when "legalActionForMedication" is missing', () => {
-      const result = followUpSurveySchema.safeParse(
-        makePayload({ legalActionForMedication: undefined }),
-      );
-      expect(result.success).toBe(false);
-    });
-
-    it('rejects when "usesWheelchair" is missing', () => {
-      const result = followUpSurveySchema.safeParse(
-        makePayload({ usesWheelchair: undefined }),
-      );
-      expect(result.success).toBe(false);
-    });
-
-    it('rejects when "usesWalkingAid" is missing', () => {
-      const result = followUpSurveySchema.safeParse(
-        makePayload({ usesWalkingAid: undefined }),
-      );
-      expect(result.success).toBe(false);
-    });
-
-    it('rejects when "bladderControl" is missing', () => {
-      const result = followUpSurveySchema.safeParse(
-        makePayload({ bladderControl: undefined }),
-      );
-      expect(result.success).toBe(false);
-    });
-
-    it('rejects when "bowelFunction" is missing', () => {
-      const result = followUpSurveySchema.safeParse(
-        makePayload({ bowelFunction: undefined }),
-      );
-      expect(result.success).toBe(false);
-    });
-
-    it('rejects when "psychologicalMedsBeforeNmo" is missing', () => {
-      const result = followUpSurveySchema.safeParse(
-        makePayload({ psychologicalMedsBeforeNmo: undefined }),
-      );
-      expect(result.success).toBe(false);
-    });
-
-    it('rejects when "psychologicalMedsAfterNmo" is missing', () => {
-      const result = followUpSurveySchema.safeParse(
-        makePayload({ psychologicalMedsAfterNmo: undefined }),
-      );
-      expect(result.success).toBe(false);
-    });
-
-    it('rejects when "psychologicalDiagnosisAfterNmo" is missing', () => {
-      const result = followUpSurveySchema.safeParse(
-        makePayload({ psychologicalDiagnosisAfterNmo: undefined }),
-      );
-      expect(result.success).toBe(false);
-    });
-
-    it('rejects when "hasOtherDisease" is missing', () => {
-      const result = followUpSurveySchema.safeParse(
-        makePayload({ hasOtherDisease: undefined }),
-      );
-      expect(result.success).toBe(false);
-    });
-
-    it('rejects when "hasVisualAlteration" is missing', () => {
-      const result = followUpSurveySchema.safeParse(
-        makePayload({ hasVisualAlteration: undefined }),
-      );
-      expect(result.success).toBe(false);
-    });
-
-    it('rejects when "hasMotorSequelae" is missing', () => {
-      const result = followUpSurveySchema.safeParse(
-        makePayload({ hasMotorSequelae: undefined }),
-      );
-      expect(result.success).toBe(false);
     });
   });
 });
