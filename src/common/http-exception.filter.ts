@@ -6,7 +6,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
-import { SentryExceptionCaptured } from '@sentry/nestjs';
+import * as Sentry from '@sentry/nestjs';
 import { Response } from 'express';
 import { ZodSerializationException, ZodValidationException } from 'nestjs-zod';
 import { ZodError } from 'zod';
@@ -43,26 +43,11 @@ export class HttpExceptionFilter extends BaseExceptionFilter {
     super();
   }
 
-  @SentryExceptionCaptured()
   catch(exception: unknown, host: ArgumentsHost) {
     const response = host.switchToHttp().getResponse<Response>();
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = 'Um erro inesperado ocorreu.';
-
-    if (exception instanceof InternalServerErrorException) {
-      const exceptionData = exception.getResponse() as HttpExceptionResponse;
-      const logMessage = exceptionData.message || exceptionData.error;
-
-      this.logger.error('InternalServerErrorException', {
-        status: exception.getStatus(),
-        message: logMessage,
-        cause: exception.cause,
-        stack: exception.stack,
-      });
-
-      return response.status(status).json({ success: false, message });
-    }
 
     if (exception instanceof ZodSerializationException) {
       status = exception.getStatus();
@@ -75,6 +60,14 @@ export class HttpExceptionFilter extends BaseExceptionFilter {
           error: issue.message,
         }));
       }
+
+      Sentry.captureException(exception, {
+        captureContext: {
+          level: 'error',
+          tags: { http_status: String(status) },
+          extra: { message, fields, cause: exception.cause },
+        },
+      });
 
       this.logger.error('ZodSerializationException', {
         status,
@@ -109,6 +102,28 @@ export class HttpExceptionFilter extends BaseExceptionFilter {
       return response.status(status).json({ success: false, message, fields });
     }
 
+    if (exception instanceof InternalServerErrorException) {
+      status = exception.getStatus();
+      const exceptionData = exception.getResponse() as HttpExceptionResponse;
+      const logMessage = exceptionData.message || exceptionData.error;
+
+      Sentry.captureException(exception, {
+        captureContext: {
+          level: 'error',
+          tags: { http_status: String(status) },
+          extra: { message: logMessage, cause: exception.cause },
+        },
+      });
+
+      this.logger.error('InternalServerErrorException', {
+        status,
+        message: logMessage,
+        cause: exception.cause,
+        stack: exception.stack,
+      });
+      return response.status(status).json({ success: false, message });
+    }
+
     if (exception instanceof HttpException) {
       status = exception.getStatus();
       const responseData = exception.getResponse() as HttpExceptionResponse;
@@ -130,6 +145,16 @@ export class HttpExceptionFilter extends BaseExceptionFilter {
         status = HttpStatus.FORBIDDEN;
         message = 'Você não tem permissão para executar esta ação.';
         return response.status(status).json({ success: false, message });
+      }
+
+      if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
+        Sentry.captureException(exception, {
+          captureContext: {
+            level: 'error',
+            tags: { http_status: String(status) },
+            extra: { message, cause: exception.cause },
+          },
+        });
       }
 
       this.logger.error('HttpException', {
@@ -169,6 +194,17 @@ export class HttpExceptionFilter extends BaseExceptionFilter {
         errorDetails = { error: 'Unserializable error object' };
       }
     }
+
+    Sentry.captureException(
+      exception instanceof Error ? exception : new Error(String(exception)),
+      {
+        captureContext: {
+          level: 'error',
+          tags: { http_status: String(status) },
+          extra: { message: errorMessage, ...errorDetails },
+        },
+      },
+    );
 
     this.logger.error('UnexpectedException', {
       message: errorMessage,
