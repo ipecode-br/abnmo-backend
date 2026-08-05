@@ -1,5 +1,9 @@
 import { SUPPORT_EMAIL, SUPPORT_WHATSAPP } from '../config';
-import { createEmailTemplate, heading, p } from '../email-template-builder';
+import {
+  createEmailTemplate,
+  heading,
+  p,
+} from '../utils/email-template-builder';
 
 const NON_NUMBER_REGEX = /\D/g;
 

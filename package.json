@@ -10,6 +10,7 @@
   },
   "scripts": {
     "dev": "npm run services:up && npm run services:wait:database && npm run db:migrate && nest start --watch",
+    "dev:email-worker": "ts-node -r tsconfig-paths/register src/workers/email/utils/local-runner.ts",
     "lint:eslint:check": "eslint .",
     "lint:prettier:check": "prettier --check .",
     "lint:prettier:fix": "prettier --write . --log-level=warn",

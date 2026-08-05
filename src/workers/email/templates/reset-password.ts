@@ -1,4 +1,8 @@
-import { createEmailTemplate, heading, p } from '../email-template-builder';
+import {
+  createEmailTemplate,
+  heading,
+  p,
+} from '../utils/email-template-builder';
 
 export function buildResetPasswordEmail({ name }: { name: string }): {
   subject: string;

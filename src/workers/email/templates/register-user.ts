@@ -3,7 +3,7 @@ import {
   createEmailTemplate,
   heading,
   p,
-} from '../email-template-builder';
+} from '../utils/email-template-builder';
 
 export function buildRegisterUserEmail({
   registerUserUrl,

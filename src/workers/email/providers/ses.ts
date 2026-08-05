@@ -1,6 +1,7 @@
 import { SendEmailCommand, SESClient } from '@aws-sdk/client-ses';
 
-import { FROM_EMAIL } from './config';
+import { FROM_EMAIL } from '../config';
+import { SendEmailPayload } from '../types';
 
 const ses = new SESClient({});
 
@@ -8,11 +9,7 @@ export async function sendViaSes({
   to,
   subject,
   html,
-}: {
-  to: string;
-  subject: string;
-  html: string;
-}): Promise<void> {
+}: SendEmailPayload): Promise<void> {
   await ses.send(
     new SendEmailCommand({
       Source: FROM_EMAIL,

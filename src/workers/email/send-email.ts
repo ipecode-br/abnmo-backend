@@ -1,7 +1,7 @@
 import { SendEmailJob } from '@/shared/queue/email.dto';
 
-import { sendViaResend } from './send-via-resend';
-import { sendViaSes } from './send-via-ses';
+import { sendViaResend } from './providers/resend';
+import { sendViaSes } from './providers/ses';
 import { buildCompleteSurveyEmail } from './templates/complete-survey';
 import { buildDeclineSurveyEmail } from './templates/decline-survey';
 import { buildRecoverPasswordEmail } from './templates/recover-password';

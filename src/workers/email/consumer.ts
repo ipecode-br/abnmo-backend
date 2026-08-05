@@ -3,7 +3,7 @@ import type { SQSBatchResponse, SQSHandler } from 'aws-lambda';
 import { parseEmailMessage } from '@/shared/queue/email.dto';
 import { MessageEnvelope } from '@/shared/queue/envelope';
 
-import { sendEmail } from './email-worker.service';
+import { sendEmail } from './send-email';
 
 export const handler: SQSHandler = async (event): Promise<SQSBatchResponse> => {
   const batchItemFailures: { itemIdentifier: string }[] = [];

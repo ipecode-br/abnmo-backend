@@ -1,3 +1,5 @@
+import 'dotenv/config';
+
 import {
   DeleteMessageCommand,
   ReceiveMessageCommand,
@@ -5,7 +7,7 @@ import {
 } from '@aws-sdk/client-sqs';
 import type { Context } from 'aws-lambda';
 
-import { handler } from './consumer';
+import { handler } from '../consumer';
 
 const QUEUE_URL = process.env.EMAIL_QUEUE_URL!;
 
