@@ -12,10 +12,6 @@ import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { EnvService } from '@/env/env.service';
 
-jest.mock('@/domain/email-templates/recover-password-email', () => ({
-  buildRecoverPasswordEmail: jest.fn().mockReturnValue('<html>recover</html>'),
-}));
-
 describe('RecoverPasswordUseCase', () => {
   let useCase: RecoverPasswordUseCase;
   let usersRepo: MockProxy<Repository<User>>;
@@ -70,8 +66,10 @@ describe('RecoverPasswordUseCase', () => {
     expect(tokensRepo.save).toHaveBeenCalled();
     expect(mailService.send).toHaveBeenCalledWith(
       expect.objectContaining({
+        template: 'recoverPassword',
         to: existingUser.email,
-        subject: 'Solicitação para redefinição de senha',
+        name: existingUser.name.split(' ')[0],
+        resetPasswordUrl: expect.stringContaining('/nova-senha?token='),
       }),
     );
   });

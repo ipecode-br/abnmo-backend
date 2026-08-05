@@ -1,29 +1,24 @@
-import { SUPPORT_EMAIL, SUPPORT_WHATSAPP } from '@/config';
-import { NON_NUMBER_REGEX } from '@/constants/regex';
-import {
-  createEmailTemplate,
-  heading,
-  p,
-} from '@/utils/email-template-builder';
+import { SUPPORT_EMAIL, SUPPORT_WHATSAPP } from '../config';
+import { createEmailTemplate, heading, p } from '../email-template-builder';
 
-interface BuildDeclineSurveyEmailProps {
-  title: string;
-  preheader: string;
-  name: string;
-  reason: string;
-}
+const NON_NUMBER_REGEX = /\D/g;
 
 export function buildDeclineSurveyEmail({
-  title,
-  preheader,
   name,
   reason,
-}: BuildDeclineSurveyEmailProps) {
+}: {
+  name: string;
+  reason: string;
+}): { subject: string; html: string } {
+  const subject = 'Sua catalogação foi recusada — ABNMO';
+  const preheader =
+    'Sua submissão foi recusada. Confira mais informações sobre o motivo e como proceder.';
+
   const formatedPhone = SUPPORT_WHATSAPP.replace(NON_NUMBER_REGEX, '');
   const whatsAppUrl = `https://wa.me/55${formatedPhone}`;
 
-  return createEmailTemplate({
-    config: { title, preheader },
+  const html = createEmailTemplate({
+    config: { title: subject, preheader },
     content: [
       heading('Pesquisa Nacional da Neuromielite Óptica'),
       p(`Olá, ${name}!`),
@@ -44,4 +39,6 @@ export function buildDeclineSurveyEmail({
       p(`- E-mail: <strong>${SUPPORT_EMAIL}</strong></a>`, 'margin: 6px 0'),
     ],
   });
+
+  return { subject, html };
 }

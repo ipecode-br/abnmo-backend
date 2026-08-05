@@ -27,6 +27,7 @@ export const envSchema = z.object({
   // E-mails
   EMAIL_PROVIDER: z.enum(['ses', 'resend', 'none']),
   RESEND_KEY: z.string().min(1),
+  EMAIL_QUEUE_URL: z.url(),
 
   // Signature
   SIGNATURE_ENABLED: z

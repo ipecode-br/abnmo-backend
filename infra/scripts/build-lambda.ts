@@ -3,24 +3,30 @@ import { build } from 'esbuild';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 
-const outDir = 'dist-lambda';
-const zipFile = 'lambda.zip';
+const TARGETS = {
+  api: {
+    entry: 'dist/app/lambda.js',
+    outDir: 'dist-lambda/api',
+    zipFile: 'lambda-api.zip',
+  },
+  'email-worker': {
+    entry: 'dist/workers/email/consumer.js',
+    outDir: 'dist-lambda/email-worker',
+    zipFile: 'lambda-email-worker.zip',
+  },
+} as const;
 
-async function buildLambda() {
-  console.log('Starting Lambda build...');
+type Target = keyof typeof TARGETS;
+
+async function buildTarget(target: Target) {
+  const { entry, outDir, zipFile } = TARGETS[target];
+
+  console.log(`Building ${target}...`);
 
   await fs.ensureDir(outDir);
 
-  try {
-    execSync('rm -rf dist dist-lambda lambda.zip', { stdio: 'inherit' });
-    execSync('npx nest build', { stdio: 'inherit' });
-  } catch (error) {
-    console.error('Failed TypeScript build:', error);
-    process.exit(1);
-  }
-
   await build({
-    entryPoints: ['dist/app/lambda.js'],
+    entryPoints: [entry],
     bundle: true,
     platform: 'node',
     target: 'node22',
@@ -62,12 +68,54 @@ async function buildLambda() {
     console.log(`Lambda bundle created: ${zipFile}`);
     console.log(`Size: ${(size / 1024 / 1024).toFixed(2)} MB`);
   } catch (error) {
-    console.error('Failed to zip:', error);
+    console.error(`Failed to zip ${target}:`, error);
     process.exit(1);
   }
 }
 
-buildLambda().catch((err) => {
-  console.error('Build failed:', err);
+async function buildAll() {
+  console.log('Starting Lambda build...');
+
+  await fs.ensureDir('dist-lambda');
+
+  try {
+    execSync('rm -rf dist dist-lambda lambda*.zip', { stdio: 'inherit' });
+    execSync('npx nest build', { stdio: 'inherit' });
+  } catch (error) {
+    console.error('Failed TypeScript build:', error);
+    process.exit(1);
+  }
+
+  for (const target of Object.keys(TARGETS) as Target[]) {
+    await buildTarget(target);
+  }
+}
+
+const arg = process.argv[2] as Target | 'all' | undefined;
+
+if (!arg || arg === 'all') {
+  buildAll().catch((err) => {
+    console.error('Build failed:', err);
+    process.exit(1);
+  });
+} else if (TARGETS[arg]) {
+  (async () => {
+    try {
+      execSync('rm -rf dist dist-lambda', { stdio: 'inherit' });
+      execSync('npx nest build', { stdio: 'inherit' });
+    } catch (error) {
+      console.error('Failed TypeScript build:', error);
+      process.exit(1);
+    }
+
+    await buildTarget(arg);
+  })().catch((err) => {
+    console.error('Build failed:', err);
+    process.exit(1);
+  });
+} else {
+  console.error(
+    `Unknown target: ${arg}. Valid targets: ${Object.keys(TARGETS).join(', ')}, all`,
+  );
   process.exit(1);
-});
+}

@@ -499,9 +499,9 @@ describe('Survey Submissions (e2e)', () => {
 
       expect(mailSpy).toHaveBeenCalledWith(
         expect.objectContaining({
+          template: 'completeSurvey',
           to: patient.email,
-          subject: expect.any(String),
-          html: expect.stringContaining(
+          completeSurveyUrl: expect.stringContaining(
             `/catalogacao/voce?token=${updated?.surveyToken}`,
           ),
         }),
@@ -594,9 +594,9 @@ describe('Survey Submissions (e2e)', () => {
       expect(updated?.reason).toBe('Documento inválido');
       expect(mailSpy).toHaveBeenCalledWith(
         expect.objectContaining({
+          template: 'declineSurvey',
           to: patient.email,
-          subject: expect.any(String),
-          html: expect.stringContaining('Documento inválido'),
+          reason: 'Documento inválido',
         }),
       );
 

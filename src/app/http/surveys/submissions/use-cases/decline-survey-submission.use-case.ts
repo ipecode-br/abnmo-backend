@@ -11,7 +11,6 @@ import { can } from '@/common/authorization/can';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import type { RequestUser } from '@/common/types';
-import { buildDeclineSurveyEmail } from '@/domain/email-templates/decline-survey-email';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
 
 interface DeclineSurveySubmissionUseCaseInput {
@@ -64,22 +63,11 @@ export class DeclineSurveySubmissionUseCase {
       updatedBy: user.id,
     });
 
-    const subject = 'Sua catalogação foi recusada — ABNMO';
-    const preheader =
-      'Sua submissão foi recusada. Confira mais informações sobre o motivo e como proceder.';
-
-    const emailHtml = buildDeclineSurveyEmail({
-      title: subject,
-      preheader,
+    await this.mailService.send({
+      template: 'declineSurvey',
+      to: submission.patient.email,
       name: submission.patient.name,
       reason,
-    });
-
-    await this.mailService.send({
-      to: submission.patient.email,
-      subject,
-      text: preheader,
-      html: emailHtml,
     });
 
     this.logger.log('Survey submission declined', { id, reason });

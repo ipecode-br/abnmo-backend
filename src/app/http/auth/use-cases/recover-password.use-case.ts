@@ -6,7 +6,6 @@ import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.us
 import { MailService } from '@/app/mail/mail.service';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
-import { buildRecoverPasswordEmail } from '@/domain/email-templates/recover-password-email';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { TOKENS } from '@/domain/enums/tokens';
@@ -63,24 +62,13 @@ export class RecoverPasswordUseCase {
 
     const baseAppUrl = this.envService.get('APP_URL');
     const resetPasswordUrl = `${baseAppUrl}/nova-senha?token=${token}`;
-
-    const subject = 'Solicitação para redefinição de senha';
-    const preheader =
-      'Redefina sua senha de acesso ao Sistema Viver Melhor da ABNMO.';
     const name = user.name.split(' ')[0];
 
-    const recoverPasswordEmail = buildRecoverPasswordEmail({
-      title: subject,
-      preheader,
+    await this.mailService.send({
+      template: 'recoverPassword',
+      to: email,
       name,
       resetPasswordUrl,
-    });
-
-    await this.mailService.send({
-      to: email,
-      subject,
-      text: preheader,
-      html: recoverPasswordEmail,
     });
   }
 }

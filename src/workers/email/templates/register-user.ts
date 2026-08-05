@@ -3,21 +3,19 @@ import {
   createEmailTemplate,
   heading,
   p,
-} from '@/utils/email-template-builder';
-
-interface BuildRegisterUserEmailProps {
-  title: string;
-  preheader: string;
-  registerUserUrl: string;
-}
+} from '../email-template-builder';
 
 export function buildRegisterUserEmail({
-  preheader,
-  title,
   registerUserUrl,
-}: BuildRegisterUserEmailProps) {
-  return createEmailTemplate({
-    config: { title, preheader },
+}: {
+  registerUserUrl: string;
+}): { subject: string; html: string } {
+  const subject = 'Cadastre sua conta no Sistema Viver Melhor da ABNMO';
+  const preheader =
+    'Conclua o cadastro da sua conta para acessar o Sistema Viver Melhor da ABNMO.';
+
+  const html = createEmailTemplate({
+    config: { title: subject, preheader },
     content: [
       heading('Cadastre sua conta'),
       p(`Olá!`),
@@ -34,4 +32,6 @@ export function buildRegisterUserEmail({
       button('Cadastrar conta', registerUserUrl),
     ],
   });
+
+  return { subject, html };
 }

@@ -8,7 +8,6 @@ import { can } from '@/common/authorization/can';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import type { RequestUser } from '@/common/types';
-import { buildRegisterUserEmail } from '@/domain/email-templates/register-user-email';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { TOKENS } from '@/domain/enums/tokens';
@@ -94,21 +93,10 @@ export class CreateUserInviteUseCase {
       const baseAppUrl = this.envService.get('APP_URL');
       const registerUserUrl = `${baseAppUrl}/cadastrar?token=${inviteUserToken}`;
 
-      const subject = 'Cadastre sua conta no Sistema Viver Melhor da ABNMO';
-      const preheader =
-        'Conclua o cadastro da sua conta para acessar o Sistema Viver Melhor da ABNMO.';
-
-      const registerUserEmail = buildRegisterUserEmail({
-        title: subject,
-        preheader,
-        registerUserUrl,
-      });
-
       await this.mailService.send({
+        template: 'registerUser',
         to: email,
-        subject,
-        text: preheader,
-        html: registerUserEmail,
+        registerUserUrl,
       });
     });
   }

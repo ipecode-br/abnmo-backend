@@ -16,10 +16,6 @@ import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { TOKENS } from '@/domain/enums/tokens';
 
-jest.mock('@/domain/email-templates/reset-password-email', () => ({
-  buildResetPasswordEmail: jest.fn().mockReturnValue('<html>reset</html>'),
-}));
-
 describe('ResetPasswordUseCase', () => {
   let useCase: ResetPasswordUseCase;
   let usersRepo: MockProxy<Repository<User>>;
@@ -105,7 +101,9 @@ describe('ResetPasswordUseCase', () => {
     );
     expect(mailService.send).toHaveBeenCalledWith(
       expect.objectContaining({
+        template: 'resetPassword',
         to: existingUser.email,
+        name: existingUser.name.split(' ')[0],
       }),
     );
   });

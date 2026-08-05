@@ -11,7 +11,6 @@ import { CryptographyService } from '@/app/cryptography/cryptography.service';
 import { MailService } from '@/app/mail/mail.service';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
-import { buildResetPasswordEmail } from '@/domain/email-templates/reset-password-email';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { TOKENS } from '@/domain/enums/tokens';
@@ -110,22 +109,12 @@ export class ResetPasswordUseCase {
       role: user.role,
     });
 
-    const subject = 'Senha de acesso alterada com sucesso';
-    const preheader =
-      'Sua senha de acesso ao Sistema Viver Melhor foi alterada com sucesso.';
     const name = user.name.split(' ')[0];
 
-    const resetPasswordEmail = buildResetPasswordEmail({
-      title: subject,
-      preheader,
-      name,
-    });
-
     await this.mailService.send({
+      template: 'resetPassword',
       to: user.email,
-      subject,
-      text: preheader,
-      html: resetPasswordEmail,
+      name,
     });
   }
 }
