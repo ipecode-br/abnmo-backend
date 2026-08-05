@@ -27,10 +27,6 @@ export const envSchema = z.object({
   // E-mails
   EMAIL_PROVIDER: z.enum(['ses', 'resend', 'none']),
   RESEND_KEY: z.string().min(1),
-  AWS_SES_REGION: z.string().min(1),
-  AWS_SES_ACCESS_KEY_ID: z.string().min(1),
-  AWS_SES_SECRET_ACCESS_KEY: z.string().min(1),
-  AWS_SES_FROM_EMAIL: z.email(),
 
   // Signature
   SIGNATURE_ENABLED: z

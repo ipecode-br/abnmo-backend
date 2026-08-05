@@ -10,8 +10,8 @@ import { EnvService } from '@/env/env.service';
 @Injectable()
 @Log()
 export class MailService {
-  private readonly isEnable: boolean;
   private readonly emailProvider: Env['EMAIL_PROVIDER'];
+  private readonly isEnable: boolean;
   private readonly sesClient: SESClient;
   private readonly resendClient: Resend;
 
@@ -21,14 +21,8 @@ export class MailService {
   ) {
     this.emailProvider = this.envService.get('EMAIL_PROVIDER');
     this.isEnable = this.emailProvider !== 'none';
+    this.sesClient = new SESClient();
     this.resendClient = new Resend(this.envService.get('RESEND_KEY'));
-    this.sesClient = new SESClient({
-      region: this.envService.get('AWS_SES_REGION'),
-      credentials: {
-        accessKeyId: this.envService.get('AWS_SES_ACCESS_KEY_ID'),
-        secretAccessKey: this.envService.get('AWS_SES_SECRET_ACCESS_KEY'),
-      },
-    });
   }
 
   async send({
@@ -43,10 +37,7 @@ export class MailService {
     text?: string;
   }) {
     if (!this.isEnable) {
-      this.logger.log(
-        'Send e-mail skipped ("EMAIL_PROVIDER" is set to "none")',
-        { to, subject },
-      );
+      this.logger.log('E-mail disabled — send bypassed', { to, subject });
 
       return true;
     }
