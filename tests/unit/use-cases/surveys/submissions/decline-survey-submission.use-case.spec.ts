@@ -8,7 +8,7 @@ import { patientUserFactory } from 'tests/config/factories/user.factory';
 import { Repository } from 'typeorm';
 
 import { DeclineSurveySubmissionUseCase } from '@/app/http/surveys/submissions/use-cases/decline-survey-submission.use-case';
-import { MailService } from '@/app/mail/mail.service';
+import { EnqueueEmailUseCase } from '@/app/mail/use-cases/enqueue-email.use-case';
 import { LogService } from '@/common/log/log.service';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
 
@@ -30,7 +30,7 @@ describe('DeclineSurveySubmissionUseCase', () => {
       providers: [
         DeclineSurveySubmissionUseCase,
         { provide: getRepositoryToken(SurveySubmission), useValue: repo },
-        { provide: MailService, useValue: { send: jest.fn() } },
+        { provide: EnqueueEmailUseCase, useValue: { execute: jest.fn() } },
         { provide: LogService, useValue: { log: jest.fn() } },
       ],
     }).compile();

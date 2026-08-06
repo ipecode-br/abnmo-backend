@@ -4,18 +4,18 @@ import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import { SendEmailJob } from '@/shared/queue/email.dto';
 
-import { QueueService } from '../queue/queue.service';
+import { QueueService } from '../../queue/queue.service';
 
 @Injectable()
 @Log()
-export class MailService {
+export class EnqueueEmailUseCase {
   constructor(
     private readonly logger: LogService,
-    private readonly queue: QueueService,
+    private readonly queueService: QueueService,
   ) {}
 
-  async send(job: SendEmailJob): Promise<void> {
-    await this.queue.enqueueEmail(job);
+  async execute(job: SendEmailJob): Promise<void> {
+    await this.queueService.enqueueEmail(job);
 
     this.logger.log('E-mail job enqueued', {
       template: job.template,

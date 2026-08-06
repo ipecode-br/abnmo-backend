@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 
-import { MailService } from './mail.service';
+import { EnqueueEmailUseCase } from './use-cases/enqueue-email.use-case';
 
-@Module({ providers: [MailService], exports: [MailService] })
+@Module({ providers: [EnqueueEmailUseCase], exports: [EnqueueEmailUseCase] })
 export class MailModule {}

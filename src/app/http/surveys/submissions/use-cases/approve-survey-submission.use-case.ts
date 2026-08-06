@@ -7,7 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { v7 as uuidv7 } from 'uuid';
 
-import { MailService } from '@/app/mail/mail.service';
+import { EnqueueEmailUseCase } from '@/app/mail/use-cases/enqueue-email.use-case';
 import { can } from '@/common/authorization/can';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
@@ -28,7 +28,7 @@ export class ApproveSurveySubmissionUseCase {
   constructor(
     @InjectRepository(SurveySubmission)
     private readonly surveySubmissionsRepository: Repository<SurveySubmission>,
-    private readonly mailService: MailService,
+    private readonly enqueueEmailUseCase: EnqueueEmailUseCase,
     private readonly envService: EnvService,
     private readonly logger: LogService,
   ) {
@@ -71,7 +71,7 @@ export class ApproveSurveySubmissionUseCase {
 
     const completeSurveyUrl = `${this.dashboardUrl}/catalogacao/voce?token=${surveyToken}`;
 
-    await this.mailService.send({
+    await this.enqueueEmailUseCase.execute({
       template: 'completeSurvey',
       to: submission.patient.email,
       name: submission.patient.name,

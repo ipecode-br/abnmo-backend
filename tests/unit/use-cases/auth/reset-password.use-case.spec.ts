@@ -10,7 +10,7 @@ import { CryptographyService } from '@/app/cryptography/cryptography.service';
 import { CreateSessionUseCase } from '@/app/http/auth/use-cases/create-session.use-case';
 import { ExpireSessionUseCase } from '@/app/http/auth/use-cases/expire-session.use-case';
 import { ResetPasswordUseCase } from '@/app/http/auth/use-cases/reset-password.use-case';
-import { MailService } from '@/app/mail/mail.service';
+import { EnqueueEmailUseCase } from '@/app/mail/use-cases/enqueue-email.use-case';
 import { LogService } from '@/common/log/log.service';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
@@ -23,7 +23,7 @@ describe('ResetPasswordUseCase', () => {
   let cryptographyService: MockProxy<CryptographyService>;
   let createSessionUseCase: MockProxy<CreateSessionUseCase>;
   let expireSessionUseCase: MockProxy<ExpireSessionUseCase>;
-  let mailService: MockProxy<MailService>;
+  let enqueueEmailUseCase: MockProxy<EnqueueEmailUseCase>;
 
   const existingUser = memberUserFactory();
 
@@ -42,7 +42,7 @@ describe('ResetPasswordUseCase', () => {
     cryptographyService = mock<CryptographyService>();
     createSessionUseCase = mock<CreateSessionUseCase>();
     expireSessionUseCase = mock<ExpireSessionUseCase>();
-    mailService = mock<MailService>();
+    enqueueEmailUseCase = mock<EnqueueEmailUseCase>();
 
     const module = await Test.createTestingModule({
       providers: [
@@ -52,7 +52,7 @@ describe('ResetPasswordUseCase', () => {
         { provide: CryptographyService, useValue: cryptographyService },
         { provide: CreateSessionUseCase, useValue: createSessionUseCase },
         { provide: ExpireSessionUseCase, useValue: expireSessionUseCase },
-        { provide: MailService, useValue: mailService },
+        { provide: EnqueueEmailUseCase, useValue: enqueueEmailUseCase },
         { provide: LogService, useValue: { log: jest.fn(), warn: jest.fn() } },
       ],
     }).compile();
@@ -99,7 +99,7 @@ describe('ResetPasswordUseCase', () => {
         keepLoggedIn: false,
       }),
     );
-    expect(mailService.send).toHaveBeenCalledWith(
+    expect(enqueueEmailUseCase.execute).toHaveBeenCalledWith(
       expect.objectContaining({
         template: 'resetPassword',
         to: existingUser.email,

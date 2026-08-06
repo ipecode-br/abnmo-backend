@@ -8,7 +8,7 @@ import type { Response } from 'express';
 import { Repository } from 'typeorm';
 
 import { CryptographyService } from '@/app/cryptography/cryptography.service';
-import { MailService } from '@/app/mail/mail.service';
+import { EnqueueEmailUseCase } from '@/app/mail/use-cases/enqueue-email.use-case';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import { Token } from '@/domain/entities/token';
@@ -36,7 +36,7 @@ export class ResetPasswordUseCase {
     private readonly cryptographyService: CryptographyService,
     private readonly createSessionUseCase: CreateSessionUseCase,
     private readonly expireSessionUseCase: ExpireSessionUseCase,
-    private readonly mailService: MailService,
+    private readonly enqueueEmailUseCase: EnqueueEmailUseCase,
     private readonly logger: LogService,
   ) {}
 
@@ -111,7 +111,7 @@ export class ResetPasswordUseCase {
 
     const name = user.name.split(' ')[0];
 
-    await this.mailService.send({
+    await this.enqueueEmailUseCase.execute({
       template: 'resetPassword',
       to: user.email,
       name,

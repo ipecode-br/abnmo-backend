@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
-import { MailService } from '@/app/mail/mail.service';
+import { EnqueueEmailUseCase } from '@/app/mail/use-cases/enqueue-email.use-case';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import { Token } from '@/domain/entities/token';
@@ -18,6 +18,8 @@ interface RecoverPasswordUseCaseInput {
 @Injectable()
 @Log()
 export class RecoverPasswordUseCase {
+  private readonly baseAppUrl: string;
+
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
@@ -26,8 +28,10 @@ export class RecoverPasswordUseCase {
     private readonly createTokenUseCase: CreateTokenUseCase,
     private readonly envService: EnvService,
     private readonly logger: LogService,
-    private readonly mailService: MailService,
-  ) {}
+    private readonly enqueueEmailUseCase: EnqueueEmailUseCase,
+  ) {
+    this.baseAppUrl = envService.get('APP_URL');
+  }
 
   async execute({ email }: RecoverPasswordUseCaseInput): Promise<void> {
     const user = await this.usersRepository.findOne({
@@ -60,11 +64,10 @@ export class RecoverPasswordUseCase {
 
     this.logger.log('Password reset token generated', { id: user.id, email });
 
-    const baseAppUrl = this.envService.get('APP_URL');
-    const resetPasswordUrl = `${baseAppUrl}/nova-senha?token=${token}`;
+    const resetPasswordUrl = `${this.baseAppUrl}/nova-senha?token=${token}`;
     const name = user.name.split(' ')[0];
 
-    await this.mailService.send({
+    await this.enqueueEmailUseCase.execute({
       template: 'recoverPassword',
       to: email,
       name,

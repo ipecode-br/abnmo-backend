@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
-import { MailService } from '@/app/mail/mail.service';
+import { EnqueueEmailUseCase } from '@/app/mail/use-cases/enqueue-email.use-case';
 import { can } from '@/common/authorization/can';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
@@ -23,6 +23,8 @@ interface CreateUserInviteUseCaseInput {
 @Injectable()
 @Log()
 export class CreateUserInviteUseCase {
+  private readonly baseAppUrl: string;
+
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
@@ -32,8 +34,10 @@ export class CreateUserInviteUseCase {
     private readonly dataSource: DataSource,
     private readonly envService: EnvService,
     private readonly logger: LogService,
-    private readonly mailService: MailService,
-  ) {}
+    private readonly enqueueEmailUseCase: EnqueueEmailUseCase,
+  ) {
+    this.baseAppUrl = envService.get('APP_URL');
+  }
 
   async execute({
     email,
@@ -90,10 +94,9 @@ export class CreateUserInviteUseCase {
         role,
       });
 
-      const baseAppUrl = this.envService.get('APP_URL');
-      const registerUserUrl = `${baseAppUrl}/cadastrar?token=${inviteUserToken}`;
+      const registerUserUrl = `${this.baseAppUrl}/cadastrar?token=${inviteUserToken}`;
 
-      await this.mailService.send({
+      await this.enqueueEmailUseCase.execute({
         template: 'registerUser',
         to: email,
         registerUserUrl,
