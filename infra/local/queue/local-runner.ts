@@ -7,7 +7,8 @@ import {
 import type { Context } from 'aws-lambda';
 import type { SQSEvent } from 'aws-lambda';
 
-import { handler } from '../../../src/workers/email/consumer';
+import { handler } from '@/workers/email/handler';
+
 import { createSqsClient, ensureQueues, QUEUE_URL } from './sqs-client';
 
 async function poll(): Promise<void> {

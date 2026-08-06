@@ -1,0 +1,60 @@
+name: Deploy Lambdas (Dev)
+
+on:
+  push:
+    branches:
+      - dev
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Build and deploy dev Lambdas
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build all Lambdas
+        run: npm run build:all
+
+      # API Lambda
+      - name: Configure AWS credentials (API)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_API_ROLE_DEV }}
+          aws-region: us-east-1
+
+      - name: Deploy API Lambda
+        run: |
+          aws lambda update-function-code \
+            --function-name abnmo-svm-lambda-development \
+            --zip-file fileb://lambda-api.zip \
+            --output text \
+            --query 'FunctionName'
+
+      # Email Worker Lambda
+      - name: Configure AWS credentials (Email Worker)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_EMAIL_WORKER_ROLE_DEV }}
+          aws-region: us-east-1
+
+      - name: Deploy Email Worker Lambda
+        run: |
+          aws lambda update-function-code \
+            --function-name abnmo-svm-email-worker-development \
+            --zip-file fileb://lambda-email-worker.zip \
+            --output text \
+            --query 'FunctionName'

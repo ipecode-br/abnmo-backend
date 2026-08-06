@@ -10,7 +10,7 @@ const TARGETS = {
     zipFile: 'lambda-api.zip',
   },
   'email-worker': {
-    entry: 'dist/workers/email/consumer.js',
+    entry: 'dist/workers/email/handler.js',
     outDir: 'dist-lambda/email-worker',
     zipFile: 'lambda-email-worker.zip',
   },
@@ -64,7 +64,7 @@ async function buildTarget(target: Target) {
 
   try {
     execSync(`cd ${outDir} && zip -r ../${zipFile} .`, { stdio: 'inherit' });
-    const { size } = await fs.stat(zipFile);
+    const { size } = await fs.stat(path.join('dist-lambda', zipFile));
     console.log(`Lambda bundle created: ${zipFile}`);
     console.log(`Size: ${(size / 1024 / 1024).toFixed(2)} MB`);
   } catch (error) {
