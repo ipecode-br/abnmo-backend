@@ -10,7 +10,7 @@ import { CryptographyService } from '@/app/cryptography/cryptography.service';
 import { CreateSessionUseCase } from '@/app/http/auth/use-cases/create-session.use-case';
 import { ExpireSessionUseCase } from '@/app/http/auth/use-cases/expire-session.use-case';
 import { ResetPasswordUseCase } from '@/app/http/auth/use-cases/reset-password.use-case';
-import { EnqueueEmailUseCase } from '@/app/mail/use-cases/enqueue-email.use-case';
+import { EnqueueEmailUseCase } from '@/app/queue/use-cases/enqueue-email.use-case';
 import { LogService } from '@/common/log/log.service';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';

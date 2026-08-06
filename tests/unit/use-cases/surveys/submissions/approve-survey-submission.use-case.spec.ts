@@ -8,7 +8,7 @@ import { patientUserFactory } from 'tests/config/factories/user.factory';
 import { Repository } from 'typeorm';
 
 import { ApproveSurveySubmissionUseCase } from '@/app/http/surveys/submissions/use-cases/approve-survey-submission.use-case';
-import { EnqueueEmailUseCase } from '@/app/mail/use-cases/enqueue-email.use-case';
+import { EnqueueEmailUseCase } from '@/app/queue/use-cases/enqueue-email.use-case';
 import { LogService } from '@/common/log/log.service';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
 import { EnvService } from '@/env/env.service';

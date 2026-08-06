@@ -8,7 +8,7 @@ import type {
   GetSurveyUrlResponse,
   GetTotalSurveySubmissionsResponse,
 } from '@/app/http/surveys/submissions/surveys.dtos';
-import { EnqueueEmailUseCase } from '@/app/mail/use-cases/enqueue-email.use-case';
+import { EnqueueEmailUseCase } from '@/app/queue/use-cases/enqueue-email.use-case';
 import { EnvService } from '@/env/env.service';
 
 import { ApiClient, createApiClient } from '../config/api-client';

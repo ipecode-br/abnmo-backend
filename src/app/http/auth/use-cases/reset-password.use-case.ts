@@ -8,7 +8,7 @@ import type { Response } from 'express';
 import { Repository } from 'typeorm';
 
 import { CryptographyService } from '@/app/cryptography/cryptography.service';
-import { EnqueueEmailUseCase } from '@/app/mail/use-cases/enqueue-email.use-case';
+import { EnqueueEmailUseCase } from '@/app/queue/use-cases/enqueue-email.use-case';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import { Token } from '@/domain/entities/token';

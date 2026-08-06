@@ -3,15 +3,15 @@ import { Global, Module } from '@nestjs/common';
 
 import { EnvModule } from '@/env/env.module';
 
-import { QueueService } from './queue.service';
+import { EnqueueEmailUseCase } from './use-cases/enqueue-email.use-case';
 
 @Global()
 @Module({
   imports: [EnvModule],
   providers: [
     { provide: SQSClient, useValue: new SQSClient({}) },
-    QueueService,
+    EnqueueEmailUseCase,
   ],
-  exports: [QueueService],
+  exports: [EnqueueEmailUseCase],
 })
 export class QueueModule {}

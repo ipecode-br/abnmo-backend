@@ -87,13 +87,11 @@ Serviços reutilizáveis são importados apenas onde necessários:
 
 ```typescript
 import { CryptographyModule } from '@/app/cryptography/cryptography.module';
-import { MailModule } from '@/app/mail/mail.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, Token]),
     CryptographyModule,  // hash, JWT, cookies
-    MailModule,          // enfileiramento de e-mails (SQS)
   ],
   controllers: [UsersController],
   providers: [...],
@@ -104,7 +102,6 @@ export class UsersModule {}
 | Módulo compartilhado | Quando importar                                     |
 | -------------------- | --------------------------------------------------- |
 | `CryptographyModule` | Hash de senhas, criação/verificação de JWT, cookies |
-| `MailModule`         | Enfileiramento de e-mails (SQS)                     |
 | `EnvModule`          | Acesso a variáveis de ambiente                      |
 | `StorageModule`      | Upload de arquivos (S3/CDN com signed URLs)         |
 

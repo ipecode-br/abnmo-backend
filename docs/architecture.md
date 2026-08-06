@@ -41,8 +41,7 @@ src/
 │   │   │   └── submissions/
 │   │   ├── users/
 │   │   └── webhooks/
-│   ├── mail/                      # Módulo de enfileiramento de e-mails
-│   ├── queue/                     # Módulo global de SQS (QueueService)
+│   ├── queue/                     # Módulo global de SQS (EnqueueEmailUseCase, etc.)
 │   ├── signature/                 # Módulo de assinatura digital
 │   └── storage/                   # Módulo de upload de arquivos (S3/CDN)
 ├── shared/                        # Código compartilhado entre API e workers
@@ -156,12 +155,11 @@ A API apenas enfileira o job com os dados do template (nome, URLs, razão). O wo
 | Módulo               | Propósito                                   | Como importar                   |
 | -------------------- | ------------------------------------------- | ------------------------------- |
 | `CryptographyModule` | Hash (bcrypt), JWT e cookies                | Importar no módulo que precisar |
-| `MailModule`         | Enfileiramento de e-mails (SQS)             | Importar no módulo que precisar |
-| `QueueModule`        | `QueueService` para envio de mensagens SQS  | Global — não precisa importar   |
+| `QueueModule`        | `EnqueueEmailUseCase` — enfileiramento SQS  | Global — não precisa importar   |
 | `EnvModule`          | Acesso tipado a variáveis de ambiente       | Importar quando necessário      |
 | `StorageModule`      | Upload de arquivos (S3/CDN com signed URLs) | Importar quando necessário      |
 | `SignatureModule`    | Assinatura digital (ClickSign)              | Importar no módulo que precisar |
 | `LogModule`          | `LogService` e decorator `@Log()`           | Global — não precisa importar   |
 | `SentryModule`       | Monitoramento de erros e logs               | Registrado no `AppModule`       |
 
-> `LogModule` e `QueueModule` são declarados com `@Global()`, portanto `LogService` e `QueueService` estão disponíveis em toda a aplicação.
+> `LogModule` e `QueueModule` são declarados com `@Global()`, portanto `LogService` e `EnqueueEmailUseCase` estão disponíveis em toda a aplicação.

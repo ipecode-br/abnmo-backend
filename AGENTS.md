@@ -261,7 +261,6 @@ When composing a list response, extract a standalone list-item schema (e.g. `lis
 | Module               | When to import        |
 | -------------------- | --------------------- |
 | `CryptographyModule` | Hashing, JWT, cookies |
-| `MailModule`         | Email queueing        |
 | `EnvModule`          | Accessing env vars    |
 | `StorageModule`      | File uploads          |
 | `SignatureModule`    | Digital signatures    |

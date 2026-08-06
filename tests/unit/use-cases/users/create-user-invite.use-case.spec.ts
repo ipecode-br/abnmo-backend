@@ -6,7 +6,7 @@ import { DataSource, Repository } from 'typeorm';
 
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
 import { CreateUserInviteUseCase } from '@/app/http/users/use-cases/create-user-invite.use-case';
-import { EnqueueEmailUseCase } from '@/app/mail/use-cases/enqueue-email.use-case';
+import { EnqueueEmailUseCase } from '@/app/queue/use-cases/enqueue-email.use-case';
 import { LogService } from '@/common/log/log.service';
 import type { RequestUser } from '@/common/types';
 import { Token } from '@/domain/entities/token';
