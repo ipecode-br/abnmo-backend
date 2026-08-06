@@ -261,10 +261,12 @@ When composing a list response, extract a standalone list-item schema (e.g. `lis
 | Module               | When to import        |
 | -------------------- | --------------------- |
 | `CryptographyModule` | Hashing, JWT, cookies |
-| `MailModule`         | Sending emails        |
+| `MailModule`         | Email queueing        |
 | `EnvModule`          | Accessing env vars    |
 | `StorageModule`      | File uploads          |
 | `SignatureModule`    | Digital signatures    |
+
+`QueueModule` and `LogModule` are global — no need to import them.
 
 `LogModule` is global — never import it.
 
@@ -347,7 +349,7 @@ await this.dataSource.transaction(async (manager) => {
 
 ## Code reuse
 
-Check existing utilities in `src/utils/` (cookies, date ranges, file names, validators, formatters, normalize strings, email templates) and `src/constants/` (mime types, regex) before creating new ones.
+Check existing utilities in `src/utils/` (cookies, date ranges, file names, validators, formatters, normalize strings) and `src/constants/` (mime types, regex) before creating new ones.
 
 ## Important constraints
 

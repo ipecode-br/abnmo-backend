@@ -131,14 +131,20 @@ can(
 );
 // → ForbiddenException implícito se falhar
 
-// Falha em serviço externo
+// Falha em serviço externo (ex: S3, assinatura digital)
 try {
-  await this.mailService.send({ to: email, subject, html });
+  await this.storageService.upload({ file, path });
 } catch (error) {
-  throw new ServiceUnavailableException('Não foi possível enviar o e-mail.', {
-    cause: error,
-  });
+  throw new ServiceUnavailableException(
+    'Não foi possível fazer o upload do arquivo.',
+    {
+      cause: error,
+    },
+  );
 }
+
+// E-mails são enfileirados via SQS — falhas de envio são tratadas pelo worker,
+// não retornam erro na API.
 ```
 
 ---

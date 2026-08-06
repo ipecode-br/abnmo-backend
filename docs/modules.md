@@ -93,7 +93,7 @@ import { MailModule } from '@/app/mail/mail.module';
   imports: [
     TypeOrmModule.forFeature([User, Token]),
     CryptographyModule,  // hash, JWT, cookies
-    MailModule,          // envio de e-mails
+    MailModule,          // enfileiramento de e-mails (SQS)
   ],
   controllers: [UsersController],
   providers: [...],
@@ -104,11 +104,11 @@ export class UsersModule {}
 | Módulo compartilhado | Quando importar                                     |
 | -------------------- | --------------------------------------------------- |
 | `CryptographyModule` | Hash de senhas, criação/verificação de JWT, cookies |
-| `MailModule`         | Envio de e-mails                                    |
+| `MailModule`         | Enfileiramento de e-mails (SQS)                     |
 | `EnvModule`          | Acesso a variáveis de ambiente                      |
 | `StorageModule`      | Upload de arquivos (S3/CDN com signed URLs)         |
 
-> `LogModule` é global e não precisa ser importado.
+> `LogModule` e `QueueModule` são globais e não precisam ser importados.
 
 ---
 
