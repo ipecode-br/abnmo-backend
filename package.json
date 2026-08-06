@@ -9,8 +9,8 @@
     "node": ">=22"
   },
   "scripts": {
-    "dev": "npm run services:up && npm run services:wait:database && npm run db:migrate && nest start --watch",
-    "dev:email-worker": "ts-node -r tsconfig-paths/register src/workers/email/utils/local-runner.ts",
+    "dev": "npm run services:up && npm run services:wait:database && npm run services:setup-queues && npm run db:migrate && nest start --watch",
+    "dev:email-worker": "ts-node -r tsconfig-paths/register infra/local/queue/local-runner.ts",
     "lint:eslint:check": "eslint .",
     "lint:prettier:check": "prettier --check .",
     "lint:prettier:fix": "prettier --write . --log-level=warn",
@@ -19,6 +19,7 @@
     "services:stop": "docker compose -f infra/docker/compose-dev.yaml --env-file .env stop",
     "services:down": "docker compose -f infra/docker/compose-dev.yaml --env-file .env down",
     "services:wait:database": "ts-node ./infra/scripts/wait-for-database.ts",
+    "services:setup-queues": "ts-node -r tsconfig-paths/register infra/local/queue/setup-queues.ts",
     "db:generate": "ts-node ./infra/scripts/generate-migration.ts",
     "db:migrate": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js -d ./infra/database/data.source.ts migration:run",
     "db:seed-dev": "ts-node -r tsconfig-paths/register infra/scripts/seed-dev/index.ts",
