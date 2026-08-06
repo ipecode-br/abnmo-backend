@@ -10,7 +10,7 @@
   },
   "scripts": {
     "dev": "npm run services:up && npm run services:wait:database && npm run services:setup-queues && npm run db:migrate && nest start --watch",
-    "dev:email-worker": "ts-node -r tsconfig-paths/register infra/local/queue/local-runner.ts",
+    "dev:email-worker": "tsx watch -r tsconfig-paths/register infra/local/queue/local-runner.ts",
     "lint:eslint:check": "eslint .",
     "lint:prettier:check": "prettier --check .",
     "lint:prettier:fix": "prettier --write . --log-level=warn",
@@ -123,6 +123,7 @@
     "ts-node": "10.9.2",
     "tsc-alias": "1.8.16",
     "tsconfig-paths": "4.2.0",
+    "tsx": "4.23.9",
     "typescript": "5.7.3",
     "typescript-eslint": "8.20.0"
   }

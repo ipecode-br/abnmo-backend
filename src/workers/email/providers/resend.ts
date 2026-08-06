@@ -1,9 +1,10 @@
 import { Resend } from 'resend';
 
 import { FROM_EMAIL } from '../config';
+import { env } from '../env';
 import { SendEmailPayload } from '../types';
 
-const resend = new Resend(process.env.RESEND_KEY ?? '');
+const resend = new Resend(env.RESEND_KEY);
 
 export async function sendViaResend({
   to,

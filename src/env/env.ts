@@ -24,10 +24,24 @@ export const envSchema = z.object({
   JWT_SECRET: z.string().min(1),
   HASH_PEPPER: z.string().min(1),
 
-  // E-mails
-  EMAIL_PROVIDER: z.enum(['ses', 'resend', 'none']),
-  RESEND_KEY: z.string().min(1),
-  EMAIL_QUEUE_URL: z.url(),
+  // Database
+  DB_HOST: z.string().min(1),
+  DB_PORT: z.coerce.number(),
+  DB_DATABASE: z.string().min(1),
+  DB_USERNAME: z.string().min(1),
+  DB_PASSWORD: z.string().min(1),
+  DB_SCHEMA: z.string().optional(),
+
+  // Observability
+  SENTRY_DSN: z.string().optional().default(''),
+  SENTRY_LOGS: z.enum(['all', 'error', 'none']),
+
+  // Storage
+  STORAGE_ENABLED: z.enum(['true', 'false']).transform((val) => val === 'true'),
+  STORAGE_BUCKET_NAME: z.string().min(1),
+  CDN_URL: z.url(),
+  CDN_PUBLIC_KEY_ID: z.string().min(1),
+  CDN_PRIVATE_KEY: z.string().min(1),
 
   // Signature
   SIGNATURE_ENABLED: z
@@ -38,24 +52,8 @@ export const envSchema = z.object({
   CLICKSIGN_API_KEY: z.string().min(1),
   CLICKSIGN_WEBHOOK_SECRET: z.string().min(1),
 
-  // Observability
-  SENTRY_DSN: z.string().optional().default(''),
-  SENTRY_LOGS: z.enum(['all', 'error', 'none']),
-
-  // Database
-  DB_HOST: z.string().min(1),
-  DB_PORT: z.coerce.number(),
-  DB_DATABASE: z.string().min(1),
-  DB_USERNAME: z.string().min(1),
-  DB_PASSWORD: z.string().min(1),
-  DB_SCHEMA: z.string().optional(),
-
-  // Storage
-  STORAGE_ENABLED: z.enum(['true', 'false']).transform((val) => val === 'true'),
-  STORAGE_BUCKET_NAME: z.string().min(1),
-  CDN_URL: z.url(),
-  CDN_PUBLIC_KEY_ID: z.string().min(1),
-  CDN_PRIVATE_KEY: z.string().min(1),
+  // Queues
+  EMAIL_QUEUE_URL: z.url(),
 
   // AWS
   AWS_REGION: z.string().optional().default(''),

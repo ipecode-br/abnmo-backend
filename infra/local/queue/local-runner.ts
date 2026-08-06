@@ -5,6 +5,7 @@ import {
   ReceiveMessageCommand,
 } from '@aws-sdk/client-sqs';
 import type { Context } from 'aws-lambda';
+import type { SQSEvent } from 'aws-lambda';
 
 import { handler } from '../../../src/workers/email/consumer';
 import { createSqsClient, ensureQueues, QUEUE_URL } from './sqs-client';
@@ -28,13 +29,29 @@ async function poll(): Promise<void> {
         continue;
       }
 
-      const event = {
+      const event: SQSEvent = {
         Records: response.Messages.map((msg) => ({
           messageId: msg.MessageId!,
           body: msg.Body!,
           receiptHandle: msg.ReceiptHandle!,
+          attributes: {
+            ApproximateReceiveCount:
+              msg.Attributes?.ApproximateReceiveCount ?? '1',
+            ApproximateFirstReceiveTimestamp: '',
+            AWSTraceHeader: '',
+            MessageDeduplicationId: '',
+            MessageGroupId: '',
+            SenderId: '',
+            SentTimestamp: '',
+            SequenceNumber: '',
+          },
+          awsRegion: '',
+          eventSource: '',
+          eventSourceARN: '',
+          md5OfBody: '',
+          messageAttributes: {},
         })),
-      } as Parameters<typeof handler>[0];
+      };
 
       const result = await handler(event, {} as Context, () => {});
       const batch = result ?? { batchItemFailures: [] };
