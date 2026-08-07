@@ -9,6 +9,7 @@ config({ path: '.env.test' });
 process.env.NODE_ENV = 'test';
 
 import { AppModule } from '@/app/app.module';
+import { EnqueueEmailUseCase } from '@/app/queue/use-cases/enqueue-email.use-case';
 import { EnvService } from '@/env/env.service';
 
 declare global {
@@ -21,7 +22,10 @@ jest.setTimeout(60000);
 beforeAll(async () => {
   const moduleRef: TestingModule = await Test.createTestingModule({
     imports: [AppModule],
-  }).compile();
+  })
+    .overrideProvider(EnqueueEmailUseCase)
+    .useValue({ execute: jest.fn() })
+    .compile();
 
   const app = moduleRef.createNestApplication({ logger: false });
   const envService = moduleRef.get(EnvService);

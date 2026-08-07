@@ -8,7 +8,7 @@ import { patientUserFactory } from 'tests/config/factories/user.factory';
 import { Repository } from 'typeorm';
 
 import { ApproveSurveySubmissionUseCase } from '@/app/http/surveys/submissions/use-cases/approve-survey-submission.use-case';
-import { MailService } from '@/app/mail/mail.service';
+import { EnqueueEmailUseCase } from '@/app/queue/use-cases/enqueue-email.use-case';
 import { LogService } from '@/common/log/log.service';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
 import { EnvService } from '@/env/env.service';
@@ -31,7 +31,7 @@ describe('ApproveSurveySubmissionUseCase', () => {
       providers: [
         ApproveSurveySubmissionUseCase,
         { provide: getRepositoryToken(SurveySubmission), useValue: repo },
-        { provide: MailService, useValue: { send: jest.fn() } },
+        { provide: EnqueueEmailUseCase, useValue: { execute: jest.fn() } },
         {
           provide: EnvService,
           useValue: { get: jest.fn().mockReturnValue('http://localhost') },

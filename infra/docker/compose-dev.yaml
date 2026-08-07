@@ -13,5 +13,16 @@ services:
     volumes:
       - abnmo_db_data:/var/lib/postgresql/data
 
+  localstack:
+    image: localstack/localstack:latest
+    container_name: localstack
+    ports:
+      - '4566:4566'
+    environment:
+      LOCALSTACK_AUTH_TOKEN: ${LOCALSTACK_AUTH_TOKEN}
+      SERVICES: sqs
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
 volumes:
   abnmo_db_data:

@@ -6,12 +6,11 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { MailService } from '@/app/mail/mail.service';
+import { EnqueueEmailUseCase } from '@/app/queue/use-cases/enqueue-email.use-case';
 import { can } from '@/common/authorization/can';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import type { RequestUser } from '@/common/types';
-import { buildDeclineSurveyEmail } from '@/domain/email-templates/decline-survey-email';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
 
 interface DeclineSurveySubmissionUseCaseInput {
@@ -26,7 +25,7 @@ export class DeclineSurveySubmissionUseCase {
   constructor(
     @InjectRepository(SurveySubmission)
     private readonly surveySubmissionsRepository: Repository<SurveySubmission>,
-    private readonly mailService: MailService,
+    private readonly enqueueEmailUseCase: EnqueueEmailUseCase,
     private readonly logger: LogService,
   ) {}
 
@@ -64,22 +63,11 @@ export class DeclineSurveySubmissionUseCase {
       updatedBy: user.id,
     });
 
-    const subject = 'Sua catalogação foi recusada — ABNMO';
-    const preheader =
-      'Sua submissão foi recusada. Confira mais informações sobre o motivo e como proceder.';
-
-    const emailHtml = buildDeclineSurveyEmail({
-      title: subject,
-      preheader,
+    await this.enqueueEmailUseCase.execute({
+      template: 'declineSurvey',
+      to: submission.patient.email,
       name: submission.patient.name,
       reason,
-    });
-
-    await this.mailService.send({
-      to: submission.patient.email,
-      subject,
-      text: preheader,
-      html: emailHtml,
     });
 
     this.logger.log('Survey submission declined', { id, reason });

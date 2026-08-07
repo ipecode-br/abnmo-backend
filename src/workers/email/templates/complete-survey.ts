@@ -3,23 +3,22 @@ import {
   createEmailTemplate,
   heading,
   p,
-} from '@/utils/email-template-builder';
-
-interface BuildCompleteSurveyEmailProps {
-  title: string;
-  preheader: string;
-  name: string;
-  completeSurveyUrl: string;
-}
+} from '../utils/email-template-builder';
 
 export function buildCompleteSurveyEmail({
-  title,
-  preheader,
   name,
   completeSurveyUrl,
-}: BuildCompleteSurveyEmailProps) {
-  return createEmailTemplate({
-    config: { title, preheader },
+}: {
+  name: string;
+  completeSurveyUrl: string;
+}): { subject: string; html: string } {
+  const subject =
+    'Sua submissão foi aprovada — complete o questionário da pesquisa';
+  const preheader =
+    'Sua submissão foi aprovada. Acesse o link para preencher o questionário completo.';
+
+  const html = createEmailTemplate({
+    config: { title: subject, preheader },
     content: [
       heading('Pesquisa Nacional da Neuromielite Óptica'),
       p(`Olá, ${name}!`),
@@ -37,4 +36,6 @@ export function buildCompleteSurveyEmail({
       ),
     ],
   });
+
+  return { subject, html };
 }

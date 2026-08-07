@@ -6,15 +6,11 @@ import { Repository } from 'typeorm';
 
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
 import { RecoverPasswordUseCase } from '@/app/http/auth/use-cases/recover-password.use-case';
-import { MailService } from '@/app/mail/mail.service';
+import { EnqueueEmailUseCase } from '@/app/queue/use-cases/enqueue-email.use-case';
 import { LogService } from '@/common/log/log.service';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { EnvService } from '@/env/env.service';
-
-jest.mock('@/domain/email-templates/recover-password-email', () => ({
-  buildRecoverPasswordEmail: jest.fn().mockReturnValue('<html>recover</html>'),
-}));
 
 describe('RecoverPasswordUseCase', () => {
   let useCase: RecoverPasswordUseCase;
@@ -22,7 +18,7 @@ describe('RecoverPasswordUseCase', () => {
   let tokensRepo: MockProxy<Repository<Token>>;
   let createTokenUseCase: MockProxy<CreateTokenUseCase>;
   let envService: MockProxy<EnvService>;
-  let mailService: MockProxy<MailService>;
+  let enqueueEmailUseCase: MockProxy<EnqueueEmailUseCase>;
 
   const existingUser = memberUserFactory();
 
@@ -31,7 +27,7 @@ describe('RecoverPasswordUseCase', () => {
     tokensRepo = mock<Repository<Token>>();
     createTokenUseCase = mock<CreateTokenUseCase>();
     envService = mock<EnvService>();
-    mailService = mock<MailService>();
+    enqueueEmailUseCase = mock<EnqueueEmailUseCase>();
 
     envService.get.mockReturnValue('https://app.test.com');
 
@@ -43,7 +39,7 @@ describe('RecoverPasswordUseCase', () => {
         { provide: CreateTokenUseCase, useValue: createTokenUseCase },
         { provide: EnvService, useValue: envService },
         { provide: LogService, useValue: { log: jest.fn(), warn: jest.fn() } },
-        { provide: MailService, useValue: mailService },
+        { provide: EnqueueEmailUseCase, useValue: enqueueEmailUseCase },
       ],
     }).compile();
 
@@ -68,10 +64,12 @@ describe('RecoverPasswordUseCase', () => {
       userId: existingUser.id,
     });
     expect(tokensRepo.save).toHaveBeenCalled();
-    expect(mailService.send).toHaveBeenCalledWith(
+    expect(enqueueEmailUseCase.execute).toHaveBeenCalledWith(
       expect.objectContaining({
+        template: 'recoverPassword',
         to: existingUser.email,
-        subject: 'Solicitação para redefinição de senha',
+        name: existingUser.name.split(' ')[0],
+        resetPasswordUrl: expect.stringContaining('/nova-senha?token='),
       }),
     );
   });
@@ -83,7 +81,7 @@ describe('RecoverPasswordUseCase', () => {
       useCase.execute({ email: 'notfound@test.com' }),
     ).resolves.toBeUndefined();
 
-    expect(mailService.send).not.toHaveBeenCalled();
+    expect(enqueueEmailUseCase.execute).not.toHaveBeenCalled();
     expect(createTokenUseCase.execute).not.toHaveBeenCalled();
   });
 });

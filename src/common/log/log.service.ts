@@ -4,6 +4,7 @@ import { PinoLogger } from 'nestjs-pino';
 
 import { Env } from '@/env/env';
 import { EnvService } from '@/env/env.service';
+import { flattenForSentry } from '@/utils/flatten-for-sentry';
 
 import { ContextService } from '../context/context.service';
 import type { ContextEvent, ContextUser } from '../types';
@@ -40,7 +41,7 @@ export class LogService {
     const payload = this.buildPayload(extras);
     this.pino.info(payload, message);
     if (this.sentryLogs === 'all') {
-      Sentry.logger.info(message, this.flattenForSentry(payload));
+      Sentry.logger.info(`[api] ${message}`, flattenForSentry(payload));
     }
   }
 
@@ -48,7 +49,7 @@ export class LogService {
     const payload = this.buildPayload(extras);
     this.pino.debug(payload, message);
     if (this.sentryLogs === 'all') {
-      Sentry.logger.debug(message, this.flattenForSentry(payload));
+      Sentry.logger.debug(`[api] ${message}`, flattenForSentry(payload));
     }
   }
 
@@ -56,7 +57,7 @@ export class LogService {
     const payload = this.buildPayload(extras);
     this.pino.warn(payload, message);
     if (this.sentryLogs === 'all') {
-      Sentry.logger.warn(message, this.flattenForSentry(payload));
+      Sentry.logger.warn(`[api] ${message}`, flattenForSentry(payload));
     }
   }
 
@@ -65,7 +66,7 @@ export class LogService {
       const payload = this.buildPayload(extras);
       this.pino.error(payload, message);
       if (this.sentryLogs === 'all' || this.sentryLogs === 'error') {
-        Sentry.logger.error(message, this.flattenForSentry(payload));
+        Sentry.logger.error(`[api] ${message}`, flattenForSentry(payload));
       }
     } else {
       const payload = this.buildPayload({
@@ -74,7 +75,7 @@ export class LogService {
       });
       this.pino.error(payload);
       if (this.sentryLogs === 'all' || this.sentryLogs === 'error') {
-        Sentry.logger.error('Error', this.flattenForSentry(payload));
+        Sentry.logger.error('[api] Error', flattenForSentry(payload));
       }
     }
   }
@@ -89,15 +90,5 @@ export class LogService {
     if (context.extras) Object.assign(extras, context.extras);
 
     return { event: context.event, user: context.user, ...extras };
-  }
-
-  private flattenForSentry(payload: Record<string, any>): Record<string, any> {
-    const entries = Object.entries(payload as Record<string, unknown>);
-    return Object.fromEntries(
-      entries.map(([key, value]) => [
-        key,
-        Array.isArray(value) ? JSON.stringify(value) : value,
-      ]),
-    ) as Record<string, any>;
   }
 }

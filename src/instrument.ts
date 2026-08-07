@@ -1,24 +1,14 @@
 import * as Sentry from '@sentry/nestjs';
 
-const dsn = process.env.SENTRY_DSN;
-const sentryLogs = process.env.SENTRY_LOGS;
+import { getSentryConfig } from '@/shared/sentry';
 
-if (dsn) {
-  Sentry.init({
-    dsn,
-    tracesSampleRate: 0,
-    environment: process.env.NODE_ENV,
-    enableLogs: sentryLogs === 'all' || sentryLogs === 'error',
-    beforeSendLog(log) {
-      if (sentryLogs === 'none') {
-        return null;
-      }
+const config = getSentryConfig({
+  dsn: process.env.SENTRY_DSN ?? '',
+  sentryLogs: process.env.SENTRY_LOGS ?? 'none',
+  component: 'api',
+  environment: process.env.NODE_ENV,
+});
 
-      if (sentryLogs === 'error') {
-        return log.level === 'error' ? log : null;
-      }
-
-      return log;
-    },
-  });
+if (config) {
+  Sentry.init(config);
 }

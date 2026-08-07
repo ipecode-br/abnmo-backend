@@ -8,7 +8,7 @@ import type {
   GetSurveyUrlResponse,
   GetTotalSurveySubmissionsResponse,
 } from '@/app/http/surveys/submissions/surveys.dtos';
-import { MailService } from '@/app/mail/mail.service';
+import { EnqueueEmailUseCase } from '@/app/queue/use-cases/enqueue-email.use-case';
 import { EnvService } from '@/env/env.service';
 
 import { ApiClient, createApiClient } from '../config/api-client';
@@ -478,8 +478,8 @@ describe('Survey Submissions (e2e)', () => {
         patient,
       });
 
-      const mailService = app.get(MailService);
-      const mailSpy = jest.spyOn(mailService, 'send');
+      const enqueueEmailUseCase = app.get(EnqueueEmailUseCase);
+      const mailSpy = jest.spyOn(enqueueEmailUseCase, 'execute');
 
       const res = await api.patch(
         `/survey-submissions/${submission.id}/approve`,
@@ -499,9 +499,9 @@ describe('Survey Submissions (e2e)', () => {
 
       expect(mailSpy).toHaveBeenCalledWith(
         expect.objectContaining({
+          template: 'completeSurvey',
           to: patient.email,
-          subject: expect.any(String),
-          html: expect.stringContaining(
+          completeSurveyUrl: expect.stringContaining(
             `/catalogacao/voce?token=${updated?.surveyToken}`,
           ),
         }),
@@ -576,8 +576,8 @@ describe('Survey Submissions (e2e)', () => {
         patient,
       });
 
-      const mailService = app.get(MailService);
-      const mailSpy = jest.spyOn(mailService, 'send');
+      const enqueueEmailUseCase = app.get(EnqueueEmailUseCase);
+      const mailSpy = jest.spyOn(enqueueEmailUseCase, 'execute');
 
       const res = await api.patch(
         `/survey-submissions/${submission.id}/decline`,
@@ -594,9 +594,9 @@ describe('Survey Submissions (e2e)', () => {
       expect(updated?.reason).toBe('Documento inválido');
       expect(mailSpy).toHaveBeenCalledWith(
         expect.objectContaining({
+          template: 'declineSurvey',
           to: patient.email,
-          subject: expect.any(String),
-          html: expect.stringContaining('Documento inválido'),
+          reason: 'Documento inválido',
         }),
       );
 

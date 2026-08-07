@@ -7,12 +7,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { v7 as uuidv7 } from 'uuid';
 
-import { MailService } from '@/app/mail/mail.service';
+import { EnqueueEmailUseCase } from '@/app/queue/use-cases/enqueue-email.use-case';
 import { can } from '@/common/authorization/can';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import type { RequestUser } from '@/common/types';
-import { buildCompleteSurveyEmail } from '@/domain/email-templates/complete-survey-email';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
 import { EnvService } from '@/env/env.service';
 
@@ -29,7 +28,7 @@ export class ApproveSurveySubmissionUseCase {
   constructor(
     @InjectRepository(SurveySubmission)
     private readonly surveySubmissionsRepository: Repository<SurveySubmission>,
-    private readonly mailService: MailService,
+    private readonly enqueueEmailUseCase: EnqueueEmailUseCase,
     private readonly envService: EnvService,
     private readonly logger: LogService,
   ) {
@@ -72,23 +71,11 @@ export class ApproveSurveySubmissionUseCase {
 
     const completeSurveyUrl = `${this.dashboardUrl}/catalogacao/voce?token=${surveyToken}`;
 
-    const subject =
-      'Sua submissão foi aprovada — complete o questionário da pesquisa';
-    const preheader =
-      'Sua submissão foi aprovada. Acesse o link para preencher o questionário completo.';
-
-    const emailHtml = buildCompleteSurveyEmail({
-      title: subject,
-      preheader,
+    await this.enqueueEmailUseCase.execute({
+      template: 'completeSurvey',
+      to: submission.patient.email,
       name: submission.patient.name,
       completeSurveyUrl,
-    });
-
-    await this.mailService.send({
-      to: submission.patient.email,
-      subject,
-      text: preheader,
-      html: emailHtml,
     });
 
     this.logger.log('Survey submission approved', { id });
