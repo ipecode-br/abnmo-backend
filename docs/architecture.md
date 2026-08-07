@@ -6,17 +6,16 @@ API SaaS construída com **NestJS** para gerenciamento de pacientes, usuários, 
 
 ## Stack
 
-| Tecnologia              | Finalidade                                   |
-| ----------------------- | -------------------------------------------- |
-| NestJS + TypeScript     | Framework principal                          |
-| TypeORM + PostgreSQL    | Persistência de dados                        |
-| Zod v4                  | Validação de schemas e DTOs                  |
-| JWT (cookies HTTP-only) | Autenticação                                 |
-| nestjs-pino             | Base do sistema de logging                   |
-| @sentry/nestjs          | Monitoramento de erros 5xx e logs            |
-| AWS SQS + Lambda        | Enfileiramento e envio assíncrono de e-mails |
-| LocalStack (dev)        | Simulação de SQS em desenvolvimento          |
-| Docker                  | Banco de dados local                         |
+| Tecnologia              | Finalidade                        |
+| ----------------------- | --------------------------------- |
+| NestJS + TypeScript     | Framework principal               |
+| TypeORM + PostgreSQL    | Persistência de dados             |
+| Zod v4                  | Validação de schemas e DTOs       |
+| JWT (cookies HTTP-only) | Autenticação                      |
+| nestjs-pino             | Base do sistema de logging        |
+| @sentry/nestjs          | Monitoramento de erros 5xx e logs |
+| AWS SES / Resend        | Envio de e-mails                  |
+| Docker                  | Banco de dados local              |
 
 ## Estrutura de pastas
 
@@ -41,17 +40,9 @@ src/
 │   │   │   └── submissions/
 │   │   ├── users/
 │   │   └── webhooks/
-│   ├── queue/                     # Módulo global de SQS (EnqueueEmailUseCase, etc.)
+│   ├── mail/                      # Módulo de envio de e-mail
 │   ├── signature/                 # Módulo de assinatura digital
 │   └── storage/                   # Módulo de upload de arquivos (S3/CDN)
-├── shared/                        # Código compartilhado entre API e workers
-│   └── queue/                     # Contratos (envelope, DTOs) de mensagens SQS
-├── workers/                       # Workers (AWS Lambda)
-│   └── email/                     # Worker de e-mail (consumer SQS → SES/Resend)
-│       ├── handler.ts             # Lambda handler
-│       ├── send-email.ts          # Dispatch por template + provider
-│       ├── providers/             # Implementações SES e Resend
-│       └── templates/             # Builders de templates de e-mail
 ├── common/                        # Utilitários globais
 │   ├── authorization/             # `can()` — verificação de permissões
 │   ├── context/                   # AsyncLocalStorage por request
@@ -95,9 +86,6 @@ Controllers não contêm lógica de negócio — apenas chamam `useCase.execute(
   imports: [
     SentryModule.forRoot(),
     EnvModule,
-    LogModule,
-    QueueModule,
-    DatabaseModule,
     AuthModule,
     AppointmentsModule,
     PatientsModule,
@@ -135,30 +123,16 @@ Requisição HTTP
 
 Em caso de exceção, o `HttpExceptionFilter` captura, reporta ao Sentry (5xx) e retorna resposta padronizada.
 
-## Fluxo de envio de e-mail
-
-```
-UseCase (API)
-  → EnqueueEmailUseCase.execute({ template, to, ... })
-  → SQS (fila email-queue)
-  → Worker Lambda (handler.ts)
-  → sendEmail(job)
-  → switch(template) → build*Email(job)
-  → EMAIL_PROVIDER=ses|resend → SES ou Resend
-```
-
-A API apenas enfileira o job com os dados do template (nome, URLs, razão). O worker monta o HTML final e envia via SES ou Resend. Falhas de envio são tratadas pelo worker — não impactam o tempo de resposta da API.
-
 ## Módulos compartilhados
 
 | Módulo               | Propósito                                   | Como importar                   |
 | -------------------- | ------------------------------------------- | ------------------------------- |
 | `CryptographyModule` | Hash (bcrypt), JWT e cookies                | Importar no módulo que precisar |
-| `QueueModule`        | `EnqueueEmailUseCase` — enfileiramento SQS  | Global — não precisa importar   |
+| `MailModule`         | Envio de e-mails (SES/Resend)               | Importar no módulo que precisar |
 | `EnvModule`          | Acesso tipado a variáveis de ambiente       | Importar quando necessário      |
 | `StorageModule`      | Upload de arquivos (S3/CDN com signed URLs) | Importar quando necessário      |
 | `SignatureModule`    | Assinatura digital (ClickSign)              | Importar no módulo que precisar |
 | `LogModule`          | `LogService` e decorator `@Log()`           | Global — não precisa importar   |
 | `SentryModule`       | Monitoramento de erros e logs               | Registrado no `AppModule`       |
 
-> `LogModule` e `QueueModule` são declarados com `@Global()`, portanto `LogService` e `EnqueueEmailUseCase` estão disponíveis em toda a aplicação.
+> `LogModule` é declarado com `@Global()`, portanto `LogService` está disponível em toda a aplicação.

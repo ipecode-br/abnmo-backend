@@ -32,7 +32,6 @@ import { StatusModule } from './http/status/status.module';
 import { SurveysModule } from './http/surveys/surveys.module';
 import { UsersModule } from './http/users/users.module';
 import { WebhooksModule } from './http/webhooks/webhooks.module';
-import { QueueModule } from './queue/queue.module';
 import { StorageModule } from './storage/storage.module';
 
 /**
@@ -76,7 +75,6 @@ import { StorageModule } from './storage/storage.module';
       },
     }),
     LogModule,
-    QueueModule,
     DatabaseModule,
     SurveysModule,
     AuthModule,

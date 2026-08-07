@@ -67,7 +67,7 @@ Use as classes nativas do NestJS, importadas de `@nestjs/common`:
 | `ForbiddenException`          | 403  | Permissão insuficiente ou violação de ownership      |
 | `BadRequestException`         | 400  | Violação de regra de negócio                         |
 | `ConflictException`           | 409  | Conflito de dados únicos (e-mail, CPF já cadastrado) |
-| `ServiceUnavailableException` | 503  | Falha em serviço externo (S3, assinatura)            |
+| `ServiceUnavailableException` | 503  | Falha em serviço externo (e-mail, S3, assinatura)    |
 
 ---
 
@@ -131,20 +131,14 @@ can(
 );
 // → ForbiddenException implícito se falhar
 
-// Falha em serviço externo (ex: S3, assinatura digital)
+// Falha em serviço externo
 try {
-  await this.storageService.upload({ file, path });
+  await this.mailService.send({ to: email, subject, html });
 } catch (error) {
-  throw new ServiceUnavailableException(
-    'Não foi possível fazer o upload do arquivo.',
-    {
-      cause: error,
-    },
-  );
+  throw new ServiceUnavailableException('Não foi possível enviar o e-mail.', {
+    cause: error,
+  });
 }
-
-// E-mails são enfileirados via SQS — falhas de envio são tratadas pelo worker,
-// não retornam erro na API.
 ```
 
 ---

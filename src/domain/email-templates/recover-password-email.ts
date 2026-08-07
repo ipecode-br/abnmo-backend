@@ -3,21 +3,23 @@ import {
   createEmailTemplate,
   heading,
   p,
-} from '../utils/email-template-builder';
+} from '@/utils/email-template-builder';
+
+interface BuildRecoverPasswordEmailProps {
+  title: string;
+  preheader: string;
+  name: string;
+  resetPasswordUrl: string;
+}
 
 export function buildRecoverPasswordEmail({
   name,
+  preheader,
+  title,
   resetPasswordUrl,
-}: {
-  name: string;
-  resetPasswordUrl: string;
-}): { subject: string; html: string } {
-  const subject = 'Solicitação para redefinição de senha';
-  const preheader =
-    'Redefina sua senha de acesso ao Sistema Viver Melhor da ABNMO.';
-
-  const html = createEmailTemplate({
-    config: { title: subject, preheader },
+}: BuildRecoverPasswordEmailProps) {
+  return createEmailTemplate({
+    config: { title, preheader },
     content: [
       heading('Redefinição de senha'),
       p(`Olá, ${name}!`),
@@ -35,6 +37,4 @@ export function buildRecoverPasswordEmail({
       ),
     ],
   });
-
-  return { subject, html };
 }

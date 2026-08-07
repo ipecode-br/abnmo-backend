@@ -1,15 +1,16 @@
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { mock, MockProxy } from 'jest-mock-extended';
-import { requestUserFactory } from 'tests/config/factories/shared.factory';
-import {
-  adminUserFactory,
-  specialistUserFactory,
-} from 'tests/config/factories/user.factory';
 import { Repository } from 'typeorm';
 
 import { GetUsersUseCase } from '@/app/http/users/use-cases/get-users.use-case';
 import { User } from '@/domain/entities/user';
+
+import { requestUserFactory } from '../../../config/factories/shared.factory';
+import {
+  adminUserFactory,
+  specialistUserFactory,
+} from '../../../config/factories/user.factory';
 
 describe('GetUsersUseCase', () => {
   let useCase: GetUsersUseCase;

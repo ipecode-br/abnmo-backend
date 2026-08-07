@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { CryptographyModule } from '@/app/cryptography/cryptography.module';
+import { MailModule } from '@/app/mail/mail.module';
 import { StorageModule } from '@/app/storage/storage.module';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
@@ -24,6 +25,7 @@ import { UsersController } from './users.controller';
     TypeOrmModule.forFeature([User, Token]),
     CryptographyModule,
     EnvModule,
+    MailModule,
     StorageModule,
   ],
   providers: [

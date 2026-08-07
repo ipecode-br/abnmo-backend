@@ -12,7 +12,7 @@ Generates e2e and unit tests that match this codebase's established conventions 
 1. Identify the resource under test and locate its route/controller file, use case files, DTOs, entity, and any existing `*.e2e-spec.ts` or `*.spec.ts` in the repo.
 2. For e2e tests, identify every endpoint to cover and whether it is **public** (`@Public()`) or **non-public** (requires cookies + feature).
 3. For each non-public endpoint, identify the specific feature flag(s) it requires (e.g. `'read:user:others'`, `'update:user'`) and whether there's "others" distinction.
-4. For unit tests, identify every use-case dependency to mock (repositories via `getRepositoryToken`, other use cases, services like `LogService`/`EnqueueEmailUseCase`).
+4. For unit tests, identify every use-case dependency to mock (repositories via `getRepositoryToken`, other use cases, services like `LogService`/`MailService`).
 5. If anything is ambiguous, ask the user rather than guessing feature names or message strings.
 
 ---
@@ -30,7 +30,7 @@ These apply to every `*.e2e-spec.ts` file:
   - Testing anything else (404s, business-logic edge cases, pagination, filters) → use `createAdmin({ login: true })`.
 - **Use repo helpers to create/read database state** (`createUser`, `getUserById`, `createSurveySubmission`, `createWebhookEvent`, etc.) instead of calling the API to set up fixtures — **except** when the endpoint under test _is_ the creation/read endpoint itself.
 - **Assert `status`, `success`, and `message` on every response** — error and success alike. For success responses with `data`, also assert the relevant data fields, and confirm mutations by re-fetching via a helper rather than trusting the response body alone.
-- **Side effects (emails)** use `jest.spyOn(app.get(EnqueueEmailUseCase), 'execute')`, checking `template`, `to`, and template-specific fields (urls, name, reason). Always `mockRestore()` after.
+- **Side effects (emails)** use `jest.spyOn(app.get(MailService), 'send')`, checking `to`, `subject`, and `html` content. Always `mockRestore()` after.
 - **Sensitive fields** must be checked for absence when the endpoint omits them: `expect(res.body).not.toHaveProperty('surveyToken')`.
 
 ### Public endpoints
@@ -46,7 +46,7 @@ Public endpoints use `@Public()` and bypass `AuthGuard`. They may use alternativ
 import { INestApplication } from '@nestjs/common';
 
 import type {} from /* DTOs */ '@/app/http/<resource>/<resource>.dtos';
-// other imports as needed (EnqueueEmailUseCase, EnvService)
+// other imports as needed (MailService, EnvService)
 
 import {
   ApiClient,
@@ -113,7 +113,7 @@ describe('<Resource> (e2e)', () => {
 Study these for exact patterns, spacing, and ordering:
 
 - `tests/e2e/users.e2e-spec.ts` — pagination, self/others, feature-gated PATCH, state-transition guards (409), invite CRUD
-- `tests/e2e/surveys-submissions.e2e-spec.ts` — public creation (dashboard-key), validation, filters, email spy with `jest.spyOn(app.get(EnqueueEmailUseCase), 'execute')`
+- `tests/e2e/surveys-submissions.e2e-spec.ts` — public creation (dashboard-key), validation, filters, email spy with `jest.spyOn`
 - `tests/e2e/webhooks.e2e-spec.ts` — public POST with HMAC auth, 401 on missing/invalid HMAC, GET :id with feature guard
 
 ---

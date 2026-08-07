@@ -9,8 +9,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "dev": "npm run services:up && npm run services:wait:database && npm run services:setup-queues && npm run db:migrate && nest start --watch",
-    "dev:email-worker": "tsx watch -r tsconfig-paths/register infra/local/queue/local-runner.ts",
+    "dev": "npm run services:up && npm run services:wait:database && npm run db:migrate && nest start --watch",
     "lint:eslint:check": "eslint .",
     "lint:prettier:check": "prettier --check .",
     "lint:prettier:fix": "prettier --write . --log-level=warn",
@@ -19,7 +18,6 @@
     "services:stop": "docker compose -f infra/docker/compose-dev.yaml --env-file .env stop",
     "services:down": "docker compose -f infra/docker/compose-dev.yaml --env-file .env down",
     "services:wait:database": "ts-node ./infra/scripts/wait-for-database.ts",
-    "services:setup-queues": "ts-node -r tsconfig-paths/register infra/local/queue/setup-queues.ts",
     "db:generate": "ts-node ./infra/scripts/generate-migration.ts",
     "db:migrate": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js -d ./infra/database/data.source.ts migration:run",
     "db:seed-dev": "ts-node -r tsconfig-paths/register infra/scripts/seed-dev/index.ts",
@@ -31,9 +29,6 @@
     "test:e2e": "NODE_ENV=test jest --config ./tests/config/jest-e2e.json --runInBand",
     "test:e2e:watch": "NODE_ENV=test jest --config ./tests/config/jest-e2e.json --runInBand --watch",
     "build:lambda": "ts-node infra/scripts/build-lambda.ts",
-    "build:api": "ts-node infra/scripts/build-lambda.ts api",
-    "build:email-worker": "ts-node infra/scripts/build-lambda.ts email-worker",
-    "build:all": "ts-node infra/scripts/build-lambda.ts all",
     "build:docker": "tsc -p tsconfig.docker.json && tsc-alias -p tsconfig.docker.json",
     "docker:dev:up": "docker compose -f infra/docker/dev/compose.yaml --env-file .env.docker up -d",
     "docker:dev:stop": "docker compose -f infra/docker/dev/compose.yaml --env-file .env.docker stop",
@@ -47,7 +42,6 @@
     "@aws-sdk/client-lambda": "3.1047.0",
     "@aws-sdk/client-s3": "3.1053.0",
     "@aws-sdk/client-ses": "3.1047.0",
-    "@aws-sdk/client-sqs": "3.1047.0",
     "@aws-sdk/cloudfront-signer": "3.1052.0",
     "@aws-sdk/s3-presigned-post": "3.1078.0",
     "@nestjs/class-validator": "0.13.1",
@@ -60,7 +54,6 @@
     "@nestjs/swagger": "11.4.6",
     "@nestjs/typeorm": "11.0.1",
     "@sentry/nestjs": "10.68.0",
-    "@sentry/node": "10.68.0",
     "@types/aws-serverless-express": "3.3.10",
     "@vendia/serverless-express": "4.12.6",
     "archiver": "7.0.1",
@@ -123,7 +116,6 @@
     "ts-node": "10.9.2",
     "tsc-alias": "1.8.16",
     "tsconfig-paths": "4.2.0",
-    "tsx": "4.23.9",
     "typescript": "5.7.3",
     "typescript-eslint": "8.20.0"
   }

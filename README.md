@@ -4,13 +4,13 @@ API do Sistema Viver Melhor (SVM) para a ABNMO. Plataforma centralizada para aco
 
 ## Stack
 
-Node.js · NestJS · TypeORM · PostgreSQL · Zod · AWS SQS · Sentry · Docker
+Node.js · NestJS · TypeORM · PostgreSQL · Zod · Sentry · Docker
 
 ## Pré-requisitos
 
 - **Node.js** ≥ 22
 - **npm** ≥ 9
-- **Docker** (para o banco de dados PostgreSQL e SQS local via LocalStack)
+- **Docker** (para o banco de dados PostgreSQL local)
 
 ## Instalação
 
@@ -27,13 +27,7 @@ cp .env.example .env
 npm run dev
 ```
 
-Sobe o banco via Docker, cria a fila SQS no LocalStack, executa as migrations pendentes e inicia o servidor com hot-reload em `http://localhost:3333`.
-
-Para consumir os e-mails enfileirados localmente, execute em outro terminal:
-
-```bash
-npm run dev:email-worker
-```
+Sobe o banco via Docker, executa as migrations pendentes e inicia o servidor com hot-reload em `http://localhost:3333`.
 
 ### Seed (dados de exemplo)
 

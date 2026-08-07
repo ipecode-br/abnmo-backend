@@ -3,6 +3,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { CryptographyModule } from '@/app/cryptography/cryptography.module';
+import { MailModule } from '@/app/mail/mail.module';
 import { StorageModule } from '@/app/storage/storage.module';
 import { AuthGuard } from '@/common/guards/auth.guard';
 import { DashboardGuard } from '@/common/guards/dashboard.guard';
@@ -28,6 +29,7 @@ import { SignInWithEmailUseCase } from './use-cases/sign-in-with-email.use-case'
     TypeOrmModule.forFeature([Session, Token, User]),
     CryptographyModule,
     EnvModule,
+    MailModule,
     StorageModule,
     UsersModule,
   ],

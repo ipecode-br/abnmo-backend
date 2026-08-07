@@ -1,3 +1,14 @@
+/**
+ * Optimized base template for maximum email client compatibility
+ * Follows best practices for Gmail, Outlook, Apple Mail, etc.
+ */
+
+/**
+ * Optimized base template for maximum email client compatibility
+ * @param config - Email settings, including title and preheader
+ * @param content - Main email content
+ * @param data - Additional data for template personalization
+ */
 export function createEmailTemplate({
   config,
   content,
@@ -124,12 +135,22 @@ export function createEmailTemplate({
 	</html>`;
 }
 
+/**
+ * @param text Text rendered in the heading
+ * @param style Additional style for the heading
+ * @returns `<p style="${defaultStyle}${style}">${text}</p>`
+ */
 export function heading(text: string, style = ''): string {
   const defaultStyle =
     'font-size: 24px; font-weight: 600; margin-bottom: 24px; color: #036246';
   return `<p style="${defaultStyle}${style}">${text}</p>`;
 }
 
+/**
+ * @param text Paragraph text
+ * @param style Additional style for the paragraph
+ * @returns `<p style="${defaultStyle}${style}">${text}</p>`
+ */
 export function p(text: string, style = ''): string {
   const defaultStyle =
     'margin: 16px 0; font-family: Arial, sans-serif; font-size: 16px; line-height: 1.6; color: #333333;';
@@ -139,6 +160,14 @@ export function p(text: string, style = ''): string {
   return `<p style="${defaultStyle}${style}">${formattedText}</p>`;
 }
 
+/**
+ *
+ * @param text Button text
+ * @param url Button URL
+ * @param backgroundColor Button background color
+ * @param textColor Button text color
+ * @param padding Button inner spacing
+ */
 export function button(
   text: string,
   url: string,

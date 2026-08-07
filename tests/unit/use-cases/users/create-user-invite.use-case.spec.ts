@@ -6,7 +6,7 @@ import { DataSource, Repository } from 'typeorm';
 
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
 import { CreateUserInviteUseCase } from '@/app/http/users/use-cases/create-user-invite.use-case';
-import { EnqueueEmailUseCase } from '@/app/queue/use-cases/enqueue-email.use-case';
+import { MailService } from '@/app/mail/mail.service';
 import { LogService } from '@/common/log/log.service';
 import type { RequestUser } from '@/common/types';
 import { Token } from '@/domain/entities/token';
@@ -21,7 +21,7 @@ describe('CreateUserInviteUseCase', () => {
   let createTokenUseCase: MockProxy<CreateTokenUseCase>;
   let dataSource: { transaction: jest.Mock };
   let envService: MockProxy<EnvService>;
-  let enqueueEmailUseCase: MockProxy<EnqueueEmailUseCase>;
+  let mailService: MockProxy<MailService>;
 
   const user: RequestUser = {
     id: 'admin-id',
@@ -35,7 +35,7 @@ describe('CreateUserInviteUseCase', () => {
     tokensRepo = mock<Repository<Token>>();
     createTokenUseCase = mock<CreateTokenUseCase>();
     envService = mock<EnvService>();
-    enqueueEmailUseCase = mock<EnqueueEmailUseCase>();
+    mailService = mock<MailService>();
 
     const transactionTokenRepo = mock<Repository<Token>>();
     transactionTokenRepo.create.mockImplementation(
@@ -62,7 +62,7 @@ describe('CreateUserInviteUseCase', () => {
         { provide: DataSource, useValue: dataSource },
         { provide: EnvService, useValue: envService },
         { provide: LogService, useValue: { log: jest.fn() } },
-        { provide: EnqueueEmailUseCase, useValue: enqueueEmailUseCase },
+        { provide: MailService, useValue: mailService },
       ],
     }).compile();
 
@@ -93,7 +93,7 @@ describe('CreateUserInviteUseCase', () => {
       type: TOKENS.inviteUser,
       payload: { role: 'member' },
     });
-    expect(enqueueEmailUseCase.execute).toHaveBeenCalled();
+    expect(mailService.send).toHaveBeenCalled();
   });
 
   it('allows invite when existing token is expired', async () => {
@@ -117,7 +117,7 @@ describe('CreateUserInviteUseCase', () => {
     });
 
     expect(createTokenUseCase.execute).toHaveBeenCalled();
-    expect(enqueueEmailUseCase.execute).toHaveBeenCalled();
+    expect(mailService.send).toHaveBeenCalled();
   });
 
   it('builds the correct register URL and sends email', async () => {
@@ -131,13 +131,10 @@ describe('CreateUserInviteUseCase', () => {
 
     await useCase.execute({ user, email: 'newuser@test.com', role: 'admin' });
 
-    expect(enqueueEmailUseCase.execute).toHaveBeenCalledWith(
+    expect(mailService.send).toHaveBeenCalledWith(
       expect.objectContaining({
-        template: 'registerUser',
         to: 'newuser@test.com',
-        registerUserUrl: expect.stringContaining(
-          '/cadastrar?token=invite-token-abc',
-        ),
+        html: expect.stringContaining('/cadastrar?token=invite-token-abc'),
       }),
     );
   });

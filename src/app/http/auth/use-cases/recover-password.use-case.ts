@@ -3,9 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
-import { EnqueueEmailUseCase } from '@/app/queue/use-cases/enqueue-email.use-case';
+import { MailService } from '@/app/mail/mail.service';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
+import { buildRecoverPasswordEmail } from '@/domain/email-templates/recover-password-email';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { TOKENS } from '@/domain/enums/tokens';
@@ -18,8 +19,6 @@ interface RecoverPasswordUseCaseInput {
 @Injectable()
 @Log()
 export class RecoverPasswordUseCase {
-  private readonly baseAppUrl: string;
-
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
@@ -28,10 +27,8 @@ export class RecoverPasswordUseCase {
     private readonly createTokenUseCase: CreateTokenUseCase,
     private readonly envService: EnvService,
     private readonly logger: LogService,
-    private readonly enqueueEmailUseCase: EnqueueEmailUseCase,
-  ) {
-    this.baseAppUrl = envService.get('APP_URL');
-  }
+    private readonly mailService: MailService,
+  ) {}
 
   async execute({ email }: RecoverPasswordUseCaseInput): Promise<void> {
     const user = await this.usersRepository.findOne({
@@ -64,14 +61,26 @@ export class RecoverPasswordUseCase {
 
     this.logger.log('Password reset token generated', { id: user.id, email });
 
-    const resetPasswordUrl = `${this.baseAppUrl}/nova-senha?token=${token}`;
+    const baseAppUrl = this.envService.get('APP_URL');
+    const resetPasswordUrl = `${baseAppUrl}/nova-senha?token=${token}`;
+
+    const subject = 'Solicitação para redefinição de senha';
+    const preheader =
+      'Redefina sua senha de acesso ao Sistema Viver Melhor da ABNMO.';
     const name = user.name.split(' ')[0];
 
-    await this.enqueueEmailUseCase.execute({
-      template: 'recoverPassword',
-      to: email,
+    const recoverPasswordEmail = buildRecoverPasswordEmail({
+      title: subject,
+      preheader,
       name,
       resetPasswordUrl,
+    });
+
+    await this.mailService.send({
+      to: email,
+      subject,
+      text: preheader,
+      html: recoverPasswordEmail,
     });
   }
 }

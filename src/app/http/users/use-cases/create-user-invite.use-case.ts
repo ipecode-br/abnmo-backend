@@ -3,11 +3,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
-import { EnqueueEmailUseCase } from '@/app/queue/use-cases/enqueue-email.use-case';
+import { MailService } from '@/app/mail/mail.service';
 import { can } from '@/common/authorization/can';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import type { RequestUser } from '@/common/types';
+import { buildRegisterUserEmail } from '@/domain/email-templates/register-user-email';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { TOKENS } from '@/domain/enums/tokens';
@@ -23,8 +24,6 @@ interface CreateUserInviteUseCaseInput {
 @Injectable()
 @Log()
 export class CreateUserInviteUseCase {
-  private readonly baseAppUrl: string;
-
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
@@ -34,10 +33,8 @@ export class CreateUserInviteUseCase {
     private readonly dataSource: DataSource,
     private readonly envService: EnvService,
     private readonly logger: LogService,
-    private readonly enqueueEmailUseCase: EnqueueEmailUseCase,
-  ) {
-    this.baseAppUrl = envService.get('APP_URL');
-  }
+    private readonly mailService: MailService,
+  ) {}
 
   async execute({
     email,
@@ -94,12 +91,24 @@ export class CreateUserInviteUseCase {
         role,
       });
 
-      const registerUserUrl = `${this.baseAppUrl}/cadastrar?token=${inviteUserToken}`;
+      const baseAppUrl = this.envService.get('APP_URL');
+      const registerUserUrl = `${baseAppUrl}/cadastrar?token=${inviteUserToken}`;
 
-      await this.enqueueEmailUseCase.execute({
-        template: 'registerUser',
-        to: email,
+      const subject = 'Cadastre sua conta no Sistema Viver Melhor da ABNMO';
+      const preheader =
+        'Conclua o cadastro da sua conta para acessar o Sistema Viver Melhor da ABNMO.';
+
+      const registerUserEmail = buildRegisterUserEmail({
+        title: subject,
+        preheader,
         registerUserUrl,
+      });
+
+      await this.mailService.send({
+        to: email,
+        subject,
+        text: preheader,
+        html: registerUserEmail,
       });
     });
   }

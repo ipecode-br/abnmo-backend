@@ -17,7 +17,7 @@ NestJS + TypeORM + PostgreSQL + Zod API.
 
 ## Architecture
 
-- **Entrypoint**: `src/app/main.ts` (HTTP — local dev only), `src/app/lambda.ts` (AWS Lambda via `@vendia/serverless-express`), `src/instrument.ts` (Sentry init), `src/workers/email/handler.ts` (email worker Lambda)
+- **Entrypoint**: `src/app/main.ts` (HTTP — local dev only), `src/app/lambda.ts` (AWS Lambda via `@vendia/serverless-express`), `src/instrument.ts` (Sentry init)
 - **Feature modules**: `src/app/http/{feature}/` — `{feature}.module.ts`, `.controller.ts`, `.dtos.ts`, `use-cases/{action}-{feature}.use-case.ts`
 - **Entities**: `src/domain/entities/`, registered centrally in `DATABASE_ENTITIES` in `src/domain/entities/database.ts`
 - **Zod schemas** (source of truth for validation): `src/domain/schemas/{entity}/` — `index.ts`, `requests.ts`, `responses.ts`
@@ -261,11 +261,12 @@ When composing a list response, extract a standalone list-item schema (e.g. `lis
 | Module               | When to import        |
 | -------------------- | --------------------- |
 | `CryptographyModule` | Hashing, JWT, cookies |
+| `MailModule`         | Sending emails        |
 | `EnvModule`          | Accessing env vars    |
 | `StorageModule`      | File uploads          |
 | `SignatureModule`    | Digital signatures    |
 
-`QueueModule` and `LogModule` are global — no need to import them.
+`LogModule` is global — never import it.
 
 ### Exception mapping
 
@@ -346,7 +347,7 @@ await this.dataSource.transaction(async (manager) => {
 
 ## Code reuse
 
-Check existing utilities in `src/utils/` (cookies, date ranges, file names, validators, formatters, normalize strings) and `src/constants/` (mime types, regex) before creating new ones.
+Check existing utilities in `src/utils/` (cookies, date ranges, file names, validators, formatters, normalize strings, email templates) and `src/constants/` (mime types, regex) before creating new ones.
 
 ## Important constraints
 
