@@ -55,7 +55,7 @@ jobs:
       - name: Deploy Email Worker Lambda
         run: |
           aws lambda update-function-code \
-            --function-name abnmo-svm-email-worker-development \
+            --function-name abnmo-svm-worker-email-development \
             --zip-file fileb://dist-lambda/lambda-email-worker.zip \
             --output text \
             --query 'FunctionName'
