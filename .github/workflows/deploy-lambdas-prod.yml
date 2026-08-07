@@ -39,7 +39,7 @@ jobs:
         run: |
           aws lambda update-function-code \
             --function-name abnmo-svm-lambda-production \
-            --zip-file fileb://lambda-api.zip \
+            --zip-file fileb://dist-lambda/lambda-api.zip \
             --output text \
             --query 'FunctionName'
 
@@ -54,6 +54,6 @@ jobs:
         run: |
           aws lambda update-function-code \
             --function-name abnmo-svm-email-worker-production \
-            --zip-file fileb://lambda-email-worker.zip \
+            --zip-file fileb://dist-lambda/lambda-email-worker.zip \
             --output text \
             --query 'FunctionName'

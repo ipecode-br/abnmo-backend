@@ -16,7 +16,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: lts/iron
+          node-version: '22'
 
       - run: npm ci
 
@@ -30,7 +30,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: lts/iron
+          node-version: '22'
 
       - run: npm ci
 
@@ -44,7 +44,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: lts/iron
+          node-version: '22'
 
       - run: npm ci
 
