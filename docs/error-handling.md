@@ -67,7 +67,7 @@ Use as classes nativas do NestJS, importadas de `@nestjs/common`:
 | `ForbiddenException`          | 403  | Permissão insuficiente ou violação de ownership      |
 | `BadRequestException`         | 400  | Violação de regra de negócio                         |
 | `ConflictException`           | 409  | Conflito de dados únicos (e-mail, CPF já cadastrado) |
-| `ServiceUnavailableException` | 503  | Falha em serviço externo (e-mail, S3, assinatura)    |
+| `ServiceUnavailableException` | 503  | Falha em serviço externo (S3, assinatura)            |
 
 ---
 

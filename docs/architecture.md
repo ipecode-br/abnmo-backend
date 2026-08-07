@@ -48,7 +48,7 @@ src/
 │   └── queue/                     # Contratos (envelope, DTOs) de mensagens SQS
 ├── workers/                       # Workers (AWS Lambda)
 │   └── email/                     # Worker de e-mail (consumer SQS → SES/Resend)
-│       ├── consumer.ts            # Lambda handler
+│       ├── handler.ts             # Lambda handler
 │       ├── send-email.ts          # Dispatch por template + provider
 │       ├── providers/             # Implementações SES e Resend
 │       └── templates/             # Builders de templates de e-mail
@@ -140,9 +140,8 @@ Em caso de exceção, o `HttpExceptionFilter` captura, reporta ao Sentry (5xx) e
 ```
 UseCase (API)
   → EnqueueEmailUseCase.execute({ template, to, ... })
-  → QueueService.enqueueEmail(job)
   → SQS (fila email-queue)
-  → Worker Lambda (consumer.ts)
+  → Worker Lambda (handler.ts)
   → sendEmail(job)
   → switch(template) → build*Email(job)
   → EMAIL_PROVIDER=ses|resend → SES ou Resend
