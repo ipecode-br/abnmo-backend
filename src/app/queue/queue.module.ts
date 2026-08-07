@@ -5,7 +5,6 @@ import { EnqueueEmailUseCase } from './use-cases/enqueue-email.use-case';
 
 @Global()
 @Module({
-  imports: [],
   providers: [
     { provide: SQSClient, useValue: new SQSClient({}) },
     EnqueueEmailUseCase,

@@ -5,7 +5,6 @@ import { RequestSignatureUseCase } from './use-cases/request-signature.use-case'
 import { SendReminderSignatureUseCase } from './use-cases/send-reminder-signature.use-case';
 
 @Module({
-  imports: [],
   providers: [
     SignatureService,
     RequestSignatureUseCase,
