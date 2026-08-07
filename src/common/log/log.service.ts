@@ -41,7 +41,7 @@ export class LogService {
     const payload = this.buildPayload(extras);
     this.pino.info(payload, message);
     if (this.sentryLogs === 'all') {
-      Sentry.logger.info(message, flattenForSentry(payload));
+      Sentry.logger.info(`[api] ${message}`, flattenForSentry(payload));
     }
   }
 
@@ -49,7 +49,7 @@ export class LogService {
     const payload = this.buildPayload(extras);
     this.pino.debug(payload, message);
     if (this.sentryLogs === 'all') {
-      Sentry.logger.debug(message, flattenForSentry(payload));
+      Sentry.logger.debug(`[api] ${message}`, flattenForSentry(payload));
     }
   }
 
@@ -57,7 +57,7 @@ export class LogService {
     const payload = this.buildPayload(extras);
     this.pino.warn(payload, message);
     if (this.sentryLogs === 'all') {
-      Sentry.logger.warn(message, flattenForSentry(payload));
+      Sentry.logger.warn(`[api] ${message}`, flattenForSentry(payload));
     }
   }
 
@@ -66,7 +66,7 @@ export class LogService {
       const payload = this.buildPayload(extras);
       this.pino.error(payload, message);
       if (this.sentryLogs === 'all' || this.sentryLogs === 'error') {
-        Sentry.logger.error(message, flattenForSentry(payload));
+        Sentry.logger.error(`[api] ${message}`, flattenForSentry(payload));
       }
     } else {
       const payload = this.buildPayload({
@@ -75,7 +75,7 @@ export class LogService {
       });
       this.pino.error(payload);
       if (this.sentryLogs === 'all' || this.sentryLogs === 'error') {
-        Sentry.logger.error('Error', flattenForSentry(payload));
+        Sentry.logger.error('[api] Error', flattenForSentry(payload));
       }
     }
   }
