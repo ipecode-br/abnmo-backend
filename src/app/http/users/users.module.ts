@@ -5,7 +5,6 @@ import { CryptographyModule } from '@/app/cryptography/cryptography.module';
 import { StorageModule } from '@/app/storage/storage.module';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
-import { EnvModule } from '@/env/env.module';
 
 import { ActivateUserUseCase } from './use-cases/activate-user.use-case';
 import { CancelUserInviteUseCase } from './use-cases/cancel-user-invite.use-case';
@@ -23,7 +22,6 @@ import { UsersController } from './users.controller';
   imports: [
     TypeOrmModule.forFeature([User, Token]),
     CryptographyModule,
-    EnvModule,
     StorageModule,
   ],
   providers: [

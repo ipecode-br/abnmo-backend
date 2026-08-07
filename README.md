@@ -4,7 +4,7 @@ API do Sistema Viver Melhor (SVM) para a ABNMO. Plataforma centralizada para aco
 
 ## Stack
 
-Node.js · NestJS · TypeORM · PostgreSQL · Zod · AWS SQS · Sentry · Docker
+Node.js · NestJS · TypeORM · PostgreSQL · Zod · AWS SQS + Lambda · Sentry · Docker
 
 ## Pré-requisitos
 
@@ -29,12 +29,6 @@ npm run dev
 
 Sobe o banco via Docker, cria a fila SQS no LocalStack, executa as migrations pendentes e inicia o servidor com hot-reload em `http://localhost:3333`.
 
-Para consumir os e-mails enfileirados localmente, execute em outro terminal:
-
-```bash
-npm run dev:email-worker
-```
-
 ### Seed (dados de exemplo)
 
 ```bash
@@ -45,6 +39,34 @@ npm run db:seed-dev
 
 ```bash
 npm run lint:prettier:fix && npm run validate
+```
+
+## Workers
+
+Processos assíncronos executados como funções AWS Lambda, acionados via filas SQS. Isolados da API — falhas no worker não impactam o tempo de resposta HTTP.
+
+### LocalStack (SQS local)
+
+O `docker compose` de desenvolvimento já inclui o LocalStack com SQS. As filas (`email-queue` + DLQ) são criadas automaticamente ao rodar `npm run dev` ou manualmente com:
+
+```bash
+npm run services:setup-queues
+```
+
+### Rodando workers localmente
+
+| Worker | Comando                    | Descrição                                              |
+| ------ | -------------------------- | ------------------------------------------------------ |
+| Email  | `npm run dev:email-worker` | Consome a fila `email-queue` e envia via SES ou Resend |
+
+O comando `dev:email-worker` usa `tsx watch` — reinicia automaticamente ao editar o código.
+
+### Testando workers
+
+Testes unitários dos workers rodam junto com a suíte completa (`npm run test:unit`). Para rodar apenas os testes de workers:
+
+```bash
+npx jest --config tests/config/jest-unit.json tests/unit/workers/
 ```
 
 ## Testes
