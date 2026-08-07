@@ -102,10 +102,9 @@ export class UsersModule {}
 | Módulo compartilhado | Quando importar                                     |
 | -------------------- | --------------------------------------------------- |
 | `CryptographyModule` | Hash de senhas, criação/verificação de JWT, cookies |
-| `EnvModule`          | Acesso a variáveis de ambiente                      |
 | `StorageModule`      | Upload de arquivos (S3/CDN com signed URLs)         |
 
-> `LogModule` e `QueueModule` são globais e não precisam ser importados.
+> `LogModule`, `QueueModule` e `EnvModule` são globais e não precisam ser importados.
 
 ---
 

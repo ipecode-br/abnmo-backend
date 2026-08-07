@@ -94,7 +94,6 @@ Controllers não contêm lógica de negócio — apenas chamam `useCase.execute(
 @Module({
   imports: [
     SentryModule.forRoot(),
-    EnvModule,
     LogModule,
     QueueModule,
     DatabaseModule,
@@ -155,10 +154,10 @@ A API apenas enfileira o job com os dados do template (nome, URLs, razão). O wo
 | -------------------- | ------------------------------------------- | ------------------------------- |
 | `CryptographyModule` | Hash (bcrypt), JWT e cookies                | Importar no módulo que precisar |
 | `QueueModule`        | `EnqueueEmailUseCase` — enfileiramento SQS  | Global — não precisa importar   |
-| `EnvModule`          | Acesso tipado a variáveis de ambiente       | Importar quando necessário      |
+| `EnvModule`          | Acesso tipado a variáveis de ambiente       | Global — não precisa importar   |
 | `StorageModule`      | Upload de arquivos (S3/CDN com signed URLs) | Importar quando necessário      |
 | `SignatureModule`    | Assinatura digital (ClickSign)              | Importar no módulo que precisar |
 | `LogModule`          | `LogService` e decorator `@Log()`           | Global — não precisa importar   |
 | `SentryModule`       | Monitoramento de erros e logs               | Registrado no `AppModule`       |
 
-> `LogModule` e `QueueModule` são declarados com `@Global()`, portanto `LogService` e `EnqueueEmailUseCase` estão disponíveis em toda a aplicação.
+> `LogModule`, `QueueModule` e `EnvModule` são declarados com `@Global()`, portanto `LogService`, `EnqueueEmailUseCase` e `EnvService` estão disponíveis em toda a aplicação.

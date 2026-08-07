@@ -10,7 +10,6 @@ import { FeatureGuard } from '@/common/guards/feature.guard';
 import { Session } from '@/domain/entities/session';
 import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
-import { EnvModule } from '@/env/env.module';
 
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
@@ -27,7 +26,6 @@ import { SignInWithEmailUseCase } from './use-cases/sign-in-with-email.use-case'
   imports: [
     TypeOrmModule.forFeature([Session, Token, User]),
     CryptographyModule,
-    EnvModule,
     StorageModule,
     UsersModule,
   ],

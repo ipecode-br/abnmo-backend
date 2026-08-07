@@ -8,7 +8,6 @@ import { Document } from '@/domain/entities/document';
 import { Survey } from '@/domain/entities/survey';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
 import { User } from '@/domain/entities/user';
-import { EnvModule } from '@/env/env.module';
 
 import { SurveySubmissionsController } from './submissions/survey-submissions.controller';
 import { ApproveSurveySubmissionUseCase } from './submissions/use-cases/approve-survey-submission.use-case';
@@ -30,7 +29,6 @@ import { SendSurveyReminderUseCase } from './use-cases/send-survey-reminder.use-
   imports: [
     TypeOrmModule.forFeature([SurveySubmission, Survey, User, Document]),
     CryptographyModule,
-    EnvModule,
     SignatureModule,
     StorageModule,
   ],

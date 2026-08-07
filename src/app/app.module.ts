@@ -48,7 +48,6 @@ import { StorageModule } from './storage/storage.module';
       validate: (env) => envSchema.parse(env),
     }),
     SentryModule.forRoot(),
-    EnvModule,
     LoggerModule.forRootAsync({
       imports: [EnvModule],
       inject: [EnvService],
