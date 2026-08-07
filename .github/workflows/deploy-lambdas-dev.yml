@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - dev
+      - feat/email-worker
   workflow_dispatch:
 
 jobs:
