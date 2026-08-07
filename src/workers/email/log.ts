@@ -12,10 +12,7 @@ function info(message: string, extras?: Record<string, unknown>): void {
   console.info(`[${timestamp()}] ${message}`, extras ?? '');
 
   if (env.SENTRY_LOGS === 'all') {
-    Sentry.logger.info(
-      `[email-worker]: ${message}`,
-      flattenForSentry(extras ?? {}),
-    );
+    Sentry.logger.info(message, flattenForSentry(extras ?? {}));
   }
 }
 
@@ -23,10 +20,7 @@ function error(message: string, extras?: Record<string, unknown>): void {
   console.error(`[${timestamp()}] ${message}`, extras ?? '');
 
   if (env.SENTRY_LOGS === 'all' || env.SENTRY_LOGS === 'error') {
-    Sentry.logger.error(
-      `[email-worker]: ${message}`,
-      flattenForSentry(extras ?? {}),
-    );
+    Sentry.logger.error(message, flattenForSentry(extras ?? {}));
   }
 }
 
