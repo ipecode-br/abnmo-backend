@@ -7,6 +7,7 @@ import { LogService } from '@/common/log/log.service';
 import { EnvService } from '@/env/env.service';
 import type { SendEmailJob } from '@/shared/queue/email.dto';
 import type { MessageEnvelope } from '@/shared/queue/envelope';
+import { generateQueueIdempotencyKey } from '@/shared/queue/utils';
 import { anonymizeEmail } from '@/utils/anonymize';
 
 @Injectable()
@@ -27,6 +28,7 @@ export class EnqueueEmailUseCase {
       version: 1,
       type: 'email',
       payload: job,
+      idempotencyKey: generateQueueIdempotencyKey(),
     };
 
     const maskedTo = anonymizeEmail(job.to);

@@ -6,11 +6,14 @@ import { z } from 'zod';
 
 import { parseEmailMessage } from '@/shared/queue/email.dto';
 import { messageEnvelopeSchema } from '@/shared/queue/envelope';
+import { checkIsProcessed, markProcessed } from '@/shared/queue/utils';
 import { anonymizeEmail } from '@/utils/anonymize';
 
 import { env } from './env';
 import { log } from './log';
 import { sendEmail } from './send-email';
+
+const PROCESSED_KEYS = new Map<string, number>();
 
 export const handler: SQSHandler = async (event): Promise<SQSBatchResponse> => {
   const batchItemFailures: { itemIdentifier: string }[] = [];
@@ -21,10 +24,21 @@ export const handler: SQSHandler = async (event): Promise<SQSBatchResponse> => {
     seenIds.add(record.messageId);
 
     try {
-      const raw: unknown = JSON.parse(record.body);
-      const envelope = messageEnvelopeSchema.parse(raw);
+      const body: unknown = JSON.parse(record.body);
+      const envelope = messageEnvelopeSchema.parse(body);
+
+      if (checkIsProcessed(envelope.idempotencyKey, PROCESSED_KEYS)) {
+        log.info('Duplicate message skipped', {
+          messageId: record.messageId,
+          idempotencyKey: envelope.idempotencyKey,
+        });
+        continue;
+      }
+
       const job = parseEmailMessage(envelope.payload);
       await sendEmail(job);
+
+      markProcessed(envelope.idempotencyKey, PROCESSED_KEYS);
 
       log.info('Email processed', {
         messageId: record.messageId,

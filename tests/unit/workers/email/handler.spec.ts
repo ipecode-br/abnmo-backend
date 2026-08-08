@@ -35,10 +35,18 @@ async function invoke(event: SQSEvent): Promise<SQSBatchResponse> {
   return result as SQSBatchResponse;
 }
 
+let idempotencyKeyCounter = 0;
+
+function nextIdempotencyKey(): string {
+  idempotencyKeyCounter++;
+  return `10000000-0000-7000-8000-${String(idempotencyKeyCounter).padStart(12, '0')}`;
+}
+
 function validBody() {
   return {
     version: 1,
     type: 'email',
+    idempotencyKey: nextIdempotencyKey(),
     payload: {
       template: 'recoverPassword',
       to: 'test@example.com',
@@ -102,6 +110,7 @@ describe('Email worker handler', () => {
     record.body = JSON.stringify({
       version: 1,
       type: 'email',
+      idempotencyKey: nextIdempotencyKey(),
       payload: { template: 'invalid', to: 'test@example.com' },
     });
     const event: SQSEvent = { Records: [record] };
@@ -180,5 +189,42 @@ describe('Email worker handler', () => {
     expect(mockLogInfo).toHaveBeenCalledTimes(1);
     expect(result.batchItemFailures).toHaveLength(1);
     expect(result.batchItemFailures[0].itemIdentifier).toBe('msg-bad');
+  });
+
+  it('skips duplicate message within the same batch', async () => {
+    const record = makeRecord({ messageId: 'msg-1' });
+    const duplicate = makeRecord({ messageId: 'msg-1' });
+    duplicate.body = record.body;
+    const event: SQSEvent = { Records: [record, duplicate] };
+
+    const result = await invoke(event);
+
+    expect(mockSendEmail).toHaveBeenCalledTimes(1);
+    expect(mockLogInfo).toHaveBeenCalledWith(
+      'Email processed',
+      expect.objectContaining({ messageId: 'msg-1' }),
+    );
+    expect(result.batchItemFailures).toHaveLength(0);
+  });
+
+  it('skips duplicate message across batches via idempotency key', async () => {
+    const recordA = makeRecord({ messageId: 'msg-1' });
+    const eventA: SQSEvent = { Records: [recordA] };
+
+    const resultA = await invoke(eventA);
+    expect(mockSendEmail).toHaveBeenCalledTimes(1);
+    expect(resultA.batchItemFailures).toHaveLength(0);
+
+    const recordB = makeRecord({ messageId: 'msg-2' });
+    recordB.body = recordA.body;
+    const eventB: SQSEvent = { Records: [recordB] };
+
+    const resultB = await invoke(eventB);
+    expect(mockSendEmail).toHaveBeenCalledTimes(1);
+    expect(mockLogInfo).toHaveBeenCalledWith(
+      'Duplicate message skipped',
+      expect.objectContaining({ messageId: 'msg-2' }),
+    );
+    expect(resultB.batchItemFailures).toHaveLength(0);
   });
 });
