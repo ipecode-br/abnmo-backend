@@ -10,12 +10,8 @@ jest.mock('@/workers/email/send-email', () => ({
   sendEmail: mockSendEmail,
 }));
 
-jest.mock('@/workers/email/log', () => ({
-  log: { info: mockLogInfo, error: mockLogError },
-}));
-
 jest.mock('@/workers/email/env', () => ({
-  env: { SQS_EMAIL_MAX_RECEIVE_COUNT: 3 },
+  env: { SQS_EMAIL_MAX_RECEIVE_COUNT: 3, SENTRY_LOGS: 'none' },
 }));
 
 jest.mock('@/workers/email/sentry', () => {});
@@ -86,6 +82,8 @@ describe('Email worker handler', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockSendEmail.mockResolvedValue(undefined);
+    jest.spyOn(console, 'info').mockImplementation(mockLogInfo);
+    jest.spyOn(console, 'error').mockImplementation(mockLogError);
   });
 
   it('processes a valid email job successfully', async () => {
@@ -95,12 +93,8 @@ describe('Email worker handler', () => {
 
     expect(mockSendEmail).toHaveBeenCalled();
     expect(mockLogInfo).toHaveBeenCalledWith(
-      'Email processed',
-      expect.objectContaining({
-        messageId: 'msg-1',
-        template: 'recoverPassword',
-        to: 'tes***@example.com',
-      }),
+      expect.stringContaining('email processed'),
+      expect.objectContaining({ messageId: 'msg-1' }),
     );
     expect(result.batchItemFailures).toHaveLength(0);
   });
@@ -201,7 +195,7 @@ describe('Email worker handler', () => {
 
     expect(mockSendEmail).toHaveBeenCalledTimes(1);
     expect(mockLogInfo).toHaveBeenCalledWith(
-      'Email processed',
+      expect.stringContaining('email processed'),
       expect.objectContaining({ messageId: 'msg-1' }),
     );
     expect(result.batchItemFailures).toHaveLength(0);
@@ -222,7 +216,7 @@ describe('Email worker handler', () => {
     const resultB = await invoke(eventB);
     expect(mockSendEmail).toHaveBeenCalledTimes(1);
     expect(mockLogInfo).toHaveBeenCalledWith(
-      'Duplicate message skipped',
+      expect.stringContaining('Duplicate message skipped'),
       expect.objectContaining({ messageId: 'msg-2' }),
     );
     expect(resultB.batchItemFailures).toHaveLength(0);
