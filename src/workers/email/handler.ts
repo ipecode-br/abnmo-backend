@@ -6,14 +6,18 @@ import { z } from 'zod';
 
 import { parseEmailMessage } from '@/shared/queue/email.dto';
 import { messageEnvelopeSchema } from '@/shared/queue/envelope';
-import { checkIsProcessed, markProcessed } from '@/shared/queue/utils';
+import {
+  checkIsProcessed,
+  markProcessed,
+  QueueProcessedKeys,
+} from '@/shared/queue/utils';
 import { anonymizeEmail } from '@/utils/anonymize';
 
 import { env } from './env';
 import { log } from './log';
 import { sendEmail } from './send-email';
 
-const PROCESSED_KEYS = new Map<string, number>();
+const PROCESSED_KEYS: QueueProcessedKeys = new Map<string, number>();
 
 export const handler: SQSHandler = async (event): Promise<SQSBatchResponse> => {
   const batchItemFailures: { itemIdentifier: string }[] = [];

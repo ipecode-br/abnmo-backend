@@ -31,7 +31,7 @@ export class RecoverPasswordUseCase {
     private readonly logger: LogService,
     private readonly enqueueEmailUseCase: EnqueueEmailUseCase,
   ) {
-    this.baseAppUrl = envService.get('APP_URL');
+    this.baseAppUrl = this.envService.get('APP_URL');
   }
 
   async execute({ email }: RecoverPasswordUseCaseInput): Promise<void> {
