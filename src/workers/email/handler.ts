@@ -13,5 +13,9 @@ export const handler = createQueueWorkerHandler(
     sentryLogs: env.SENTRY_LOGS,
     parsePayload: parseEmailMessage,
   },
-  { onProcess: async (job: SendEmailJob) => await sendEmail(job) },
+  {
+    onProcess: async (logger, job: SendEmailJob) => {
+      await sendEmail(logger, job);
+    },
+  },
 );

@@ -19,8 +19,17 @@ export interface QueueWorkerConfig {
   dedupTtlMs?: number;
 }
 
+export interface QueueWorkerLogger {
+  info: (message: string, extras?: Record<string, unknown>) => void;
+  error: (message: string, extras?: Record<string, unknown>) => void;
+}
+
 export interface QueueWorkerCallbacks {
-  onProcess: (job: unknown, messageId: string) => Promise<void>;
+  onProcess: (
+    logger: QueueWorkerLogger,
+    job: unknown,
+    messageId: string,
+  ) => Promise<void>;
 }
 
 function createLogger(name: string, sentryLogs: string) {
@@ -55,7 +64,7 @@ export function createQueueWorkerHandler(
   config: QueueWorkerConfig,
   { onProcess }: QueueWorkerCallbacks,
 ): SQSHandler {
-  const log = createLogger(config.name, config.sentryLogs);
+  const logger = createLogger(config.name, config.sentryLogs);
   const processedKeys: QueueProcessedKeys = new Map();
 
   return async (event): Promise<SQSBatchResponse> => {
@@ -77,7 +86,7 @@ export function createQueueWorkerHandler(
             config.dedupTtlMs,
           )
         ) {
-          log.info('Duplicate message skipped', {
+          logger.info('Duplicate message skipped', {
             messageId: record.messageId,
             idempotencyKey: envelope.idempotencyKey,
           });
@@ -85,15 +94,17 @@ export function createQueueWorkerHandler(
         }
 
         const job = config.parsePayload(envelope.payload);
-        await onProcess(job, record.messageId);
+        await onProcess(logger, job, record.messageId);
 
         markProcessed(envelope.idempotencyKey, processedKeys);
 
-        log.info(`${config.name} processed`, { messageId: record.messageId });
+        logger.info(`${config.name} processed`, {
+          messageId: record.messageId,
+        });
       } catch (err) {
         const receiveCount = Number(record.attributes.ApproximateReceiveCount);
 
-        log.error(`${config.name} processing failed`, {
+        logger.error(`${config.name} processing failed`, {
           messageId: record.messageId,
           receiveCount,
           error: err instanceof Error ? err.message : String(err),
