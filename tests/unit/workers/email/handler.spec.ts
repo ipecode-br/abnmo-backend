@@ -91,7 +91,7 @@ describe('Email worker handler', () => {
       expect.objectContaining({
         messageId: 'msg-1',
         template: 'recoverPassword',
-        to: 'test@example.com',
+        to: 'tes***@example.com',
       }),
     );
     expect(result.batchItemFailures).toHaveLength(0);
@@ -147,7 +147,7 @@ describe('Email worker handler', () => {
     expect(result.batchItemFailures).toHaveLength(1);
   });
 
-  it('captures Sentry for transient error with receiveCount >= max', async () => {
+  it('captures Sentry for transient error with receiveCount === max', async () => {
     mockSendEmail.mockRejectedValue(new Error('SES error'));
     const record = makeRecord({
       attributes: {

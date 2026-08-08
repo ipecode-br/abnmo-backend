@@ -10,6 +10,7 @@ import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { TOKENS } from '@/domain/enums/tokens';
 import { EnvService } from '@/env/env.service';
+import { anonymizeEmail } from '@/utils/anonymize';
 
 interface RecoverPasswordUseCaseInput {
   email: string;
@@ -41,7 +42,7 @@ export class RecoverPasswordUseCase {
 
     if (!user) {
       this.logger.warn('Attempt to recover password for non-registered email', {
-        email,
+        email: anonymizeEmail(email),
       });
       return;
     }
@@ -62,7 +63,10 @@ export class RecoverPasswordUseCase {
     });
     await this.tokensRepository.save(tokenEntity);
 
-    this.logger.log('Password reset token generated', { id: user.id, email });
+    this.logger.log('Password reset token generated', {
+      id: user.id,
+      email: anonymizeEmail(email),
+    });
 
     const resetPasswordUrl = `${this.baseAppUrl}/nova-senha?token=${token}`;
     const name = user.name.split(' ')[0];

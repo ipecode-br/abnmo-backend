@@ -1,4 +1,5 @@
 import { SendEmailJob } from '@/shared/queue/email.dto';
+import { anonymizeEmail } from '@/utils/anonymize';
 
 import { env } from './env';
 import { log } from './log';
@@ -45,13 +46,13 @@ export async function sendEmail(job: SendEmailJob): Promise<void> {
       : sendViaSes(payload));
 
     log.info('Email sent', {
-      to: job.to,
+      to: anonymizeEmail(job.to),
       template: job.template,
       provider: env.EMAIL_PROVIDER,
     });
   } catch (err) {
     log.error('Email send failed', {
-      to: job.to,
+      to: anonymizeEmail(job.to),
       template: job.template,
       provider: env.EMAIL_PROVIDER,
       error: err instanceof Error ? err.message : String(err),

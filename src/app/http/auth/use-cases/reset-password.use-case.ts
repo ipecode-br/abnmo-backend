@@ -15,6 +15,7 @@ import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { TOKENS } from '@/domain/enums/tokens';
 import type { ResetPasswordPayload } from '@/domain/schemas/tokens';
+import { anonymizeEmail } from '@/utils/anonymize';
 
 import { CreateSessionUseCase } from './create-session.use-case';
 import { ExpireSessionUseCase } from './expire-session.use-case';
@@ -105,7 +106,7 @@ export class ResetPasswordUseCase {
 
     this.logger.log('Password reseted', {
       id: user.id,
-      email: user.email,
+      email: anonymizeEmail(user.email),
       role: user.role,
     });
 
