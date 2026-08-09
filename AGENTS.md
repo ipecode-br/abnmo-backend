@@ -24,6 +24,50 @@ NestJS + TypeORM + PostgreSQL + Zod API.
 - **Enums**: `as const` arrays in `src/domain/enums/`, **not** TypeScript `enum` keyword
 - **Path alias**: `@/` → `./src/`
 
+### Workers
+
+SQS consumer Lambdas built with the shared `createQueueWorkerHandler` builder (`src/shared/queue/create-handler.ts`). The builder handles envelope parsing, idempotency, log/error formatting, and Sentry reporting — each worker only provides config and an `onProcess` callback.
+
+```ts
+// src/workers/{name}/handler.ts
+import { createQueueWorkerHandler } from '@/shared/queue/create-handler';
+import { createQueueWorkerLogger } from '@/shared/queue/logger';
+import { parseMyMessage } from '@/shared/queue/my-worker.dto';
+
+export const handler = createQueueWorkerHandler(
+  {
+    name: 'my-worker',
+    maxReceiveCount: env.SQS_MY_WORKER_MAX_RECEIVE_COUNT,
+    parsePayload: parseMyMessage,
+  },
+  {
+    onProcess: async (job, messageId) => {
+      /* business logic */
+    },
+    logger: createQueueWorkerLogger('my-worker', env.SENTRY_LOGS),
+  },
+);
+```
+
+**Worker file structure:**
+
+```
+src/workers/{name}/
+  handler.ts            # calls createQueueWorkerHandler
+  env.ts                # Zod-validated env schema (maxReceiveCount, SENTRY_LOGS, etc.)
+  logger.ts             # creates QueueWorkerLogger instance
+  sentry.ts             # imports from handler to init Sentry on cold start
+```
+
+**Shared queue infrastructure** (`src/shared/queue/`):
+
+| File                | Purpose                                                                                 |
+| ------------------- | --------------------------------------------------------------------------------------- |
+| `create-handler.ts` | `createQueueWorkerHandler` builder and `QueueWorkerConfig`/`QueueWorkerCallbacks` types |
+| `logger.ts`         | `createQueueWorkerLogger` — console + Sentry logger factory                             |
+| `envelope.ts`       | `messageEnvelopeSchema` — versioned envelope with `idempotencyKey`                      |
+| `utils.ts`          | `generateQueueIdempotencyKey`, `checkIsProcessed`, `markProcessed`                      |
+
 ## Patient data model
 
 - **No dedicated `Patient` entity** — patients are `User` records with `role: 'patient'`
