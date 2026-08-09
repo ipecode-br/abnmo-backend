@@ -93,7 +93,7 @@ describe('Email worker handler', () => {
 
     expect(mockSendEmail).toHaveBeenCalled();
     expect(mockLogInfo).toHaveBeenCalledWith(
-      expect.stringContaining('email processed'),
+      expect.stringContaining('Message processed'),
       expect.objectContaining({ messageId: 'msg-1' }),
     );
     expect(result.batchItemFailures).toHaveLength(0);
@@ -195,7 +195,7 @@ describe('Email worker handler', () => {
 
     expect(mockSendEmail).toHaveBeenCalledTimes(1);
     expect(mockLogInfo).toHaveBeenCalledWith(
-      expect.stringContaining('email processed'),
+      expect.stringContaining('Message processed'),
       expect.objectContaining({ messageId: 'msg-1' }),
     );
     expect(result.batchItemFailures).toHaveLength(0);

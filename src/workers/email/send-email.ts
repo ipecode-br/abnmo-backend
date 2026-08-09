@@ -1,8 +1,8 @@
-import type { QueueWorkerLogger } from '@/shared/queue/create-handler';
 import { SendEmailJob } from '@/shared/queue/email.dto';
 import { anonymizeEmail } from '@/utils/anonymize';
 
 import { env } from './env';
+import { logger } from './logger';
 import { sendViaResend } from './providers/resend';
 import { sendViaSes } from './providers/ses';
 import { buildCompleteSurveyEmail } from './templates/complete-survey';
@@ -11,10 +11,7 @@ import { buildRecoverPasswordEmail } from './templates/recover-password';
 import { buildRegisterUserEmail } from './templates/register-user';
 import { buildResetPasswordEmail } from './templates/reset-password';
 
-export async function sendEmail(
-  logger: QueueWorkerLogger,
-  job: SendEmailJob,
-): Promise<void> {
+export async function sendEmail(job: SendEmailJob): Promise<void> {
   let rendered: { subject: string; html: string };
 
   switch (job.template) {

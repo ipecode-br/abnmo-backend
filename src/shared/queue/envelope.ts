@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const messageEnvelopeSchema = z.object({
   version: z.literal(1),
-  type: z.literal('email'),
+  type: z.enum(['email']),
   payload: z.unknown(),
   idempotencyKey: z.uuid(),
 });
