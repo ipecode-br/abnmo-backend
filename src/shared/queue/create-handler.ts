@@ -68,7 +68,7 @@ export function createQueueWorkerHandler(
         if (
           err instanceof z.ZodError ||
           err instanceof SyntaxError ||
-          receiveCount === maxReceiveCount
+          receiveCount >= maxReceiveCount
         ) {
           Sentry.captureException(err, {
             captureContext: {

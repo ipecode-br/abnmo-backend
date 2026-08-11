@@ -40,10 +40,22 @@ export async function sendEmail(job: SendEmailJob): Promise<void> {
 
   const payload = { to: job.to, ...rendered };
 
+  if (env.EMAIL_PROVIDER === 'none') {
+    logger.info('Email send skipped', {
+      to: anonymizeEmail(job.to),
+      template: job.template,
+      reason: 'EMAIL_PROVIDER is "none"',
+    });
+    return;
+  }
+
   try {
-    await (env.EMAIL_PROVIDER === 'resend'
-      ? sendViaResend(payload)
-      : sendViaSes(payload));
+    if (env.EMAIL_PROVIDER === 'resend') {
+      await sendViaResend(payload);
+    }
+    if (env.EMAIL_PROVIDER === 'ses') {
+      await sendViaSes(payload);
+    }
 
     logger.info('Email sent', {
       to: anonymizeEmail(job.to),

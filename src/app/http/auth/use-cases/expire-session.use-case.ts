@@ -27,9 +27,9 @@ export class ExpireSessionUseCase {
     logout,
   }: ExpireSessionUseCaseInput): Promise<void> {
     if (!tokenHash && !userId) {
-      this.logger.log(
-        'Expire session skipped – no tokenHash or userId provided',
-      );
+      this.logger.log('Expire session skipped', {
+        reason: 'No tokenHash or userId provided',
+      });
       return;
     }
 

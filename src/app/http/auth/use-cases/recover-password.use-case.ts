@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
 import { EnqueueEmailUseCase } from '@/app/queue/use-cases/enqueue-email.use-case';
@@ -29,6 +29,7 @@ export class RecoverPasswordUseCase {
     private readonly createTokenUseCase: CreateTokenUseCase,
     private readonly envService: EnvService,
     private readonly logger: LogService,
+    private readonly dataSource: DataSource,
     private readonly enqueueEmailUseCase: EnqueueEmailUseCase,
   ) {
     this.baseAppUrl = this.envService.get('APP_URL');
@@ -47,21 +48,29 @@ export class RecoverPasswordUseCase {
       return;
     }
 
-    const [{ token, expiresAt }] = await Promise.all([
-      this.createTokenUseCase.execute({
-        type: TOKENS.passwordReset,
-        payload: { sub: user.id },
-      }),
-      this.tokensRepository.delete({ userId: user.id }),
-    ]);
+    let token = '';
 
-    const tokenEntity = this.tokensRepository.create({
-      type: TOKENS.passwordReset,
-      userId: user.id,
-      expiresAt,
-      token,
+    await this.dataSource.transaction(async (manager) => {
+      const tokensRepository = manager.getRepository(Token);
+
+      const [{ token: tokenValue, expiresAt }] = await Promise.all([
+        this.createTokenUseCase.execute({
+          type: TOKENS.passwordReset,
+          payload: { sub: user.id },
+        }),
+        tokensRepository.delete({ userId: user.id }),
+      ]);
+
+      token = tokenValue;
+
+      const tokenEntity = tokensRepository.create({
+        type: TOKENS.passwordReset,
+        userId: user.id,
+        expiresAt,
+        token,
+      });
+      await tokensRepository.save(tokenEntity);
     });
-    await this.tokensRepository.save(tokenEntity);
 
     this.logger.log('Password reset token generated', {
       id: user.id,
