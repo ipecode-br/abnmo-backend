@@ -38,29 +38,24 @@ describe('DeclineSurveySubmissionUseCase', () => {
     useCase = module.get(DeclineSurveySubmissionUseCase);
   });
 
-  it('declines pending_review submission with reason', async () => {
+  it('declines "pending_review" submission with reason', async () => {
     const user = requestUserFactory({ role: 'admin' });
     repo.findOne.mockResolvedValue(submission as unknown as SurveySubmission);
-    repo.update.mockResolvedValue(undefined as any);
+    repo.update.mockResolvedValue({ affected: 1 } as any);
 
-    await useCase.execute({
-      id: 'sub-1',
-      reason: 'Incomplete document',
-      user,
-    });
+    await useCase.execute({ id: 'sub-1', reason: 'Incomplete document', user });
 
     expect(repo.findOne).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: 'sub-1' } }),
     );
-    expect(repo.update).toHaveBeenCalledWith('sub-1', {
-      status: 'declined',
-      reason: 'Incomplete document',
-      updatedBy: user.id,
-    });
+    expect(repo.update).toHaveBeenCalledWith(
+      { id: 'sub-1', status: 'pending_review' },
+      { reason: 'Incomplete document', status: 'declined', updatedBy: user.id },
+    );
   });
 
   describe('Error cases', () => {
-    it('throws NotFoundException when submission not found', async () => {
+    it('throws "NotFoundException" when submission not found', async () => {
       repo.findOne.mockResolvedValue(null);
 
       await expect(
@@ -72,12 +67,9 @@ describe('DeclineSurveySubmissionUseCase', () => {
       ).rejects.toThrow(NotFoundException);
     });
 
-    it('throws BadRequestException for non-pending_review status', async () => {
-      const approvedSubmission = {
-        ...submission,
-        status: 'approved',
-      } as SurveySubmission;
-      repo.findOne.mockResolvedValue(approvedSubmission);
+    it('throws "BadRequestException" when submission not "pending_review"', async () => {
+      repo.findOne.mockResolvedValue(submission as unknown as SurveySubmission);
+      repo.update.mockResolvedValue({ affected: 0 } as any);
 
       await expect(
         useCase.execute({

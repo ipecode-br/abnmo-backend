@@ -48,20 +48,19 @@ export class DeclineSurveySubmissionUseCase {
       });
     }
 
-    if (submission.status !== 'pending_review') {
+    const result = await this.surveySubmissionsRepository.update(
+      { id, status: 'pending_review' },
+      { reason, status: 'declined', updatedBy: user.id },
+    );
+
+    if (result.affected === 0) {
       throw new BadRequestException(
         'Somente submissões pendentes podem ser recusadas.',
         {
-          cause: `Survey submission with ID <${id}> status is <${submission.status}>`,
+          cause: `Survey submission with ID <${id}> status is not pending_review`,
         },
       );
     }
-
-    await this.surveySubmissionsRepository.update(submission.id, {
-      reason,
-      status: 'declined',
-      updatedBy: user.id,
-    });
 
     await this.enqueueEmailUseCase.execute({
       template: 'declineSurvey',

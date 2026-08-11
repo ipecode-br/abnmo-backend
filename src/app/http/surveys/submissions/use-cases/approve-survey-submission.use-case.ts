@@ -52,22 +52,21 @@ export class ApproveSurveySubmissionUseCase {
       });
     }
 
-    if (submission.status !== 'pending_review') {
+    const surveyToken = uuidv7();
+
+    const result = await this.surveySubmissionsRepository.update(
+      { id, status: 'pending_review' },
+      { surveyToken, status: 'approved', updatedBy: user.id },
+    );
+
+    if (result.affected === 0) {
       throw new BadRequestException(
         'Somente submissões pendentes podem ser aprovadas.',
         {
-          cause: `Survey submission with ID <${id}> status is <${submission.status}>`,
+          cause: `Survey submission with ID <${id}> status is not <pending_review>`,
         },
       );
     }
-
-    const surveyToken = uuidv7();
-
-    await this.surveySubmissionsRepository.update(submission.id, {
-      updatedBy: user.id,
-      status: 'approved',
-      surveyToken,
-    });
 
     const completeSurveyUrl = `${this.dashboardUrl}/catalogacao/voce?token=${surveyToken}`;
 
