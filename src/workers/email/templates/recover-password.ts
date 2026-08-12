@@ -1,3 +1,4 @@
+import { BuildEmailTemplateOutput } from '../types';
 import {
   button,
   createEmailTemplate,
@@ -5,13 +6,15 @@ import {
   p,
 } from '../utils/email-template-builder';
 
+interface BuildRecoverPasswordEmailInput {
+  name: string;
+  resetPasswordUrl: string;
+}
+
 export function buildRecoverPasswordEmail({
   name,
   resetPasswordUrl,
-}: {
-  name: string;
-  resetPasswordUrl: string;
-}): { subject: string; html: string } {
+}: BuildRecoverPasswordEmailInput): BuildEmailTemplateOutput {
   const subject = 'Solicitação para redefinição de senha';
   const preheader =
     'Redefina sua senha de acesso ao Sistema Viver Melhor da ABNMO.';

@@ -1,3 +1,4 @@
+import { BuildEmailTemplateOutput } from '../types';
 import {
   button,
   createEmailTemplate,
@@ -5,13 +6,15 @@ import {
   p,
 } from '../utils/email-template-builder';
 
+interface BuildCompleteSurveyEmailInput {
+  name: string;
+  completeSurveyUrl: string;
+}
+
 export function buildCompleteSurveyEmail({
   name,
   completeSurveyUrl,
-}: {
-  name: string;
-  completeSurveyUrl: string;
-}): { subject: string; html: string } {
+}: BuildCompleteSurveyEmailInput): BuildEmailTemplateOutput {
   const subject =
     'Sua submissão foi aprovada — complete o questionário da pesquisa';
   const preheader =

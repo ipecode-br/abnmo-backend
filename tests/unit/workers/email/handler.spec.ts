@@ -11,7 +11,7 @@ jest.mock('@/workers/email/send-email', () => ({
 }));
 
 jest.mock('@/workers/email/env', () => ({
-  env: { SQS_EMAIL_MAX_RECEIVE_COUNT: 3, SENTRY_LOGS: 'none' },
+  env: { SQS_EMAIL_MAX_RECEIVE_COUNT: 5, SENTRY_LOGS: 'none' },
 }));
 
 jest.mock('@/workers/email/sentry', () => {});

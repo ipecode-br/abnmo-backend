@@ -5,7 +5,7 @@ import { z } from 'zod';
 export const emailWorkerEnvSchema = z.object({
   NODE_ENV: z.enum(['production', 'development', 'test']).optional(),
 
-  SQS_EMAIL_MAX_RECEIVE_COUNT: z.coerce.number().default(3),
+  SQS_EMAIL_MAX_RECEIVE_COUNT: z.coerce.number().default(5),
   EMAIL_PROVIDER: z.enum(['ses', 'resend', 'none']),
   RESEND_KEY: z.string().min(1),
 

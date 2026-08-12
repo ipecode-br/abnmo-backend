@@ -1,3 +1,4 @@
+import { BuildEmailTemplateOutput } from '../types';
 import {
   button,
   createEmailTemplate,
@@ -5,11 +6,13 @@ import {
   p,
 } from '../utils/email-template-builder';
 
+interface BuildRegisterUserEmailInput {
+  registerUserUrl: string;
+}
+
 export function buildRegisterUserEmail({
   registerUserUrl,
-}: {
-  registerUserUrl: string;
-}): { subject: string; html: string } {
+}: BuildRegisterUserEmailInput): BuildEmailTemplateOutput {
   const subject = 'Cadastre sua conta no Sistema Viver Melhor da ABNMO';
   const preheader =
     'Conclua o cadastro da sua conta para acessar o Sistema Viver Melhor da ABNMO.';

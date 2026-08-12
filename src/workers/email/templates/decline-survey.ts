@@ -1,4 +1,5 @@
 import { SUPPORT_EMAIL, SUPPORT_WHATSAPP } from '../config';
+import { BuildEmailTemplateOutput } from '../types';
 import {
   createEmailTemplate,
   heading,
@@ -7,13 +8,15 @@ import {
 
 const NON_NUMBER_REGEX = /\D/g;
 
+interface BuildDeclineSurveyEmailInput {
+  name: string;
+  reason: string;
+}
+
 export function buildDeclineSurveyEmail({
   name,
   reason,
-}: {
-  name: string;
-  reason: string;
-}): { subject: string; html: string } {
+}: BuildDeclineSurveyEmailInput): BuildEmailTemplateOutput {
   const subject = 'Sua catalogação foi recusada — ABNMO';
   const preheader =
     'Sua submissão foi recusada. Confira mais informações sobre o motivo e como proceder.';

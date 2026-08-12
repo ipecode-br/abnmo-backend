@@ -1,13 +1,17 @@
+import { BuildEmailTemplateOutput } from '../types';
 import {
   createEmailTemplate,
   heading,
   p,
 } from '../utils/email-template-builder';
 
-export function buildResetPasswordEmail({ name }: { name: string }): {
-  subject: string;
-  html: string;
-} {
+interface BuildResetPasswordEmailInput {
+  name: string;
+}
+
+export function buildResetPasswordEmail({
+  name,
+}: BuildResetPasswordEmailInput): BuildEmailTemplateOutput {
   const subject = 'Senha de acesso alterada com sucesso';
   const preheader =
     'Sua senha de acesso ao Sistema Viver Melhor foi alterada com sucesso.';
