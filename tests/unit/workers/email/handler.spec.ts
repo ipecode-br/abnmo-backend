@@ -116,13 +116,15 @@ describe('Email worker handler', () => {
       expect.objectContaining({
         captureContext: expect.objectContaining({
           level: 'error',
-          extra: expect.objectContaining({ messageId: 'msg-1' }),
+          extra: expect.objectContaining({
+            messageId: 'msg-1',
+            body: expect.any(String),
+          }),
         }),
       }),
     );
     expect(mockLogError).toHaveBeenCalled();
-    expect(result.batchItemFailures).toHaveLength(1);
-    expect(result.batchItemFailures[0].itemIdentifier).toBe('msg-1');
+    expect(result.batchItemFailures).toHaveLength(0);
   });
 
   it('captures Sentry immediately for malformed JSON (SyntaxError)', async () => {
@@ -134,12 +136,16 @@ describe('Email worker handler', () => {
 
     expect(mockSentryCaptureException).toHaveBeenCalledWith(
       expect.any(SyntaxError),
-      expect.any(Object),
+      expect.objectContaining({
+        captureContext: expect.objectContaining({
+          extra: expect.objectContaining({ body: expect.any(String) }),
+        }),
+      }),
     );
-    expect(result.batchItemFailures).toHaveLength(1);
+    expect(result.batchItemFailures).toHaveLength(0);
   });
 
-  it('does not capture Sentry for transient error with receiveCount < max', async () => {
+  it('does not capture Sentry for transient error with "receiveCount" < max', async () => {
     mockSendEmail.mockRejectedValue(new Error('SES error'));
     const event: SQSEvent = { Records: [makeRecord()] };
 
@@ -150,11 +156,11 @@ describe('Email worker handler', () => {
     expect(result.batchItemFailures).toHaveLength(1);
   });
 
-  it('captures Sentry for transient error with receiveCount === max', async () => {
+  it('captures Sentry for transient error with "receiveCount" >= max', async () => {
     mockSendEmail.mockRejectedValue(new Error('SES error'));
     const record = makeRecord({
       attributes: {
-        ApproximateReceiveCount: '3',
+        ApproximateReceiveCount: '5',
         ApproximateFirstReceiveTimestamp: '',
         AWSTraceHeader: '',
         MessageDeduplicationId: '',
@@ -181,8 +187,7 @@ describe('Email worker handler', () => {
     const result = await invoke(event);
 
     expect(mockLogInfo).toHaveBeenCalledTimes(1);
-    expect(result.batchItemFailures).toHaveLength(1);
-    expect(result.batchItemFailures[0].itemIdentifier).toBe('msg-bad');
+    expect(result.batchItemFailures).toHaveLength(0);
   });
 
   it('skips duplicate message within the same batch', async () => {
@@ -197,6 +202,23 @@ describe('Email worker handler', () => {
     expect(mockLogInfo).toHaveBeenCalledWith(
       expect.stringContaining('Message processed'),
       expect.objectContaining({ messageId: 'msg-1' }),
+    );
+    expect(result.batchItemFailures).toHaveLength(0);
+  });
+
+  it('captures Sentry and deletes message for "TypeError"', async () => {
+    mockSendEmail.mockRejectedValue(new TypeError('Code bug'));
+    const event: SQSEvent = { Records: [makeRecord()] };
+
+    const result = await invoke(event);
+
+    expect(mockSentryCaptureException).toHaveBeenCalledWith(
+      expect.any(TypeError),
+      expect.objectContaining({
+        captureContext: expect.objectContaining({
+          extra: expect.objectContaining({ body: expect.any(String) }),
+        }),
+      }),
     );
     expect(result.batchItemFailures).toHaveLength(0);
   });

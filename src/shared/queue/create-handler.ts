@@ -65,11 +65,23 @@ export function createQueueWorkerHandler(
           error: err instanceof Error ? err.message : String(err),
         });
 
-        if (
+        const isPermanentError =
           err instanceof z.ZodError ||
           err instanceof SyntaxError ||
-          receiveCount >= maxReceiveCount
-        ) {
+          err instanceof TypeError;
+
+        if (isPermanentError) {
+          Sentry.captureException(err, {
+            captureContext: {
+              level: 'error',
+              tags: { worker: name },
+              extra: { messageId: record.messageId, body: record.body },
+            },
+          });
+          continue;
+        }
+
+        if (receiveCount >= maxReceiveCount) {
           Sentry.captureException(err, {
             captureContext: {
               level: 'error',
