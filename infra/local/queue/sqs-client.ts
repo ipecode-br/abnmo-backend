@@ -6,7 +6,12 @@ import {
   SQSClient,
 } from '@aws-sdk/client-sqs';
 
-const QUEUE_URL = process.env.EMAIL_QUEUE_URL!;
+const QUEUE_URL = process.env.EMAIL_QUEUE_URL;
+
+if (!QUEUE_URL) {
+  throw new Error('EMAIL_QUEUE_URL environment variable is required');
+}
+
 const QUEUE_NAME = QUEUE_URL.split('/').pop()!;
 const DLQ_NAME = `${QUEUE_NAME}-dlq`;
 const DLQ_URL = QUEUE_URL.replace(QUEUE_NAME, DLQ_NAME);
@@ -14,7 +19,7 @@ const DLQ_URL = QUEUE_URL.replace(QUEUE_NAME, DLQ_NAME);
 export { DLQ_NAME, DLQ_URL, QUEUE_NAME, QUEUE_URL };
 
 export function createSqsClient(): SQSClient {
-  const url = new URL(QUEUE_URL);
+  const url = new URL(QUEUE_URL as string);
 
   if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
     return new SQSClient({

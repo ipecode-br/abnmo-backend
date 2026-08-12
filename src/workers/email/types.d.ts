@@ -3,3 +3,8 @@ export interface SendEmailPayload {
   subject: string;
   html: string;
 }
+
+export interface BuildEmailTemplateOutput {
+  subject: string;
+  html: string;
+}

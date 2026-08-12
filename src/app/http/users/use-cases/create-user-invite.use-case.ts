@@ -13,6 +13,7 @@ import { User } from '@/domain/entities/user';
 import { TOKENS } from '@/domain/enums/tokens';
 import type { UserRole } from '@/domain/enums/users';
 import { EnvService } from '@/env/env.service';
+import { anonymizeEmail } from '@/utils/anonymize';
 
 interface CreateUserInviteUseCaseInput {
   user: RequestUser;
@@ -32,11 +33,11 @@ export class CreateUserInviteUseCase {
     private readonly tokensRepository: Repository<Token>,
     private readonly createTokenUseCase: CreateTokenUseCase,
     private readonly dataSource: DataSource,
+    private readonly enqueueEmailUseCase: EnqueueEmailUseCase,
     private readonly envService: EnvService,
     private readonly logger: LogService,
-    private readonly enqueueEmailUseCase: EnqueueEmailUseCase,
   ) {
-    this.baseAppUrl = envService.get('APP_URL');
+    this.baseAppUrl = this.envService.get('APP_URL');
   }
 
   async execute({
@@ -67,10 +68,12 @@ export class CreateUserInviteUseCase {
       );
     }
 
+    let token = '';
+
     await this.dataSource.transaction(async (manager) => {
       const tokensRepository = manager.getRepository(Token);
 
-      const [{ token: inviteUserToken, expiresAt }] = await Promise.all([
+      const [{ token: tokenValue, expiresAt }] = await Promise.all([
         this.createTokenUseCase.execute({
           type: TOKENS.inviteUser,
           payload: { role },
@@ -79,10 +82,12 @@ export class CreateUserInviteUseCase {
         tokensRepository.delete({ email }),
       ]);
 
+      token = tokenValue;
+
       const newInviteUserToken = tokensRepository.create({
         type: TOKENS.inviteUser,
-        token: inviteUserToken,
         expiresAt,
+        token,
         email,
       });
 
@@ -90,17 +95,17 @@ export class CreateUserInviteUseCase {
 
       this.logger.log('Invite user token created', {
         id: newInviteUserToken.id,
-        email,
+        email: anonymizeEmail(email),
         role,
       });
+    });
 
-      const registerUserUrl = `${this.baseAppUrl}/cadastrar?token=${inviteUserToken}`;
+    const registerUserUrl = `${this.baseAppUrl}/cadastrar?token=${token}`;
 
-      await this.enqueueEmailUseCase.execute({
-        template: 'registerUser',
-        to: email,
-        registerUserUrl,
-      });
+    await this.enqueueEmailUseCase.execute({
+      template: 'registerUser',
+      to: email,
+      registerUserUrl,
     });
   }
 }

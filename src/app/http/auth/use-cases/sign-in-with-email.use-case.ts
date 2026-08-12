@@ -40,7 +40,7 @@ export class SignInWithEmailUseCase {
     private readonly envService: EnvService,
     private readonly logger: LogService,
   ) {
-    this.isTestMode = envService.get('NODE_ENV') === 'test';
+    this.isTestMode = this.envService.get('NODE_ENV') === 'test';
   }
 
   async execute({

@@ -1,5 +1,12 @@
-export interface MessageEnvelope<T> {
-  version: number;
-  type: 'email';
+import { z } from 'zod';
+
+export const messageEnvelopeSchema = z.object({
+  version: z.literal(1),
+  type: z.enum(['email']),
+  payload: z.unknown(),
+  idempotencyKey: z.uuid(),
+});
+
+export type MessageEnvelope<T> = z.infer<typeof messageEnvelopeSchema> & {
   payload: T;
-}
+};

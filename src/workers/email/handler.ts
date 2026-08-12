@@ -1,55 +1,20 @@
 import './sentry';
 
-import * as Sentry from '@sentry/node';
-import type { SQSBatchResponse, SQSHandler } from 'aws-lambda';
-import { z } from 'zod';
-
-import { parseEmailMessage } from '@/shared/queue/email.dto';
-import { MessageEnvelope } from '@/shared/queue/envelope';
+import { createQueueWorkerHandler } from '@/shared/queue/create-handler';
+import { parseEmailMessage, SendEmailJob } from '@/shared/queue/email.dto';
 
 import { env } from './env';
-import { log } from './log';
+import { logger } from './logger';
 import { sendEmail } from './send-email';
 
-export const handler: SQSHandler = async (event): Promise<SQSBatchResponse> => {
-  const batchItemFailures: { itemIdentifier: string }[] = [];
-
-  for (const record of event.Records) {
-    try {
-      const envelope = JSON.parse(record.body) as MessageEnvelope<unknown>;
-      const job = parseEmailMessage(envelope.payload);
-      await sendEmail(job);
-
-      log.info('Email processed', {
-        messageId: record.messageId,
-        template: job.template,
-        to: job.to,
-      });
-    } catch (err) {
-      const receiveCount = Number(record.attributes.ApproximateReceiveCount);
-
-      log.error('Email processing failed', {
-        messageId: record.messageId,
-        receiveCount,
-        error: err instanceof Error ? err.message : String(err),
-      });
-
-      if (
-        err instanceof z.ZodError ||
-        err instanceof SyntaxError ||
-        receiveCount >= env.SQS_EMAIL_MAX_RECEIVE_COUNT
-      ) {
-        Sentry.captureException(err, {
-          captureContext: {
-            level: 'error',
-            extra: { messageId: record.messageId, receiveCount },
-          },
-        });
-      }
-
-      batchItemFailures.push({ itemIdentifier: record.messageId });
-    }
-  }
-
-  return { batchItemFailures };
-};
+export const handler = createQueueWorkerHandler(
+  {
+    name: 'email',
+    maxReceiveCount: env.SQS_EMAIL_MAX_RECEIVE_COUNT,
+    parsePayload: parseEmailMessage,
+  },
+  {
+    onProcess: async (job: SendEmailJob) => await sendEmail(job),
+    logger,
+  },
+);

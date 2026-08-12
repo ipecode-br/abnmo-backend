@@ -27,7 +27,7 @@ export const sendEmailJobSchema = z.discriminatedUnion('template', [
     template: z.literal('declineSurvey'),
     to: z.email(),
     name: z.string().min(1),
-    reason: z.string().min(1),
+    reason: z.string().min(1).max(500),
   }),
 ]);
 

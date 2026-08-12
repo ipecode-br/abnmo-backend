@@ -43,10 +43,10 @@ describe('ApproveSurveySubmissionUseCase', () => {
     useCase = module.get(ApproveSurveySubmissionUseCase);
   });
 
-  it('approves pending_review submission', async () => {
+  it('approves "pending_review" submission', async () => {
     const user = requestUserFactory({ role: 'admin' });
     repo.findOne.mockResolvedValue(submission as unknown as SurveySubmission);
-    repo.update.mockResolvedValue(undefined as any);
+    repo.update.mockResolvedValue({ affected: 1 } as any);
 
     await useCase.execute({ id: 'sub-1', user });
 
@@ -54,16 +54,13 @@ describe('ApproveSurveySubmissionUseCase', () => {
       expect.objectContaining({ where: { id: 'sub-1' } }),
     );
     expect(repo.update).toHaveBeenCalledWith(
-      'sub-1',
-      expect.objectContaining({
-        status: 'approved',
-        updatedBy: user.id,
-      }),
+      { id: 'sub-1', status: 'pending_review' },
+      expect.objectContaining({ status: 'approved', updatedBy: user.id }),
     );
   });
 
   describe('Error cases', () => {
-    it('throws NotFoundException when submission not found', async () => {
+    it('throws "NotFoundException" when submission not found', async () => {
       repo.findOne.mockResolvedValue(null);
 
       await expect(
@@ -74,12 +71,9 @@ describe('ApproveSurveySubmissionUseCase', () => {
       ).rejects.toThrow(NotFoundException);
     });
 
-    it('throws BadRequestException for non-pending_review status', async () => {
-      const approvedSubmission = {
-        ...submission,
-        status: 'approved',
-      } as SurveySubmission;
-      repo.findOne.mockResolvedValue(approvedSubmission);
+    it('throws "BadRequestException" when submission not "pending_review"', async () => {
+      repo.findOne.mockResolvedValue(submission as unknown as SurveySubmission);
+      repo.update.mockResolvedValue({ affected: 0 } as any);
 
       await expect(
         useCase.execute({

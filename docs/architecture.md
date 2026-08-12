@@ -48,7 +48,10 @@ src/
 │   └── queue/                     # Contratos (envelope, DTOs) de mensagens SQS
 ├── workers/                       # Workers (AWS Lambda)
 │   └── email/                     # Worker de e-mail (consumer SQS → SES/Resend)
-│       ├── handler.ts             # Lambda handler
+│       ├── handler.ts             # createQueueWorkerHandler(...)
+│       ├── logger.ts              # createQueueWorkerLogger('email', env.SENTRY_LOGS)
+│       ├── sentry.ts              # Sentry.init() no cold start
+│       ├── env.ts                 # Zod schema + parse(process.env)
 │       ├── send-email.ts          # Dispatch por template + provider
 │       ├── providers/             # Implementações SES e Resend
 │       └── templates/             # Builders de templates de e-mail
@@ -134,19 +137,51 @@ Requisição HTTP
 
 Em caso de exceção, o `HttpExceptionFilter` captura, reporta ao Sentry (5xx) e retorna resposta padronizada.
 
-## Fluxo de envio de e-mail
+## Workers (AWS Lambda + SQS)
+
+Workers são funções Lambda consumidoras de filas SQS, construídas com o builder `createQueueWorkerHandler` (`src/shared/queue/create-handler.ts`). O builder encapsula:
+
+- Parsing e validação do envelope (`messageEnvelopeSchema`)
+- Deduplicação de mensagens via `idempotencyKey` (batch-level + cross-batch)
+- Classificação de erros (`ZodError`/`SyntaxError`/`TypeError` → Sentry imediato + delete; erro transiente → retry; última tentativa → Sentry + DLQ)
+- Acumulação de `batchItemFailures` para reporte parcial ao SQS
+- Logging via `console` + Sentry (`createQueueWorkerLogger`)
+
+### Fluxo de envio de e-mail
 
 ```
 UseCase (API)
   → EnqueueEmailUseCase.execute({ template, to, ... })
   → SQS (fila email-queue)
   → Worker Lambda (handler.ts)
-  → sendEmail(job)
-  → switch(template) → build*Email(job)
-  → EMAIL_PROVIDER=ses|resend → SES ou Resend
+    → createQueueWorkerHandler configura dedup, logging e parse
+    → onProcess(job) → sendEmail(job)
+    → build*Email(job) → EMAIL_PROVIDER=ses|resend → SES ou Resend
 ```
 
-A API apenas enfileira o job com os dados do template (nome, URLs, razão). O worker monta o HTML final e envia via SES ou Resend. Falhas de envio são tratadas pelo worker — não impactam o tempo de resposta da API.
+### Estrutura de um worker
+
+```
+src/workers/{name}/
+  handler.ts            # createQueueWorkerHandler({ name, maxReceiveCount, parsePayload }, { onProcess, logger })
+  env.ts                # Zod schema com maxReceiveCount, SENTRY_LOGS, configs específicas
+  logger.ts             # createQueueWorkerLogger(name, env.SENTRY_LOGS)
+  sentry.ts             # Sentry.init() no cold start
+```
+
+### Criando um novo worker
+
+Veja [`docs/workers.md`](workers.md) para o guia completo de criação de workers.
+
+### Infraestrutura compartilhada
+
+| Arquivo (`src/shared/queue/`) | Propósito                                                                             |
+| ----------------------------- | ------------------------------------------------------------------------------------- |
+| `create-handler.ts`           | Builder `createQueueWorkerHandler` e tipos `QueueWorkerConfig`/`QueueWorkerCallbacks` |
+| `logger.ts`                   | Factory `createQueueWorkerLogger` e interface `QueueWorkerLogger`                     |
+| `envelope.ts`                 | `messageEnvelopeSchema` — envelope versionado com `idempotencyKey`                    |
+| `email.dto.ts`                | `sendEmailJobSchema` (discriminated union) e `parseEmailMessage()`                    |
+| `utils.ts`                    | `generateQueueIdempotencyKey`, `checkIsProcessed`, `markProcessed`                    |
 
 ## Módulos compartilhados
 

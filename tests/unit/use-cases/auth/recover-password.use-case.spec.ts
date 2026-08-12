@@ -2,7 +2,7 @@ import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { mock, MockProxy } from 'jest-mock-extended';
 import { memberUserFactory } from 'tests/config/factories/user.factory';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
 import { RecoverPasswordUseCase } from '@/app/http/auth/use-cases/recover-password.use-case';
@@ -19,6 +19,7 @@ describe('RecoverPasswordUseCase', () => {
   let createTokenUseCase: MockProxy<CreateTokenUseCase>;
   let envService: MockProxy<EnvService>;
   let enqueueEmailUseCase: MockProxy<EnqueueEmailUseCase>;
+  let dataSource: MockProxy<DataSource>;
 
   const existingUser = memberUserFactory();
 
@@ -28,8 +29,14 @@ describe('RecoverPasswordUseCase', () => {
     createTokenUseCase = mock<CreateTokenUseCase>();
     envService = mock<EnvService>();
     enqueueEmailUseCase = mock<EnqueueEmailUseCase>();
+    dataSource = mock<DataSource>();
 
     envService.get.mockReturnValue('https://app.test.com');
+
+    dataSource.transaction.mockImplementation(async (cb: any) => {
+      const manager = { getRepository: jest.fn().mockReturnValue(tokensRepo) };
+      return cb(manager);
+    });
 
     const module = await Test.createTestingModule({
       providers: [
@@ -40,6 +47,7 @@ describe('RecoverPasswordUseCase', () => {
         { provide: EnvService, useValue: envService },
         { provide: LogService, useValue: { log: jest.fn(), warn: jest.fn() } },
         { provide: EnqueueEmailUseCase, useValue: enqueueEmailUseCase },
+        { provide: DataSource, useValue: dataSource },
       ],
     }).compile();
 

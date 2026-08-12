@@ -24,6 +24,50 @@ NestJS + TypeORM + PostgreSQL + Zod API.
 - **Enums**: `as const` arrays in `src/domain/enums/`, **not** TypeScript `enum` keyword
 - **Path alias**: `@/` → `./src/`
 
+### Workers
+
+SQS consumer Lambdas built with the shared `createQueueWorkerHandler` builder (`src/shared/queue/create-handler.ts`). The builder handles envelope parsing, idempotency, log/error formatting, and Sentry reporting — each worker only provides config and an `onProcess` callback.
+
+```ts
+// src/workers/{name}/handler.ts
+import { createQueueWorkerHandler } from '@/shared/queue/create-handler';
+import { createQueueWorkerLogger } from '@/shared/queue/logger';
+import { parseMyMessage } from '@/shared/queue/my-worker.dto';
+
+export const handler = createQueueWorkerHandler(
+  {
+    name: 'my-worker',
+    maxReceiveCount: env.SQS_MY_WORKER_MAX_RECEIVE_COUNT,
+    parsePayload: parseMyMessage,
+  },
+  {
+    onProcess: async (job, messageId) => {
+      /* business logic */
+    },
+    logger: createQueueWorkerLogger('my-worker', env.SENTRY_LOGS),
+  },
+);
+```
+
+**Worker file structure:**
+
+```
+src/workers/{name}/
+  handler.ts            # calls createQueueWorkerHandler
+  env.ts                # Zod-validated env schema (maxReceiveCount, SENTRY_LOGS, etc.)
+  logger.ts             # creates QueueWorkerLogger instance
+  sentry.ts             # imports from handler to init Sentry on cold start
+```
+
+**Shared queue infrastructure** (`src/shared/queue/`):
+
+| File                | Purpose                                                                                 |
+| ------------------- | --------------------------------------------------------------------------------------- |
+| `create-handler.ts` | `createQueueWorkerHandler` builder and `QueueWorkerConfig`/`QueueWorkerCallbacks` types |
+| `logger.ts`         | `createQueueWorkerLogger` — console + Sentry logger factory                             |
+| `envelope.ts`       | `messageEnvelopeSchema` — versioned envelope with `idempotencyKey`                      |
+| `utils.ts`          | `generateQueueIdempotencyKey`, `checkIsProcessed`, `markProcessed`                      |
+
 ## Patient data model
 
 - **No dedicated `Patient` entity** — patients are `User` records with `role: 'patient'`
@@ -172,6 +216,30 @@ Import the inferred schema type from `responses.ts`, use it as the return type, 
 - All database write operations (create, update, delete) **must** log after successful execution
 - On error, throw the correct HTTP exception with a `cause` property set to the original error; the exception's message goes to the response, and the cause is logged automatically by the exception filter
 - When `SENTRY_DSN` is configured, `LogService` forwards logs to Sentry based on `SENTRY_LOGS` env var (`"none"` = nothing, `"error"` = only errors, `"all"` = all levels). Logs with HTTP `status < 500` are filtered out by `beforeSendLog` — only 5xx errors reach Sentry.
+
+### Sentry issues vs logs
+
+Sentry has two separate pipelines:
+
+- **Issues (exceptions):** Created via `Sentry.captureException()`. Grouped by stack trace, trigger alerts. Always created when `SENTRY_DSN` is set, regardless of `SENTRY_LOGS`.
+- **Logs:** Created via `Sentry.logger.info/error()` (called internally by `LogService` and the worker's `log` utility). Filtered by `SENTRY_LOGS` via `beforeSendLog`. These are log entries, NOT issues — they have no stack trace grouping and no alerts.
+
+The HTTP exception filter (`src/common/http-exception.filter.ts`) automatically calls `Sentry.captureException()` for:
+
+- `ZodSerializationException` (always)
+- `InternalServerErrorException` (always)
+- `HttpException` with `status >= 500`
+- Any unhandled error
+
+4xx client errors and handled errors in use cases are NOT captured as Sentry issues by the filter.
+
+**When to call `Sentry.captureException()` manually:**
+
+- Catches in background/async operations that swallow the error (e.g., failed SQS enqueue)
+- Non-HTTP contexts that error out (worker Lambdas, scheduled jobs)
+- Errors you want to alert on even though you're handling them gracefully downstream
+
+`LogService.error()` alone does **not** create a Sentry issue — it only creates a Sentry log entry (if `SENTRY_LOGS` permits).
 
 ## Testing
 

@@ -1,3 +1,5 @@
+import { escapeHtml } from './html';
+
 export function createEmailTemplate({
   config,
   content,
@@ -127,7 +129,7 @@ export function createEmailTemplate({
 export function heading(text: string, style = ''): string {
   const defaultStyle =
     'font-size: 24px; font-weight: 600; margin-bottom: 24px; color: #036246';
-  return `<p style="${defaultStyle}${style}">${text}</p>`;
+  return `<p style="${defaultStyle}${style}">${escapeHtml(text)}</p>`;
 }
 
 export function p(text: string, style = ''): string {
@@ -154,7 +156,7 @@ export function button(
 					border-radius: 12px;
 					padding: 0;
 				">
-					<a href="${url}" target="_blank" rel="noopener noreferrer" style="
+					<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" style="
 						background-color: ${backgroundColor};
 						border-radius: 10px;
 						box-sizing: border-box;
@@ -166,7 +168,7 @@ export function button(
 						padding: ${padding};
 						text-decoration: none;
 					">
-						${text}
+						${escapeHtml(text)}
 					</a>
 				</td>
 			</tr>

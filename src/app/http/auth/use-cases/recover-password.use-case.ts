@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 
 import { CreateTokenUseCase } from '@/app/cryptography/use-cases/create-token.use-case';
 import { EnqueueEmailUseCase } from '@/app/queue/use-cases/enqueue-email.use-case';
@@ -10,6 +10,7 @@ import { Token } from '@/domain/entities/token';
 import { User } from '@/domain/entities/user';
 import { TOKENS } from '@/domain/enums/tokens';
 import { EnvService } from '@/env/env.service';
+import { anonymizeEmail } from '@/utils/anonymize';
 
 interface RecoverPasswordUseCaseInput {
   email: string;
@@ -28,9 +29,10 @@ export class RecoverPasswordUseCase {
     private readonly createTokenUseCase: CreateTokenUseCase,
     private readonly envService: EnvService,
     private readonly logger: LogService,
+    private readonly dataSource: DataSource,
     private readonly enqueueEmailUseCase: EnqueueEmailUseCase,
   ) {
-    this.baseAppUrl = envService.get('APP_URL');
+    this.baseAppUrl = this.envService.get('APP_URL');
   }
 
   async execute({ email }: RecoverPasswordUseCaseInput): Promise<void> {
@@ -41,28 +43,39 @@ export class RecoverPasswordUseCase {
 
     if (!user) {
       this.logger.warn('Attempt to recover password for non-registered email', {
-        email,
+        email: anonymizeEmail(email),
       });
       return;
     }
 
-    const [{ token, expiresAt }] = await Promise.all([
-      this.createTokenUseCase.execute({
+    let token = '';
+
+    await this.dataSource.transaction(async (manager) => {
+      const tokensRepository = manager.getRepository(Token);
+
+      const [{ token: tokenValue, expiresAt }] = await Promise.all([
+        this.createTokenUseCase.execute({
+          type: TOKENS.passwordReset,
+          payload: { sub: user.id },
+        }),
+        tokensRepository.delete({ userId: user.id }),
+      ]);
+
+      token = tokenValue;
+
+      const tokenEntity = tokensRepository.create({
         type: TOKENS.passwordReset,
-        payload: { sub: user.id },
-      }),
-      this.tokensRepository.delete({ userId: user.id }),
-    ]);
-
-    const tokenEntity = this.tokensRepository.create({
-      type: TOKENS.passwordReset,
-      userId: user.id,
-      expiresAt,
-      token,
+        userId: user.id,
+        expiresAt,
+        token,
+      });
+      await tokensRepository.save(tokenEntity);
     });
-    await this.tokensRepository.save(tokenEntity);
 
-    this.logger.log('Password reset token generated', { id: user.id, email });
+    this.logger.log('Password reset token generated', {
+      id: user.id,
+      email: anonymizeEmail(email),
+    });
 
     const resetPasswordUrl = `${this.baseAppUrl}/nova-senha?token=${token}`;
     const name = user.name.split(' ')[0];

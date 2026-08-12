@@ -56,9 +56,9 @@ export class ValidateFileUseCase {
     key,
   }: ValidateFileUseCaseInput): Promise<ValidateFileUseCaseOutput> {
     if (!this.isEnabled) {
-      this.logger.log(
-        'Validate file skipped (STORAGE_ENABLED=false) — returning mock result',
-      );
+      this.logger.log('Validate file skipped', {
+        reason: 'STORAGE_ENABLED is "false"',
+      });
 
       if (documentId) {
         await this.documentsRepository.update(documentId, {
@@ -69,7 +69,7 @@ export class ValidateFileUseCase {
       return {
         isValid: true,
         message: 'O arquivo enviado é válido.',
-        cause: 'File validation skipped (STORAGE_ENABLED=false)',
+        cause: 'File validation skipped because STORAGE_ENABLED is "false"',
       };
     }
 

@@ -16,7 +16,16 @@ async function poll(): Promise<void> {
 
   await ensureQueues(sqs);
 
-  while (true) {
+  let running = true;
+
+  process.on('SIGTERM', () => {
+    running = false;
+  });
+  process.on('SIGINT', () => {
+    running = false;
+  });
+
+  while (running) {
     try {
       const response = await sqs.send(
         new ReceiveMessageCommand({
@@ -73,8 +82,12 @@ async function poll(): Promise<void> {
       }
     } catch (err) {
       console.error('Poll error:', err);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
   }
 }
 
-void poll();
+poll().catch((err) => {
+  console.error('Fatal error starting local runner:', err);
+  process.exit(1);
+});

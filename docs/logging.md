@@ -169,6 +169,25 @@ export class CreateAppointmentUseCase {
 
 ---
 
+## Workers
+
+Workers não usam o NestJS `LogService` (rodam como funções Lambda puras, sem DI). Em vez disso, usam `createQueueWorkerLogger` de `src/shared/queue/logger.ts`:
+
+```ts
+import { createQueueWorkerLogger } from '@/shared/queue/logger';
+
+export const logger = createQueueWorkerLogger('email', env.SENTRY_LOGS);
+
+logger.info('Email sent', { to: anonymizeEmail(...), template: ... });
+logger.error('Email send failed', { to: anonymizeEmail(...), error: ... });
+```
+
+O logger escreve em `console.info`/`console.error` com timestamp ISO e, quando configurado (`SENTRY_LOGS`), encaminha para `Sentry.logger` após sanitização PII via `flattenForSentry`.
+
+Veja [`docs/workers.md`](workers.md) para detalhes completos sobre workers.
+
+---
+
 ## Regras
 
 - Use `@Log()` em todos os use-cases (class-level).
@@ -176,4 +195,4 @@ export class CreateAppointmentUseCase {
 - Mensagens de log em **inglês** — são para desenvolvedores, não para o usuário.
 - Inclua metadados relevantes no segundo argumento para facilitar rastreamento.
 - Use `logger.error()` antes de lançar exceções que representam falhas operacionais.
-- **Nunca** logar senhas, tokens ou dados sensíveis.
+- **Nunca** logar senhas, tokens ou dados sensíveis (use `anonymizeEmail`/`anonymizeCpf`/`anonymizeName`/`anonymizePhone` de `@/utils/anonymize`).

@@ -1,4 +1,4 @@
-import { Column, Entity, Index, JoinColumn, OneToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
 
 import {
   SURVEY_FILLING_METHODS,
@@ -29,8 +29,7 @@ export class SurveySubmission
   @Column({ type: 'enum', enum: SURVEY_FILLING_METHODS })
   fillingMethod: SurveyFillingMethod;
 
-  @Index()
-  @Column({ type: 'varchar', length: 36, nullable: true })
+  @Column({ type: 'varchar', length: 36, unique: true, nullable: true })
   surveyToken: string | null;
 
   @OneToOne(() => User, (user) => user.surveySubmission)

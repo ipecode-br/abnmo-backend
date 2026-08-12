@@ -61,6 +61,10 @@ npm run services:setup-queues
 
 O comando `dev:email-worker` usa `tsx watch` — reinicia automaticamente ao editar o código.
 
+### Criando novos workers
+
+Veja [`docs/workers.md`](docs/workers.md) para o guia completo de criação de workers com `createQueueWorkerHandler`.
+
 ### Testando workers
 
 Testes unitários dos workers rodam junto com a suíte completa (`npm run test:unit`). Para rodar apenas os testes de workers:

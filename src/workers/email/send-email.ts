@@ -1,7 +1,8 @@
 import { SendEmailJob } from '@/shared/queue/email.dto';
+import { anonymizeEmail } from '@/utils/anonymize';
 
 import { env } from './env';
-import { log } from './log';
+import { logger } from './logger';
 import { sendViaResend } from './providers/resend';
 import { sendViaSes } from './providers/ses';
 import { buildCompleteSurveyEmail } from './templates/complete-survey';
@@ -39,19 +40,31 @@ export async function sendEmail(job: SendEmailJob): Promise<void> {
 
   const payload = { to: job.to, ...rendered };
 
-  try {
-    await (env.EMAIL_PROVIDER === 'resend'
-      ? sendViaResend(payload)
-      : sendViaSes(payload));
+  if (env.EMAIL_PROVIDER === 'none') {
+    logger.info('Email send skipped', {
+      to: anonymizeEmail(job.to),
+      template: job.template,
+      reason: 'EMAIL_PROVIDER is "none"',
+    });
+    return;
+  }
 
-    log.info('Email sent', {
-      to: job.to,
+  try {
+    if (env.EMAIL_PROVIDER === 'resend') {
+      await sendViaResend(payload);
+    }
+    if (env.EMAIL_PROVIDER === 'ses') {
+      await sendViaSes(payload);
+    }
+
+    logger.info('Email sent', {
+      to: anonymizeEmail(job.to),
       template: job.template,
       provider: env.EMAIL_PROVIDER,
     });
   } catch (err) {
-    log.error('Email send failed', {
-      to: job.to,
+    logger.error('Email send failed', {
+      to: anonymizeEmail(job.to),
       template: job.template,
       provider: env.EMAIL_PROVIDER,
       error: err instanceof Error ? err.message : String(err),

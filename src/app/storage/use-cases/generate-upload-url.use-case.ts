@@ -54,10 +54,9 @@ export class GenerateUploadUrlUseCase {
     }
 
     if (!this.isEnabled) {
-      this.logger.log(
-        'Generate upload URL skipped (STORAGE_ENABLED=false) — returning mock upload URL',
-        { key, mimeType },
-      );
+      this.logger.log('Generate upload URL skipped', {
+        reason: 'STORAGE_ENABLED is "false"',
+      });
 
       return {
         url: `https://${this.bucketName}.s3.amazonaws.com`,
