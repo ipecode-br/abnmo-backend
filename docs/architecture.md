@@ -143,7 +143,7 @@ Workers são funções Lambda consumidoras de filas SQS, construídas com o buil
 
 - Parsing e validação do envelope (`messageEnvelopeSchema`)
 - Deduplicação de mensagens via `idempotencyKey` (batch-level + cross-batch)
-- Classificação de erros (`ZodError`/`SyntaxError` → Sentry imediato; erro transiente → retry)
+- Classificação de erros (`ZodError`/`SyntaxError`/`TypeError` → Sentry imediato + delete; erro transiente → retry; última tentativa → Sentry + DLQ)
 - Acumulação de `batchItemFailures` para reporte parcial ao SQS
 - Logging via `console` + Sentry (`createQueueWorkerLogger`)
 

@@ -18,12 +18,12 @@ import type {
 
 ### `QueueWorkerConfig`
 
-| Campo             | Tipo                            | Descrição                                               |
-| ----------------- | ------------------------------- | ------------------------------------------------------- |
-| `name`            | `string`                        | Nome do worker (usado em logs e tags do Sentry)         |
-| `maxReceiveCount` | `number`                        | Número máximo de tentativas antes de reportar ao Sentry |
-| `parsePayload`    | `(payload: unknown) => unknown` | Função Zod para validar o payload específico do worker  |
-| `dedupTtlMs?`     | `number`                        | TTL da janela de deduplicação (default: 10 minutos)     |
+| Campo             | Tipo                            | Descrição                                                   |
+| ----------------- | ------------------------------- | ----------------------------------------------------------- |
+| `name`            | `string`                        | Nome do worker (usado em logs e tags do Sentry)             |
+| `maxReceiveCount` | `number`                        | Limiar de tentativas para alerta no Sentry e envio para DLQ |
+| `parsePayload`    | `(payload: unknown) => unknown` | Função Zod para validar o payload específico do worker      |
+| `dedupTtlMs?`     | `number`                        | TTL da janela de deduplicação (default: 10 minutos)         |
 
 ### `QueueWorkerCallbacks`
 
@@ -38,9 +38,13 @@ import type {
 2. **Deduplicação** — checa `idempotencyKey` contra cache em memória (batch-level + cross-batch)
 3. **Logging** — `info` ao processar/pular mensagem, `error` em falhas (via `logger`)
 4. **Classificação de erros**:
-   - `ZodError` ou `SyntaxError` → reporta ao Sentry **imediatamente** (mensagem malformada, irreparável)
-   - Erro com `receiveCount === maxReceiveCount` → reporta ao Sentry (poison pill)
-   - Outros erros → **não** reporta ao Sentry, apenas retorna em `batchItemFailures` para retry no SQS
+   - `ZodError`, `SyntaxError` ou `TypeError` (erros permanentes) → reporta ao Sentry
+     **imediatamente** com o corpo completo da mensagem no extra `body` para debugging.
+     A mensagem é **removida da fila** — não vai para `batchItemFailures` e não é retentada.
+   - Erro transiente com `receiveCount >= maxReceiveCount` → reporta ao Sentry
+     (última tentativa, mensagem vai para DLQ)
+   - Erro transiente com `receiveCount < maxReceiveCount` → **não** reporta ao Sentry,
+     retorna em `batchItemFailures` para retry pelo SQS
 5. **Batch failures** — acumula `messageId`s com falha e retorna `{ batchItemFailures }`
 
 ---
@@ -106,7 +110,7 @@ import 'dotenv/config';
 import { z } from 'zod';
 
 export const myWorkerEnvSchema = z.object({
-  SQS_MY_WORKER_MAX_RECEIVE_COUNT: z.coerce.number().default(3),
+  SQS_MY_WORKER_MAX_RECEIVE_COUNT: z.coerce.number().default(5),
   SENTRY_DSN: z.string().optional().default(''),
   SENTRY_LOGS: z.enum(['all', 'error', 'none']).default('none'),
 });
