@@ -1,0 +1,51 @@
+import { SendWhatsAppJob } from '@/shared/queue/whatsapp.dto';
+import { anonymizePhoneE164 } from '@/utils/anonymize';
+
+import { logger } from './logger';
+import { sendViaSocialMessaging } from './providers/social-messaging';
+import { buildCompleteSurveyTemplate } from './templates/complete-survey';
+import { WhatsAppTemplateMessage } from './types';
+
+export async function sendWhatsApp(job: SendWhatsAppJob): Promise<void> {
+  let template: WhatsAppTemplateMessage;
+
+  switch (job.template) {
+    case 'completeSurvey':
+      template = buildCompleteSurveyTemplate(job);
+      break;
+    default: {
+      const _exhaustive: never = job.template;
+      throw new Error(`Unhandled WhatsApp template: ${String(_exhaustive)}`);
+    }
+  }
+
+  const payload = {
+    messaging_product: 'whatsapp',
+    to: job.to,
+    type: 'template',
+    template: {
+      name: template.name,
+      language: { code: template.language },
+      components: template.components,
+    },
+  };
+
+  try {
+    await sendViaSocialMessaging({
+      message: new TextEncoder().encode(JSON.stringify(payload)),
+    });
+
+    logger.info('WhatsApp message sent', {
+      to: anonymizePhoneE164(job.to),
+      template: job.template,
+    });
+  } catch (err) {
+    logger.error('WhatsApp message send failed', {
+      to: anonymizePhoneE164(job.to),
+      template: job.template,
+      error: err instanceof Error ? err.message : String(err),
+    });
+
+    throw err;
+  }
+}

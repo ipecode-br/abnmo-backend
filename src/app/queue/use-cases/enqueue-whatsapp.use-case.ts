@@ -5,14 +5,14 @@ import * as Sentry from '@sentry/nestjs';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import { EnvService } from '@/env/env.service';
-import type { SendEmailJob } from '@/shared/queue/email.dto';
 import type { MessageEnvelope } from '@/shared/queue/envelope';
 import { generateQueueIdempotencyKey } from '@/shared/queue/utils';
-import { anonymizeEmail } from '@/utils/anonymize';
+import type { SendWhatsAppJob } from '@/shared/queue/whatsapp.dto';
+import { anonymizePhoneE164 } from '@/utils/anonymize';
 
 @Injectable()
 @Log()
-export class EnqueueEmailUseCase {
+export class EnqueueWhatsAppUseCase {
   private readonly queueUrl: string;
 
   constructor(
@@ -20,18 +20,18 @@ export class EnqueueEmailUseCase {
     private readonly logger: LogService,
     private readonly sqs: SQSClient,
   ) {
-    this.queueUrl = this.envService.get('EMAIL_QUEUE_URL');
+    this.queueUrl = this.envService.get('WHATSAPP_QUEUE_URL');
   }
 
-  async execute(job: SendEmailJob): Promise<void> {
-    const message: MessageEnvelope<SendEmailJob> = {
+  async execute(job: SendWhatsAppJob): Promise<void> {
+    const message: MessageEnvelope<SendWhatsAppJob> = {
       version: 1,
-      type: 'email',
+      type: 'whatsapp',
       payload: job,
       idempotencyKey: generateQueueIdempotencyKey(),
     };
 
-    const maskedTo = anonymizeEmail(job.to);
+    const maskedTo = anonymizePhoneE164(job.to);
 
     try {
       await this.sqs.send(
@@ -41,12 +41,12 @@ export class EnqueueEmailUseCase {
         }),
       );
 
-      this.logger.log('E-mail job enqueued', {
+      this.logger.log('WhatsApp job enqueued', {
         template: job.template,
         to: maskedTo,
       });
     } catch (error) {
-      this.logger.error('Failed to enqueue email job', {
+      this.logger.error('Failed to enqueue WhatsApp job', {
         template: job.template,
         to: maskedTo,
         error: error instanceof Error ? error.message : String(error),

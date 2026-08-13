@@ -16,3 +16,7 @@ export function anonymizeCpf(cpf: string): string {
 export function anonymizePhone(phone: string): string {
   return `(${phone.slice(0, 2)}) ${phone.slice(2, 5)}**-****`;
 }
+
+export function anonymizePhoneE164(phone: string): string {
+  return `${phone.slice(0, 6)}***${phone.slice(-2)}`;
+}
