@@ -6,7 +6,7 @@ export const whatsappWorkerEnvSchema = z.object({
   NODE_ENV: z.enum(['production', 'development', 'test']).optional(),
 
   SQS_WHATSAPP_MAX_RECEIVE_COUNT: z.coerce.number().default(5),
-  WHATSAPP_ORIGINATION_PHONE_NUMBER_ID: z.string().min(1),
+  WHATSAPP_PHONE_NUMBER_ID: z.string().min(1),
   WHATSAPP_META_API_VERSION: z.string().min(1),
 
   SENTRY_DSN: z.string().optional().default(''),

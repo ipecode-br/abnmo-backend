@@ -13,7 +13,7 @@ export async function sendViaSocialMessaging({
 }: SendWhatsAppPayload): Promise<void> {
   await socialMessaging.send(
     new SendWhatsAppMessageCommand({
-      originationPhoneNumberId: env.WHATSAPP_ORIGINATION_PHONE_NUMBER_ID,
+      originationPhoneNumberId: env.WHATSAPP_PHONE_NUMBER_ID,
       metaApiVersion: env.WHATSAPP_META_API_VERSION,
       message,
     }),
