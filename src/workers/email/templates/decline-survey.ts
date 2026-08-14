@@ -1,4 +1,5 @@
-import { SUPPORT_EMAIL, SUPPORT_WHATSAPP } from '../config';
+import { SUPPORT_EMAIL, SUPPORT_WHATSAPP } from '@/config';
+
 import { BuildEmailTemplateOutput } from '../types';
 import {
   createEmailTemplate,

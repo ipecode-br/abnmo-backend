@@ -99,6 +99,32 @@ describe('WhatsApp worker handler', () => {
     expect(result.batchItemFailures).toHaveLength(0);
   });
 
+  it('processes a valid "declineSurvey" job', async () => {
+    const record = makeRecord();
+    record.body = JSON.stringify({
+      version: 1,
+      type: 'whatsapp',
+      idempotencyKey: nextIdempotencyKey(),
+      payload: {
+        template: 'declineSurvey',
+        to: '+5511999999999',
+        name: 'Test',
+        reason: 'Documento inválido',
+      },
+    });
+    const event: SQSEvent = { Records: [record] };
+
+    const result = await invoke(event);
+
+    expect(mockSendWhatsApp).toHaveBeenCalledWith({
+      template: 'declineSurvey',
+      to: '+5511999999999',
+      name: 'Test',
+      reason: 'Documento inválido',
+    });
+    expect(result.batchItemFailures).toHaveLength(0);
+  });
+
   it('captures Sentry immediately for invalid template (ZodError)', async () => {
     const record = makeRecord();
     record.body = JSON.stringify({

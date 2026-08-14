@@ -4,6 +4,7 @@ import { anonymizePhoneE164 } from '@/utils/anonymize';
 import { logger } from './logger';
 import { sendViaSocialMessaging } from './providers/social-messaging';
 import { buildCompleteSurveyTemplate } from './templates/complete-survey';
+import { buildDeclineSurveyTemplate } from './templates/decline-survey';
 import { WhatsAppTemplateMessage } from './types';
 
 export async function sendWhatsApp(job: SendWhatsAppJob): Promise<void> {
@@ -13,9 +14,14 @@ export async function sendWhatsApp(job: SendWhatsAppJob): Promise<void> {
     case 'completeSurvey':
       template = buildCompleteSurveyTemplate(job);
       break;
+    case 'declineSurvey':
+      template = buildDeclineSurveyTemplate(job);
+      break;
     default: {
-      const _exhaustive: never = job.template;
-      throw new Error(`Unhandled WhatsApp template: ${String(_exhaustive)}`);
+      const _exhaustive: never = job;
+      throw new Error(
+        `Unhandled WhatsApp template: ${(_exhaustive as unknown as { template: string }).template}`,
+      );
     }
   }
 

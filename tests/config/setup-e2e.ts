@@ -10,6 +10,7 @@ process.env.NODE_ENV = 'test';
 
 import { AppModule } from '@/app/app.module';
 import { EnqueueEmailUseCase } from '@/app/queue/use-cases/enqueue-email.use-case';
+import { EnqueueWhatsAppUseCase } from '@/app/queue/use-cases/enqueue-whatsapp.use-case';
 import { EnvService } from '@/env/env.service';
 
 declare global {
@@ -24,6 +25,8 @@ beforeAll(async () => {
     imports: [AppModule],
   })
     .overrideProvider(EnqueueEmailUseCase)
+    .useValue({ execute: jest.fn() })
+    .overrideProvider(EnqueueWhatsAppUseCase)
     .useValue({ execute: jest.fn() })
     .compile();
 

@@ -7,11 +7,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { EnqueueEmailUseCase } from '@/app/queue/use-cases/enqueue-email.use-case';
+import { EnqueueWhatsAppUseCase } from '@/app/queue/use-cases/enqueue-whatsapp.use-case';
 import { can } from '@/common/authorization/can';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import type { RequestUser } from '@/common/types';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
+import { formatPhoneE164 } from '@/utils/formatters/format-phone-e164';
 
 interface DeclineSurveySubmissionUseCaseInput {
   id: string;
@@ -26,6 +28,7 @@ export class DeclineSurveySubmissionUseCase {
     @InjectRepository(SurveySubmission)
     private readonly surveySubmissionsRepository: Repository<SurveySubmission>,
     private readonly enqueueEmailUseCase: EnqueueEmailUseCase,
+    private readonly enqueueWhatsAppUseCase: EnqueueWhatsAppUseCase,
     private readonly logger: LogService,
   ) {}
 
@@ -37,7 +40,7 @@ export class DeclineSurveySubmissionUseCase {
     can(user, 'review:survey');
 
     const submission = await this.surveySubmissionsRepository.findOne({
-      select: { patient: { name: true, email: true } },
+      select: { patient: { name: true, email: true, phone: true } },
       relations: { patient: true },
       where: { id },
     });
@@ -65,6 +68,13 @@ export class DeclineSurveySubmissionUseCase {
     await this.enqueueEmailUseCase.execute({
       template: 'declineSurvey',
       to: submission.patient.email,
+      name: submission.patient.name,
+      reason,
+    });
+
+    await this.enqueueWhatsAppUseCase.execute({
+      template: 'declineSurvey',
+      to: formatPhoneE164(submission.patient.phone!),
       name: submission.patient.name,
       reason,
     });

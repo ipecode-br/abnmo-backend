@@ -9,6 +9,7 @@ import { Repository } from 'typeorm';
 
 import { ApproveSurveySubmissionUseCase } from '@/app/http/surveys/submissions/use-cases/approve-survey-submission.use-case';
 import { EnqueueEmailUseCase } from '@/app/queue/use-cases/enqueue-email.use-case';
+import { EnqueueWhatsAppUseCase } from '@/app/queue/use-cases/enqueue-whatsapp.use-case';
 import { LogService } from '@/common/log/log.service';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
 import { EnvService } from '@/env/env.service';
@@ -16,6 +17,8 @@ import { EnvService } from '@/env/env.service';
 describe('ApproveSurveySubmissionUseCase', () => {
   let useCase: ApproveSurveySubmissionUseCase;
   let repo: MockProxy<Repository<SurveySubmission>>;
+  let enqueueEmailUseCase: MockProxy<EnqueueEmailUseCase>;
+  let enqueueWhatsAppUseCase: MockProxy<EnqueueWhatsAppUseCase>;
 
   const patient = patientUserFactory();
   const submission = surveySubmissionFactory({
@@ -26,12 +29,15 @@ describe('ApproveSurveySubmissionUseCase', () => {
 
   beforeEach(async () => {
     repo = mock<Repository<SurveySubmission>>();
+    enqueueEmailUseCase = mock<EnqueueEmailUseCase>();
+    enqueueWhatsAppUseCase = mock<EnqueueWhatsAppUseCase>();
 
     const module = await Test.createTestingModule({
       providers: [
         ApproveSurveySubmissionUseCase,
         { provide: getRepositoryToken(SurveySubmission), useValue: repo },
-        { provide: EnqueueEmailUseCase, useValue: { execute: jest.fn() } },
+        { provide: EnqueueEmailUseCase, useValue: enqueueEmailUseCase },
+        { provide: EnqueueWhatsAppUseCase, useValue: enqueueWhatsAppUseCase },
         {
           provide: EnvService,
           useValue: { get: jest.fn().mockReturnValue('http://localhost') },
@@ -56,6 +62,19 @@ describe('ApproveSurveySubmissionUseCase', () => {
     expect(repo.update).toHaveBeenCalledWith(
       { id: 'sub-1', status: 'pending_review' },
       expect.objectContaining({ status: 'approved', updatedBy: user.id }),
+    );
+    expect(enqueueEmailUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        template: 'completeSurvey',
+        to: patient.email,
+      }),
+    );
+    expect(enqueueWhatsAppUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        template: 'completeSurvey',
+        to: `+55${patient.phone}`,
+        name: patient.name,
+      }),
     );
   });
 

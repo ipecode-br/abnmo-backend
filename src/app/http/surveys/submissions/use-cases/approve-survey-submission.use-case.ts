@@ -8,12 +8,14 @@ import { Repository } from 'typeorm';
 import { v7 as uuidv7 } from 'uuid';
 
 import { EnqueueEmailUseCase } from '@/app/queue/use-cases/enqueue-email.use-case';
+import { EnqueueWhatsAppUseCase } from '@/app/queue/use-cases/enqueue-whatsapp.use-case';
 import { can } from '@/common/authorization/can';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import type { RequestUser } from '@/common/types';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
 import { EnvService } from '@/env/env.service';
+import { formatPhoneE164 } from '@/utils/formatters/format-phone-e164';
 
 interface ApproveSurveySubmissionUseCaseInput {
   id: string;
@@ -29,6 +31,7 @@ export class ApproveSurveySubmissionUseCase {
     @InjectRepository(SurveySubmission)
     private readonly surveySubmissionsRepository: Repository<SurveySubmission>,
     private readonly enqueueEmailUseCase: EnqueueEmailUseCase,
+    private readonly enqueueWhatsAppUseCase: EnqueueWhatsAppUseCase,
     private readonly envService: EnvService,
     private readonly logger: LogService,
   ) {
@@ -75,6 +78,13 @@ export class ApproveSurveySubmissionUseCase {
       to: submission.patient.email,
       name: submission.patient.name,
       completeSurveyUrl,
+    });
+
+    await this.enqueueWhatsAppUseCase.execute({
+      template: 'completeSurvey',
+      to: formatPhoneE164(submission.patient.phone!),
+      name: submission.patient.name,
+      token: surveyToken,
     });
 
     this.logger.log('Survey submission approved', { id });
