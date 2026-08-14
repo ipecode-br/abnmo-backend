@@ -62,6 +62,7 @@ export function createQueueWorkerHandler(
         logger.error('Message processing failed', {
           messageId: record.messageId,
           receiveCount,
+          errorType: err instanceof Error ? err.name : typeof err,
           error: err instanceof Error ? err.message : String(err),
         });
 
