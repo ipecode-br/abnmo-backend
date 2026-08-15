@@ -1,4 +1,8 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { mock, MockProxy } from 'jest-mock-extended';
@@ -100,6 +104,29 @@ describe('ApproveSurveySubmissionUseCase', () => {
           user: requestUserFactory({ role: 'admin' }),
         }),
       ).rejects.toThrow(BadRequestException);
+    });
+
+    it('throws "InternalServerErrorException" when patient has no phone', async () => {
+      const patientWithoutPhone = patientUserFactory({ phone: null });
+      const submissionWithoutPhone = surveySubmissionFactory({
+        patient: patientWithoutPhone,
+        id: 'sub-1',
+        status: 'pending_review',
+      });
+      repo.findOne.mockResolvedValue(
+        submissionWithoutPhone as unknown as SurveySubmission,
+      );
+
+      await expect(
+        useCase.execute({
+          id: 'sub-1',
+          user: requestUserFactory({ role: 'admin' }),
+        }),
+      ).rejects.toThrow(InternalServerErrorException);
+
+      expect(repo.update).not.toHaveBeenCalled();
+      expect(enqueueEmailUseCase.execute).not.toHaveBeenCalled();
+      expect(enqueueWhatsAppUseCase.execute).not.toHaveBeenCalled();
     });
   });
 });

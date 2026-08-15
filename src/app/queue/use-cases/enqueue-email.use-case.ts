@@ -5,8 +5,8 @@ import * as Sentry from '@sentry/nestjs';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import { EnvService } from '@/env/env.service';
-import type { SendEmailJob } from '@/shared/queue/email.dto';
 import type { MessageEnvelope } from '@/shared/queue/envelope';
+import type { SendEmailJob } from '@/shared/queue/schemas/email';
 import { generateQueueIdempotencyKey } from '@/shared/queue/utils';
 import { anonymizeEmail } from '@/utils/anonymize';
 
@@ -31,8 +31,6 @@ export class EnqueueEmailUseCase {
       idempotencyKey: generateQueueIdempotencyKey(),
     };
 
-    const maskedTo = anonymizeEmail(job.to);
-
     try {
       await this.sqs.send(
         new SendMessageCommand({
@@ -43,19 +41,19 @@ export class EnqueueEmailUseCase {
 
       this.logger.log('E-mail job enqueued', {
         template: job.template,
-        to: maskedTo,
+        email: job.to,
       });
     } catch (error) {
       this.logger.error('Failed to enqueue email job', {
         template: job.template,
-        to: maskedTo,
+        email: job.to,
         error: error instanceof Error ? error.message : String(error),
       });
 
       Sentry.captureException(error, {
         captureContext: {
           level: 'error',
-          extra: { template: job.template, to: maskedTo },
+          extra: { template: job.template, email: anonymizeEmail(job.to) },
         },
       });
     }

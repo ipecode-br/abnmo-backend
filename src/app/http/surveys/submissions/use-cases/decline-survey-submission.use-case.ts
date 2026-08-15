@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -51,6 +52,13 @@ export class DeclineSurveySubmissionUseCase {
       });
     }
 
+    if (!submission.patient.phone) {
+      throw new InternalServerErrorException(
+        'Não foi possível enviar a notificação por WhatsApp.',
+        { cause: `Survey submission with ID <${id}> has no patient phone` },
+      );
+    }
+
     const result = await this.surveySubmissionsRepository.update(
       { id, status: 'pending_review' },
       { reason, status: 'declined', updatedBy: user.id },
@@ -74,7 +82,7 @@ export class DeclineSurveySubmissionUseCase {
 
     await this.enqueueWhatsAppUseCase.execute({
       template: 'declineSurvey',
-      to: formatPhoneE164(submission.patient.phone!),
+      to: formatPhoneE164(submission.patient.phone),
       name: submission.patient.name,
       reason,
     });

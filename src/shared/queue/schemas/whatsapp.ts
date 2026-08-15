@@ -1,15 +1,17 @@
 import { z } from 'zod';
 
-export const sendWhatsAppJobSchema = z.discriminatedUnion('template', [
+const phoneSchema = z.string().startsWith('+55');
+
+const sendWhatsAppJobSchema = z.discriminatedUnion('template', [
   z.object({
     template: z.literal('completeSurvey'),
-    to: z.string().min(1),
+    to: phoneSchema,
     name: z.string().min(1),
     token: z.string().min(1),
   }),
   z.object({
     template: z.literal('declineSurvey'),
-    to: z.string().min(1),
+    to: phoneSchema,
     name: z.string().min(1),
     reason: z.string().min(1).max(500),
   }),

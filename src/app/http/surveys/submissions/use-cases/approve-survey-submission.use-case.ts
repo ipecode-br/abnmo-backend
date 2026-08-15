@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -45,6 +46,7 @@ export class ApproveSurveySubmissionUseCase {
     can(user, 'review:survey');
 
     const submission = await this.surveySubmissionsRepository.findOne({
+      select: { patient: { name: true, email: true, phone: true } },
       relations: { patient: true },
       where: { id },
     });
@@ -53,6 +55,13 @@ export class ApproveSurveySubmissionUseCase {
       throw new NotFoundException('Submissão de catalogação não encontrada.', {
         cause: `Survey submission with ID <${id}> not found`,
       });
+    }
+
+    if (!submission.patient.phone) {
+      throw new InternalServerErrorException(
+        'Não foi possível enviar a notificação por WhatsApp.',
+        { cause: `Survey submission with ID <${id}> has no patient phone` },
+      );
     }
 
     const surveyToken = uuidv7();
@@ -82,7 +91,7 @@ export class ApproveSurveySubmissionUseCase {
 
     await this.enqueueWhatsAppUseCase.execute({
       template: 'completeSurvey',
-      to: formatPhoneE164(submission.patient.phone!),
+      to: formatPhoneE164(submission.patient.phone),
       name: submission.patient.name,
       token: surveyToken,
     });

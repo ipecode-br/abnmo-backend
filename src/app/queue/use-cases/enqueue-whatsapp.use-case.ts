@@ -6,8 +6,8 @@ import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import { EnvService } from '@/env/env.service';
 import type { MessageEnvelope } from '@/shared/queue/envelope';
+import type { SendWhatsAppJob } from '@/shared/queue/schemas/whatsapp';
 import { generateQueueIdempotencyKey } from '@/shared/queue/utils';
-import type { SendWhatsAppJob } from '@/shared/queue/whatsapp.dto';
 import { anonymizePhoneE164 } from '@/utils/anonymize';
 
 @Injectable()
@@ -31,8 +31,6 @@ export class EnqueueWhatsAppUseCase {
       idempotencyKey: generateQueueIdempotencyKey(),
     };
 
-    const maskedTo = anonymizePhoneE164(job.to);
-
     try {
       await this.sqs.send(
         new SendMessageCommand({
@@ -43,19 +41,22 @@ export class EnqueueWhatsAppUseCase {
 
       this.logger.log('WhatsApp job enqueued', {
         template: job.template,
-        to: maskedTo,
+        phone: job.to,
       });
     } catch (error) {
       this.logger.error('Failed to enqueue WhatsApp job', {
         template: job.template,
-        to: maskedTo,
+        phone: job.to,
         error: error instanceof Error ? error.message : String(error),
       });
 
       Sentry.captureException(error, {
         captureContext: {
           level: 'error',
-          extra: { template: job.template, to: maskedTo },
+          extra: {
+            template: job.template,
+            phone: anonymizePhoneE164(job.to),
+          },
         },
       });
     }

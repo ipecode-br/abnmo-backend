@@ -1,5 +1,4 @@
-import { SendWhatsAppJob } from '@/shared/queue/whatsapp.dto';
-import { anonymizePhoneE164 } from '@/utils/anonymize';
+import { SendWhatsAppJob } from '@/shared/queue/schemas/whatsapp';
 
 import { logger } from './logger';
 import { sendViaSocialMessaging } from './providers/social-messaging';
@@ -42,12 +41,12 @@ export async function sendWhatsApp(job: SendWhatsAppJob): Promise<void> {
     });
 
     logger.info('WhatsApp message sent', {
-      to: anonymizePhoneE164(job.to),
+      phone: job.to,
       template: job.template,
     });
   } catch (err) {
     logger.error('WhatsApp message send failed', {
-      to: anonymizePhoneE164(job.to),
+      phone: job.to,
       template: job.template,
       error: err instanceof Error ? err.message : String(err),
     });

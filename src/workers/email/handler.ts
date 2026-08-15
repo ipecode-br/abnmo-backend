@@ -1,7 +1,7 @@
 import './sentry';
 
 import { createQueueWorkerHandler } from '@/shared/queue/create-handler';
-import { parseEmailMessage, SendEmailJob } from '@/shared/queue/email.dto';
+import { parseEmailMessage, SendEmailJob } from '@/shared/queue/schemas/email';
 
 import { env } from './env';
 import { logger } from './logger';

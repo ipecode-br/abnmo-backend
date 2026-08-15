@@ -1,3 +1,4 @@
+import { ValidationException } from '@aws-sdk/client-socialmessaging';
 import type { SQSEvent } from 'aws-lambda';
 import { z } from 'zod';
 
@@ -180,6 +181,24 @@ describe('WhatsApp worker handler', () => {
     expect(mockSentryCaptureException).not.toHaveBeenCalled();
     expect(mockLogError).toHaveBeenCalled();
     expect(result.batchItemFailures).toHaveLength(1);
+  });
+
+  it('does not retry configured permanent errors ("ValidationException")', async () => {
+    mockSendWhatsApp.mockRejectedValue(
+      new ValidationException({ $metadata: {}, message: 'invalid' }),
+    );
+    const event: SQSEvent = { Records: [makeRecord()] };
+
+    const result = await invoke(event);
+
+    expect(mockSentryCaptureException).toHaveBeenCalledWith(
+      expect.any(ValidationException),
+      expect.objectContaining({
+        captureContext: expect.objectContaining({ level: 'error' }),
+      }),
+    );
+    expect(mockLogError).toHaveBeenCalled();
+    expect(result.batchItemFailures).toHaveLength(0);
   });
 
   it('captures Sentry for transient error with "receiveCount" >= max', async () => {
