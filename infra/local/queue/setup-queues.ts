@@ -1,14 +1,26 @@
-import { createSqsClient, ensureQueues } from './sqs-client';
+import { createSqsClient, ensureQueues, getQueueUrls } from './sqs-client';
+
+const QUEUE_URL_ENV_NAMES = ['EMAIL_QUEUE_URL', 'WHATSAPP_QUEUE_URL'];
 
 const MAX_RETRIES = 10;
 const RETRY_DELAY_MS = 1500;
 
 async function setup() {
-  const sqs = createSqsClient();
+  const queues = QUEUE_URL_ENV_NAMES.map((envName) => {
+    const queueUrl = process.env[envName];
+
+    if (!queueUrl) {
+      throw new Error(`${envName} environment variable is required`);
+    }
+
+    return getQueueUrls(queueUrl);
+  });
+
+  const sqs = createSqsClient(queues[0].url);
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
-      await ensureQueues(sqs);
+      await ensureQueues(sqs, queues);
       process.exit(0);
     } catch (err) {
       if (attempt < MAX_RETRIES) {

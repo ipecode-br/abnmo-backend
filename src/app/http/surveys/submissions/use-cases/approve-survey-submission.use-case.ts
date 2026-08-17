@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -8,12 +9,14 @@ import { Repository } from 'typeorm';
 import { v7 as uuidv7 } from 'uuid';
 
 import { EnqueueEmailUseCase } from '@/app/queue/use-cases/enqueue-email.use-case';
+import { EnqueueWhatsAppUseCase } from '@/app/queue/use-cases/enqueue-whatsapp.use-case';
 import { can } from '@/common/authorization/can';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
 import type { RequestUser } from '@/common/types';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
 import { EnvService } from '@/env/env.service';
+import { formatPhoneE164 } from '@/utils/formatters/format-phone-e164';
 
 interface ApproveSurveySubmissionUseCaseInput {
   id: string;
@@ -29,6 +32,7 @@ export class ApproveSurveySubmissionUseCase {
     @InjectRepository(SurveySubmission)
     private readonly surveySubmissionsRepository: Repository<SurveySubmission>,
     private readonly enqueueEmailUseCase: EnqueueEmailUseCase,
+    private readonly enqueueWhatsAppUseCase: EnqueueWhatsAppUseCase,
     private readonly envService: EnvService,
     private readonly logger: LogService,
   ) {
@@ -42,6 +46,7 @@ export class ApproveSurveySubmissionUseCase {
     can(user, 'review:survey');
 
     const submission = await this.surveySubmissionsRepository.findOne({
+      select: { patient: { name: true, email: true, phone: true } },
       relations: { patient: true },
       where: { id },
     });
@@ -50,6 +55,13 @@ export class ApproveSurveySubmissionUseCase {
       throw new NotFoundException('Submissão de catalogação não encontrada.', {
         cause: `Survey submission with ID <${id}> not found`,
       });
+    }
+
+    if (!submission.patient.phone) {
+      throw new InternalServerErrorException(
+        'Não foi possível enviar a notificação por WhatsApp.',
+        { cause: `Survey submission with ID <${id}> has no patient phone` },
+      );
     }
 
     const surveyToken = uuidv7();
@@ -75,6 +87,13 @@ export class ApproveSurveySubmissionUseCase {
       to: submission.patient.email,
       name: submission.patient.name,
       completeSurveyUrl,
+    });
+
+    await this.enqueueWhatsAppUseCase.execute({
+      template: 'completeSurvey',
+      to: formatPhoneE164(submission.patient.phone),
+      name: submission.patient.name,
+      token: surveyToken,
     });
 
     this.logger.log('Survey submission approved', { id });

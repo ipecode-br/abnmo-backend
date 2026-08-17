@@ -6,20 +6,25 @@ import {
   SQSClient,
 } from '@aws-sdk/client-sqs';
 
-const QUEUE_URL = process.env.EMAIL_QUEUE_URL;
-
-if (!QUEUE_URL) {
-  throw new Error('EMAIL_QUEUE_URL environment variable is required');
+export interface QueueUrls {
+  name: string;
+  url: string;
+  dlqName: string;
+  dlqUrl: string;
 }
 
-const QUEUE_NAME = QUEUE_URL.split('/').pop()!;
-const DLQ_NAME = `${QUEUE_NAME}-dlq`;
-const DLQ_URL = QUEUE_URL.replace(QUEUE_NAME, DLQ_NAME);
+export function getQueueUrls(queueUrl: string): QueueUrls {
+  const name = queueUrl.split('/').pop()!;
+  return {
+    name,
+    url: queueUrl,
+    dlqName: `${name}-dlq`,
+    dlqUrl: queueUrl.replace(name, `${name}-dlq`),
+  };
+}
 
-export { DLQ_NAME, DLQ_URL, QUEUE_NAME, QUEUE_URL };
-
-export function createSqsClient(): SQSClient {
-  const url = new URL(QUEUE_URL as string);
+export function createSqsClient(queueUrl: string): SQSClient {
+  const url = new URL(queueUrl);
 
   if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
     return new SQSClient({
@@ -49,13 +54,16 @@ export async function getQueueArn(
   return response.Attributes?.QueueArn ?? '';
 }
 
-export async function ensureQueues(sqs: SQSClient): Promise<void> {
-  await sqs.send(new CreateQueueCommand({ QueueName: DLQ_NAME }));
-  const dlqArn = await getQueueArn(sqs, DLQ_URL);
+export async function ensureQueue(
+  sqs: SQSClient,
+  queue: QueueUrls,
+): Promise<void> {
+  await sqs.send(new CreateQueueCommand({ QueueName: queue.dlqName }));
+  const dlqArn = await getQueueArn(sqs, queue.dlqUrl);
 
   await sqs.send(
     new CreateQueueCommand({
-      QueueName: QUEUE_NAME,
+      QueueName: queue.name,
       Attributes: {
         RedrivePolicy: JSON.stringify({
           deadLetterTargetArn: dlqArn,
@@ -65,5 +73,14 @@ export async function ensureQueues(sqs: SQSClient): Promise<void> {
     }),
   );
 
-  console.log(`Queues ready: ${QUEUE_NAME}, ${DLQ_NAME}`);
+  console.log(`Queues ready: ${queue.name}, ${queue.dlqName}`);
+}
+
+export async function ensureQueues(
+  sqs: SQSClient,
+  queues: QueueUrls[],
+): Promise<void> {
+  for (const queue of queues) {
+    await ensureQueue(sqs, queue);
+  }
 }

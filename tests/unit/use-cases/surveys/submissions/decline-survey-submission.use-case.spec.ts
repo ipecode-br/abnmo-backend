@@ -1,4 +1,8 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { mock, MockProxy } from 'jest-mock-extended';
@@ -9,12 +13,15 @@ import { Repository } from 'typeorm';
 
 import { DeclineSurveySubmissionUseCase } from '@/app/http/surveys/submissions/use-cases/decline-survey-submission.use-case';
 import { EnqueueEmailUseCase } from '@/app/queue/use-cases/enqueue-email.use-case';
+import { EnqueueWhatsAppUseCase } from '@/app/queue/use-cases/enqueue-whatsapp.use-case';
 import { LogService } from '@/common/log/log.service';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
 
 describe('DeclineSurveySubmissionUseCase', () => {
   let useCase: DeclineSurveySubmissionUseCase;
   let repo: MockProxy<Repository<SurveySubmission>>;
+  let enqueueEmailUseCase: MockProxy<EnqueueEmailUseCase>;
+  let enqueueWhatsAppUseCase: MockProxy<EnqueueWhatsAppUseCase>;
 
   const patient = patientUserFactory();
   const submission = surveySubmissionFactory({
@@ -25,12 +32,15 @@ describe('DeclineSurveySubmissionUseCase', () => {
 
   beforeEach(async () => {
     repo = mock<Repository<SurveySubmission>>();
+    enqueueEmailUseCase = mock<EnqueueEmailUseCase>();
+    enqueueWhatsAppUseCase = mock<EnqueueWhatsAppUseCase>();
 
     const module = await Test.createTestingModule({
       providers: [
         DeclineSurveySubmissionUseCase,
         { provide: getRepositoryToken(SurveySubmission), useValue: repo },
-        { provide: EnqueueEmailUseCase, useValue: { execute: jest.fn() } },
+        { provide: EnqueueEmailUseCase, useValue: enqueueEmailUseCase },
+        { provide: EnqueueWhatsAppUseCase, useValue: enqueueWhatsAppUseCase },
         { provide: LogService, useValue: { log: jest.fn() } },
       ],
     }).compile();
@@ -51,6 +61,21 @@ describe('DeclineSurveySubmissionUseCase', () => {
     expect(repo.update).toHaveBeenCalledWith(
       { id: 'sub-1', status: 'pending_review' },
       { reason: 'Incomplete document', status: 'declined', updatedBy: user.id },
+    );
+    expect(enqueueEmailUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        template: 'declineSurvey',
+        to: patient.email,
+        reason: 'Incomplete document',
+      }),
+    );
+    expect(enqueueWhatsAppUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        template: 'declineSurvey',
+        to: `+55${patient.phone}`,
+        name: patient.name,
+        reason: 'Incomplete document',
+      }),
     );
   });
 
@@ -78,6 +103,30 @@ describe('DeclineSurveySubmissionUseCase', () => {
           user: requestUserFactory({ role: 'admin' }),
         }),
       ).rejects.toThrow(BadRequestException);
+    });
+
+    it('throws "InternalServerErrorException" when patient has no phone', async () => {
+      const patientWithoutPhone = patientUserFactory({ phone: null });
+      const submissionWithoutPhone = surveySubmissionFactory({
+        patient: patientWithoutPhone,
+        id: 'sub-1',
+        status: 'pending_review',
+      });
+      repo.findOne.mockResolvedValue(
+        submissionWithoutPhone as unknown as SurveySubmission,
+      );
+
+      await expect(
+        useCase.execute({
+          id: 'sub-1',
+          reason: 'N/A',
+          user: requestUserFactory({ role: 'admin' }),
+        }),
+      ).rejects.toThrow(InternalServerErrorException);
+
+      expect(repo.update).not.toHaveBeenCalled();
+      expect(enqueueEmailUseCase.execute).not.toHaveBeenCalled();
+      expect(enqueueWhatsAppUseCase.execute).not.toHaveBeenCalled();
     });
   });
 });

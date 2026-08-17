@@ -10,11 +10,14 @@ import {
   type QueueProcessedKeys,
 } from './utils';
 
+type ErrorConstructor = abstract new (...args: never[]) => Error;
+
 export interface QueueWorkerConfig {
   name: string;
   maxReceiveCount: number;
   parsePayload: (payload: unknown) => unknown;
   dedupTtlMs?: number;
+  permanentErrors?: ErrorConstructor | ErrorConstructor[];
 }
 
 export interface QueueWorkerCallbacks {
@@ -23,10 +26,24 @@ export interface QueueWorkerCallbacks {
 }
 
 export function createQueueWorkerHandler(
-  { maxReceiveCount, name, parsePayload, dedupTtlMs }: QueueWorkerConfig,
+  {
+    maxReceiveCount,
+    name,
+    parsePayload,
+    dedupTtlMs,
+    permanentErrors,
+  }: QueueWorkerConfig,
   { onProcess, logger }: QueueWorkerCallbacks,
 ): SQSHandler {
   const processedKeys: QueueProcessedKeys = new Map();
+
+  let permanentErrorClasses: ErrorConstructor[] = [];
+
+  if (permanentErrors) {
+    permanentErrorClasses = Array.isArray(permanentErrors)
+      ? permanentErrors
+      : [permanentErrors];
+  }
 
   return async (event): Promise<SQSBatchResponse> => {
     const batchItemFailures: { itemIdentifier: string }[] = [];
@@ -62,13 +79,15 @@ export function createQueueWorkerHandler(
         logger.error('Message processing failed', {
           messageId: record.messageId,
           receiveCount,
+          errorType: err instanceof Error ? err.name : typeof err,
           error: err instanceof Error ? err.message : String(err),
         });
 
         const isPermanentError =
           err instanceof z.ZodError ||
           err instanceof SyntaxError ||
-          err instanceof TypeError;
+          err instanceof TypeError ||
+          permanentErrorClasses.some((ErrorClass) => err instanceof ErrorClass);
 
         if (isPermanentError) {
           Sentry.captureException(err, {
@@ -94,6 +113,8 @@ export function createQueueWorkerHandler(
         batchItemFailures.push({ itemIdentifier: record.messageId });
       }
     }
+
+    await Sentry.flush(1500);
 
     return { batchItemFailures };
   };

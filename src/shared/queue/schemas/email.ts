@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const sendEmailJobSchema = z.discriminatedUnion('template', [
+const sendEmailJobSchema = z.discriminatedUnion('template', [
   z.object({
     template: z.literal('recoverPassword'),
     to: z.email(),

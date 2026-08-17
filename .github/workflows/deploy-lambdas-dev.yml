@@ -59,3 +59,18 @@ jobs:
             --zip-file fileb://dist-lambda/lambda-email-worker.zip \
             --output text \
             --query 'FunctionName'
+
+      # WhatsApp Worker Lambda
+      - name: Configure AWS credentials (WhatsApp Worker)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_WHATSAPP_WORKER_ROLE_DEV }}
+          aws-region: us-east-1
+
+      - name: Deploy WhatsApp Worker Lambda
+        run: |
+          aws lambda update-function-code \
+            --function-name abnmo-svm-worker-whatsapp-development \
+            --zip-file fileb://dist-lambda/lambda-whatsapp-worker.zip \
+            --output text \
+            --query 'FunctionName'

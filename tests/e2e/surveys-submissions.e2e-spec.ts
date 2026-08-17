@@ -9,6 +9,7 @@ import type {
   GetTotalSurveySubmissionsResponse,
 } from '@/app/http/surveys/submissions/surveys.dtos';
 import { EnqueueEmailUseCase } from '@/app/queue/use-cases/enqueue-email.use-case';
+import { EnqueueWhatsAppUseCase } from '@/app/queue/use-cases/enqueue-whatsapp.use-case';
 import { EnvService } from '@/env/env.service';
 
 import { ApiClient, createApiClient } from '../config/api-client';
@@ -480,6 +481,8 @@ describe('Survey Submissions (e2e)', () => {
 
       const enqueueEmailUseCase = app.get(EnqueueEmailUseCase);
       const mailSpy = jest.spyOn(enqueueEmailUseCase, 'execute');
+      const enqueueWhatsAppUseCase = app.get(EnqueueWhatsAppUseCase);
+      const whatsAppSpy = jest.spyOn(enqueueWhatsAppUseCase, 'execute');
 
       const res = await api.patch(
         `/survey-submissions/${submission.id}/approve`,
@@ -506,8 +509,17 @@ describe('Survey Submissions (e2e)', () => {
           ),
         }),
       );
+      expect(whatsAppSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          template: 'completeSurvey',
+          to: `+55${patient.phone}`,
+          name: patient.name,
+          token: updated?.surveyToken,
+        }),
+      );
 
       mailSpy.mockRestore();
+      whatsAppSpy.mockRestore();
     });
 
     it('cannot approve submission when status it not "pending_review"', async () => {
@@ -578,6 +590,8 @@ describe('Survey Submissions (e2e)', () => {
 
       const enqueueEmailUseCase = app.get(EnqueueEmailUseCase);
       const mailSpy = jest.spyOn(enqueueEmailUseCase, 'execute');
+      const enqueueWhatsAppUseCase = app.get(EnqueueWhatsAppUseCase);
+      const whatsAppSpy = jest.spyOn(enqueueWhatsAppUseCase, 'execute');
 
       const res = await api.patch(
         `/survey-submissions/${submission.id}/decline`,
@@ -599,8 +613,17 @@ describe('Survey Submissions (e2e)', () => {
           reason: 'Documento inválido',
         }),
       );
+      expect(whatsAppSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          template: 'declineSurvey',
+          to: `+55${patient.phone}`,
+          name: patient.name,
+          reason: 'Documento inválido',
+        }),
+      );
 
       mailSpy.mockRestore();
+      whatsAppSpy.mockRestore();
     });
 
     it('must provide a reason', async () => {

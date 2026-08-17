@@ -3,11 +3,11 @@ import {
   anonymizeEmail,
   anonymizeName,
   anonymizePhone,
+  anonymizePhoneE164,
 } from './anonymize';
 
 const PII_ANONYMIZERS: Record<string, (value: string) => string> = {
   email: anonymizeEmail,
-  to: anonymizeEmail,
   name: anonymizeName,
   phone: anonymizePhone,
   cpf: anonymizeCpf,
@@ -15,6 +15,9 @@ const PII_ANONYMIZERS: Record<string, (value: string) => string> = {
 
 function sanitizeValue(key: string, value: unknown): unknown {
   if (PII_ANONYMIZERS[key] && typeof value === 'string') {
+    if (key === 'phone' && value.startsWith('+')) {
+      return anonymizePhoneE164(value);
+    }
     return PII_ANONYMIZERS[key](value);
   }
 

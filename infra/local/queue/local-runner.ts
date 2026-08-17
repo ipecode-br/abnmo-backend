@@ -4,17 +4,43 @@ import {
   DeleteMessageCommand,
   ReceiveMessageCommand,
 } from '@aws-sdk/client-sqs';
-import type { Context } from 'aws-lambda';
-import type { SQSEvent } from 'aws-lambda';
+import type { Context, SQSEvent, SQSHandler } from 'aws-lambda';
 
-import { handler } from '@/workers/email/handler';
+import { createSqsClient, ensureQueue, getQueueUrls } from './sqs-client';
 
-import { createSqsClient, ensureQueues, QUEUE_URL } from './sqs-client';
+const WORKERS = {
+  email: 'EMAIL_QUEUE_URL',
+  whatsapp: 'WHATSAPP_QUEUE_URL',
+} as const;
+
+type WorkerName = keyof typeof WORKERS;
+
+const workerName = process.argv[2] as WorkerName | undefined;
+const queueUrlEnv = workerName ? WORKERS[workerName] : undefined;
+
+if (!queueUrlEnv) {
+  console.error(
+    `Usage: tsx local-runner.ts <${Object.keys(WORKERS).join('|')}>`,
+  );
+  process.exit(1);
+}
+
+const queueUrl = process.env[queueUrlEnv];
+
+if (!queueUrl) {
+  throw new Error(`${queueUrlEnv} environment variable is required`);
+}
+
+const queue = getQueueUrls(queueUrl);
 
 async function poll(): Promise<void> {
-  const sqs = createSqsClient();
+  const sqs = createSqsClient(queue.url);
 
-  await ensureQueues(sqs);
+  const { handler } = (await import(`@/workers/${workerName}/handler`)) as {
+    handler: SQSHandler;
+  };
+
+  await ensureQueue(sqs, queue);
 
   let running = true;
 
@@ -29,7 +55,7 @@ async function poll(): Promise<void> {
     try {
       const response = await sqs.send(
         new ReceiveMessageCommand({
-          QueueUrl: QUEUE_URL,
+          QueueUrl: queue.url,
           MaxNumberOfMessages: 10,
           WaitTimeSeconds: 20,
         }),
@@ -74,7 +100,7 @@ async function poll(): Promise<void> {
         if (!failedIds.has(msg.MessageId!)) {
           await sqs.send(
             new DeleteMessageCommand({
-              QueueUrl: QUEUE_URL,
+              QueueUrl: queue.url,
               ReceiptHandle: msg.ReceiptHandle!,
             }),
           );

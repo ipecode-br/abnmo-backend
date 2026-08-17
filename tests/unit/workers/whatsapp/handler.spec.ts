@@ -1,20 +1,21 @@
+import { ValidationException } from '@aws-sdk/client-socialmessaging';
 import type { SQSEvent } from 'aws-lambda';
 import { z } from 'zod';
 
-const mockSendEmail = jest.fn();
+const mockSendWhatsApp = jest.fn();
 const mockLogInfo = jest.fn();
 const mockLogError = jest.fn();
 const mockSentryCaptureException = jest.fn();
 
-jest.mock('@/workers/email/send-email', () => ({
-  sendEmail: mockSendEmail,
+jest.mock('@/workers/whatsapp/send-whatsapp', () => ({
+  sendWhatsApp: mockSendWhatsApp,
 }));
 
-jest.mock('@/workers/email/env', () => ({
-  env: { SQS_EMAIL_MAX_RECEIVE_COUNT: 5, SENTRY_LOGS: 'none' },
+jest.mock('@/workers/whatsapp/env', () => ({
+  env: { SQS_WHATSAPP_MAX_RECEIVE_COUNT: 5, SENTRY_LOGS: 'none' },
 }));
 
-jest.mock('@/workers/email/sentry', () => {});
+jest.mock('@/workers/whatsapp/sentry', () => {});
 
 jest.mock('@sentry/node', () => ({
   init: jest.fn(),
@@ -25,7 +26,7 @@ jest.mock('@sentry/node', () => ({
 
 import type { Context, SQSBatchResponse } from 'aws-lambda';
 
-import { handler } from '@/workers/email/handler';
+import { handler } from '@/workers/whatsapp/handler';
 
 async function invoke(event: SQSEvent): Promise<SQSBatchResponse> {
   const result = await handler(event, {} as Context, () => {});
@@ -42,13 +43,13 @@ function nextIdempotencyKey(): string {
 function validBody() {
   return {
     version: 1,
-    type: 'email',
+    type: 'whatsapp',
     idempotencyKey: nextIdempotencyKey(),
     payload: {
-      template: 'recoverPassword',
-      to: 'test@example.com',
+      template: 'completeSurvey',
+      to: '+5511999999999',
       name: 'Test',
-      resetPasswordUrl: 'https://example.com/nova-senha?token=abc',
+      token: 'token-abc',
     },
   };
 }
@@ -79,20 +80,20 @@ function makeRecord(
   };
 }
 
-describe('Email worker handler', () => {
+describe('WhatsApp worker handler', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockSendEmail.mockResolvedValue(undefined);
+    mockSendWhatsApp.mockResolvedValue(undefined);
     jest.spyOn(console, 'info').mockImplementation(mockLogInfo);
     jest.spyOn(console, 'error').mockImplementation(mockLogError);
   });
 
-  it('processes a valid email job successfully', async () => {
+  it('processes a valid WhatsApp job successfully', async () => {
     const event: SQSEvent = { Records: [makeRecord()] };
 
     const result = await invoke(event);
 
-    expect(mockSendEmail).toHaveBeenCalled();
+    expect(mockSendWhatsApp).toHaveBeenCalled();
     expect(mockLogInfo).toHaveBeenCalledWith(
       expect.stringContaining('Message processed'),
       expect.objectContaining({ messageId: 'msg-1' }),
@@ -100,13 +101,39 @@ describe('Email worker handler', () => {
     expect(result.batchItemFailures).toHaveLength(0);
   });
 
+  it('processes a valid "declineSurvey" job', async () => {
+    const record = makeRecord();
+    record.body = JSON.stringify({
+      version: 1,
+      type: 'whatsapp',
+      idempotencyKey: nextIdempotencyKey(),
+      payload: {
+        template: 'declineSurvey',
+        to: '+5511999999999',
+        name: 'Test',
+        reason: 'Documento inválido',
+      },
+    });
+    const event: SQSEvent = { Records: [record] };
+
+    const result = await invoke(event);
+
+    expect(mockSendWhatsApp).toHaveBeenCalledWith({
+      template: 'declineSurvey',
+      to: '+5511999999999',
+      name: 'Test',
+      reason: 'Documento inválido',
+    });
+    expect(result.batchItemFailures).toHaveLength(0);
+  });
+
   it('captures Sentry immediately for invalid template (ZodError)', async () => {
     const record = makeRecord();
     record.body = JSON.stringify({
       version: 1,
-      type: 'email',
+      type: 'whatsapp',
       idempotencyKey: nextIdempotencyKey(),
-      payload: { template: 'invalid', to: 'test@example.com' },
+      payload: { template: 'invalid', to: '+5511999999999' },
     });
     const event: SQSEvent = { Records: [record] };
 
@@ -147,7 +174,7 @@ describe('Email worker handler', () => {
   });
 
   it('does not capture Sentry for transient error with "receiveCount" < max', async () => {
-    mockSendEmail.mockRejectedValue(new Error('SES error'));
+    mockSendWhatsApp.mockRejectedValue(new Error('Social Messaging error'));
     const event: SQSEvent = { Records: [makeRecord()] };
 
     const result = await invoke(event);
@@ -157,8 +184,26 @@ describe('Email worker handler', () => {
     expect(result.batchItemFailures).toHaveLength(1);
   });
 
+  it('does not retry configured permanent errors ("ValidationException")', async () => {
+    mockSendWhatsApp.mockRejectedValue(
+      new ValidationException({ $metadata: {}, message: 'invalid' }),
+    );
+    const event: SQSEvent = { Records: [makeRecord()] };
+
+    const result = await invoke(event);
+
+    expect(mockSentryCaptureException).toHaveBeenCalledWith(
+      expect.any(ValidationException),
+      expect.objectContaining({
+        captureContext: expect.objectContaining({ level: 'error' }),
+      }),
+    );
+    expect(mockLogError).toHaveBeenCalled();
+    expect(result.batchItemFailures).toHaveLength(0);
+  });
+
   it('captures Sentry for transient error with "receiveCount" >= max', async () => {
-    mockSendEmail.mockRejectedValue(new Error('SES error'));
+    mockSendWhatsApp.mockRejectedValue(new Error('Social Messaging error'));
     const record = makeRecord({
       attributes: {
         ApproximateReceiveCount: '5',
@@ -199,7 +244,7 @@ describe('Email worker handler', () => {
 
     const result = await invoke(event);
 
-    expect(mockSendEmail).toHaveBeenCalledTimes(1);
+    expect(mockSendWhatsApp).toHaveBeenCalledTimes(1);
     expect(mockLogInfo).toHaveBeenCalledWith(
       expect.stringContaining('Message processed'),
       expect.objectContaining({ messageId: 'msg-1' }),
@@ -208,7 +253,7 @@ describe('Email worker handler', () => {
   });
 
   it('captures Sentry and deletes message for "TypeError"', async () => {
-    mockSendEmail.mockRejectedValue(new TypeError('Code bug'));
+    mockSendWhatsApp.mockRejectedValue(new TypeError('Code bug'));
     const event: SQSEvent = { Records: [makeRecord()] };
 
     const result = await invoke(event);
@@ -229,7 +274,7 @@ describe('Email worker handler', () => {
     const eventA: SQSEvent = { Records: [recordA] };
 
     const resultA = await invoke(eventA);
-    expect(mockSendEmail).toHaveBeenCalledTimes(1);
+    expect(mockSendWhatsApp).toHaveBeenCalledTimes(1);
     expect(resultA.batchItemFailures).toHaveLength(0);
 
     const recordB = makeRecord({ messageId: 'msg-2' });
@@ -237,7 +282,7 @@ describe('Email worker handler', () => {
     const eventB: SQSEvent = { Records: [recordB] };
 
     const resultB = await invoke(eventB);
-    expect(mockSendEmail).toHaveBeenCalledTimes(1);
+    expect(mockSendWhatsApp).toHaveBeenCalledTimes(1);
     expect(mockLogInfo).toHaveBeenCalledWith(
       expect.stringContaining('Duplicate message skipped'),
       expect.objectContaining({ messageId: 'msg-2' }),
