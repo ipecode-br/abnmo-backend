@@ -19,6 +19,7 @@ jest.mock('@/workers/email/sentry', () => {});
 jest.mock('@sentry/node', () => ({
   init: jest.fn(),
   captureException: mockSentryCaptureException,
+  flush: jest.fn(),
   logger: { info: jest.fn(), error: jest.fn() },
 }));
 

@@ -114,6 +114,8 @@ export function createQueueWorkerHandler(
       }
     }
 
+    await Sentry.flush(1500);
+
     return { batchItemFailures };
   };
 }

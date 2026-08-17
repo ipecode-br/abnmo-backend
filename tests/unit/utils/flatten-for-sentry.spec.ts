@@ -10,7 +10,7 @@ describe('flattenForSentry()', () => {
   it('anonymizes "phone" values in E.164 format', () => {
     const result = flattenForSentry({ phone: '+5511999999999' });
 
-    expect(result).toEqual({ phone: '+55119***99' });
+    expect(result).toEqual({ phone: '+551199***99' });
   });
 
   it('anonymizes "phone" values in national format', () => {
