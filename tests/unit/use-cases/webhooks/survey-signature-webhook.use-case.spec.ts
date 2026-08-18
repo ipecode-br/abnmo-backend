@@ -2,6 +2,12 @@ import { NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { mock, MockProxy } from 'jest-mock-extended';
 
+const mockSentryCaptureException = jest.fn();
+
+jest.mock('@sentry/nestjs', () => ({
+  captureException: mockSentryCaptureException,
+}));
+
 import { CompleteSurveyUseCase } from '@/app/http/surveys/use-cases/complete-survey.use-case';
 import { SurveySignatureWebhookUseCase } from '@/app/http/webhooks/use-cases/survey-signature-webhook.use-case';
 import { UpdateWebhookEventStatusUseCase } from '@/app/http/webhooks/use-cases/update-webhook-event-status.use-case';
@@ -36,6 +42,7 @@ describe('SurveySignatureWebhookUseCase', () => {
     completeSurveyUseCase = mock<CompleteSurveyUseCase>();
     updateWebhookEventStatusUseCase = mock<UpdateWebhookEventStatusUseCase>();
     logger = mock<LogService>();
+    mockSentryCaptureException.mockClear();
 
     const module = await Test.createTestingModule({
       providers: [
@@ -114,15 +121,30 @@ describe('SurveySignatureWebhookUseCase', () => {
     });
   });
 
-  it('catches "NotFoundException" and marks webhook event as failed', async () => {
-    completeSurveyUseCase.execute.mockRejectedValue(
-      new NotFoundException(
-        'Nenhuma catalogação encontrada para esta assinatura.',
-      ),
+  it('logs the error and reports it to Sentry when "CompleteSurveyUseCase" fails', async () => {
+    const error = new NotFoundException(
+      'Nenhuma catalogação encontrada para esta assinatura.',
     );
+    completeSurveyUseCase.execute.mockRejectedValue(error);
 
     await expect(useCase.execute(makePayload())).resolves.toBeUndefined();
 
+    expect(logger.error).toHaveBeenCalledWith(
+      'Failed to complete survey from signature webhook',
+      expect.objectContaining({
+        error: 'Nenhuma catalogação encontrada para esta assinatura.',
+      }),
+    );
+    expect(mockSentryCaptureException).toHaveBeenCalledWith(error, {
+      captureContext: {
+        level: 'error',
+        extra: {
+          eventName: 'auto_close',
+          documentKey: DOCUMENT_KEY,
+          documentStatus: 'closed',
+        },
+      },
+    });
     expect(updateWebhookEventStatusUseCase.execute).toHaveBeenCalledWith({
       id: WEBHOOK_EVENT_ID,
       status: 'failed',
