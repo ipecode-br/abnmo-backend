@@ -1,4 +1,5 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import * as pg from 'pg';
 
 import { DATABASE_ENTITIES } from '@/domain/entities/database';
 import { EnvService } from '@/env/env.service';
@@ -12,6 +13,7 @@ export function getTypeOrmConfig(env: EnvService): TypeOrmModuleOptions {
 
   const baseConfig: TypeOrmModuleOptions = {
     type: 'postgres',
+    driver: pg,
     host: env.get('DB_HOST'),
     port: env.get('DB_PORT'),
     database: env.get('DB_DATABASE'),
