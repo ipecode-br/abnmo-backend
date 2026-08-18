@@ -95,14 +95,14 @@ export class RequestSignatureUseCase {
         data: {
           type: 'signers',
           attributes: {
-            documentation: signer.cpf,
-            email: signer.email,
             name: signer.fullName,
+            email: signer.email,
             phone_number: signer.phone,
+            documentation: signer.cpf,
             communicate_events: {
               signature_request: channel,
               signature_reminder: channel === 'whatsapp' ? 'none' : 'email',
-              document_signed: channel === 'whatsapp' ? 'whatsapp' : 'email',
+              document_signed: channel,
             },
           },
         },
@@ -130,7 +130,7 @@ export class RequestSignatureUseCase {
       method: 'POST',
       data: {
         type: 'requirements',
-        attributes: { action: 'provide_evidence', auth: 'email' },
+        attributes: { action: 'provide_evidence', auth: channel },
         relationships: {
           document: { data: { type: 'documents', id: documentId } },
           signer: { data: { type: 'signers', id: signerId } },

@@ -5,6 +5,7 @@ import type { RequestListener } from 'node:http';
 
 import { INestApplication } from '@nestjs/common';
 import { ExpressAdapter } from '@nestjs/platform-express';
+import * as Sentry from '@sentry/nestjs';
 import serverlessExpress from '@vendia/serverless-express';
 import { APIGatewayProxyEvent, Callback, Context } from 'aws-lambda';
 import express from 'express';
@@ -34,5 +35,9 @@ export const handler = async (
     });
   }
 
-  return cachedHandler(event, context, callback);
+  try {
+    return await cachedHandler(event, context, callback);
+  } finally {
+    await Sentry.flush(1000);
+  }
 };

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import * as Sentry from '@sentry/nestjs';
 
 import { CompleteSurveyUseCase } from '@/app/http/surveys/use-cases/complete-survey.use-case';
 import { Log } from '@/common/log/log.decorator';
@@ -31,26 +32,22 @@ export class SurveySignatureWebhookUseCase {
     const documentStatus = payload.document.status;
     const logData = { eventName, documentKey, documentStatus };
 
-    this.logger.log('ClickSign webhook received', logData);
+    this.logger.log('Signature webhook received', logData);
 
     const metadataKey = payload.document.metadata?.key;
 
     if (metadataKey !== SURVEY_SIGNATURE_METADATA_KEY) {
-      this.logger.log('ClickSign webhook bypassed – metadata key mismatch', {
+      this.logger.log('Signature webhook bypassed – metadata key mismatch', {
         ...logData,
         metadataKey,
       });
       return;
     }
 
-    const CLICKSIGN_COMPLETION_EVENTS = [
-      'auto_close',
-      'close',
-      'document_closed',
-    ];
+    const COMPLETION_EVENTS = ['auto_close', 'close', 'document_closed'];
 
-    if (!CLICKSIGN_COMPLETION_EVENTS.includes(eventName)) {
-      this.logger.log('ClickSign webhook bypassed – event mismatch', logData);
+    if (!COMPLETION_EVENTS.includes(eventName)) {
+      this.logger.log('Signature webhook bypassed – event mismatch', logData);
       return;
     }
 
@@ -58,7 +55,19 @@ export class SurveySignatureWebhookUseCase {
       await this.completeSurveyUseCase.execute({
         signatureDocumentId: documentKey,
       });
-    } catch {
+    } catch (error) {
+      this.logger.error('Failed to complete survey from signature webhook', {
+        ...logData,
+        error: error instanceof Error ? error.message : String(error),
+      });
+
+      Sentry.captureException(error, {
+        captureContext: {
+          level: 'error',
+          extra: { eventName, documentKey, documentStatus },
+        },
+      });
+
       await this.updateWebhookEventStatusUseCase.execute({
         id: webhookEventId,
         status: 'failed',
