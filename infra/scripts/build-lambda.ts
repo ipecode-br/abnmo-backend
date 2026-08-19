@@ -1,3 +1,6 @@
+import 'dotenv/config';
+
+import sentryEsbuildPlugin from '@sentry/esbuild-plugin';
 import { execSync } from 'child_process';
 import { build } from 'esbuild';
 import * as fs from 'fs-extra';
@@ -39,7 +42,15 @@ async function buildTarget(target: Target) {
     minify: true,
     keepNames: true,
     treeShaking: true,
-    sourcemap: false,
+    sourcemap: true,
+    plugins: [
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+      sentryEsbuildPlugin({
+        authToken: process.env.SENTRY_AUTH_TOKEN,
+        org: 'abnmo',
+        project: 'svm-backend',
+      }),
+    ],
     external: [
       'class-transformer/storage',
       '@nestjs/microservices',
