@@ -49,6 +49,7 @@ async function buildTarget(target: Target) {
         authToken: process.env.SENTRY_AUTH_TOKEN,
         org: 'abnmo',
         project: 'svm-backend',
+        release: { dist: target },
       }),
     ],
     external: [
