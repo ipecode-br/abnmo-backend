@@ -34,7 +34,6 @@ import {
   SPECIALTIES_BEFORE_DIAGNOSIS,
   STUDY_INTERRUPTION_SITUATIONS,
   SURVEY_STATUSES,
-  TIME_UNITS,
   TRANSPORT_MODES,
   TREATMENT_LOCATIONS,
   VISUAL_ASSISTIVE_TECHNOLOGIES,
@@ -106,8 +105,7 @@ export const surveySchema = baseEntitySchema.extend({
   specialistsBeforeDiagnosis: z
     .array(z.enum(SPECIALTIES_BEFORE_DIAGNOSIS))
     .min(1),
-  timeToDiagnosis: z.number().min(0),
-  timeToDiagnosisUnit: z.enum(TIME_UNITS),
+  timeToDiagnosisInDays: z.number().int().min(0),
   suspectedMultipleSclerosis: z.boolean().nullable(),
   otherSuspectedDiseases: z.string().min(1).nullable(),
   crisesBeforeDiagnosis: z.number().min(0).nullable(),

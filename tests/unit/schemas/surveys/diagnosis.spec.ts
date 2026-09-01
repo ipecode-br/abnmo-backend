@@ -20,8 +20,7 @@ const makePayload = (overrides?: Partial<DiagnosisSurveySchema>) => ({
   currentTreatmentHospital: 'Hospital da Cidade',
   currentTreatmentHospitalCep: '00000000',
   specialistsBeforeDiagnosis: ['neurologist'],
-  timeToDiagnosis: 30,
-  timeToDiagnosisUnit: 'days',
+  timeToDiagnosisInDays: 30,
   suspectedMultipleSclerosis: true,
   otherSuspectedDiseases: 'Diabetes',
   crisesBeforeDiagnosis: 2,
@@ -260,15 +259,29 @@ describe('diagnosisSurveySchema', () => {
       }
     });
 
-    it('rejects "timeToDiagnosis" with a negative value', () => {
+    it('rejects "timeToDiagnosisInDays" with a negative value', () => {
       const result = diagnosisSurveySchema.safeParse(
-        makePayload({ timeToDiagnosis: -1 }),
+        makePayload({ timeToDiagnosisInDays: -1 }),
       );
       expect(result.success).toBe(false);
 
       if (!result.success) {
         const issue = result.error.issues.find(
-          (i) => i.path[0] === 'timeToDiagnosis',
+          (i) => i.path[0] === 'timeToDiagnosisInDays',
+        );
+        expect(issue).toBeDefined();
+      }
+    });
+
+    it('rejects "timeToDiagnosisInDays" with a non-integer value', () => {
+      const result = diagnosisSurveySchema.safeParse(
+        makePayload({ timeToDiagnosisInDays: 1.5 }),
+      );
+      expect(result.success).toBe(false);
+
+      if (!result.success) {
+        const issue = result.error.issues.find(
+          (i) => i.path[0] === 'timeToDiagnosisInDays',
         );
         expect(issue).toBeDefined();
       }
@@ -313,8 +326,7 @@ describe('diagnosisSurveySchema', () => {
       'affectedAreas',
       'diagnosisDate',
       'specialistsBeforeDiagnosis',
-      'timeToDiagnosis',
-      'timeToDiagnosisUnit',
+      'timeToDiagnosisInDays',
       'treatmentInHomeCity',
       'crisisAction',
     ];

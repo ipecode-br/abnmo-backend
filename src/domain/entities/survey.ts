@@ -65,8 +65,6 @@ import {
   STUDY_INTERRUPTION_SITUATIONS,
   type StudyInterruptionSituation,
   SURVEY_STATUSES,
-  TIME_UNITS,
-  type TimeUnits,
   TREATMENT_LOCATIONS,
   type TreatmentLocation,
   WALKING_DISTANCES,
@@ -251,10 +249,7 @@ export class Survey extends BaseEntity implements SurveySchema {
   specialistsBeforeDiagnosis: SpecialtyBeforeDiagnosis[] = [];
 
   @Column({ type: 'int' })
-  timeToDiagnosis: number;
-
-  @Column({ type: 'enum', enum: TIME_UNITS })
-  timeToDiagnosisUnit: TimeUnits;
+  timeToDiagnosisInDays: number;
 
   @Column({ type: 'boolean', nullable: true })
   suspectedMultipleSclerosis: boolean | null;

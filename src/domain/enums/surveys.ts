@@ -241,9 +241,6 @@ export const SPECIALTIES_BEFORE_DIAGNOSIS = [
 export type SpecialtyBeforeDiagnosis =
   (typeof SPECIALTIES_BEFORE_DIAGNOSIS)[number];
 
-export const TIME_UNITS = ['days', 'weeks', 'months', 'years'] as const;
-export type TimeUnits = (typeof TIME_UNITS)[number];
-
 export const TREATMENT_LOCATIONS = [
   'lives_in_capital',
   'lives_in_interior',

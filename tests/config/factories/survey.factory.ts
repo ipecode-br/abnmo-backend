@@ -37,7 +37,6 @@ import {
   SPECIALTIES_BEFORE_DIAGNOSIS,
   STUDY_INTERRUPTION_SITUATIONS,
   SURVEY_STATUSES,
-  TIME_UNITS,
   TRANSPORT_MODES,
   TREATMENT_LOCATIONS,
   VISUAL_ASSISTIVE_TECHNOLOGIES,
@@ -190,8 +189,7 @@ export function surveyFactory(
       SPECIALTIES_BEFORE_DIAGNOSIS,
       { min: 1, max: 4 },
     ),
-    timeToDiagnosis: faker.number.int({ min: 1, max: 30 }),
-    timeToDiagnosisUnit: faker.helpers.arrayElement(TIME_UNITS),
+    timeToDiagnosisInDays: faker.number.int({ min: 0, max: 3650 }),
     suspectedMultipleSclerosis: faker.datatype.boolean() || null,
     otherSuspectedDiseases: faker.datatype.boolean()
       ? faker.lorem.words(3)
