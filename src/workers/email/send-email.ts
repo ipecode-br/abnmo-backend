@@ -1,4 +1,5 @@
 import { SendEmailJob } from '@/shared/queue/schemas/email';
+import { anonymizeEmail } from '@/utils/anonymize';
 
 import { env } from './env';
 import { logger } from './logger';
@@ -41,7 +42,7 @@ export async function sendEmail(job: SendEmailJob): Promise<void> {
 
   if (env.EMAIL_PROVIDER === 'none') {
     logger.info('Email send skipped', {
-      email: job.to,
+      email: anonymizeEmail(job.to),
       template: job.template,
       reason: 'EMAIL_PROVIDER is "none"',
     });
@@ -57,13 +58,13 @@ export async function sendEmail(job: SendEmailJob): Promise<void> {
     }
 
     logger.info('Email sent', {
-      email: job.to,
+      email: anonymizeEmail(job.to),
       template: job.template,
       provider: env.EMAIL_PROVIDER,
     });
   } catch (err) {
     logger.error('Email send failed', {
-      email: job.to,
+      email: anonymizeEmail(job.to),
       template: job.template,
       provider: env.EMAIL_PROVIDER,
       error: err instanceof Error ? err.message : String(err),

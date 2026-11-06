@@ -178,8 +178,17 @@ import { createQueueWorkerLogger } from '@/shared/queue/logger';
 
 export const logger = createQueueWorkerLogger('email', env.SENTRY_LOGS);
 
-logger.info('Email sent', { to: anonymizeEmail(...), template: ... });
-logger.error('Email send failed', { to: anonymizeEmail(...), error: ... });
+logger.info('Email sent', {
+  email: anonymizeEmail(...),
+  template: ...,
+  provider: ...,
+});
+logger.error('Email send failed', {
+  email: anonymizeEmail(...),
+  template: ...,
+  provider: ...,
+  error: ...,
+});
 ```
 
 O logger escreve em `console.info`/`console.error` com timestamp ISO e, quando configurado (`SENTRY_LOGS`), encaminha para `Sentry.logger` após sanitização PII via `flattenForSentry`.
