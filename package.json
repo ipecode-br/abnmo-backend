@@ -59,15 +59,14 @@
     "@nestjs/core": "11.1.21",
     "@nestjs/jwt": "11.0.0",
     "@nestjs/mapped-types": "2.1.0",
-    "@nestjs/platform-express": "11.1.28",
-    "@nestjs/swagger": "11.4.7",
+    "@nestjs/platform-express": "11.2.8",
+    "@nestjs/swagger": "11.4.8",
     "@nestjs/typeorm": "11.0.1",
     "@sentry/esbuild-plugin": "5.4.0",
     "@sentry/nestjs": "10.68.0",
     "@sentry/node": "10.68.0",
     "@types/aws-serverless-express": "3.3.10",
     "@vendia/serverless-express": "4.12.6",
-    "archiver": "7.0.1",
     "bcryptjs": "3.0.2",
     "class-transformer": "0.5.1",
     "class-validator": "0.14.1",
@@ -83,7 +82,22 @@
     "rxjs": "7.8.1",
     "typeorm": "1.1.0",
     "uuid": "14.0.1",
-    "zod": "4.4.3"
+    "zod": "4.6.7"
+  },
+  "overrides": {
+    "@nestjs/cli": {
+      "glob": "14.0.4"
+    },
+    "@sentry/bundler-plugins": {
+      "glob": "14.0.4"
+    },
+    "@swc/cli": {
+      "minimatch": "11.0.5"
+    },
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "11.0.5"
+    },
+    "multer": "2.5.0"
   },
   "devDependencies": {
     "@commitlint/cli": "19.8.1",
@@ -96,7 +110,6 @@
     "@nestjs/testing": "11.0.1",
     "@swc/cli": "0.8.1",
     "@swc/core": "1.10.7",
-    "@types/archiver": "6.0.3",
     "@types/aws-lambda": "8.10.149",
     "@types/cookie-parser": "1.4.9",
     "@types/cors": "2.8.17",
