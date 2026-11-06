@@ -245,6 +245,15 @@ Factories live under `tests/config/factories/` and generate entity objects with 
 | `surveyFactory(overrides?)`       | `tests/config/factories/survey.factory.ts`        | Generate `Survey` entities                |
 | `webhookEventFactory(overrides?)` | `tests/config/factories/webhook-event.factory.ts` | Generate `WebhookEvent` entities          |
 
+Factories use `faker.helpers.arrayElement()` for random enum fields (e.g. `status`), and e2e helpers built on them inherit that randomness. When a test updates or transitions state, always override these fields to a known, non-terminal value — never rely on the random default:
+
+```ts
+const referral = await createReferral({
+  status: 'scheduled',
+  patient,
+});
+```
+
 **Creating new factories**: follow the pattern — import `{ faker }` from `@faker-js/faker`, export a function that returns an object matching the entity shape with sensible defaults, allowing `Partial<T>` overrides:
 
 ```ts

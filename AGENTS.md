@@ -1,72 +1,43 @@
 # ABNMO Backend — Agent Guide
 
-NestJS + TypeORM + PostgreSQL + Zod API.
+NestJS + TypeORM + PostgreSQL + Zod API (Node.js >= 22).
 
 ## Quick commands
 
-| Command                                         | What it does                                                         |
-| ----------------------------------------------- | -------------------------------------------------------------------- |
-| `npm run dev`                                   | Docker up → wait for DB → migrate → `nest start --watch`             |
-| `npm run validate`                              | ESLint **+** `tsc --noEmit` (both in one command)                    |
-| `npm run lint:prettier:check`                   | Prettier check only                                                  |
-| `npm run lint:prettier:fix`                     | Prettier fix only                                                    |
-| `npm run lint:prettier:fix && npm run validate` | **Always run this before committing** — fix formatting then validate |
-| `npm run test`                                  | Prepare DB → unit tests → e2e tests (full suite)                     |
-| `npm run test:unit`                             | Unit tests only (parallel, no DB)                                    |
-| `npm run test:prepare && npm run test:e2e`      | Full E2E run                                                         |
+| Command                                    | What it does                                       |
+| ------------------------------------------ | -------------------------------------------------- |
+| `npm run dev`                              | Docker up → queues → wait for DB → migrate → watch |
+| `npm run validate`                         | Prettier check + ESLint + `tsc --noEmit`           |
+| `npm run lint:prettier:fix`                | Fix formatting                                     |
+| `npm run test`                             | Prepare DB → unit tests → e2e tests                |
+| `npm run test:unit`                        | Unit tests only (parallel, no DB)                  |
+| `npm run test:prepare && npm run test:e2e` | Full E2E run                                       |
+| `npm run db:generate`                      | Generate a migration                               |
+| `npm run db:migrate`                       | Run pending migrations                             |
+
+Before committing: `npm run lint:prettier:fix && npm run validate`.
+
+## Deep reference
+
+Read only when the task needs the detail:
+
+- `docs/index.md` — architecture, domain, controllers, DTOs, use-cases, responses, errors, logging, auth, permissions
+- `docs/workers.md` — SQS/Lambda workers, envelope, idempotency, adding a worker
+- `.agents/skills/write-test/SKILL.md` — e2e and unit test conventions (or load the `write-test` skill)
+- `README.md` — local setup, workers, seeding
 
 ## Architecture
 
-- **Entrypoint**: `src/app/main.ts` (HTTP — local dev only), `src/app/lambda.ts` (AWS Lambda via `@vendia/serverless-express`), `src/instrument.ts` (Sentry init), `src/workers/email/handler.ts` (email worker Lambda)
+- **Entrypoints**: `src/app/main.ts` (HTTP, local dev), `src/app/lambda.ts` (AWS Lambda), `src/instrument.ts` (Sentry init), `src/workers/{name}/handler.ts` (SQS consumers)
 - **Feature modules**: `src/app/http/{feature}/` — `{feature}.module.ts`, `.controller.ts`, `.dtos.ts`, `use-cases/{action}-{feature}.use-case.ts`
-- **Entities**: `src/domain/entities/`, registered centrally in `DATABASE_ENTITIES` in `src/domain/entities/database.ts`
+- **Entities**: `src/domain/entities/`, registered centrally in `DATABASE_ENTITIES` (`src/domain/entities/database.ts`)
 - **Zod schemas** (source of truth for validation): `src/domain/schemas/{entity}/` — `index.ts`, `requests.ts`, `responses.ts`
-- **Enums**: `as const` arrays in `src/domain/enums/`, **not** TypeScript `enum` keyword
+- **Enums**: `as const` arrays in `src/domain/enums/`, **not** the TypeScript `enum` keyword
 - **Path alias**: `@/` → `./src/`
 
 ### Workers
 
-SQS consumer Lambdas built with the shared `createQueueWorkerHandler` builder (`src/shared/queue/create-handler.ts`). The builder handles envelope parsing, idempotency, log/error formatting, and Sentry reporting — each worker only provides config and an `onProcess` callback.
-
-```ts
-// src/workers/{name}/handler.ts
-import { createQueueWorkerHandler } from '@/shared/queue/create-handler';
-import { createQueueWorkerLogger } from '@/shared/queue/logger';
-import { parseMyMessage } from '@/shared/queue/my-worker.dto';
-
-export const handler = createQueueWorkerHandler(
-  {
-    name: 'my-worker',
-    maxReceiveCount: env.SQS_MY_WORKER_MAX_RECEIVE_COUNT,
-    parsePayload: parseMyMessage,
-  },
-  {
-    onProcess: async (job, messageId) => {
-      /* business logic */
-    },
-    logger: createQueueWorkerLogger('my-worker', env.SENTRY_LOGS),
-  },
-);
-```
-
-**Worker file structure:**
-
-```
-src/workers/{name}/
-  handler.ts            # calls createQueueWorkerHandler
-  env.ts                # Zod-validated env schema (maxReceiveCount, SENTRY_LOGS, etc.)
-  logger.ts             # creates QueueWorkerLogger instance
-  sentry.ts             # imports from handler to init Sentry on cold start
-```
-
-**Shared queue infrastructure** (`src/shared/queue/`):
-
-| File                | Purpose                                                                                 |
-| ------------------- | --------------------------------------------------------------------------------------- |
-| `create-handler.ts` | `createQueueWorkerHandler` builder and `QueueWorkerConfig`/`QueueWorkerCallbacks` types |
-| `logger.ts`         | `createQueueWorkerLogger` — console + Sentry logger factory                             |
-| `envelope.ts`       | `messageEnvelopeSchema` — versioned envelope with `idempotencyKey`                      |
-| `utils.ts`          | `generateQueueIdempotencyKey`, `checkIsProcessed`, `markProcessed`                      |
+SQS consumer Lambdas use the shared `createQueueWorkerHandler` builder (`src/shared/queue/create-handler.ts`), which handles envelope parsing, idempotency, error classification, logging, and Sentry reporting. Worker-specific code lives in `src/workers/{name}/`. See `docs/workers.md` for the full guide.
 
 ## Patient data model
 
@@ -79,8 +50,8 @@ src/workers/{name}/
 
 ## Auth & permissions
 
-- **Session-based auth in HTTP-only signed cookies** (no `Authorization` header)
-- Global guards (registered in `AuthModule`, evaluated in order): `AuthGuard` → `FeatureGuard`
+- JWT tokens in HTTP-only signed cookies — no `Authorization` header
+- Request auth guards, in order: `AuthGuard` → `FeatureGuard` (registered in `AuthModule`)
 - **Admin** bypasses `can()` (returns `true` unconditionally)
 - User roles (from `USER_ROLES`): `admin`, `member`, `specialist`, `patient`
 
@@ -95,7 +66,7 @@ src/workers/{name}/
 
 ### `@RequireFeature` decorator
 
-Accepts `UserFeature` (single) or `UserFeature[]` (OR logic). If the user has **any** of the listed features, the guard passes — it never checks ownership.
+Accepts a single `UserFeature` or `UserFeature[]` (OR logic). If the user has **any** of the listed features, the guard passes — it never checks ownership.
 
 **Every endpoint that is not `@Public()` must have a `@RequireFeature()` decorator.** Endpoints without any feature are denied by default.
 
@@ -104,11 +75,11 @@ Accepts `UserFeature` (single) or `UserFeature[]` (OR logic). If the user has **
 @RequireFeature(['read:survey', 'read:survey:others'])  // OR: either feature grants access
 ```
 
-The guard only validates feature existence. Ownership is enforced separately in use cases via `can()`.
+Ownership is enforced separately in use cases via `can()`.
 
 ### `can()` — use-case level authorization
 
-Imports from `@/common/authorization/can`. Use inside use cases to check both feature ownership and resource ownership.
+Imports from `@/common/authorization/can`. Use inside use cases to check both feature ownership and resource ownership:
 
 ```ts
 import { can } from '@/common/authorization/can';
@@ -122,169 +93,44 @@ can(
   ['update:appointment', 'update:appointment:others'],
   appointment.specialist?.id,
 );
-
-// Multi-feature OR + multi-owner: user must have a feature AND match AT LEAST ONE owner
-can(
-  user,
-  ['update:appointment', 'update:appointment:others'],
-  [appointment.patient.id, appointment.specialist?.id || ''],
-);
 ```
 
-`compareToId` accepts `string | string[]`. Features ending with `:others` bypass ownership entirely. `undefined` `compareToId` skips ownership checks.
+`compareToId` accepts `string | string[]` (passes when the user matches at least one ID). Features ending with `:others` bypass ownership entirely. `undefined` `compareToId` skips ownership checks. `can()` throws `ForbiddenException` on failure.
 
 ## Response conventions
 
 - Portuguese (pt-BR) user messages, English log messages
-- Format: `{ success: boolean, message: string, data?: ... }`
-
-### Response validation
-
-- All controller methods **must** use `@ZodResponse({ type: ResponseDto, status: N })` from `nestjs-zod`
-- Never use `@ApiResponse` directly — it lacks runtime serialization and does not prevent data leakage
-- `@ZodResponse` validates the response body against the DTO schema via the global `ZodSerializerInterceptor`
-- Every `@ZodResponse` **must** include an explicit `status` code:
-
-| HTTP  | When                                                                                          |
-| ----- | --------------------------------------------------------------------------------------------- |
-| `200` | Endpoint that returns resource data (GET list/detail, action that returns data)               |
-| `201` | POST that creates a resource (`register/user`, `create-appointment`, `create-referral`, etc.) |
-
-- Do **not** inject `@Res()` response objects manually — use NestJS return values + HTTP exceptions
-- **Exception**: `GET /status` uses `@ApiResponse` + `@Res()` (not `@ZodResponse`) because it needs dynamic HTTP status — 200 when OK, 503 when services are down; it validates the response manually via `getStatusResponseSchema.parse()`
-
-### Response mapping in use cases
-
-When the response schema extends the entity schema with relations (nested objects) or picks a subset, **never** return raw TypeORM entities. The `ZodSerializerInterceptor` validates responses against the schema with `.strict()` — any extra properties (e.g. `createdBy`, `updatedAt`, `createdAt` from `BaseEntity`, or full relation objects) cause runtime failures.
-
-Map entities to plain objects matching the schema exactly:
-
-```ts
-import type { AppointmentResponseSchema } from '@/domain/schemas/appointments/responses';
-
-interface GetAppointmentsUseCaseOutput {
-  appointments: AppointmentResponseSchema[];
-  total: number;
-}
-
-// ...
-
-return {
-  appointments: appointments.map((appointment) => ({
-    id: appointment.id,
-    date: appointment.date,
-    status: appointment.status,
-    category: appointment.category,
-    condition: appointment.condition,
-    annotation: appointment.annotation,
-    professionalName: appointment.professionalName,
-    patient: {
-      id: appointment.patient.id,
-      name: appointment.patient.name,
-      email: appointment.patient.email,
-      avatarUrl: appointment.patient.avatarUrl,
-    },
-    specialist: appointment.specialist
-      ? {
-          id: appointment.specialist.id,
-          name: appointment.specialist.name,
-          email: appointment.specialist.email,
-          avatarUrl: appointment.specialist.avatarUrl,
-        }
-      : null,
-  })),
-  total,
-};
-```
-
-Import the inferred schema type from `responses.ts`, use it as the return type, and map every entity to a plain object with only the fields in the response schema.
+- Body format: `{ success: boolean, message: string, data?: ... }`
+- Every controller method **must** use `@ZodResponse({ type, status })` from `nestjs-zod`: `200` for reads/actions returning data, `201` for POSTs that create a resource
+- Never use `@ApiResponse` directly — it lacks runtime serialization and does not prevent data leakage. The only exception is `GET /status`, which needs dynamic 200/503 and validates manually via `getStatusResponseSchema.parse()`
+- The global `ZodSerializerInterceptor` validates responses with `.strict()`. **Never return TypeORM entities or full relation objects** — map to plain objects containing exactly the response-schema fields. See `docs/responses.md`
 
 ## Database
 
-- **synchronize: false** — migrations only
+- `synchronize: false` — migrations only, in `infra/database/migrations/`
 - **Migration file naming**: kebab-case only, e.g. `add-x-column-to-users.ts` — never CamelCase like `AddXColumnToUsers`
-- **Migration schema-agnosticism**: when generating migrations (always against the `public` schema), remove any `"public"."` qualifiers from CREATE/DROP TYPE, DROP INDEX, and enum column references so the same migration runs on both `public` (dev) and `test` (test) schemas via `search_path`
-- Naming: `SnakeNamingStrategy` (columns auto-convert to snake_case)
-- Inject `Repository<T>` directly in use-cases (no repository layer). For multi-table transactions, inject `DataSource`.
-- Always use `.create()` then `.save()` (two steps), never `repository.save()` directly.
+- **Migration schema-agnosticism**: when generating migrations (against `public`), remove any `"public"."` qualifiers from CREATE/DROP TYPE, DROP INDEX, and enum column references so the same migration runs in both `public` (dev) and `test` (test) schemas via `search_path`
+- `SnakeNamingStrategy` converts columns to snake_case automatically
+- Inject `Repository<T>` directly in use-cases (no repository layer). Inject `DataSource` for multi-table transactions
+- Always use `.create()` then `.save()` (two steps), never `repository.save()` directly
 
-## Logging
+## Logging & Sentry
 
 - `LogModule` is global — never import it
-- `@Log('event_name')` decorator on controller methods to register auditable events (e.g. `@Log('create_user')`); the event name is persisted through the request
-- `@Log()` (class decorator) + `constructor(private readonly logger: LogService)` on use-cases
-- All database write operations (create, update, delete) **must** log after successful execution
-- On error, throw the correct HTTP exception with a `cause` property set to the original error; the exception's message goes to the response, and the cause is logged automatically by the exception filter
-- When `SENTRY_DSN` is configured, `LogService` forwards logs to Sentry based on `SENTRY_LOGS` env var (`"none"` = nothing, `"error"` = only errors, `"all"` = all levels). Logs with HTTP `status < 500` are filtered out by `beforeSendLog` — only 5xx errors reach Sentry.
-
-### Sentry issues vs logs
-
-Sentry has two separate pipelines:
-
-- **Issues (exceptions):** Created via `Sentry.captureException()`. Grouped by stack trace, trigger alerts. Always created when `SENTRY_DSN` is set, regardless of `SENTRY_LOGS`.
-- **Logs:** Created via `Sentry.logger.info/error()` (called internally by `LogService` and the worker's `log` utility). Filtered by `SENTRY_LOGS` via `beforeSendLog`. These are log entries, NOT issues — they have no stack trace grouping and no alerts.
-
-The HTTP exception filter (`src/common/http-exception.filter.ts`) automatically calls `Sentry.captureException()` for:
-
-- `ZodSerializationException` (always)
-- `InternalServerErrorException` (always)
-- `HttpException` with `status >= 500`
-- Any unhandled error
-
-4xx client errors and handled errors in use cases are NOT captured as Sentry issues by the filter.
-
-**When to call `Sentry.captureException()` manually:**
-
-- Catches in background/async operations that swallow the error (e.g., failed SQS enqueue)
-- Non-HTTP contexts that error out (worker Lambdas, scheduled jobs)
-- Errors you want to alert on even though you're handling them gracefully downstream
-
-`LogService.error()` alone does **not** create a Sentry issue — it only creates a Sentry log entry (if `SENTRY_LOGS` permits).
+- `@Log('event_name')` on controller methods registers auditable events; `@Log()` (class decorator) + `constructor(private readonly logger: LogService)` on use-cases
+- All database writes (create, update, delete) **must** log after successful execution
+- Throw HTTP exceptions with a `cause` property set to the original error; the exception message goes to the user and the cause is logged by the exception filter
+- `LogService` forwards to Sentry when `SENTRY_DSN` is set, subject to `SENTRY_LOGS` (`none`/`error`/`all`). Logs with HTTP status < 500 are filtered by `beforeSendLog`
+- Sentry **issues** come from `Sentry.captureException()`, not `LogService.error()`. The HTTP filter captures 5xx and `ZodSerializationException` automatically; call `captureException()` manually only in background/non-HTTP paths that swallow errors. See `docs/logging.md`
 
 ## Testing
 
-### Test structure
-
-| Layer | Config                        | Pattern                      | Count | Parallel |
-| ----- | ----------------------------- | ---------------------------- | ----- | -------- |
-| Unit  | `tests/config/jest-unit.json` | `tests/**/*.spec.ts`         | ~50   | Yes      |
-| E2E   | `tests/config/jest-e2e.json`  | `tests/e2e/**/*.e2e-spec.ts` | 9     | No       |
-
-Unit tests use mocked repositories, no database. E2E tests run against the same PostgreSQL database as development, but in a separate `test` schema (see `.env.test`). Schema isolation uses PostgreSQL `search_path`; TypeORM migrations are kept schema-agnostic by removing `"public"."` qualifiers.
-
-### E2E infrastructure
-
-1. `test:prepare` — ensures dev DB container is up, then creates `test` schema and runs TypeORM migrations inside it
-2. `test:reset` — drops and recreates the `test` schema (useful after schema drift)
-3. `test:e2e` — `jest --config jest-e2e.json --runInBand` (single worker, `maxWorkers: 1`)
-4. Global `beforeAll` in `tests/config/setup-e2e.ts` creates the NestJS app once, caches it on `global.__E2E_APP__`
-5. Global `beforeEach` deletes all rows from every table via `TRUNCATE TABLE ... CASCADE`
-6. Test files call `getTestApp()` and `createApiClient(app)` to get a supertest wrapper
-
-### Auth helpers
-
-`createAdmin()`, `createMember()`, `createSpecialist()`, `createPatient()` — pass `{ login: true }` to also log in and get cookies. These create users directly in the database (bypassing HTTP) then call `POST /login` for cookie-based sessions.
-
-### Factory functions
-
-`tests/config/factories/` — generate entity objects for test setup. `tests/helpers/` — wraps factory + DB persistence.
-
-**Important**: factories use `faker.helpers.arrayElement()` for random enum fields (e.g. `status` on referrals/appointments). When testing updates, always override `status` to a non-terminal value to avoid random failures:
-
-```ts
-const referral = await createReferral({
-  status: 'scheduled', // never rely on factory random default
-  patient,
-});
-```
-
-### Running a single test file
-
-```bash
-npm run test:prepare && npx jest --config tests/config/jest-e2e.json tests/e2e/referrals.e2e-spec.ts
-```
-
-`patient-requirements.e2e-spec.ts` is currently deleted — it will be re-created later; do not attempt to restore it.
+- Unit: `tests/**/*.spec.ts`, mocked repositories, no DB
+- E2E: `tests/e2e/**/*.e2e-spec.ts`, real PostgreSQL in an isolated `test` schema (`search_path`), run serially
+- `test:prepare` creates and migrates the test schema; `test:reset` recreates it after schema drift
+- Global e2e setup creates the Nest app once and truncates every table before each test (`tests/config/setup-e2e.ts`)
+- Use helpers/factories from `tests/config/` and `tests/helpers/` instead of calling the API to set up fixtures
+- Full conventions (feature/403 coverage, naming, mocks, assertions): load the `write-test` skill
 
 ## Patterns
 
@@ -303,13 +149,13 @@ export class CreateAppointmentBody extends createZodDto(
 
 ### Path params
 
-For route params representing UUIDs (`:id`), use the shared `UUIDParams` DTO with `@Param()` destructuring:
+For UUID route params (`:id`), use the shared `UUIDParam` DTO with `@Param()` destructuring:
 
 ```ts
-import { UUIDParams } from '@/common/dtos';
+import { UUIDParam } from '@/common/dtos';
 
 @Get(':id')
-async getById(@Param() { id }: UUIDParams, @User() user: RequestUser) {
+async getById(@Param() { id }: UUIDParam, @User() user: RequestUser) {
   // id is a validated UUID v7 string
 }
 ```
@@ -318,36 +164,13 @@ async getById(@Param() { id }: UUIDParams, @User() user: RequestUser) {
 
 ### Schema reuse
 
-Prefer `.pick()`, `.extend()`, or `.merge()` from existing schemas before defining raw fields. Only create a new schema from scratch if no existing one covers the domain (e.g., a brand-new entity). This keeps schemas like `userSchema` as a single source of truth.
+Prefer `.pick()`, `.extend()`, or `.merge()` from existing schemas before defining raw fields. Only create a new schema from scratch if no existing one covers the domain. Use shared schemas (`nameSchema`, `emailSchema`, `phoneSchema`, etc.) from `src/domain/schemas/shared.ts` instead of raw `z.string()`.
 
-When fields are shared or no longer exist on an entity schema (e.g. after removing a column), reuse shared schemas (`nameSchema`, `emailSchema`, `phoneSchema`, etc.) from `src/domain/schemas/shared.ts` instead of defining raw `z.string()` or picking from unrelated entity schemas.
-
-When composing a list response, extract a standalone list-item schema (e.g. `listSurveyResponseSchema`), export its inferred type (`ListSurveyResponse`), then use it in the response schema's array. This keeps the Zod type available for use-case return types and ensures runtime validation matches.
-
-### Shared modules
-
-| Module               | When to import        |
-| -------------------- | --------------------- |
-| `CryptographyModule` | Hashing, JWT, cookies |
-| `StorageModule`      | File uploads          |
-| `SignatureModule`    | Digital signatures    |
-
-`QueueModule`, `LogModule`, and `EnvModule` are global — no need to import them.
-
-### Exception mapping
-
-| Exception                     | HTTP | When                           |
-| ----------------------------- | ---- | ------------------------------ |
-| `NotFoundException`           | 404  | Entity not found by ID         |
-| `UnauthorizedException`       | 401  | Bad credentials, expired token |
-| `ForbiddenException`          | 403  | Permission/ownership violation |
-| `BadRequestException`         | 400  | Business rule violation        |
-| `ConflictException`           | 409  | Duplicate email, CPF, etc.     |
-| `ServiceUnavailableException` | 503  | External service (email, S3)   |
+When composing a list response, extract a standalone list-item schema, export its inferred type, then use it in the response schema's array. This keeps the Zod type available for use-case return types and keeps runtime validation aligned.
 
 ### Query schemas
 
-Define query schemas using individual query field schemas directly — **do not** `.pick()` or `.extend()` from `baseQuerySchema`:
+Build query schemas with `z.object(...)` using the field schemas from `src/domain/schemas/query.ts`:
 
 ```ts
 import {
@@ -370,11 +193,28 @@ export const getPatientsQuerySchema = z.object({
 });
 ```
 
-Available query field schemas: `querySearchSchema`, `queryOrderSchema`, `queryDateSchema`, `queryPageSchema`, `queryPerPageSchema`, `queryPeriodSchema` (from `src/domain/schemas/query.ts`).
+Available field schemas: `querySearchSchema`, `queryOrderSchema`, `queryDateSchema`, `queryPageSchema`, `queryPerPageSchema`, `queryPeriodSchema`.
 
-### Use-case ownership checks
+### Shared modules
 
-Ownership is now covered in [Auth & permissions](#auth--permissions) — see `can()` documentation above.
+| Module               | When to import        |
+| -------------------- | --------------------- |
+| `CryptographyModule` | Hashing, JWT, cookies |
+| `StorageModule`      | File uploads          |
+| `SignatureModule`    | Digital signatures    |
+
+`QueueModule`, `LogModule`, and `EnvModule` are global — no need to import them.
+
+### Exception mapping
+
+| Exception                     | HTTP | When                           |
+| ----------------------------- | ---- | ------------------------------ |
+| `NotFoundException`           | 404  | Entity not found by ID         |
+| `UnauthorizedException`       | 401  | Bad credentials, expired token |
+| `ForbiddenException`          | 403  | Permission/ownership violation |
+| `BadRequestException`         | 400  | Business rule violation        |
+| `ConflictException`           | 409  | Duplicate email, CPF, etc.     |
+| `ServiceUnavailableException` | 503  | External service (email, S3)   |
 
 ### Dynamic filtering
 
@@ -413,7 +253,7 @@ await this.dataSource.transaction(async (manager) => {
 
 ## Code reuse
 
-Check existing utilities in `src/utils/` (cookies, date ranges, file names, validators, formatters, normalize strings) and `src/constants/` (mime types, regex) before creating new ones.
+Check existing utilities in `src/utils/` (cookies, date ranges, file names, validators, formatters, normalize strings, anonymize) and `src/constants/` before creating new ones.
 
 ## Important constraints
 
@@ -424,5 +264,4 @@ Check existing utilities in `src/utils/` (cookies, date ranges, file names, vali
 
 ## Pre-commit pipeline
 
-`husky pre-commit` → `lint-staged` → `prettier --check` + `eslint` on `*.{ts,js}`
-`husky commit-msg` → `commitlint` (conventional commits only)
+`husky pre-commit` → `lint-staged` → `prettier --check` + `eslint` on `*.{ts,js}`; `husky commit-msg` → `commitlint` (conventional commits only).

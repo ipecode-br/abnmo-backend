@@ -180,7 +180,8 @@ Veja [`docs/workers.md`](workers.md) para o guia completo de criação de worker
 | `create-handler.ts`           | Builder `createQueueWorkerHandler` e tipos `QueueWorkerConfig`/`QueueWorkerCallbacks` |
 | `logger.ts`                   | Factory `createQueueWorkerLogger` e interface `QueueWorkerLogger`                     |
 | `envelope.ts`                 | `messageEnvelopeSchema` — envelope versionado com `idempotencyKey`                    |
-| `email.dto.ts`                | `sendEmailJobSchema` (discriminated union) e `parseEmailMessage()`                    |
+| `schemas/email.ts`            | `sendEmailJobSchema` (discriminated union) e `parseEmailMessage()`                    |
+| `schemas/whatsapp.ts`         | `sendWhatsAppJobSchema` (discriminated union) e `parseWhatsAppMessage()`              |
 | `utils.ts`                    | `generateQueueIdempotencyKey`, `checkIsProcessed`, `markProcessed`                    |
 
 ## Módulos compartilhados

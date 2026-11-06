@@ -144,10 +144,10 @@ const config = getSentryConfig({
 if (config) Sentry.init(config);
 ```
 
-### 5. Criar o DTO da mensagem em `src/shared/queue/`
+### 5. Criar o DTO da mensagem em `src/shared/queue/schemas/`
 
 ```ts
-// src/shared/queue/my-worker.dto.ts
+// src/shared/queue/schemas/my-worker.ts
 import { z } from 'zod';
 
 export const myMessageSchema = z.object({
@@ -169,7 +169,7 @@ export function parseMyMessage(message: unknown): MyMessage {
 // src/shared/queue/envelope.ts
 export const messageEnvelopeSchema = z.object({
   version: z.literal(1),
-  type: z.enum(['email', 'my-message']), // adicionar novo tipo
+  type: z.enum(['email', 'whatsapp', 'my-message']), // adicionar novo tipo
   payload: z.unknown(),
   idempotencyKey: z.uuid(),
 });
@@ -180,7 +180,7 @@ export const messageEnvelopeSchema = z.object({
 ```ts
 import './sentry';
 import { createQueueWorkerHandler } from '@/shared/queue/create-handler';
-import { parseMyMessage } from '@/shared/queue/my-worker.dto';
+import { parseMyMessage } from '@/shared/queue/schemas/my-worker';
 import { env } from './env';
 import { logger } from './logger';
 
