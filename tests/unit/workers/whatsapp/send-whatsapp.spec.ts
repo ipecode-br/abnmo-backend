@@ -57,7 +57,7 @@ describe('sendWhatsApp()', () => {
     });
     expect(mockLogInfo).toHaveBeenCalledWith(
       'WhatsApp message sent',
-      expect.objectContaining({ phone: '+5511999999999' }),
+      expect.objectContaining({ phone: '+551199***99' }),
     );
   });
 
@@ -104,7 +104,7 @@ describe('sendWhatsApp()', () => {
 
     expect(mockLogError).toHaveBeenCalledWith(
       'WhatsApp message send failed',
-      expect.objectContaining({ phone: '+5511999999999' }),
+      expect.objectContaining({ phone: '+551199***99' }),
     );
   });
 });
