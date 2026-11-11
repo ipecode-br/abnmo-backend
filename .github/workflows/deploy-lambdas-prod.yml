@@ -74,3 +74,18 @@ jobs:
             --zip-file fileb://dist-lambda/lambda-whatsapp-worker.zip \
             --output text \
             --query 'FunctionName'
+
+      # Survey Analysis Worker Lambda
+      - name: Configure AWS credentials (Survey Analysis Worker)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_SURVEY_ANALYSIS_WORKER_ROLE_PROD }}
+          aws-region: us-east-1
+
+      - name: Deploy Survey Analysis Worker Lambda
+        run: |
+          aws lambda update-function-code \
+            --function-name abnmo-svm-worker-survey-analysis-production \
+            --zip-file fileb://dist-lambda/lambda-survey-analysis-worker.zip \
+            --output text \
+            --query 'FunctionName'
