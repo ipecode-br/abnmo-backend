@@ -201,6 +201,46 @@ export const handler = createQueueWorkerHandler(
 
 ---
 
+## Workers com acesso ao banco
+
+Workers rodam como Lambdas isoladas, sem container NestJS/DI. Quando um worker precisa ler ou gravar no banco (ex.: `survey-analysis`), inicialize um `DataSource` do TypeORM de forma lazy e reaproveite a conexão entre invocações (warm start):
+
+```ts
+// src/workers/my-worker/data-source.ts
+import { DataSource } from 'typeorm';
+
+import { SnakeNamingStrategy } from '@/config/snake-naming.strategy';
+import { DATABASE_ENTITIES } from '@/domain/entities/database';
+
+import { env } from './env';
+
+let dataSource: DataSource | null = null;
+
+export async function getDataSource(): Promise<DataSource> {
+  if (!dataSource) {
+    dataSource = new DataSource({
+      type: 'postgres',
+      host: env.DB_HOST,
+      port: env.DB_PORT,
+      username: env.DB_USERNAME,
+      password: env.DB_PASSWORD,
+      database: env.DB_DATABASE,
+      entities: DATABASE_ENTITIES,
+      namingStrategy: new SnakeNamingStrategy(),
+      synchronize: false,
+    });
+  }
+
+  if (!dataSource.isInitialized) {
+    await dataSource.initialize();
+  }
+
+  return dataSource;
+}
+```
+
+No `handler.ts`, obtenha o `DataSource` dentro de `onProcess` e repasse para a lógica de negócio. O worker `survey-analysis` (`src/workers/survey-analysis/`) é a referência completa desse padrão.
+
 ## Testando workers
 
 Mock do `onProcess` e spy em `console.info`/`console.error` para verificar logs:

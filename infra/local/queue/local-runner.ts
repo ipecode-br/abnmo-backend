@@ -11,6 +11,7 @@ import { createSqsClient, ensureQueue, getQueueUrls } from './sqs-client';
 const WORKERS = {
   email: 'EMAIL_QUEUE_URL',
   whatsapp: 'WHATSAPP_QUEUE_URL',
+  'survey-analysis': 'SURVEY_ANALYSIS_QUEUE_URL',
 } as const;
 
 type WorkerName = keyof typeof WORKERS;

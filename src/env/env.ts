@@ -55,6 +55,7 @@ export const envSchema = z.object({
   // Queues
   EMAIL_QUEUE_URL: z.url(),
   WHATSAPP_QUEUE_URL: z.url(),
+  SURVEY_ANALYSIS_QUEUE_URL: z.url(),
 
   // AWS
   AWS_REGION: z.string().optional().default(''),

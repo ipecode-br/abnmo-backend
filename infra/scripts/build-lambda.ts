@@ -22,6 +22,11 @@ const TARGETS = {
     outDir: 'dist-lambda/whatsapp-worker',
     zipFile: 'lambda-whatsapp-worker.zip',
   },
+  'survey-analysis-worker': {
+    entry: 'dist/workers/survey-analysis/handler.js',
+    outDir: 'dist-lambda/survey-analysis-worker',
+    zipFile: 'lambda-survey-analysis-worker.zip',
+  },
 } as const;
 
 type Target = keyof typeof TARGETS;
