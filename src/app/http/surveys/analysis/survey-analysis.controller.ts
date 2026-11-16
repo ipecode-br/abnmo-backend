@@ -72,7 +72,7 @@ export class SurveyAnalysisController {
   }
 
   @Post('reanalyze')
-  @Log('analyze_survey_answer')
+  @Log('reanalyze_survey_answer')
   @RequireFeature('update:survey:others')
   @ApiOperation({ summary: 'Solicita uma nova análise para uma resposta' })
   @ZodResponse({ type: BaseResponse, status: 200 })

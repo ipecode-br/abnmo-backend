@@ -55,7 +55,7 @@ type SurveyEvent =
   | 'approve_survey'
   | 'decline_survey'
   | 'send_survey_reminder'
-  | 'analyze_survey_answer'
+  | 'reanalyze_survey_answer'
   | 'update_survey_analysis';
 
 type StatusEvent = 'get_status';

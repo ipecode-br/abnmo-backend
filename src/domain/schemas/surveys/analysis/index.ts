@@ -24,7 +24,7 @@ export const surveyAnalysisSchema = z.strictObject({
   questionKey: z.enum(SURVEY_ANALYSIS_QUESTION_KEYS),
   question: z.string().min(1).max(500),
   rawResponse: z.string().min(1),
-  terms: z.array(surveyAnalysisTermSchema),
+  terms: surveyAnalysisTermsSchema,
   promptVersion: z.string().min(1).max(16),
   model: z.string().min(1).max(32),
 });
