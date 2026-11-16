@@ -1,5 +1,7 @@
 import type { SurveyAnalysisQuestionKey } from '@/domain/enums/survey-analysis';
 
+export const SURVEY_ANALYSIS_MAX_LLM_ATTEMPTS = 3;
+
 export const SURVEY_ANALYSIS_QUESTIONS: Record<
   SurveyAnalysisQuestionKey,
   string

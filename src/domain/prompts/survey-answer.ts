@@ -1,5 +1,22 @@
 export const SURVEY_ANSWER_PROMPT_VERSION = '1';
 
+export const SURVEY_ANSWER_TERMS_PATTERN =
+  '[{ "word": string, "frequency": number, "sentiment": "good" | "neutral" | "bad", "weight": number }]';
+
+export function buildSurveyAnswerCorrectionPrompt(
+  validationError: string,
+): string {
+  return `Your previous response does not match the required JSON pattern.
+
+Required pattern:
+${SURVEY_ANSWER_TERMS_PATTERN}
+
+Validation error:
+${validationError}
+
+Return ONLY the corrected JSON array matching the required pattern, with no explanation.`;
+}
+
 export function buildSurveyAnswerPrompt(
   question: string,
   answer: string,
@@ -78,7 +95,7 @@ For example:
 Consider both the survey question and the patient's answer when determining concepts, sentiment, and importance.
 
 Respond ONLY with a JSON array, no explanation:
-[{ "word": string, "frequency": number, "sentiment": "good" | "neutral" | "bad", "weight": number }]
+${SURVEY_ANSWER_TERMS_PATTERN}
 
 Return terms ordered by weight descending.
 

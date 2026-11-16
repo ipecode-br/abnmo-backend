@@ -18,9 +18,11 @@ jest.mock('@/workers/survey-analysis/logger', () => ({
 }));
 
 import { mock, MockProxy } from 'jest-mock-extended';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, QueryFailedError, Repository } from 'typeorm';
 
+import { SURVEY_ANALYSIS_MAX_LLM_ATTEMPTS } from '@/constants/survey-analysis';
 import { SurveyAnalysis } from '@/domain/entities/survey-analysis';
+import { SURVEY_ANSWER_TERMS_PATTERN } from '@/domain/prompts/survey-answer';
 import type { SurveyAnalysisTerm } from '@/domain/schemas/surveys/analysis';
 import type { AnalyzeSurveyAnswerJob } from '@/shared/queue/schemas/survey-analysis';
 import {
@@ -143,9 +145,15 @@ describe('analyzeSurveyAnswer()', () => {
       }),
       expect.objectContaining({
         role: 'user',
-        content: expect.stringContaining('invalid'),
+        content: expect.stringContaining(
+          'does not match the required JSON pattern',
+        ),
       }),
     ]);
+    expect(secondCall.messages[2].content).toContain(
+      SURVEY_ANSWER_TERMS_PATTERN,
+    );
+    expect(secondCall.messages[2].content).toContain('Unexpected token');
     expect(mockLogInfo).toHaveBeenCalledWith(
       'Invalid analysis response — requesting correction',
       expect.objectContaining({ attempt: 1 }),
@@ -164,21 +172,58 @@ describe('analyzeSurveyAnswer()', () => {
     await analyzeSurveyAnswer(job, dataSource);
 
     expect(mockCreate).toHaveBeenCalledTimes(2);
+
+    const secondCall = mockCreate.mock.calls[1][0] as {
+      messages: { role: string; content: string }[];
+    };
+    expect(secondCall.messages[2].content).toContain(
+      SURVEY_ANSWER_TERMS_PATTERN,
+    );
+    expect(secondCall.messages[2].content).toContain(
+      'Too small: expected number to be >=1',
+    );
+    expect(secondCall.messages[2].content).toContain('at [0].frequency');
     expect(analysesRepo.save).toHaveBeenCalledWith(
       expect.objectContaining({ terms: validTerms }),
     );
   });
 
-  it('throws "InvalidAnalysisResponseError" after 3 failed attempts', async () => {
+  it('throws "InvalidAnalysisResponseError" after the max attempts', async () => {
     mockCreate.mockResolvedValue(llmResponse('not a json array'));
 
     await expect(analyzeSurveyAnswer(job, dataSource)).rejects.toThrow(
       InvalidAnalysisResponseError,
     );
 
-    expect(mockCreate).toHaveBeenCalledTimes(3);
+    expect(mockCreate).toHaveBeenCalledTimes(SURVEY_ANALYSIS_MAX_LLM_ATTEMPTS);
     expect(analysesRepo.save).not.toHaveBeenCalled();
     expect(analysesRepo.update).not.toHaveBeenCalled();
+  });
+
+  it('updates the analysis when a concurrent insert wins the unique constraint', async () => {
+    const driverError = Object.assign(new Error('duplicate key'), {
+      code: '23505',
+    });
+    analysesRepo.save.mockRejectedValue(
+      new QueryFailedError('INSERT', [], driverError),
+    );
+    analysesRepo.findOne
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ id: 'concurrent-id' } as SurveyAnalysis);
+
+    await analyzeSurveyAnswer(job, dataSource);
+
+    expect(analysesRepo.update).toHaveBeenCalledWith('concurrent-id', {
+      question: job.question,
+      rawResponse: JSON.stringify(validTerms),
+      terms: validTerms,
+      promptVersion: '1',
+      model: job.model,
+    });
+    expect(mockLogInfo).toHaveBeenCalledWith(
+      'Survey analysis updated',
+      expect.objectContaining({ analysisId: 'concurrent-id' }),
+    );
   });
 
   it('propagates OpenAI errors without retrying', async () => {
