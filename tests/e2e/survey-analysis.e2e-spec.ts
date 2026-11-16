@@ -93,6 +93,33 @@ describe('Survey analysis (e2e)', () => {
       expect(res.body.message).toBe('Os dados enviados são inválidos.');
     });
 
+    it('returns 404 when the patient does not exist', async () => {
+      const { cookies } = await createAdmin({ login: true });
+
+      const res = await api.get(
+        '/survey-analysis/01900000-0000-7000-8000-000000000000',
+        undefined,
+        { cookies },
+      );
+
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Paciente não encontrado.');
+    });
+
+    it('returns 404 when the ID belongs to a non-patient user', async () => {
+      const { cookies } = await createAdmin({ login: true });
+      const { member } = await createMember();
+
+      const res = await api.get(`/survey-analysis/${member.id}`, undefined, {
+        cookies,
+      });
+
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Paciente não encontrado.');
+    });
+
     it('returns 401 without authentication', async () => {
       const { patient } = await createPatient();
 

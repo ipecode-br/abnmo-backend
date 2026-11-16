@@ -1,4 +1,4 @@
-import { ForbiddenException } from '@nestjs/common';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { mock, MockProxy } from 'jest-mock-extended';
@@ -9,10 +9,12 @@ import { Repository } from 'typeorm';
 
 import { GetSurveyAnalysesUseCase } from '@/app/http/surveys/analysis/use-cases/get-survey-analyses.use-case';
 import { SurveyAnalysis } from '@/domain/entities/survey-analysis';
+import { User } from '@/domain/entities/user';
 
 describe('GetSurveyAnalysesUseCase', () => {
   let useCase: GetSurveyAnalysesUseCase;
   let analysesRepo: MockProxy<Repository<SurveyAnalysis>>;
+  let usersRepo: MockProxy<Repository<User>>;
 
   const patient = patientUserFactory({ id: 'patient-1' });
 
@@ -30,6 +32,8 @@ describe('GetSurveyAnalysesUseCase', () => {
 
   beforeEach(async () => {
     analysesRepo = mock<Repository<SurveyAnalysis>>();
+    usersRepo = mock<Repository<User>>();
+    usersRepo.findOne.mockResolvedValue(patient);
 
     const module = await Test.createTestingModule({
       providers: [
@@ -37,6 +41,10 @@ describe('GetSurveyAnalysesUseCase', () => {
         {
           provide: getRepositoryToken(SurveyAnalysis),
           useValue: analysesRepo,
+        },
+        {
+          provide: getRepositoryToken(User),
+          useValue: usersRepo,
         },
       ],
     }).compile();
@@ -50,6 +58,11 @@ describe('GetSurveyAnalysesUseCase', () => {
 
     const result = await useCase.execute({ patientId: patient.id, user });
 
+    expect(usersRepo.findOne).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: patient.id, role: 'patient' },
+      }),
+    );
     expect(analysesRepo.find).toHaveBeenCalledWith(
       expect.objectContaining({ where: { patient: { id: patient.id } } }),
     );
@@ -86,6 +99,33 @@ describe('GetSurveyAnalysesUseCase', () => {
     expect(result.analyses).toEqual([]);
   });
 
+  it('throws "NotFoundException" when the patient does not exist', async () => {
+    const user = requestUserFactory({ role: 'admin' });
+    usersRepo.findOne.mockResolvedValue(null);
+
+    await expect(
+      useCase.execute({ patientId: patient.id, user }),
+    ).rejects.toThrow(NotFoundException);
+
+    expect(analysesRepo.find).not.toHaveBeenCalled();
+  });
+
+  it('throws "NotFoundException" when the ID belongs to a non-patient user', async () => {
+    const user = requestUserFactory({ role: 'admin' });
+    usersRepo.findOne.mockResolvedValue(null);
+
+    await expect(
+      useCase.execute({ patientId: 'member-1', user }),
+    ).rejects.toThrow(NotFoundException);
+
+    expect(usersRepo.findOne).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'member-1', role: 'patient' },
+      }),
+    );
+    expect(analysesRepo.find).not.toHaveBeenCalled();
+  });
+
   it('throws "ForbiddenException" without "read:survey:others" feature', async () => {
     const user = requestUserFactory({ features: [] });
 
@@ -93,6 +133,7 @@ describe('GetSurveyAnalysesUseCase', () => {
       useCase.execute({ patientId: patient.id, user }),
     ).rejects.toThrow(ForbiddenException);
 
+    expect(usersRepo.findOne).not.toHaveBeenCalled();
     expect(analysesRepo.find).not.toHaveBeenCalled();
   });
 });
