@@ -10,7 +10,6 @@ import type { RequestUser } from '@/common/types';
 
 import {
   GetSurveyAnalysesResponse,
-  PatientIdParam,
   ReanalyzeSurveyAnswerBody,
   UpdateSurveyAnalysisTermsBody,
 } from './survey-analysis.dtos';
@@ -27,18 +26,18 @@ export class SurveyAnalysisController {
     private readonly updateSurveyAnalysisTermsUseCase: UpdateSurveyAnalysisTermsUseCase,
   ) {}
 
-  @Get(':patientId')
+  @Get(':id')
   @RequireFeature('read:survey:others')
   @ApiOperation({
     summary: 'Lista as análises de respostas da catalogação de um paciente',
   })
   @ZodResponse({ type: GetSurveyAnalysesResponse, status: 200 })
   async getSurveyAnalyses(
-    @Param() { patientId }: PatientIdParam,
+    @Param() { id }: UUIDParam,
     @User() user: RequestUser,
   ): Promise<GetSurveyAnalysesResponse> {
     const data = await this.getSurveyAnalysesUseCase.execute({
-      patientId,
+      patientId: id,
       user,
     });
 

@@ -8,10 +8,6 @@ import {
 import { uuidSchema } from '../../shared';
 import { surveyAnalysisTermSchema } from '.';
 
-export const patientIdParamSchema = z.strictObject({
-  patientId: uuidSchema,
-});
-
 export const updateSurveyAnalysisTermsSchema = z.strictObject({
   terms: z.array(surveyAnalysisTermSchema).max(15),
 });
