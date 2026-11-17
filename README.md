@@ -47,7 +47,7 @@ Processos assíncronos executados como funções AWS Lambda, acionados via filas
 
 ### LocalStack (SQS local)
 
-O `docker compose` de desenvolvimento já inclui o LocalStack com SQS. As filas (`email-queue` + DLQ) são criadas automaticamente ao rodar `npm run dev` ou manualmente com:
+O `docker compose` de desenvolvimento já inclui o LocalStack com SQS. As filas (`email-queue`, `whatsapp-queue`, `survey-analysis-queue` + DLQs) são criadas automaticamente ao rodar `npm run dev` ou manualmente com:
 
 ```bash
 npm run services:setup-queues
@@ -55,11 +55,13 @@ npm run services:setup-queues
 
 ### Rodando workers localmente
 
-| Worker | Comando                    | Descrição                                              |
-| ------ | -------------------------- | ------------------------------------------------------ |
-| Email  | `npm run dev:email-worker` | Consome a fila `email-queue` e envia via SES ou Resend |
+| Worker          | Comando                              | Descrição                                                             |
+| --------------- | ------------------------------------ | --------------------------------------------------------------------- |
+| Email           | `npm run dev:email-worker`           | Consome a fila `email-queue` e envia via SES ou Resend                |
+| WhatsApp        | `npm run dev:whatsapp-worker`        | Consome a fila `whatsapp-queue` e envia via Meta Social Messaging     |
+| Survey analysis | `npm run dev:survey-analysis-worker` | Consome a fila `survey-analysis-queue` e analisa respostas com OpenAI |
 
-O comando `dev:email-worker` usa `tsx watch` — reinicia automaticamente ao editar o código.
+Os comandos usam `tsx watch` — reiniciam automaticamente ao editar o código. O worker de survey analysis também exige `OPENAI_API_KEY` e acesso ao banco (`DB_*`) no ambiente.
 
 ### Criando novos workers
 

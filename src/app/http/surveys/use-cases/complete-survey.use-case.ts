@@ -2,9 +2,12 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import { EnqueueSurveyAnalysisUseCase } from '@/app/queue/use-cases/enqueue-survey-analysis.use-case';
 import { Log } from '@/common/log/log.decorator';
 import { LogService } from '@/common/log/log.service';
+import { SURVEY_ANALYSIS_QUESTIONS } from '@/constants/survey-analysis';
 import { Survey } from '@/domain/entities/survey';
+import { SURVEY_ANALYSIS_QUESTION_KEYS } from '@/domain/enums/survey-analysis';
 
 interface CompleteSurveyUseCaseInput {
   signatureDocumentId: string;
@@ -16,6 +19,7 @@ export class CompleteSurveyUseCase {
   constructor(
     @InjectRepository(Survey)
     private readonly surveysRepository: Repository<Survey>,
+    private readonly enqueueSurveyAnalysisUseCase: EnqueueSurveyAnalysisUseCase,
     private readonly logger: LogService,
   ) {}
 
@@ -28,6 +32,9 @@ export class CompleteSurveyUseCase {
       select: {
         id: true,
         status: true,
+        lifePerception: true,
+        dreams: true,
+        additionalInfo: true,
         patient: { id: true, name: true, email: true },
       },
     });
@@ -60,5 +67,19 @@ export class CompleteSurveyUseCase {
         email: survey.patient.email,
       },
     });
+
+    for (const questionKey of SURVEY_ANALYSIS_QUESTION_KEYS) {
+      const answer = survey[questionKey]?.trim();
+
+      if (!answer) continue;
+
+      await this.enqueueSurveyAnalysisUseCase.execute({
+        patientId: survey.patient.id,
+        questionKey,
+        question: SURVEY_ANALYSIS_QUESTIONS[questionKey],
+        answer,
+        model: 'gpt-5',
+      });
+    }
   }
 }

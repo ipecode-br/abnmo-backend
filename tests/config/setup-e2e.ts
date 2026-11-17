@@ -10,6 +10,7 @@ process.env.NODE_ENV = 'test';
 
 import { AppModule } from '@/app/app.module';
 import { EnqueueEmailUseCase } from '@/app/queue/use-cases/enqueue-email.use-case';
+import { EnqueueSurveyAnalysisUseCase } from '@/app/queue/use-cases/enqueue-survey-analysis.use-case';
 import { EnqueueWhatsAppUseCase } from '@/app/queue/use-cases/enqueue-whatsapp.use-case';
 import { EnvService } from '@/env/env.service';
 
@@ -27,6 +28,8 @@ beforeAll(async () => {
     .overrideProvider(EnqueueEmailUseCase)
     .useValue({ execute: jest.fn() })
     .overrideProvider(EnqueueWhatsAppUseCase)
+    .useValue({ execute: jest.fn() })
+    .overrideProvider(EnqueueSurveyAnalysisUseCase)
     .useValue({ execute: jest.fn() })
     .compile();
 

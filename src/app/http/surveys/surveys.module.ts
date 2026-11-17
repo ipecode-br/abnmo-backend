@@ -6,9 +6,14 @@ import { SignatureModule } from '@/app/signature/signature.module';
 import { StorageModule } from '@/app/storage/storage.module';
 import { Document } from '@/domain/entities/document';
 import { Survey } from '@/domain/entities/survey';
+import { SurveyAnalysis } from '@/domain/entities/survey-analysis';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
 import { User } from '@/domain/entities/user';
 
+import { SurveyAnalysisController } from './analysis/survey-analysis.controller';
+import { GetSurveyAnalysesUseCase } from './analysis/use-cases/get-survey-analyses.use-case';
+import { ReanalyzeSurveyAnswerUseCase } from './analysis/use-cases/reanalyze-survey-answer.use-case';
+import { UpdateSurveyAnalysisTermsUseCase } from './analysis/use-cases/update-survey-analysis-terms.use-case';
 import { SurveySubmissionsController } from './submissions/survey-submissions.controller';
 import { ApproveSurveySubmissionUseCase } from './submissions/use-cases/approve-survey-submission.use-case';
 import { ConfirmSurveySubmissionUploadUseCase } from './submissions/use-cases/confirm-survey-submission-upload.use-case';
@@ -27,12 +32,22 @@ import { SendSurveyReminderUseCase } from './use-cases/send-survey-reminder.use-
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([SurveySubmission, Survey, User, Document]),
+    TypeOrmModule.forFeature([
+      SurveySubmission,
+      Survey,
+      SurveyAnalysis,
+      User,
+      Document,
+    ]),
     CryptographyModule,
     SignatureModule,
     StorageModule,
   ],
-  controllers: [SurveysController, SurveySubmissionsController],
+  controllers: [
+    SurveysController,
+    SurveySubmissionsController,
+    SurveyAnalysisController,
+  ],
   providers: [
     ApproveSurveySubmissionUseCase,
     CompleteSurveyUseCase,
@@ -40,13 +55,16 @@ import { SendSurveyReminderUseCase } from './use-cases/send-survey-reminder.use-
     CreateSurveySubmissionUseCase,
     CreateSurveyUseCase,
     DeclineSurveySubmissionUseCase,
+    GetSurveyAnalysesUseCase,
     GetSurveySubmissionUseCase,
     GetSurveySubmissionsUseCase,
     GetSurveyUrlUseCase,
     GetSurveyUseCase,
     GetSurveysUseCase,
     GetTotalSurveySubmissionsUseCase,
+    ReanalyzeSurveyAnswerUseCase,
     SendSurveyReminderUseCase,
+    UpdateSurveyAnalysisTermsUseCase,
   ],
   exports: [CompleteSurveyUseCase],
 })

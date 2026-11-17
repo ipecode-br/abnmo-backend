@@ -10,18 +10,64 @@ import { documentFactory } from 'tests/config/factories/document.factory';
 import { referralFactory } from 'tests/config/factories/referral.factory';
 import { datetimeFactory } from 'tests/config/factories/shared.factory';
 import { surveyFactory } from 'tests/config/factories/survey.factory';
+import { surveyAnalysisFactory } from 'tests/config/factories/survey-analysis.factory';
 import { surveySubmissionFactory } from 'tests/config/factories/survey-submission.factory';
 import { userFactory } from 'tests/config/factories/user.factory';
 
+import { SURVEY_ANALYSIS_QUESTIONS } from '@/constants/survey-analysis';
 import { Appointment } from '@/domain/entities/appointment';
 import { Document } from '@/domain/entities/document';
 import { Referral } from '@/domain/entities/referral';
 import { Survey } from '@/domain/entities/survey';
+import { SurveyAnalysis } from '@/domain/entities/survey-analysis';
 import { SurveySubmission } from '@/domain/entities/survey-submission';
 import { User } from '@/domain/entities/user';
+import {
+  SURVEY_ANALYSIS_MODELS,
+  SURVEY_ANALYSIS_QUESTION_KEYS,
+} from '@/domain/enums/survey-analysis';
 import { USER_ROLES } from '@/domain/enums/users';
+import type { SurveyAnalysisTerm } from '@/domain/schemas/surveys/analysis';
 
 const DATABASE_DEV_NAME = 'abnmo_dev';
+
+const SAMPLE_ANALYSIS_TERMS: SurveyAnalysisTerm[][] = [
+  [
+    {
+      word: 'perda de esperança',
+      frequency: 3,
+      sentiment: 'bad',
+      weight: 0.98,
+    },
+    { word: 'frustração', frequency: 3, sentiment: 'bad', weight: 0.93 },
+    { word: 'casamento', frequency: 4, sentiment: 'bad', weight: 0.85 },
+    { word: 'família', frequency: 1, sentiment: 'good', weight: 0.8 },
+    { word: 'amor', frequency: 1, sentiment: 'good', weight: 0.75 },
+    { word: 'recuperação', frequency: 1, sentiment: 'good', weight: 0.75 },
+    {
+      word: 'retorno ao trabalho',
+      frequency: 1,
+      sentiment: 'good',
+      weight: 0.7,
+    },
+  ],
+  [
+    { word: 'esperança', frequency: 2, sentiment: 'good', weight: 0.95 },
+    { word: 'independência', frequency: 1, sentiment: 'good', weight: 0.85 },
+    { word: 'apoio familiar', frequency: 2, sentiment: 'good', weight: 0.8 },
+    { word: 'mobilidade', frequency: 1, sentiment: 'neutral', weight: 0.6 },
+    { word: 'dor', frequency: 1, sentiment: 'bad', weight: 0.7 },
+    { word: 'consultas', frequency: 2, sentiment: 'neutral', weight: 0.4 },
+  ],
+  [
+    { word: 'viagem', frequency: 2, sentiment: 'good', weight: 0.9 },
+    { word: 'autonomia', frequency: 1, sentiment: 'good', weight: 0.85 },
+    { word: 'medo', frequency: 1, sentiment: 'bad', weight: 0.75 },
+    { word: 'tratamento', frequency: 2, sentiment: 'neutral', weight: 0.5 },
+    { word: 'filhos', frequency: 1, sentiment: 'good', weight: 0.8 },
+    { word: 'cansaço', frequency: 1, sentiment: 'bad', weight: 0.6 },
+  ],
+];
 
 function loadCitiesByState(): Record<string, string[]> {
   const citiesByState: Record<string, string[]> = {};
@@ -65,7 +111,7 @@ async function main() {
 
     console.log('🧹 Cleaning database...');
     await dataSource.query(
-      'TRUNCATE TABLE appointments, referrals, documents, patient_requirements, survey_submissions, surveys, sessions, tokens, users CASCADE',
+      'TRUNCATE TABLE appointments, referrals, documents, patient_requirements, survey_submissions, surveys, survey_analyses, sessions, tokens, users CASCADE',
     );
     console.log('✅ Old data deleted.');
 
@@ -77,6 +123,7 @@ async function main() {
     const surveySubmissionRepository =
       dataSource.getRepository(SurveySubmission);
     const surveyRepository = dataSource.getRepository(Survey);
+    const surveyAnalysisRepository = dataSource.getRepository(SurveyAnalysis);
     const documentRepository = dataSource.getRepository(Document);
     const appointmentsRepository = dataSource.getRepository(Appointment);
     const referralsRepository = dataSource.getRepository(Referral);
@@ -122,6 +169,7 @@ async function main() {
 
     console.log('📋 Creating surveys...');
     const totalOfSurveys = 120;
+    const completedSurveyPatients: User[] = [];
     for (let i = 0; i < totalOfSurveys; i++) {
       const isCompleted = i >= 5;
       const surveyStatus = isCompleted ? 'completed' : 'pending_signature';
@@ -162,8 +210,39 @@ async function main() {
         ),
       );
       await surveyRepository.save(survey);
+
+      if (isCompleted) completedSurveyPatients.push(patient);
     }
     console.log(`✅ ${totalOfSurveys} surveys created.`);
+
+    console.log('🧠 Creating survey analyses...');
+    const totalOfAnalysedPatients = 30;
+    const surveyAnalyses: SurveyAnalysis[] = [];
+
+    for (const patient of completedSurveyPatients.slice(
+      0,
+      totalOfAnalysedPatients,
+    )) {
+      for (const questionKey of SURVEY_ANALYSIS_QUESTION_KEYS) {
+        const terms = faker.helpers.arrayElement(SAMPLE_ANALYSIS_TERMS);
+
+        surveyAnalyses.push(
+          surveyAnalysisRepository.create(
+            surveyAnalysisFactory({
+              patient,
+              questionKey,
+              question: SURVEY_ANALYSIS_QUESTIONS[questionKey],
+              terms,
+              rawResponse: JSON.stringify(terms),
+              model: faker.helpers.arrayElement(SURVEY_ANALYSIS_MODELS),
+              createdAt: datetimeFactory(),
+            }),
+          ),
+        );
+      }
+    }
+    await surveyAnalysisRepository.save(surveyAnalyses);
+    console.log(`✅ ${surveyAnalyses.length} survey analyses created.`);
 
     console.log('📝 Creating survey submissions...');
     const totalOfSubmissions = 40;
