@@ -4,6 +4,7 @@ import { z } from 'zod';
 const mockSendEmail = jest.fn();
 const mockLogInfo = jest.fn();
 const mockLogError = jest.fn();
+const mockLogDebug = jest.fn();
 const mockSentryCaptureException = jest.fn();
 
 jest.mock('@/workers/email/send-email', () => ({
@@ -20,6 +21,7 @@ jest.mock('@sentry/node', () => ({
   init: jest.fn(),
   captureException: mockSentryCaptureException,
   flush: jest.fn(),
+  getClient: jest.fn(),
   logger: { info: jest.fn(), error: jest.fn() },
 }));
 
@@ -85,6 +87,7 @@ describe('Email worker handler', () => {
     mockSendEmail.mockResolvedValue(undefined);
     jest.spyOn(console, 'info').mockImplementation(mockLogInfo);
     jest.spyOn(console, 'error').mockImplementation(mockLogError);
+    jest.spyOn(console, 'log').mockImplementation(mockLogDebug);
   });
 
   it('processes a valid email job successfully', async () => {

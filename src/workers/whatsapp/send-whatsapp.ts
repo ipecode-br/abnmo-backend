@@ -1,5 +1,6 @@
 import { SendWhatsAppJob } from '@/shared/queue/schemas/whatsapp';
 import { anonymizePhoneE164 } from '@/utils/anonymize';
+import { debugLog, describeError } from '@/utils/debug-log';
 
 import { logger } from './logger';
 import { sendViaSocialMessaging } from './providers/social-messaging';
@@ -8,6 +9,12 @@ import { buildDeclineSurveyTemplate } from './templates/decline-survey';
 import { WhatsAppTemplateMessage } from './types';
 
 export async function sendWhatsApp(job: SendWhatsAppJob): Promise<void> {
+  debugLog('sendWhatsApp started', {
+    template: job.template,
+    phone: anonymizePhoneE164(job.to),
+    job,
+  });
+
   let template: WhatsAppTemplateMessage;
 
   switch (job.template) {
@@ -36,9 +43,33 @@ export async function sendWhatsApp(job: SendWhatsAppJob): Promise<void> {
     },
   };
 
+  const serializedPayload = JSON.stringify(payload);
+
+  debugLog('sendWhatsApp payload ready', {
+    phone: anonymizePhoneE164(job.to),
+    template: job.template,
+    templateName: template.name,
+    language: template.language,
+    componentCount: template.components.length,
+    payload: serializedPayload,
+  });
+
   try {
-    await sendViaSocialMessaging({
-      message: new TextEncoder().encode(JSON.stringify(payload)),
+    debugLog('sendWhatsApp calling provider', {
+      phone: anonymizePhoneE164(job.to),
+      payloadBytes: new TextEncoder().encode(serializedPayload).byteLength,
+    });
+
+    const response = await sendViaSocialMessaging({
+      message: new TextEncoder().encode(serializedPayload),
+    });
+
+    debugLog('sendWhatsApp provider responded', {
+      phone: anonymizePhoneE164(job.to),
+      template: job.template,
+      messageId: response.messageId,
+      httpStatusCode: response.$metadata?.httpStatusCode,
+      requestId: response.$metadata?.requestId,
     });
 
     logger.info('WhatsApp message sent', {
@@ -46,6 +77,12 @@ export async function sendWhatsApp(job: SendWhatsAppJob): Promise<void> {
       template: job.template,
     });
   } catch (err) {
+    debugLog('sendWhatsApp provider threw', {
+      phone: anonymizePhoneE164(job.to),
+      template: job.template,
+      ...describeError(err),
+    });
+
     logger.error('WhatsApp message send failed', {
       phone: anonymizePhoneE164(job.to),
       template: job.template,

@@ -5,6 +5,7 @@ import { z } from 'zod';
 const mockSendWhatsApp = jest.fn();
 const mockLogInfo = jest.fn();
 const mockLogError = jest.fn();
+const mockLogDebug = jest.fn();
 const mockSentryCaptureException = jest.fn();
 
 jest.mock('@/workers/whatsapp/send-whatsapp', () => ({
@@ -21,6 +22,7 @@ jest.mock('@sentry/node', () => ({
   init: jest.fn(),
   captureException: mockSentryCaptureException,
   flush: jest.fn(),
+  getClient: jest.fn(),
   logger: { info: jest.fn(), error: jest.fn() },
 }));
 
@@ -86,6 +88,7 @@ describe('WhatsApp worker handler', () => {
     mockSendWhatsApp.mockResolvedValue(undefined);
     jest.spyOn(console, 'info').mockImplementation(mockLogInfo);
     jest.spyOn(console, 'error').mockImplementation(mockLogError);
+    jest.spyOn(console, 'log').mockImplementation(mockLogDebug);
   });
 
   it('processes a valid WhatsApp job successfully', async () => {
