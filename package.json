@@ -12,6 +12,7 @@
     "dev": "npm run services:up && npm run services:wait:database && npm run services:setup-queues && npm run db:migrate && nest start --watch",
     "dev:email-worker": "tsx watch -r tsconfig-paths/register infra/local/queue/local-runner.ts email",
     "dev:whatsapp-worker": "tsx watch -r tsconfig-paths/register infra/local/queue/local-runner.ts whatsapp",
+    "dev:whatsapp-enqueue": "tsx -r tsconfig-paths/register infra/local/queue/send-test-message.ts",
     "dev:survey-analysis-worker": "tsx watch -r tsconfig-paths/register infra/local/queue/local-runner.ts survey-analysis",
     "lint:eslint:check": "eslint .",
     "lint:prettier:check": "prettier --check .",
