@@ -22,6 +22,11 @@ const TARGETS = {
     outDir: 'dist-lambda/whatsapp-worker',
     zipFile: 'lambda-whatsapp-worker.zip',
   },
+  'events-worker': {
+    entry: 'dist/workers/events/handler.js',
+    outDir: 'dist-lambda/events-worker',
+    zipFile: 'lambda-events-worker.zip',
+  },
   'survey-analysis-worker': {
     entry: 'dist/workers/survey-analysis/handler.js',
     outDir: 'dist-lambda/survey-analysis-worker',
