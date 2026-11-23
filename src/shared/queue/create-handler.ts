@@ -83,9 +83,11 @@ export function createQueueWorkerHandler(
         const isZodError = err instanceof z.ZodError;
         const isSyntaxError = err instanceof SyntaxError;
         const isTypeError = err instanceof TypeError;
+
         const matchedPermanentErrors = permanentErrorClasses
           .filter((ErrorClass) => err instanceof ErrorClass)
           .map((ErrorClass) => ErrorClass.name);
+
         const isPermanentError =
           isZodError ||
           isSyntaxError ||
