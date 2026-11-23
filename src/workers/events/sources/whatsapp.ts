@@ -2,7 +2,6 @@ import * as Sentry from '@sentry/node';
 
 import { checkIsProcessed, markProcessed } from '@/shared/queue/utils';
 import { anonymizePhoneE164 } from '@/utils/anonymize';
-import { debugLog } from '@/utils/debug-log';
 
 import { logger } from '../logger';
 import { whatsAppEventSchema, whatsAppWebhookEntrySchema } from '../schemas';
@@ -22,23 +21,10 @@ export function handleWhatsAppEvent(
     (change) => change.value.statuses ?? [],
   );
 
-  debugLog('whatsapp statuses parsed', {
-    snsMessageId: context.sns.MessageId,
-    statusCount: statuses.length,
-    statuses: statuses.map((status) => ({
-      wamid: status.id,
-      status: status.status,
-    })),
-  });
-
   for (const status of statuses) {
     const dedupKey = `${status.id}:${status.status}`;
 
     if (checkIsProcessed(dedupKey, context.processedKeys)) {
-      debugLog('whatsapp status duplicate skipped', {
-        wamid: status.id,
-        status: status.status,
-      });
       continue;
     }
 

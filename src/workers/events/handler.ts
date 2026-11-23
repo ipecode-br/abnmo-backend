@@ -5,7 +5,6 @@ import type { SQSBatchResponse, SQSHandler } from 'aws-lambda';
 import { z } from 'zod';
 
 import type { QueueProcessedKeys } from '@/shared/queue/utils';
-import { debugLog, describeError } from '@/utils/debug-log';
 
 import { env } from './env';
 import { logger } from './logger';
@@ -28,26 +27,10 @@ export const handler: SQSHandler = async (event): Promise<SQSBatchResponse> => {
   const batchItemFailures: { itemIdentifier: string }[] = [];
   const seenIds = new Set<string>();
 
-  debugLog('events handler invoked', {
-    worker: 'events',
-    recordCount: event.Records.length,
-    maxReceiveCount: env.SQS_EVENTS_MAX_RECEIVE_COUNT,
-    whatsAppTopicConfigured: env.SNS_TOPIC_ARN_WHATSAPP !== '',
-  });
-
   for (const record of event.Records) {
     const receiveCount = Number(record.attributes.ApproximateReceiveCount);
 
-    debugLog('event record received', {
-      messageId: record.messageId,
-      receiveCount,
-      bodyLength: record.body.length,
-    });
-
     if (seenIds.has(record.messageId)) {
-      debugLog('duplicate messageId skipped', {
-        messageId: record.messageId,
-      });
       continue;
     }
     seenIds.add(record.messageId);
@@ -57,13 +40,6 @@ export const handler: SQSHandler = async (event): Promise<SQSBatchResponse> => {
       const sns = snsEnvelopeSchema.parse(body);
       const payload = parseSnsMessage(sns.Message);
       const source = resolveEventSource(sns, payload);
-
-      debugLog('event resolved', {
-        messageId: record.messageId,
-        snsMessageId: sns.MessageId,
-        topicArn: sns.TopicArn,
-        source: source.name,
-      });
 
       await source.handle(payload, {
         sns,
@@ -82,17 +58,6 @@ export const handler: SQSHandler = async (event): Promise<SQSBatchResponse> => {
       const isUnknownSource = err instanceof UnknownEventSourceError;
       const isPermanentError = isZodError || isSyntaxError || isUnknownSource;
 
-      debugLog('event processing failed', {
-        worker: 'events',
-        messageId: record.messageId,
-        receiveCount,
-        isZodError,
-        isSyntaxError,
-        isUnknownSource,
-        isPermanentError,
-        ...describeError(err),
-      });
-
       logger.error('Event processing failed', {
         messageId: record.messageId,
         receiveCount,
@@ -109,11 +74,6 @@ export const handler: SQSHandler = async (event): Promise<SQSBatchResponse> => {
           },
         });
 
-        debugLog('event record resolved', {
-          messageId: record.messageId,
-          action: 'dropped',
-          reason: 'permanent-error',
-        });
         continue;
       }
 
@@ -127,25 +87,11 @@ export const handler: SQSHandler = async (event): Promise<SQSBatchResponse> => {
         });
       }
 
-      debugLog('event record resolved', {
-        messageId: record.messageId,
-        action: 'retry',
-        reason:
-          receiveCount >= env.SQS_EVENTS_MAX_RECEIVE_COUNT
-            ? 'max-receive-count-reached'
-            : 'transient-error',
-      });
       batchItemFailures.push({ itemIdentifier: record.messageId });
     }
   }
 
-  const flushSucceeded = await Sentry.flush(1000);
-
-  debugLog('events handler finished', {
-    worker: 'events',
-    flushSucceeded,
-    batchItemFailures,
-  });
+  await Sentry.flush(1000);
 
   return { batchItemFailures };
 };

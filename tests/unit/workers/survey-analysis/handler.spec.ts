@@ -28,7 +28,6 @@ jest.mock('@sentry/node', () => ({
   init: jest.fn(),
   captureException: mockSentryCaptureException,
   flush: jest.fn(),
-  getClient: jest.fn(),
   logger: { info: jest.fn(), error: jest.fn() },
 }));
 
@@ -98,7 +97,6 @@ describe('Survey analysis worker handler', () => {
     mockAnalyzeSurveyAnswer.mockResolvedValue(undefined);
     jest.spyOn(console, 'info').mockImplementation(mockLogInfo);
     jest.spyOn(console, 'error').mockImplementation(mockLogError);
-    jest.spyOn(console, 'log').mockImplementation(jest.fn());
   });
 
   it('processes a valid survey analysis job successfully', async () => {

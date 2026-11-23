@@ -4,7 +4,6 @@ import { z } from 'zod';
 const mockHandleWhatsAppEvent = jest.fn();
 const mockLogInfo = jest.fn();
 const mockLogError = jest.fn();
-const mockLogDebug = jest.fn();
 const mockSentryCaptureException = jest.fn();
 
 const WHATSAPP_TOPIC_ARN = 'arn:aws:sns:us-east-1:123456789012:whatsapp-events';
@@ -29,7 +28,6 @@ jest.mock('@sentry/node', () => ({
   captureException: mockSentryCaptureException,
   captureMessage: jest.fn(),
   flush: jest.fn(),
-  getClient: jest.fn(),
   logger: { info: jest.fn(), error: jest.fn() },
 }));
 
@@ -95,7 +93,6 @@ describe('events worker handler', () => {
     mockHandleWhatsAppEvent.mockResolvedValue(undefined);
     jest.spyOn(console, 'info').mockImplementation(mockLogInfo);
     jest.spyOn(console, 'error').mockImplementation(mockLogError);
-    jest.spyOn(console, 'log').mockImplementation(mockLogDebug);
   });
 
   it('processes a WhatsApp event matched by topic ARN', async () => {

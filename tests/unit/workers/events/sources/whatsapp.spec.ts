@@ -2,7 +2,6 @@ import { z } from 'zod';
 
 const mockLogInfo = jest.fn();
 const mockLogError = jest.fn();
-const mockLogDebug = jest.fn();
 const mockSentryCaptureMessage = jest.fn();
 
 jest.mock('@/workers/events/logger', () => ({
@@ -71,7 +70,6 @@ const metaParameterError = {
 describe('handleWhatsAppEvent()', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.spyOn(console, 'log').mockImplementation(mockLogDebug);
   });
 
   it('logs and captures a failed delivery with Meta error details', () => {

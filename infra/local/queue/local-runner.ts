@@ -6,8 +6,6 @@ import {
 } from '@aws-sdk/client-sqs';
 import type { Context, SQSEvent, SQSHandler } from 'aws-lambda';
 
-import { debugLog } from '@/utils/debug-log';
-
 import { createSqsClient, ensureQueue, getQueueUrls } from './sqs-client';
 
 const WORKERS = {
@@ -46,12 +44,6 @@ async function poll(): Promise<void> {
 
   await ensureQueue(sqs, queue);
 
-  debugLog('local runner polling', {
-    worker: workerName,
-    queueUrl: queue.url,
-    dlqUrl: queue.dlqUrl,
-  });
-
   let running = true;
 
   process.on('SIGTERM', () => {
@@ -74,12 +66,6 @@ async function poll(): Promise<void> {
       if (!response.Messages || response.Messages.length === 0) {
         continue;
       }
-
-      debugLog('local runner received messages', {
-        worker: workerName,
-        count: response.Messages.length,
-        messageIds: response.Messages.map((msg) => msg.MessageId),
-      });
 
       const event: SQSEvent = {
         Records: response.Messages.map((msg) => ({
@@ -108,11 +94,6 @@ async function poll(): Promise<void> {
       const result = await handler(event, {} as Context, () => {});
       const batch = result ?? { batchItemFailures: [] };
 
-      debugLog('local runner handler result', {
-        worker: workerName,
-        batchItemFailures: batch.batchItemFailures,
-      });
-
       const failedIds = new Set(
         batch.batchItemFailures.map((f) => f.itemIdentifier),
       );
@@ -125,14 +106,6 @@ async function poll(): Promise<void> {
               ReceiptHandle: msg.ReceiptHandle!,
             }),
           );
-
-          debugLog('local runner message deleted', {
-            messageId: msg.MessageId,
-          });
-        } else {
-          debugLog('local runner message kept for retry', {
-            messageId: msg.MessageId,
-          });
         }
       }
     } catch (err) {

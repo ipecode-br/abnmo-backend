@@ -1,5 +1,3 @@
-import { debugLog } from '@/utils/debug-log';
-
 interface GetSentryConfigProps {
   dsn: string;
   sentryLogs: string;
@@ -38,14 +36,6 @@ export function getSentryConfig({
       const shouldKeep =
         sentryLogs === 'all' ||
         (sentryLogs === 'error' && log.level === 'error');
-
-      debugLog('before-send-log decision', {
-        component,
-        level: log.level,
-        message: log.message,
-        sentryLogs,
-        decision: shouldKeep ? 'keep' : 'drop',
-      });
 
       return shouldKeep ? log : null;
     },

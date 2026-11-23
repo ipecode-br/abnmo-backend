@@ -1,6 +1,5 @@
 import * as Sentry from '@sentry/node';
 
-import { debugLog } from '@/utils/debug-log';
 import { flattenForSentry } from '@/utils/flatten-for-sentry';
 
 export interface QueueWorkerLogger {
@@ -21,15 +20,6 @@ export function createQueueWorkerLogger(
   ): void {
     const shouldForward =
       sentryLogs === 'all' || (sentryLogs === 'error' && level === 'error');
-
-    debugLog('sentry-log decision', {
-      component,
-      level,
-      message,
-      sentryLogs,
-      sentryClientInitialized: Sentry.getClient() !== undefined,
-      forwarded: shouldForward,
-    });
 
     if (!shouldForward) return;
 
