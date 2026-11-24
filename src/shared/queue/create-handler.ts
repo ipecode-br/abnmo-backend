@@ -84,15 +84,11 @@ export function createQueueWorkerHandler(
         const isSyntaxError = err instanceof SyntaxError;
         const isTypeError = err instanceof TypeError;
 
-        const matchedPermanentErrors = permanentErrorClasses
-          .filter((ErrorClass) => err instanceof ErrorClass)
-          .map((ErrorClass) => ErrorClass.name);
-
         const isPermanentError =
           isZodError ||
           isSyntaxError ||
           isTypeError ||
-          matchedPermanentErrors.length > 0;
+          permanentErrorClasses.some((ErrorClass) => err instanceof ErrorClass);
 
         logger.error('Message processing failed', {
           messageId: record.messageId,
@@ -121,9 +117,6 @@ export function createQueueWorkerHandler(
               extra: { messageId: record.messageId, receiveCount },
             },
           });
-
-          batchItemFailures.push({ itemIdentifier: record.messageId });
-          continue;
         }
 
         batchItemFailures.push({ itemIdentifier: record.messageId });
