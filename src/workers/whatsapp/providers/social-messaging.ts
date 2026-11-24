@@ -1,6 +1,5 @@
 import {
   SendWhatsAppMessageCommand,
-  SendWhatsAppMessageCommandOutput,
   SocialMessagingClient,
 } from '@aws-sdk/client-socialmessaging';
 
@@ -11,8 +10,8 @@ const socialMessaging = new SocialMessagingClient({});
 
 export async function sendViaSocialMessaging({
   message,
-}: SendWhatsAppPayload): Promise<SendWhatsAppMessageCommandOutput> {
-  return await socialMessaging.send(
+}: SendWhatsAppPayload): Promise<void> {
+  await socialMessaging.send(
     new SendWhatsAppMessageCommand({
       originationPhoneNumberId: env.WHATSAPP_PHONE_NUMBER_ID,
       metaApiVersion: env.WHATSAPP_META_API_VERSION,

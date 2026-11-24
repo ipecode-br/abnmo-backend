@@ -36,11 +36,9 @@ export async function sendWhatsApp(job: SendWhatsAppJob): Promise<void> {
     },
   };
 
-  const serializedPayload = JSON.stringify(payload);
-
   try {
     await sendViaSocialMessaging({
-      message: new TextEncoder().encode(serializedPayload),
+      message: new TextEncoder().encode(JSON.stringify(payload)),
     });
 
     logger.info('WhatsApp message sent', {

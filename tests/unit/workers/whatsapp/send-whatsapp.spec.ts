@@ -2,12 +2,6 @@ const mockSendViaSocialMessaging = jest.fn();
 const mockLogInfo = jest.fn();
 const mockLogError = jest.fn();
 
-const providerResponse = {
-  messageId: 'wamid.test',
-  metaApiVersion: 'v23.0',
-  $metadata: {},
-};
-
 jest.mock('@/workers/whatsapp/providers/social-messaging', () => ({
   sendViaSocialMessaging: mockSendViaSocialMessaging,
 }));
@@ -29,7 +23,7 @@ function getSentPayload(): Record<string, unknown> {
 describe('sendWhatsApp()', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockSendViaSocialMessaging.mockResolvedValue(providerResponse);
+    mockSendViaSocialMessaging.mockResolvedValue(undefined);
   });
 
   it('sends "completeSurvey" template with name and token', async () => {
