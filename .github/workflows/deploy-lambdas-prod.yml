@@ -89,3 +89,18 @@ jobs:
             --zip-file fileb://dist-lambda/lambda-survey-analysis-worker.zip \
             --output text \
             --query 'FunctionName'
+
+      # Events Worker Lambda
+      - name: Configure AWS credentials (Events Worker)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_EVENTS_WORKER_ROLE_PROD }}
+          aws-region: us-east-1
+
+      - name: Deploy Events Worker Lambda
+        run: |
+          aws lambda update-function-code \
+            --function-name abnmo-svm-worker-events-production \
+            --zip-file fileb://dist-lambda/lambda-events-worker.zip \
+            --output text \
+            --query 'FunctionName'

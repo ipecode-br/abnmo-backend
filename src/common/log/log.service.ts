@@ -62,21 +62,26 @@ export class LogService {
   }
 
   error(message: string | object, extras?: Record<string, any>) {
-    if (typeof message === 'string') {
-      const payload = this.buildPayload(extras);
-      this.pino.error(payload, message);
-      if (this.sentryLogs === 'all' || this.sentryLogs === 'error') {
-        Sentry.logger.error(`[api] ${message}`, flattenForSentry(payload));
-      }
-    } else {
+    if (typeof message !== 'string') {
       const payload = this.buildPayload({
         ...(extras ?? {}),
         ...(message as Record<string, any>),
       });
+
       this.pino.error(payload);
+
       if (this.sentryLogs === 'all' || this.sentryLogs === 'error') {
         Sentry.logger.error('[api] Error', flattenForSentry(payload));
       }
+
+      return;
+    }
+
+    const payload = this.buildPayload(extras);
+    this.pino.error(payload, message);
+
+    if (this.sentryLogs === 'all' || this.sentryLogs === 'error') {
+      Sentry.logger.error(`[api] ${message}`, flattenForSentry(payload));
     }
   }
 

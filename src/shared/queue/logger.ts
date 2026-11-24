@@ -13,26 +13,34 @@ export function createQueueWorkerLogger(
 ): QueueWorkerLogger {
   const component = `${name}-worker`;
 
+  function forward(
+    level: 'info' | 'error',
+    message: string,
+    extras?: Record<string, unknown>,
+  ): void {
+    const shouldForward =
+      sentryLogs === 'all' || (sentryLogs === 'error' && level === 'error');
+
+    if (!shouldForward) return;
+
+    const attributes = flattenForSentry(extras ?? {});
+
+    if (level === 'error') {
+      Sentry.logger.error(`[${component}] ${message}`, attributes);
+      return;
+    }
+
+    Sentry.logger.info(`[${component}] ${message}`, attributes);
+  }
+
   function info(message: string, extras?: Record<string, unknown>): void {
     console.info(`[${new Date().toISOString()}] ${message}`, extras ?? '');
-
-    if (sentryLogs === 'all') {
-      Sentry.logger.info(
-        `[${component}] ${message}`,
-        flattenForSentry(extras ?? {}),
-      );
-    }
+    forward('info', message, extras);
   }
 
   function error(message: string, extras?: Record<string, unknown>): void {
     console.error(`[${new Date().toISOString()}] ${message}`, extras ?? '');
-
-    if (sentryLogs === 'all' || sentryLogs === 'error') {
-      Sentry.logger.error(
-        `[${component}] ${message}`,
-        flattenForSentry(extras ?? {}),
-      );
-    }
+    forward('error', message, extras);
   }
 
   return { info, error };

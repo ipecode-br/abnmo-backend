@@ -4,6 +4,8 @@
 
 Workers são funções AWS Lambda consumidoras de filas SQS, construídas com o builder `createQueueWorkerHandler`. O builder encapsula a lógica repetitiva — envelope parsing, deduplicação, classificação de erros, logging e reporte ao Sentry — deixando cada worker focado apenas na sua lógica de negócio.
 
+Exceção: workers que consomem eventos de terceiros via SNS (como o `events`) têm handler próprio, porque o formato da mensagem não é o envelope interno. Veja [Workers de eventos externos](#workers-de-eventos-externos-sns--sqs).
+
 ---
 
 ## `createQueueWorkerHandler`
@@ -88,6 +90,20 @@ No consumidor (worker), o builder usa `checkIsProcessed`/`markProcessed` para ev
 
 - **Batch-level**: um `Set<string>` de `messageId` por invocação (cobre double-read por visibility timeout)
 - **Cross-batch**: um `Map<string, number>` com TTL de 10 minutos (cobre entregas duplicadas do SQS)
+
+---
+
+## Workers de eventos externos (SNS → SQS)
+
+O worker `events` (`src/workers/events/`) não usa `createQueueWorkerHandler`: a fila recebe o envelope do SNS (`Type`, `MessageId`, `TopicArn`, `Message`) e o conteúdo é um evento de terceiros (WhatsApp/Meta), não o envelope interno `{ version, type, idempotencyKey, payload }`. Use esse padrão para qualquer fila alimentada por eventos de terceiros.
+
+- **Sem Zod para o payload externo** — o formato é definido por terceiros e pode mudar sem aviso. Os payloads são tipados em `types.ts` e convertidos com `as`; o único parsing rígido é o `JSON.parse` do envelope SNS e do `whatsAppWebhookEntry` (string JSON).
+- **Roteamento por emissor** — `sources/index.ts` resolve a fonte pelo `TopicArn` (quando `SNS_TOPIC_ARN_WHATSAPP` está definido) e, como fallback, pelo formato do payload. Para um novo emissor, crie `sources/<nome>.ts` e registre em `eventSources`.
+- **Classificação de erros** — `SyntaxError`, `TypeError` e `UnknownEventSourceError` são permanentes: reporta ao Sentry e **descarta a mensagem sem retry**. Erros transientes voltam em `batchItemFailures` e só são reportados ao Sentry na última tentativa (`SQS_EVENTS_MAX_RECEIVE_COUNT`).
+- **Emissores desconhecidos são descartados** — publicar em um tópico novo antes de implementar o `source` correspondente perde os eventos (um issue no Sentry por mensagem). Faça deploy do source antes de assinar o tópico.
+- **`SQS_EVENTS_MAX_RECEIVE_COUNT` deve acompanhar o `max_receive_count` da fila** (`abnmo-devops`, módulo `queue`). Se o DLQ for configurado com um valor menor, o alerta de última tentativa nunca dispara.
+- **`raw_message_delivery` permanece `false`** na subscription SNS → SQS: o worker espera o envelope SNS, não o payload cru.
+- **Destinatário completo é intencional** — os logs de falha e o extra do Sentry registram o telefone em E.164 para localizar o usuário e reenviar a mensagem manualmente. Não anonimizar: esses logs e issues contêm PII por decisão de produto.
 
 ---
 

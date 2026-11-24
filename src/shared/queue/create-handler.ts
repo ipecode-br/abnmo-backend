@@ -50,11 +50,16 @@ export function createQueueWorkerHandler(
     const seenIds = new Set<string>();
 
     for (const record of event.Records) {
-      if (seenIds.has(record.messageId)) continue;
+      const receiveCount = Number(record.attributes.ApproximateReceiveCount);
+
+      if (seenIds.has(record.messageId)) {
+        continue;
+      }
       seenIds.add(record.messageId);
 
       try {
         const body: unknown = JSON.parse(record.body);
+
         const envelope = messageEnvelopeSchema.parse(body);
 
         if (
@@ -68,13 +73,22 @@ export function createQueueWorkerHandler(
         }
 
         const job = parsePayload(envelope.payload);
+
         await onProcess(job, record.messageId);
 
         markProcessed(envelope.idempotencyKey, processedKeys);
 
         logger.info('Message processed', { messageId: record.messageId });
       } catch (err) {
-        const receiveCount = Number(record.attributes.ApproximateReceiveCount);
+        const isZodError = err instanceof z.ZodError;
+        const isSyntaxError = err instanceof SyntaxError;
+        const isTypeError = err instanceof TypeError;
+
+        const isPermanentError =
+          isZodError ||
+          isSyntaxError ||
+          isTypeError ||
+          permanentErrorClasses.some((ErrorClass) => err instanceof ErrorClass);
 
         logger.error('Message processing failed', {
           messageId: record.messageId,
@@ -82,12 +96,6 @@ export function createQueueWorkerHandler(
           errorType: err instanceof Error ? err.name : typeof err,
           error: err instanceof Error ? err.message : String(err),
         });
-
-        const isPermanentError =
-          err instanceof z.ZodError ||
-          err instanceof SyntaxError ||
-          err instanceof TypeError ||
-          permanentErrorClasses.some((ErrorClass) => err instanceof ErrorClass);
 
         if (isPermanentError) {
           Sentry.captureException(err, {
@@ -97,6 +105,7 @@ export function createQueueWorkerHandler(
               extra: { messageId: record.messageId, body: record.body },
             },
           });
+
           continue;
         }
 
