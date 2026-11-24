@@ -47,7 +47,7 @@ Processos assíncronos executados como funções AWS Lambda, acionados via filas
 
 ### LocalStack (SQS local)
 
-O `docker compose` de desenvolvimento já inclui o LocalStack com SQS. As filas (`email-queue`, `whatsapp-queue`, `survey-analysis-queue` + DLQs) são criadas automaticamente ao rodar `npm run dev` ou manualmente com:
+O `docker compose` de desenvolvimento já inclui o LocalStack com SQS. As filas (`email-queue`, `whatsapp-queue`, `events-queue`, `survey-analysis-queue` + DLQs) são criadas automaticamente ao rodar `npm run dev` ou manualmente com:
 
 ```bash
 npm run services:setup-queues
@@ -59,9 +59,18 @@ npm run services:setup-queues
 | --------------- | ------------------------------------ | --------------------------------------------------------------------- |
 | Email           | `npm run dev:email-worker`           | Consome a fila `email-queue` e envia via SES ou Resend                |
 | WhatsApp        | `npm run dev:whatsapp-worker`        | Consome a fila `whatsapp-queue` e envia via Meta Social Messaging     |
+| Events          | `npm run dev:events-worker`          | Consome a fila `events-queue` e reporta falhas de entrega do WhatsApp |
 | Survey analysis | `npm run dev:survey-analysis-worker` | Consome a fila `survey-analysis-queue` e analisa respostas com OpenAI |
 
 Os comandos usam `tsx watch` — reiniciam automaticamente ao editar o código. O worker de survey analysis também exige `OPENAI_API_KEY` e acesso ao banco (`DB_*`) no ambiente.
+
+Para enfileirar uma mensagem de WhatsApp de teste (sem precisar de evento real da Meta):
+
+```bash
+npm run dev:whatsapp-enqueue -- [scenario] [phone]
+```
+
+Cenários: `complete-survey`, `decline-survey`, `bad-phone`, `empty-name`, `long-reason`, `unknown-template`.
 
 ### Criando novos workers
 
