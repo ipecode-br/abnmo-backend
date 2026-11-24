@@ -118,14 +118,29 @@ async function buildAll() {
   }
 }
 
-const arg = process.argv[2] as Target | 'all' | undefined;
+function isTarget(value: string): value is Target {
+  return Object.hasOwn(TARGETS, value);
+}
 
-if (!arg || arg === 'all') {
-  buildAll().catch((err) => {
-    console.error('Build failed:', err);
+function main(): void {
+  const arg = process.argv[2];
+
+  if (!arg || arg === 'all') {
+    buildAll().catch((err) => {
+      console.error('Build failed:', err);
+      process.exit(1);
+    });
+
+    return;
+  }
+
+  if (!isTarget(arg)) {
+    console.error(
+      `Unknown target: ${arg}. Valid targets: ${Object.keys(TARGETS).join(', ')}, all`,
+    );
     process.exit(1);
-  });
-} else if (TARGETS[arg]) {
+  }
+
   (async () => {
     try {
       execSync('rm -rf dist dist-lambda', { stdio: 'inherit' });
@@ -140,9 +155,6 @@ if (!arg || arg === 'all') {
     console.error('Build failed:', err);
     process.exit(1);
   });
-} else {
-  console.error(
-    `Unknown target: ${arg}. Valid targets: ${Object.keys(TARGETS).join(', ')}, all`,
-  );
-  process.exit(1);
 }
+
+void main();

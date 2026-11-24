@@ -28,15 +28,15 @@ async function setup() {
       await ensureQueues(sqs, queues);
       process.exit(0);
     } catch (err) {
-      if (attempt < MAX_RETRIES) {
-        console.warn(
-          `Queue setup failed (attempt ${attempt}/${MAX_RETRIES}), retrying in ${RETRY_DELAY_MS / 1000}s...`,
-        );
-        await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
-      } else {
+      if (attempt === MAX_RETRIES) {
         console.error('Queue setup failed after all retries:', err);
         process.exit(1);
       }
+
+      console.warn(
+        `Queue setup failed (attempt ${attempt}/${MAX_RETRIES}), retrying in ${RETRY_DELAY_MS / 1000}s...`,
+      );
+      await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
     }
   }
 }
