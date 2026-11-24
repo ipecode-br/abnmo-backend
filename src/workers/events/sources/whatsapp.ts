@@ -1,21 +1,23 @@
 import * as Sentry from '@sentry/node';
 
 import { checkIsProcessed, markProcessed } from '@/shared/queue/utils';
-import { anonymizePhoneE164 } from '@/utils/anonymize';
 
 import { logger } from '../logger';
-import { whatsAppEventSchema, whatsAppWebhookEntrySchema } from '../schemas';
-import type { EventContext } from '../types';
+import type {
+  EventContext,
+  WhatsAppEvent,
+  WhatsAppWebhookEntry,
+} from '../types';
 
 export function handleWhatsAppEvent(
   payload: Record<string, unknown>,
   context: EventContext,
 ): void {
-  const event = whatsAppEventSchema.parse(payload);
+  const event = payload as unknown as WhatsAppEvent;
 
-  const webhookEntry = whatsAppWebhookEntrySchema.parse(
-    JSON.parse(event.whatsAppWebhookEntry),
-  );
+  const webhookEntry = JSON.parse(
+    event.whatsAppWebhookEntry,
+  ) as WhatsAppWebhookEntry;
 
   const statuses = webhookEntry.changes.flatMap(
     (change) => change.value.statuses ?? [],
@@ -29,14 +31,15 @@ export function handleWhatsAppEvent(
     }
 
     const recipient = status.recipient_id
-      ? anonymizePhoneE164(`+${status.recipient_id}`)
+      ? `+${status.recipient_id}`
       : undefined;
 
-    if (status.status === 'failed') {
+    if (status.status.toLowerCase().includes('failed')) {
       const failure = status.errors?.[0];
 
       logger.error('WhatsApp message delivery failed', {
         wamid: status.id,
+        status: status.status,
         recipient,
         statusTimestamp: status.timestamp,
         awsMessageId: event.messageId,
@@ -57,6 +60,7 @@ export function handleWhatsAppEvent(
           },
           extra: {
             wamid: status.id,
+            status: status.status,
             recipient,
             awsMessageId: event.messageId,
             snsMessageId: context.sns.MessageId,

@@ -1,5 +1,4 @@
 import type { SQSEvent } from 'aws-lambda';
-import { z } from 'zod';
 
 const mockHandleWhatsAppEvent = jest.fn();
 const mockLogInfo = jest.fn();
@@ -61,22 +60,28 @@ function makeSnsBody(
   });
 }
 
+function makeAttributes(
+  receiveCount: string,
+): SQSEvent['Records'][number]['attributes'] {
+  return {
+    ApproximateReceiveCount: receiveCount,
+    ApproximateFirstReceiveTimestamp: '',
+    AWSTraceHeader: '',
+    MessageDeduplicationId: '',
+    MessageGroupId: '',
+    SenderId: '',
+    SentTimestamp: '',
+    SequenceNumber: '',
+  };
+}
+
 function makeRecord(
   overrides: Partial<SQSEvent['Records'][number]> = {},
 ): SQSEvent['Records'][number] {
   return {
     messageId: 'msg-1',
     body: makeSnsBody(whatsAppPayload()),
-    attributes: {
-      ApproximateReceiveCount: '1',
-      ApproximateFirstReceiveTimestamp: '',
-      AWSTraceHeader: '',
-      MessageDeduplicationId: '',
-      MessageGroupId: '',
-      SenderId: '',
-      SentTimestamp: '',
-      SequenceNumber: '',
-    },
+    attributes: makeAttributes('1'),
     awsRegion: 'us-east-1',
     eventSource: 'aws:sqs',
     eventSourceARN: 'arn:',
@@ -103,7 +108,6 @@ describe('events worker handler', () => {
     expect(mockHandleWhatsAppEvent).toHaveBeenCalledWith(
       whatsAppPayload(),
       expect.objectContaining({
-        messageId: 'msg-1',
         sns: expect.objectContaining({ MessageId: 'sns-message-1' }),
       }),
     );
@@ -149,7 +153,7 @@ describe('events worker handler', () => {
     expect(result.batchItemFailures).toHaveLength(0);
   });
 
-  it('drops invalid SNS envelope and captures "ZodError"', async () => {
+  it('drops SNS envelope without "Message" and captures "SyntaxError"', async () => {
     const event: SQSEvent = {
       Records: [makeRecord({ body: JSON.stringify({ Type: 'Notification' }) })],
     };
@@ -157,7 +161,23 @@ describe('events worker handler', () => {
     const result = await invoke(event);
 
     expect(mockSentryCaptureException).toHaveBeenCalledWith(
-      expect.any(z.ZodError),
+      expect.any(SyntaxError),
+      expect.objectContaining({
+        captureContext: expect.objectContaining({ level: 'error' }),
+      }),
+    );
+    expect(result.batchItemFailures).toHaveLength(0);
+  });
+
+  it('drops non-object SNS body and captures "TypeError"', async () => {
+    const event: SQSEvent = {
+      Records: [makeRecord({ body: 'null' })],
+    };
+
+    const result = await invoke(event);
+
+    expect(mockSentryCaptureException).toHaveBeenCalledWith(
+      expect.any(TypeError),
       expect.objectContaining({
         captureContext: expect.objectContaining({ level: 'error' }),
       }),
@@ -194,32 +214,19 @@ describe('events worker handler', () => {
 
     expect(mockSentryCaptureException).not.toHaveBeenCalled();
     expect(mockLogError).toHaveBeenCalled();
-    expect(result.batchItemFailures).toHaveLength(1);
+    expect(result.batchItemFailures).toEqual([{ itemIdentifier: 'msg-1' }]);
   });
 
   it('captures Sentry for transient error on last attempt', async () => {
     mockHandleWhatsAppEvent.mockRejectedValue(new Error('boom'));
     const event: SQSEvent = {
-      Records: [
-        makeRecord({
-          attributes: {
-            ApproximateReceiveCount: '5',
-            ApproximateFirstReceiveTimestamp: '',
-            AWSTraceHeader: '',
-            MessageDeduplicationId: '',
-            MessageGroupId: '',
-            SenderId: '',
-            SentTimestamp: '',
-            SequenceNumber: '',
-          },
-        }),
-      ],
+      Records: [makeRecord({ attributes: makeAttributes('5') })],
     };
 
     const result = await invoke(event);
 
     expect(mockSentryCaptureException).toHaveBeenCalled();
-    expect(result.batchItemFailures).toHaveLength(1);
+    expect(result.batchItemFailures).toEqual([{ itemIdentifier: 'msg-1' }]);
   });
 
   it('skips duplicate messageId within the same batch', async () => {

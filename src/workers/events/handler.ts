@@ -2,14 +2,13 @@ import './sentry';
 
 import * as Sentry from '@sentry/node';
 import type { SQSBatchResponse, SQSHandler } from 'aws-lambda';
-import { z } from 'zod';
 
 import type { QueueProcessedKeys } from '@/shared/queue/utils';
 
 import { env } from './env';
 import { logger } from './logger';
-import { snsEnvelopeSchema } from './schemas';
 import { resolveEventSource, UnknownEventSourceError } from './sources';
+import type { SnsEnvelope } from './types';
 
 const processedKeys: QueueProcessedKeys = new Map();
 
@@ -37,15 +36,11 @@ export const handler: SQSHandler = async (event): Promise<SQSBatchResponse> => {
 
     try {
       const body: unknown = JSON.parse(record.body);
-      const sns = snsEnvelopeSchema.parse(body);
+      const sns = body as SnsEnvelope;
       const payload = parseSnsMessage(sns.Message);
       const source = resolveEventSource(sns, payload);
 
-      await source.handle(payload, {
-        sns,
-        messageId: record.messageId,
-        processedKeys,
-      });
+      await source.handle(payload, { sns, processedKeys });
 
       logger.info('Event processed', {
         messageId: record.messageId,
@@ -53,10 +48,10 @@ export const handler: SQSHandler = async (event): Promise<SQSBatchResponse> => {
         source: source.name,
       });
     } catch (err) {
-      const isZodError = err instanceof z.ZodError;
       const isSyntaxError = err instanceof SyntaxError;
+      const isTypeError = err instanceof TypeError;
       const isUnknownSource = err instanceof UnknownEventSourceError;
-      const isPermanentError = isZodError || isSyntaxError || isUnknownSource;
+      const isPermanentError = isSyntaxError || isTypeError || isUnknownSource;
 
       logger.error('Event processing failed', {
         messageId: record.messageId,

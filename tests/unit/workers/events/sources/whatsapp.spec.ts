@@ -1,5 +1,3 @@
-import { z } from 'zod';
-
 const mockLogInfo = jest.fn();
 const mockLogError = jest.fn();
 const mockSentryCaptureMessage = jest.fn();
@@ -27,7 +25,6 @@ function makeContext(
       Message: '{}',
       Timestamp: '2026-11-18T12:00:00.000Z',
     },
-    messageId: 'msg-1',
     processedKeys,
   };
 }
@@ -89,7 +86,8 @@ describe('handleWhatsAppEvent()', () => {
       'WhatsApp message delivery failed',
       expect.objectContaining({
         wamid: 'wamid.failed',
-        recipient: '+551199***99',
+        status: 'failed',
+        recipient: '+5511999999999',
         awsMessageId: 'aws-message-1',
         metaErrorCode: 132000,
         metaErrorTitle: 'Something went wrong',
@@ -105,10 +103,45 @@ describe('handleWhatsAppEvent()', () => {
           worker: 'events',
           source: 'whatsapp',
         }),
-        extra: expect.objectContaining({ wamid: 'wamid.failed' }),
+        extra: expect.objectContaining({
+          wamid: 'wamid.failed',
+          recipient: '+5511999999999',
+        }),
       }),
     );
     expect(mockLogInfo).not.toHaveBeenCalled();
+  });
+
+  it('captures a handover failure reported with a generated status name', () => {
+    const payload = makePayload([
+      {
+        id: 'wamid.handover',
+        status: 'WhatsApp Message Handover Failed',
+        recipient_id: '5511999999999',
+        errors: [
+          {
+            code: 131026,
+            title: 'Message undeliverable',
+            message: 'Message undeliverable',
+          },
+        ],
+      },
+    ]);
+
+    handleWhatsAppEvent(payload, makeContext());
+
+    expect(mockLogError).toHaveBeenCalledWith(
+      'WhatsApp message delivery failed',
+      expect.objectContaining({
+        wamid: 'wamid.handover',
+        status: 'WhatsApp Message Handover Failed',
+        metaErrorCode: 131026,
+      }),
+    );
+    expect(mockSentryCaptureMessage).toHaveBeenCalledWith(
+      'WhatsApp message delivery failed (Meta 131026)',
+      expect.anything(),
+    );
   });
 
   it('logs non-failed statuses without capturing Sentry', () => {
@@ -128,7 +161,7 @@ describe('handleWhatsAppEvent()', () => {
       expect.objectContaining({
         wamid: 'wamid.delivered',
         status: 'delivered',
-        recipient: '+551199***99',
+        recipient: '+5511999999999',
       }),
     );
     expect(mockLogError).not.toHaveBeenCalled();
@@ -177,10 +210,10 @@ describe('handleWhatsAppEvent()', () => {
     expect(mockSentryCaptureMessage).not.toHaveBeenCalled();
   });
 
-  it('throws "ZodError" when payload misses "whatsAppWebhookEntry"', () => {
+  it('throws "SyntaxError" when payload misses "whatsAppWebhookEntry"', () => {
     expect(() =>
       handleWhatsAppEvent({ messageId: 'aws-message-1' }, makeContext()),
-    ).toThrow(z.ZodError);
+    ).toThrow(SyntaxError);
   });
 
   it('throws "SyntaxError" when webhook entry is not valid JSON', () => {
