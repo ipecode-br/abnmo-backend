@@ -20,13 +20,21 @@ export class UnknownEventSourceError extends Error {
   }
 }
 
+function hasWhatsAppWebhookEntry(payload: Record<string, unknown>): boolean {
+  const entry = payload.whatsAppWebhookEntry;
+
+  return (
+    typeof entry === 'string' || (typeof entry === 'object' && entry !== null)
+  );
+}
+
 const eventSources: EventSource[] = [
   {
     name: 'whatsapp',
     matches: (sns, payload) =>
       (env.SNS_TOPIC_ARN_WHATSAPP !== '' &&
         sns.TopicArn === env.SNS_TOPIC_ARN_WHATSAPP) ||
-      typeof payload.whatsAppWebhookEntry === 'string',
+      hasWhatsAppWebhookEntry(payload),
     handle: handleWhatsAppEvent,
   },
 ];

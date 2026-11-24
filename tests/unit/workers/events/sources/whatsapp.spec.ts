@@ -210,10 +210,44 @@ describe('handleWhatsAppEvent()', () => {
     expect(mockSentryCaptureMessage).not.toHaveBeenCalled();
   });
 
-  it('throws "SyntaxError" when payload misses "whatsAppWebhookEntry"', () => {
+  it('accepts a webhook entry delivered as an object', () => {
+    handleWhatsAppEvent(
+      {
+        whatsAppWebhookEntry: {
+          id: 'waba-id',
+          changes: [
+            {
+              field: 'messages',
+              value: {
+                statuses: [
+                  {
+                    id: 'wamid.object',
+                    status: 'delivered',
+                    recipient_id: '5511999999999',
+                  },
+                ],
+              },
+            },
+          ],
+        },
+        messageId: 'aws-message-1',
+      },
+      makeContext(),
+    );
+
+    expect(mockLogInfo).toHaveBeenCalledWith(
+      'WhatsApp message status received',
+      expect.objectContaining({
+        wamid: 'wamid.object',
+        recipient: '+5511999999999',
+      }),
+    );
+  });
+
+  it('throws "TypeError" when payload misses "whatsAppWebhookEntry"', () => {
     expect(() =>
       handleWhatsAppEvent({ messageId: 'aws-message-1' }, makeContext()),
-    ).toThrow(SyntaxError);
+    ).toThrow(TypeError);
   });
 
   it('throws "SyntaxError" when webhook entry is not valid JSON', () => {

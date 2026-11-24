@@ -15,9 +15,10 @@ export function handleWhatsAppEvent(
 ): void {
   const event = payload as unknown as WhatsAppEvent;
 
-  const webhookEntry = JSON.parse(
-    event.whatsAppWebhookEntry,
-  ) as WhatsAppWebhookEntry;
+  const webhookEntry =
+    typeof event.whatsAppWebhookEntry === 'string'
+      ? (JSON.parse(event.whatsAppWebhookEntry) as WhatsAppWebhookEntry)
+      : event.whatsAppWebhookEntry;
 
   const statuses = webhookEntry.changes.flatMap(
     (change) => change.value.statuses ?? [],

@@ -133,6 +133,27 @@ describe('events worker handler', () => {
     expect(result.batchItemFailures).toHaveLength(0);
   });
 
+  it('falls back to payload shape for an object-encoded webhook entry', async () => {
+    const event: SQSEvent = {
+      Records: [
+        makeRecord({
+          body: makeSnsBody(
+            {
+              whatsAppWebhookEntry: { changes: [] },
+              messageId: 'aws-message-1',
+            },
+            'arn:aws:sns:us-east-1:1:other',
+          ),
+        }),
+      ],
+    };
+
+    const result = await invoke(event);
+
+    expect(mockHandleWhatsAppEvent).toHaveBeenCalled();
+    expect(result.batchItemFailures).toHaveLength(0);
+  });
+
   it('drops malformed SNS body and captures "SyntaxError"', async () => {
     const event: SQSEvent = {
       Records: [makeRecord({ body: 'not valid json' })],

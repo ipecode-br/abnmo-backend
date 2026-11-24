@@ -43,7 +43,7 @@ export interface WhatsAppWebhookEntry {
 }
 
 export interface WhatsAppEvent {
-  whatsAppWebhookEntry: string;
+  whatsAppWebhookEntry: string | WhatsAppWebhookEntry;
   messageId?: string;
   message_timestamp?: string;
 }
