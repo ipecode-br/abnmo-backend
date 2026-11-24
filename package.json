@@ -13,6 +13,7 @@
     "dev:email-worker": "tsx watch -r tsconfig-paths/register infra/local/queue/local-runner.ts email",
     "dev:whatsapp-worker": "tsx watch -r tsconfig-paths/register infra/local/queue/local-runner.ts whatsapp",
     "dev:whatsapp-enqueue": "tsx -r tsconfig-paths/register infra/local/queue/send-test-message.ts",
+    "dev:events-enqueue": "tsx -r tsconfig-paths/register infra/local/queue/send-test-event.ts",
     "dev:events-worker": "tsx watch -r tsconfig-paths/register infra/local/queue/local-runner.ts events",
     "dev:survey-analysis-worker": "tsx watch -r tsconfig-paths/register infra/local/queue/local-runner.ts survey-analysis",
     "lint:eslint:check": "eslint .",

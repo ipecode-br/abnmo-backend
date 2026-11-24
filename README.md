@@ -64,13 +64,14 @@ npm run services:setup-queues
 
 Os comandos usam `tsx watch` — reiniciam automaticamente ao editar o código. O worker de survey analysis também exige `OPENAI_API_KEY` e acesso ao banco (`DB_*`) no ambiente.
 
-Para enfileirar uma mensagem de WhatsApp de teste (sem precisar de evento real da Meta):
+Para simular entradas nas filas (sem precisar de mensagem real da Meta):
 
 ```bash
 npm run dev:whatsapp-enqueue -- [scenario] [phone]
+npm run dev:events-enqueue -- [scenario] [phone]
 ```
 
-Cenários: `complete-survey`, `decline-survey`, `bad-phone`, `empty-name`, `long-reason`, `unknown-template`.
+Cenários de mensagem de WhatsApp: `complete-survey`, `decline-survey`, `bad-phone`, `empty-name`, `long-reason`, `unknown-template`. Cenários de evento: `delivered`, `failed`, `handover-failed`, `unknown-source`.
 
 ### Criando novos workers
 
