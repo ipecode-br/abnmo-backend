@@ -3,6 +3,7 @@ import { createSqsClient, ensureQueues, getQueueUrls } from './sqs-client';
 const QUEUE_URL_ENV_NAMES = [
   'EMAIL_QUEUE_URL',
   'WHATSAPP_QUEUE_URL',
+  'EVENTS_QUEUE_URL',
   'SURVEY_ANALYSIS_QUEUE_URL',
 ];
 
