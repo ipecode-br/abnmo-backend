@@ -26,7 +26,11 @@ export function getSentryConfig({
 
       if (ex?.values?.[0]?.type) {
         ex.values[0].type = `${prefix} ${ex.values[0].type}`;
-      } else if (typeof event.message === 'string') {
+
+        return event;
+      }
+
+      if (typeof event.message === 'string') {
         event.message = `${prefix} ${event.message}`;
       }
 
