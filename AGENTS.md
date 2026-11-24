@@ -258,6 +258,7 @@ Check existing utilities in `src/utils/` (cookies, date ranges, file names, vali
 ## Important constraints
 
 - **Never read secrets** — do not read, print, or inspect secrets (GitHub Actions secrets, `.env*` values, `secrets.auto.tfvars`, SSM/Secrets Manager); if a secret needs verification, ask the user
+- **Avoid `else`** — prefer early returns, `continue`, or an extracted function; keep `else` only when there is no other option
 - **`patients` module**: queries `User` entity with `role: "patient"`
 - **Do NOT add comments** to code unless explicitly asked
 - Files: `kebab-case`, exports match file names (`create-appointment.use-case.ts` → `CreateAppointmentUseCase`)
