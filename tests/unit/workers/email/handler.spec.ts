@@ -34,6 +34,9 @@ async function invoke(event: SQSEvent): Promise<SQSBatchResponse> {
 
 let idempotencyKeyCounter = 0;
 
+const USER_ID = '01900000-0000-7000-8000-000000000001';
+const INVITE_ID = '01900000-0000-7000-8000-000000000002';
+
 function nextIdempotencyKey(): string {
   idempotencyKeyCounter++;
   return `10000000-0000-7000-8000-${String(idempotencyKeyCounter).padStart(12, '0')}`;
@@ -49,6 +52,7 @@ function validBody() {
       to: 'test@example.com',
       name: 'Test',
       resetPasswordUrl: 'https://example.com/nova-senha?token=abc',
+      userId: USER_ID,
     },
   };
 }
@@ -97,6 +101,32 @@ describe('Email worker handler', () => {
       expect.stringContaining('Message processed'),
       expect.objectContaining({ messageId: 'msg-1' }),
     );
+    expect(result.batchItemFailures).toHaveLength(0);
+  });
+
+  it('processes a valid "registerUser" job with inviteId', async () => {
+    const record = makeRecord();
+    record.body = JSON.stringify({
+      version: 1,
+      type: 'email',
+      idempotencyKey: nextIdempotencyKey(),
+      payload: {
+        template: 'registerUser',
+        to: 'newuser@example.com',
+        registerUserUrl: 'https://example.com/cadastrar?token=abc',
+        inviteId: INVITE_ID,
+      },
+    });
+    const event: SQSEvent = { Records: [record] };
+
+    const result = await invoke(event);
+
+    expect(mockSendEmail).toHaveBeenCalledWith({
+      template: 'registerUser',
+      to: 'newuser@example.com',
+      registerUserUrl: 'https://example.com/cadastrar?token=abc',
+      inviteId: INVITE_ID,
+    });
     expect(result.batchItemFailures).toHaveLength(0);
   });
 
@@ -219,7 +249,14 @@ describe('Email worker handler', () => {
       expect.any(TypeError),
       expect.objectContaining({
         captureContext: expect.objectContaining({
-          extra: expect.objectContaining({ body: expect.any(Object) }),
+          extra: expect.objectContaining({
+            body: expect.objectContaining({
+              payload: expect.objectContaining({
+                userId: USER_ID,
+                to: 'tes***@example.com',
+              }),
+            }),
+          }),
         }),
       }),
     );

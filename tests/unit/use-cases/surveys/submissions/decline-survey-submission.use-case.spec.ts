@@ -67,6 +67,7 @@ describe('DeclineSurveySubmissionUseCase', () => {
         template: 'declineSurvey',
         to: patient.email,
         reason: 'Incomplete document',
+        userId: patient.id,
       }),
     );
     expect(enqueueWhatsAppUseCase.execute).toHaveBeenCalledWith(

@@ -87,6 +87,7 @@ export class ApproveSurveySubmissionUseCase {
       to: submission.patient.email,
       name: submission.patient.name,
       completeSurveyUrl,
+      userId: submission.patient.id,
     });
 
     await this.enqueueWhatsAppUseCase.execute({

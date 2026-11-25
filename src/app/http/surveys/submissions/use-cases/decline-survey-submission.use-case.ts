@@ -78,6 +78,7 @@ export class DeclineSurveySubmissionUseCase {
       to: submission.patient.email,
       name: submission.patient.name,
       reason,
+      userId: submission.patient.id,
     });
 
     await this.enqueueWhatsAppUseCase.execute({

@@ -71,6 +71,7 @@ describe('ApproveSurveySubmissionUseCase', () => {
       expect.objectContaining({
         template: 'completeSurvey',
         to: patient.email,
+        userId: patient.id,
       }),
     );
     expect(enqueueWhatsAppUseCase.execute).toHaveBeenCalledWith(

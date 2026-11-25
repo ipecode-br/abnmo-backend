@@ -23,12 +23,16 @@ jest.mock('@/workers/email/providers/ses', () => ({
 import type { SendEmailJob } from '@/shared/queue/schemas/email';
 import { sendEmail } from '@/workers/email/send-email';
 
+const USER_ID = '01900000-0000-7000-8000-000000000001';
+const INVITE_ID = '01900000-0000-7000-8000-000000000002';
+
 function makeJob(): SendEmailJob {
   return {
     template: 'recoverPassword',
     to: 'test@example.com',
     name: 'Test',
     resetPasswordUrl: 'https://example.com/nova-senha?token=abc',
+    userId: USER_ID,
   };
 }
 
@@ -49,6 +53,7 @@ describe('sendEmail()', () => {
     });
     expect(mockSendViaSes).not.toHaveBeenCalled();
     expect(mockLogInfo).toHaveBeenCalledWith('Email sent', {
+      userId: USER_ID,
       email: 'tes***@example.com',
       template: 'recoverPassword',
       provider: 'resend',
@@ -68,8 +73,25 @@ describe('sendEmail()', () => {
     expect(mockSendViaResend).not.toHaveBeenCalled();
     expect(mockLogInfo).toHaveBeenCalledWith(
       'Email sent',
-      expect.objectContaining({ provider: 'ses' }),
+      expect.objectContaining({ provider: 'ses', userId: USER_ID }),
     );
+  });
+
+  it('logs "inviteId" for invitation emails', async () => {
+    await sendEmail({
+      template: 'registerUser',
+      to: 'newuser@example.com',
+      registerUserUrl: 'https://example.com/cadastrar?token=abc',
+      inviteId: INVITE_ID,
+    });
+
+    expect(mockLogInfo).toHaveBeenCalledWith('Email sent', {
+      userId: undefined,
+      inviteId: INVITE_ID,
+      email: 'new***@example.com',
+      template: 'registerUser',
+      provider: 'resend',
+    });
   });
 
   it('skips sending when "EMAIL_PROVIDER" is "none"', async () => {
@@ -80,6 +102,7 @@ describe('sendEmail()', () => {
     expect(mockSendViaResend).not.toHaveBeenCalled();
     expect(mockSendViaSes).not.toHaveBeenCalled();
     expect(mockLogInfo).toHaveBeenCalledWith('Email send skipped', {
+      userId: USER_ID,
       email: 'tes***@example.com',
       template: 'recoverPassword',
       reason: 'EMAIL_PROVIDER is "none"',
@@ -92,6 +115,7 @@ describe('sendEmail()', () => {
     await expect(sendEmail(makeJob())).rejects.toThrow('Resend error');
 
     expect(mockLogError).toHaveBeenCalledWith('Email send failed', {
+      userId: USER_ID,
       email: 'tes***@example.com',
       template: 'recoverPassword',
       provider: 'resend',

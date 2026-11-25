@@ -30,6 +30,8 @@ describe('CreateUserInviteUseCase', () => {
     features: [],
   };
 
+  const INVITE_ID = '01900000-0000-7000-8000-000000000002';
+
   beforeEach(async () => {
     usersRepo = mock<Repository<User>>();
     tokensRepo = mock<Repository<Token>>();
@@ -39,7 +41,7 @@ describe('CreateUserInviteUseCase', () => {
 
     const transactionTokenRepo = mock<Repository<Token>>();
     transactionTokenRepo.create.mockImplementation(
-      (entity: any) => entity as Token,
+      (entity: any) => ({ ...entity, id: INVITE_ID }) as Token,
     );
 
     dataSource = {
@@ -138,6 +140,7 @@ describe('CreateUserInviteUseCase', () => {
         registerUserUrl: expect.stringContaining(
           '/cadastrar?token=invite-token-abc',
         ),
+        inviteId: INVITE_ID,
       }),
     );
   });

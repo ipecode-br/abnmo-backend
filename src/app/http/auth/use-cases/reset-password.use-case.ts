@@ -116,6 +116,7 @@ export class ResetPasswordUseCase {
       template: 'resetPassword',
       to: user.email,
       name,
+      userId: user.id,
     });
   }
 }

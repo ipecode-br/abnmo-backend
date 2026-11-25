@@ -85,6 +85,7 @@ export class RecoverPasswordUseCase {
       to: email,
       name,
       resetPasswordUrl,
+      userId: user.id,
     });
   }
 }

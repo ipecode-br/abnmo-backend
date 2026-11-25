@@ -78,6 +78,7 @@ describe('RecoverPasswordUseCase', () => {
         to: existingUser.email,
         name: existingUser.name.split(' ')[0],
         resetPasswordUrl: expect.stringContaining('/nova-senha?token='),
+        userId: existingUser.id,
       }),
     );
   });

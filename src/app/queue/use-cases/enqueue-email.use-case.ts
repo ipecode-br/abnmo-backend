@@ -31,6 +31,11 @@ export class EnqueueEmailUseCase {
       idempotencyKey: generateQueueIdempotencyKey(),
     };
 
+    const target = {
+      userId: job.userId,
+      ...(job.template === 'registerUser' && { inviteId: job.inviteId }),
+    };
+
     try {
       await this.sqs.send(
         new SendMessageCommand({
@@ -41,19 +46,25 @@ export class EnqueueEmailUseCase {
 
       this.logger.log('E-mail job enqueued', {
         template: job.template,
-        email: job.to,
+        ...target,
+        email: anonymizeEmail(job.to),
       });
     } catch (error) {
       this.logger.error('Failed to enqueue email job', {
         template: job.template,
-        email: job.to,
+        ...target,
+        email: anonymizeEmail(job.to),
         error: error instanceof Error ? error.message : String(error),
       });
 
       Sentry.captureException(error, {
         captureContext: {
           level: 'error',
-          extra: { template: job.template, email: anonymizeEmail(job.to) },
+          extra: {
+            template: job.template,
+            ...target,
+            email: anonymizeEmail(job.to),
+          },
         },
       });
     }
