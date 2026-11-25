@@ -4,6 +4,7 @@ import * as Sentry from '@sentry/node';
 import type { SQSBatchResponse, SQSHandler } from 'aws-lambda';
 
 import type { QueueProcessedKeys } from '@/shared/queue/utils';
+import { sanitizeBodyForSentry } from '@/utils/sanitize-for-sentry';
 
 import { env } from './env';
 import { logger } from './logger';
@@ -65,7 +66,10 @@ export const handler: SQSHandler = async (event): Promise<SQSBatchResponse> => {
           captureContext: {
             level: 'error',
             tags: { worker: 'events' },
-            extra: { messageId: record.messageId, body: record.body },
+            extra: {
+              messageId: record.messageId,
+              body: sanitizeBodyForSentry(record.body),
+            },
           },
         });
 

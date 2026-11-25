@@ -64,6 +64,9 @@ const metaParameterError = {
   },
 };
 
+const USER_ID = '01900000-0000-7000-8000-000000000001';
+const MASKED_RECIPIENT = '+551199***99';
+
 describe('handleWhatsAppEvent()', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -75,7 +78,8 @@ describe('handleWhatsAppEvent()', () => {
         id: 'wamid.failed',
         status: 'failed',
         timestamp: '1736379042',
-        recipient_id: '5511999999999',
+        recipient_id: '+5511999999999',
+        biz_opaque_callback_data: USER_ID,
         errors: [metaParameterError],
       },
     ]);
@@ -87,7 +91,8 @@ describe('handleWhatsAppEvent()', () => {
       expect.objectContaining({
         wamid: 'wamid.failed',
         status: 'failed',
-        recipient: '+5511999999999',
+        recipient: MASKED_RECIPIENT,
+        userId: USER_ID,
         awsMessageId: 'aws-message-1',
         metaErrorCode: 132000,
         metaErrorTitle: 'Something went wrong',
@@ -105,11 +110,33 @@ describe('handleWhatsAppEvent()', () => {
         }),
         extra: expect.objectContaining({
           wamid: 'wamid.failed',
-          recipient: '+5511999999999',
+          recipient: MASKED_RECIPIENT,
+          userId: USER_ID,
         }),
       }),
     );
     expect(mockLogInfo).not.toHaveBeenCalled();
+  });
+
+  it('never logs or captures the full recipient phone number', () => {
+    const payload = makePayload([
+      {
+        id: 'wamid.no-leak',
+        status: 'failed',
+        recipient_id: '+5511999999999',
+        biz_opaque_callback_data: USER_ID,
+        errors: [metaParameterError],
+      },
+    ]);
+
+    handleWhatsAppEvent(payload, makeContext());
+
+    expect(JSON.stringify(mockLogError.mock.calls)).not.toContain(
+      '+5511999999999',
+    );
+    expect(JSON.stringify(mockSentryCaptureMessage.mock.calls)).not.toContain(
+      '+5511999999999',
+    );
   });
 
   it('captures a handover failure reported with a generated status name', () => {
@@ -117,7 +144,8 @@ describe('handleWhatsAppEvent()', () => {
       {
         id: 'wamid.handover',
         status: 'WhatsApp Message Handover Failed',
-        recipient_id: '5511999999999',
+        recipient_id: '+5511999999999',
+        biz_opaque_callback_data: USER_ID,
         errors: [
           {
             code: 131026,
@@ -135,6 +163,8 @@ describe('handleWhatsAppEvent()', () => {
       expect.objectContaining({
         wamid: 'wamid.handover',
         status: 'WhatsApp Message Handover Failed',
+        recipient: MASKED_RECIPIENT,
+        userId: USER_ID,
         metaErrorCode: 131026,
       }),
     );
@@ -150,7 +180,8 @@ describe('handleWhatsAppEvent()', () => {
         id: 'wamid.delivered',
         status: 'delivered',
         timestamp: '1736379042',
-        recipient_id: '5511999999999',
+        recipient_id: '+5511999999999',
+        biz_opaque_callback_data: USER_ID,
       },
     ]);
 
@@ -161,20 +192,44 @@ describe('handleWhatsAppEvent()', () => {
       expect.objectContaining({
         wamid: 'wamid.delivered',
         status: 'delivered',
-        recipient: '+5511999999999',
+        recipient: MASKED_RECIPIENT,
+        userId: USER_ID,
       }),
     );
     expect(mockLogError).not.toHaveBeenCalled();
     expect(mockSentryCaptureMessage).not.toHaveBeenCalled();
   });
 
+  it('logs a masked recipient when callback data is missing', () => {
+    const payload = makePayload([
+      {
+        id: 'wamid.no-callback',
+        status: 'delivered',
+        recipient_id: '+5511999999999',
+      },
+    ]);
+
+    handleWhatsAppEvent(payload, makeContext());
+
+    const extras = mockLogInfo.mock.calls[0][1] as Record<string, unknown>;
+
+    expect(extras.recipient).toBe(MASKED_RECIPIENT);
+    expect(extras.userId).toBeUndefined();
+  });
+
   it('processes mixed statuses in the same event', () => {
     const payload = makePayload([
-      { id: 'wamid.a', status: 'delivered', recipient_id: '5511999999999' },
+      {
+        id: 'wamid.a',
+        status: 'delivered',
+        recipient_id: '+5511999999999',
+        biz_opaque_callback_data: USER_ID,
+      },
       {
         id: 'wamid.b',
         status: 'failed',
-        recipient_id: '5511888888888',
+        recipient_id: '+5511888888888',
+        biz_opaque_callback_data: '01900000-0000-7000-8000-000000000002',
         errors: [metaParameterError],
       },
     ]);
@@ -191,7 +246,8 @@ describe('handleWhatsAppEvent()', () => {
       {
         id: 'wamid.duplicate',
         status: 'delivered',
-        recipient_id: '5511999999999',
+        recipient_id: '+5511999999999',
+        biz_opaque_callback_data: USER_ID,
       },
     ]);
     const processedKeys: QueueProcessedKeys = new Map();
@@ -223,7 +279,8 @@ describe('handleWhatsAppEvent()', () => {
                   {
                     id: 'wamid.object',
                     status: 'delivered',
-                    recipient_id: '5511999999999',
+                    recipient_id: '+5511999999999',
+                    biz_opaque_callback_data: USER_ID,
                   },
                 ],
               },
@@ -239,7 +296,8 @@ describe('handleWhatsAppEvent()', () => {
       'WhatsApp message status received',
       expect.objectContaining({
         wamid: 'wamid.object',
-        recipient: '+5511999999999',
+        recipient: MASKED_RECIPIENT,
+        userId: USER_ID,
       }),
     );
   });

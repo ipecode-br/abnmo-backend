@@ -515,6 +515,7 @@ describe('Survey Submissions (e2e)', () => {
           to: `+55${patient.phone}`,
           name: patient.name,
           token: updated?.surveyToken,
+          userId: patient.id,
         }),
       );
 
@@ -619,6 +620,7 @@ describe('Survey Submissions (e2e)', () => {
           to: `+55${patient.phone}`,
           name: patient.name,
           reason: 'Documento inválido',
+          userId: patient.id,
         }),
       );
 

@@ -1,6 +1,7 @@
 import * as Sentry from '@sentry/node';
 
 import { checkIsProcessed, markProcessed } from '@/shared/queue/utils';
+import { anonymizePhoneE164 } from '@/utils/anonymize';
 
 import { logger } from '../logger';
 import type {
@@ -15,13 +16,17 @@ function reportStatus(
   event: WhatsAppEvent,
   context: EventContext,
 ): void {
-  const recipient = status.recipient_id ? `+${status.recipient_id}` : undefined;
+  const recipient = status.recipient_id
+    ? anonymizePhoneE164(status.recipient_id)
+    : undefined;
+  const userId = status.biz_opaque_callback_data;
 
   if (!status.status.toLowerCase().includes('failed')) {
     logger.info('WhatsApp message status received', {
       wamid: status.id,
       status: status.status,
       recipient,
+      userId,
       statusTimestamp: status.timestamp,
       awsMessageId: event.messageId,
       snsMessageId: context.sns.MessageId,
@@ -36,6 +41,7 @@ function reportStatus(
     wamid: status.id,
     status: status.status,
     recipient,
+    userId,
     statusTimestamp: status.timestamp,
     awsMessageId: event.messageId,
     snsMessageId: context.sns.MessageId,
@@ -57,6 +63,7 @@ function reportStatus(
         wamid: status.id,
         status: status.status,
         recipient,
+        userId,
         awsMessageId: event.messageId,
         snsMessageId: context.sns.MessageId,
         metaErrorCode: failure?.code,

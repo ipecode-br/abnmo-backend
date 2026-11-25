@@ -75,6 +75,7 @@ describe('DeclineSurveySubmissionUseCase', () => {
         to: `+55${patient.phone}`,
         name: patient.name,
         reason: 'Incomplete document',
+        userId: patient.id,
       }),
     );
   });

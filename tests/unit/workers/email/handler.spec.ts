@@ -119,7 +119,9 @@ describe('Email worker handler', () => {
           level: 'error',
           extra: expect.objectContaining({
             messageId: 'msg-1',
-            body: expect.any(String),
+            body: expect.objectContaining({
+              payload: expect.objectContaining({ to: 'tes***@example.com' }),
+            }),
           }),
         }),
       }),
@@ -217,7 +219,7 @@ describe('Email worker handler', () => {
       expect.any(TypeError),
       expect.objectContaining({
         captureContext: expect.objectContaining({
-          extra: expect.objectContaining({ body: expect.any(String) }),
+          extra: expect.objectContaining({ body: expect.any(Object) }),
         }),
       }),
     );

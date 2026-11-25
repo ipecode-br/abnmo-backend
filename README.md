@@ -68,7 +68,7 @@ Para simular entradas nas filas (sem precisar de mensagem real da Meta):
 
 ```bash
 npm run dev:whatsapp-enqueue -- [scenario] [phone]
-npm run dev:events-enqueue -- [scenario] [phone]
+npm run dev:events-enqueue -- [scenario] [phone] [userId]
 ```
 
 Cenários de mensagem de WhatsApp: `complete-survey`, `decline-survey`, `bad-phone`, `empty-name`, `long-reason`, `unknown-template`. Cenários de evento: `delivered`, `failed`, `handover-failed`, `unknown-source`.

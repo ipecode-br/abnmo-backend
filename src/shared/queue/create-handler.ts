@@ -2,6 +2,8 @@ import * as Sentry from '@sentry/node';
 import type { SQSBatchResponse, SQSHandler } from 'aws-lambda';
 import { z } from 'zod';
 
+import { sanitizeBodyForSentry } from '@/utils/sanitize-for-sentry';
+
 import { messageEnvelopeSchema } from './envelope';
 import { QueueWorkerLogger } from './logger';
 import {
@@ -102,7 +104,10 @@ export function createQueueWorkerHandler(
             captureContext: {
               level: 'error',
               tags: { worker: name },
-              extra: { messageId: record.messageId, body: record.body },
+              extra: {
+                messageId: record.messageId,
+                body: sanitizeBodyForSentry(record.body),
+              },
             },
           });
 

@@ -78,6 +78,7 @@ describe('ApproveSurveySubmissionUseCase', () => {
         template: 'completeSurvey',
         to: `+55${patient.phone}`,
         name: patient.name,
+        userId: patient.id,
       }),
     );
   });

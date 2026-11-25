@@ -8,7 +8,6 @@ import { EnvService } from '@/env/env.service';
 import type { MessageEnvelope } from '@/shared/queue/envelope';
 import type { SendWhatsAppJob } from '@/shared/queue/schemas/whatsapp';
 import { generateQueueIdempotencyKey } from '@/shared/queue/utils';
-import { anonymizePhoneE164 } from '@/utils/anonymize';
 
 @Injectable()
 @Log()
@@ -41,12 +40,12 @@ export class EnqueueWhatsAppUseCase {
 
       this.logger.log('WhatsApp job enqueued', {
         template: job.template,
-        phone: job.to,
+        userId: job.userId,
       });
     } catch (error) {
       this.logger.error('Failed to enqueue WhatsApp job', {
         template: job.template,
-        phone: job.to,
+        userId: job.userId,
         error: error instanceof Error ? error.message : String(error),
       });
 
@@ -55,7 +54,7 @@ export class EnqueueWhatsAppUseCase {
           level: 'error',
           extra: {
             template: job.template,
-            phone: anonymizePhoneE164(job.to),
+            userId: job.userId,
           },
         },
       });

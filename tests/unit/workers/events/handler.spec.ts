@@ -174,6 +174,54 @@ describe('events worker handler', () => {
     expect(result.batchItemFailures).toHaveLength(0);
   });
 
+  it('sanitizes phone fields in captured permanent-error bodies', async () => {
+    const userId = '01900000-0000-7000-8000-000000000001';
+    const payload = {
+      whatsAppWebhookEntry: JSON.stringify({
+        changes: [
+          {
+            value: {
+              statuses: [
+                {
+                  id: 'wamid.1',
+                  status: 'failed',
+                  recipient_id: '+5511999999999',
+                  biz_opaque_callback_data: userId,
+                },
+              ],
+            },
+          },
+        ],
+      }),
+      messageId: 'aws-message-1',
+    };
+    mockHandleWhatsAppEvent.mockRejectedValue(new TypeError('boom'));
+
+    const event: SQSEvent = {
+      Records: [makeRecord({ body: makeSnsBody(payload) })],
+    };
+
+    await invoke(event);
+
+    expect(mockSentryCaptureException).toHaveBeenCalledWith(
+      expect.any(TypeError),
+      expect.objectContaining({
+        captureContext: expect.objectContaining({
+          extra: expect.objectContaining({
+            body: expect.objectContaining({
+              Message: expect.stringContaining('+551199***99'),
+            }),
+          }),
+        }),
+      }),
+    );
+
+    const serialized = JSON.stringify(mockSentryCaptureException.mock.calls);
+
+    expect(serialized).not.toContain('+5511999999999');
+    expect(serialized).toContain(userId);
+  });
+
   it('drops SNS envelope without "Message" and captures "SyntaxError"', async () => {
     const event: SQSEvent = {
       Records: [makeRecord({ body: JSON.stringify({ Type: 'Notification' }) })],
