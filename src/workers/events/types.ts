@@ -22,6 +22,7 @@ export interface WhatsAppStatus {
   status: string;
   timestamp?: string;
   recipient_id?: string;
+  biz_opaque_callback_data?: string;
   errors?: WhatsAppStatusError[];
 }
 

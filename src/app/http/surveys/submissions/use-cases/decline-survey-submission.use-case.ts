@@ -41,7 +41,7 @@ export class DeclineSurveySubmissionUseCase {
     can(user, 'review:survey');
 
     const submission = await this.surveySubmissionsRepository.findOne({
-      select: { patient: { name: true, email: true, phone: true } },
+      select: { patient: { id: true, name: true, email: true, phone: true } },
       relations: { patient: true },
       where: { id },
     });
@@ -78,6 +78,7 @@ export class DeclineSurveySubmissionUseCase {
       to: submission.patient.email,
       name: submission.patient.name,
       reason,
+      userId: submission.patient.id,
     });
 
     await this.enqueueWhatsAppUseCase.execute({
@@ -85,6 +86,7 @@ export class DeclineSurveySubmissionUseCase {
       to: formatPhoneE164(submission.patient.phone),
       name: submission.patient.name,
       reason,
+      userId: submission.patient.id,
     });
 
     this.logger.log('Survey submission declined', { id, reason });

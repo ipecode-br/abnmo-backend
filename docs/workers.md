@@ -103,7 +103,8 @@ O worker `events` (`src/workers/events/`) não usa `createQueueWorkerHandler`: a
 - **Emissores desconhecidos são descartados** — publicar em um tópico novo antes de implementar o `source` correspondente perde os eventos (um issue no Sentry por mensagem). Faça deploy do source antes de assinar o tópico.
 - **`SQS_EVENTS_MAX_RECEIVE_COUNT` deve acompanhar o `max_receive_count` da fila** (`abnmo-devops`, módulo `queue`). Se o DLQ for configurado com um valor menor, o alerta de última tentativa nunca dispara.
 - **`raw_message_delivery` permanece `false`** na subscription SNS → SQS: o worker espera o envelope SNS, não o payload cru.
-- **Destinatário completo é intencional** — os logs de falha e o extra do Sentry registram o telefone em E.164 para localizar o usuário e reenviar a mensagem manualmente. Não anonimizar: esses logs e issues contêm PII por decisão de produto.
+- **Destinatário mascarado + `userId`** — os logs e o extra do Sentry do worker `events` registram o telefone do destinatário mascarado (ex.: `+554799***99`) e o `userId` retornado em `biz_opaque_callback_data`; nunca o `recipient_id` cru. O worker `whatsapp` envia o `userId` do paciente como `biz_opaque_callback_data` (limite de 512 caracteres do Meta). Para obter o telefone completo, consulte o `User` pelo `userId`. Mensagens sem esse campo não têm como ser correlacionadas ao usuário.
+- **Corpos de erro sanitizados** — os extras `body` capturados em erros permanentes passam por `sanitizeBodyForSentry`, que mascara telefones e anonimiza dados pessoais antes de enviar ao Sentry.
 
 ---
 

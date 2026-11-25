@@ -104,6 +104,7 @@ describe('ResetPasswordUseCase', () => {
         template: 'resetPassword',
         to: existingUser.email,
         name: existingUser.name.split(' ')[0],
+        userId: existingUser.id,
       }),
     );
   });

@@ -8,6 +8,7 @@ import type { MessageEnvelope } from '@/shared/queue/envelope';
 import { createSqsClient } from './sqs-client';
 
 const DEFAULT_PHONE = '+5511999999999';
+const DEFAULT_USER_ID = '01900000-0000-7000-8000-000000000001';
 
 const SCENARIOS = [
   'complete-survey',
@@ -28,6 +29,7 @@ function buildPayload(scenario: Scenario, phone: string): unknown {
         to: phone,
         name: 'Test User',
         token: 'test-token-abc123',
+        userId: DEFAULT_USER_ID,
       };
     case 'decline-survey':
       return {
@@ -35,6 +37,7 @@ function buildPayload(scenario: Scenario, phone: string): unknown {
         to: phone,
         name: 'Test User',
         reason: 'Documento inválido',
+        userId: DEFAULT_USER_ID,
       };
     case 'bad-phone':
       return {
@@ -42,6 +45,7 @@ function buildPayload(scenario: Scenario, phone: string): unknown {
         to: phone.replace(/^\+/, ''),
         name: 'Test User',
         reason: 'Documento inválido',
+        userId: DEFAULT_USER_ID,
       };
     case 'empty-name':
       return {
@@ -49,6 +53,7 @@ function buildPayload(scenario: Scenario, phone: string): unknown {
         to: phone,
         name: '',
         token: 'test-token-abc123',
+        userId: DEFAULT_USER_ID,
       };
     case 'long-reason':
       return {
@@ -56,12 +61,14 @@ function buildPayload(scenario: Scenario, phone: string): unknown {
         to: phone,
         name: 'Test User',
         reason: 'x'.repeat(501),
+        userId: DEFAULT_USER_ID,
       };
     case 'unknown-template':
       return {
         template: 'reminder',
         to: phone,
         name: 'Test User',
+        userId: DEFAULT_USER_ID,
       };
   }
 }

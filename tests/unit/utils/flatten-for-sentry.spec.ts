@@ -16,7 +16,7 @@ describe('flattenForSentry()', () => {
   it('anonymizes "phone" values in national format', () => {
     const result = flattenForSentry({ phone: '11999999999' });
 
-    expect(result).toEqual({ phone: '(11) 999**-****' });
+    expect(result).toEqual({ phone: '(11) 999***99' });
   });
 
   it('anonymizes "name" values', () => {

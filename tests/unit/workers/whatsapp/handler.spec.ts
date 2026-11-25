@@ -35,6 +35,8 @@ async function invoke(event: SQSEvent): Promise<SQSBatchResponse> {
 
 let idempotencyKeyCounter = 0;
 
+const USER_ID = '01900000-0000-7000-8000-000000000001';
+
 function nextIdempotencyKey(): string {
   idempotencyKeyCounter++;
   return `10000000-0000-7000-8000-${String(idempotencyKeyCounter).padStart(12, '0')}`;
@@ -50,6 +52,7 @@ function validBody() {
       to: '+5511999999999',
       name: 'Test',
       token: 'token-abc',
+      userId: USER_ID,
     },
   };
 }
@@ -112,6 +115,7 @@ describe('WhatsApp worker handler', () => {
         to: '+5511999999999',
         name: 'Test',
         reason: 'Documento inválido',
+        userId: USER_ID,
       },
     });
     const event: SQSEvent = { Records: [record] };
@@ -123,6 +127,7 @@ describe('WhatsApp worker handler', () => {
       to: '+5511999999999',
       name: 'Test',
       reason: 'Documento inválido',
+      userId: USER_ID,
     });
     expect(result.batchItemFailures).toHaveLength(0);
   });
@@ -146,7 +151,9 @@ describe('WhatsApp worker handler', () => {
           level: 'error',
           extra: expect.objectContaining({
             messageId: 'msg-1',
-            body: expect.any(String),
+            body: expect.objectContaining({
+              payload: expect.objectContaining({ to: '+551199***99' }),
+            }),
           }),
         }),
       }),
@@ -262,7 +269,7 @@ describe('WhatsApp worker handler', () => {
       expect.any(TypeError),
       expect.objectContaining({
         captureContext: expect.objectContaining({
-          extra: expect.objectContaining({ body: expect.any(String) }),
+          extra: expect.objectContaining({ body: expect.any(Object) }),
         }),
       }),
     );

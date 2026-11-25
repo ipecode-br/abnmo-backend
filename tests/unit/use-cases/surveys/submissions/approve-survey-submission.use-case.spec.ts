@@ -71,6 +71,7 @@ describe('ApproveSurveySubmissionUseCase', () => {
       expect.objectContaining({
         template: 'completeSurvey',
         to: patient.email,
+        userId: patient.id,
       }),
     );
     expect(enqueueWhatsAppUseCase.execute).toHaveBeenCalledWith(
@@ -78,6 +79,7 @@ describe('ApproveSurveySubmissionUseCase', () => {
         template: 'completeSurvey',
         to: `+55${patient.phone}`,
         name: patient.name,
+        userId: patient.id,
       }),
     );
   });

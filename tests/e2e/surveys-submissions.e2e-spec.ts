@@ -507,6 +507,7 @@ describe('Survey Submissions (e2e)', () => {
           completeSurveyUrl: expect.stringContaining(
             `/catalogacao/voce?token=${updated?.surveyToken}`,
           ),
+          userId: patient.id,
         }),
       );
       expect(whatsAppSpy).toHaveBeenCalledWith(
@@ -515,6 +516,7 @@ describe('Survey Submissions (e2e)', () => {
           to: `+55${patient.phone}`,
           name: patient.name,
           token: updated?.surveyToken,
+          userId: patient.id,
         }),
       );
 
@@ -611,6 +613,7 @@ describe('Survey Submissions (e2e)', () => {
           template: 'declineSurvey',
           to: patient.email,
           reason: 'Documento inválido',
+          userId: patient.id,
         }),
       );
       expect(whatsAppSpy).toHaveBeenCalledWith(
@@ -619,6 +622,7 @@ describe('Survey Submissions (e2e)', () => {
           to: `+55${patient.phone}`,
           name: patient.name,
           reason: 'Documento inválido',
+          userId: patient.id,
         }),
       );
 

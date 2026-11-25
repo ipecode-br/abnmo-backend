@@ -140,7 +140,7 @@ describe('Survey analysis worker handler', () => {
           level: 'error',
           extra: expect.objectContaining({
             messageId: 'msg-1',
-            body: expect.any(String),
+            body: expect.any(Object),
           }),
         }),
       }),

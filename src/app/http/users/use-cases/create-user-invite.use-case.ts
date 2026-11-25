@@ -69,6 +69,7 @@ export class CreateUserInviteUseCase {
     }
 
     let token = '';
+    let inviteId: string | undefined;
 
     await this.dataSource.transaction(async (manager) => {
       const tokensRepository = manager.getRepository(Token);
@@ -93,6 +94,8 @@ export class CreateUserInviteUseCase {
 
       await tokensRepository.save(newInviteUserToken);
 
+      inviteId = newInviteUserToken.id;
+
       this.logger.log('Invite user token created', {
         id: newInviteUserToken.id,
         email: anonymizeEmail(email),
@@ -106,6 +109,7 @@ export class CreateUserInviteUseCase {
       template: 'registerUser',
       to: email,
       registerUserUrl,
+      inviteId,
     });
   }
 }

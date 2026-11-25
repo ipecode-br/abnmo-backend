@@ -46,7 +46,7 @@ export class ApproveSurveySubmissionUseCase {
     can(user, 'review:survey');
 
     const submission = await this.surveySubmissionsRepository.findOne({
-      select: { patient: { name: true, email: true, phone: true } },
+      select: { patient: { id: true, name: true, email: true, phone: true } },
       relations: { patient: true },
       where: { id },
     });
@@ -87,6 +87,7 @@ export class ApproveSurveySubmissionUseCase {
       to: submission.patient.email,
       name: submission.patient.name,
       completeSurveyUrl,
+      userId: submission.patient.id,
     });
 
     await this.enqueueWhatsAppUseCase.execute({
@@ -94,6 +95,7 @@ export class ApproveSurveySubmissionUseCase {
       to: formatPhoneE164(submission.patient.phone),
       name: submission.patient.name,
       token: surveyToken,
+      userId: submission.patient.id,
     });
 
     this.logger.log('Survey submission approved', { id });

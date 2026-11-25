@@ -6,6 +6,7 @@ import { randomUUID } from 'crypto';
 import { createSqsClient } from './sqs-client';
 
 const DEFAULT_PHONE = '+5511999999999';
+const DEFAULT_USER_ID = '01900000-0000-7000-8000-000000000001';
 const DEFAULT_TOPIC_ARN =
   'arn:aws:sns:us-east-1:000000000000:abnmo-svm-whatsapp-events';
 
@@ -23,23 +24,24 @@ function statusTimestamp(): string {
 function buildStatus(
   scenario: StatusScenario,
   phone: string,
+  userId: string,
 ): Record<string, unknown> {
-  const recipient = phone.replace(/^\+/, '');
-
   switch (scenario) {
     case 'delivered':
       return {
         id: `wamid.${randomUUID()}`,
         status: 'delivered',
         timestamp: statusTimestamp(),
-        recipient_id: recipient,
+        recipient_id: phone,
+        biz_opaque_callback_data: userId,
       };
     case 'failed':
       return {
         id: `wamid.${randomUUID()}`,
         status: 'failed',
         timestamp: statusTimestamp(),
-        recipient_id: recipient,
+        recipient_id: phone,
+        biz_opaque_callback_data: userId,
         errors: [
           {
             code: 132000,
@@ -58,7 +60,8 @@ function buildStatus(
         id: `wamid.${randomUUID()}`,
         status: 'WhatsApp Message Handover Failed',
         timestamp: statusTimestamp(),
-        recipient_id: recipient,
+        recipient_id: phone,
+        biz_opaque_callback_data: userId,
         errors: [
           {
             code: 131026,
@@ -73,6 +76,7 @@ function buildStatus(
 function buildPayload(
   scenario: Scenario,
   phone: string,
+  userId: string,
 ): Record<string, unknown> {
   if (scenario === 'unknown-source') {
     return { event: 'unmapped-source' };
@@ -92,7 +96,7 @@ function buildPayload(
               display_phone_number: phoneNumber,
               phone_number_id: 'phone-number-id',
             },
-            statuses: [buildStatus(scenario, phone)],
+            statuses: [buildStatus(scenario, phone, userId)],
           },
         },
       ],
@@ -105,11 +109,12 @@ function buildPayload(
 function usage(): void {
   console.log(
     [
-      'Usage: npm run dev:events-enqueue -- [scenario] [phone]',
+      'Usage: npm run dev:events-enqueue -- [scenario] [phone] [userId]',
       '',
       `Scenarios: ${SCENARIOS.join(', ')}`,
       `Default scenario: failed`,
       `Default phone: ${DEFAULT_PHONE}`,
+      `Default userId: ${DEFAULT_USER_ID}`,
       '',
       'Examples:',
       '  npm run dev:events-enqueue',
@@ -138,6 +143,7 @@ async function main(): Promise<void> {
 
   const scenario = parseScenario(process.argv[2] ?? 'failed');
   const phone = process.argv[3] ?? DEFAULT_PHONE;
+  const userId = process.argv[4] ?? DEFAULT_USER_ID;
 
   const queueUrl = process.env.EVENTS_QUEUE_URL;
 
@@ -149,7 +155,7 @@ async function main(): Promise<void> {
     Type: 'Notification',
     MessageId: randomUUID(),
     TopicArn: process.env.SNS_TOPIC_ARN_WHATSAPP || DEFAULT_TOPIC_ARN,
-    Message: JSON.stringify(buildPayload(scenario, phone)),
+    Message: JSON.stringify(buildPayload(scenario, phone, userId)),
     Timestamp: new Date().toISOString(),
   };
 
@@ -165,6 +171,7 @@ async function main(): Promise<void> {
   console.log('Test WhatsApp event enqueued', {
     scenario,
     phone,
+    userId,
     queueUrl,
     sqsMessageId: response.MessageId,
     snsMessageId: envelope.MessageId,
