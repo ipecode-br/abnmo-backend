@@ -40,16 +40,17 @@ export async function sendEmail(job: SendEmailJob): Promise<void> {
 
   const payload = { to: job.to, ...rendered };
 
-  const target = {
+  const logBody = {
+    template: job.template,
+    email: anonymizeEmail(job.to),
     userId: job.userId,
+    provider: env.EMAIL_PROVIDER,
     ...(job.template === 'registerUser' && { inviteId: job.inviteId }),
   };
 
   if (env.EMAIL_PROVIDER === 'none') {
     logger.info('Email send skipped', {
-      ...target,
-      email: anonymizeEmail(job.to),
-      template: job.template,
+      ...logBody,
       reason: 'EMAIL_PROVIDER is "none"',
     });
     return;
@@ -63,18 +64,10 @@ export async function sendEmail(job: SendEmailJob): Promise<void> {
       await sendViaSes(payload);
     }
 
-    logger.info('Email sent', {
-      ...target,
-      email: anonymizeEmail(job.to),
-      template: job.template,
-      provider: env.EMAIL_PROVIDER,
-    });
+    logger.info('Email sent', logBody);
   } catch (err) {
     logger.error('Email send failed', {
-      ...target,
-      email: anonymizeEmail(job.to),
-      template: job.template,
-      provider: env.EMAIL_PROVIDER,
+      ...logBody,
       error: err instanceof Error ? err.message : String(err),
     });
 

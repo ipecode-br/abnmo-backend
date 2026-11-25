@@ -105,6 +105,7 @@ describe('sendEmail()', () => {
       userId: USER_ID,
       email: 'tes***@example.com',
       template: 'recoverPassword',
+      provider: 'none',
       reason: 'EMAIL_PROVIDER is "none"',
     });
   });
